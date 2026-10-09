@@ -5,14 +5,21 @@ use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\PasswordController;
 use App\Http\Controllers\Kelompok;
 use App\Http\Controllers\Opd;
+use App\Http\Controllers\Publik;
 use App\Http\Controllers\Shared;
 use App\Models\Organization;
 use App\Models\User;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', function () {
-    return view('welcome');
-});
+Route::get('/', Publik\HomeController::class)->name('home');
+Route::get('/profil', [Publik\PageController::class, 'profile'])->name('public.profile');
+Route::get('/kontak', [Publik\PageController::class, 'contact'])->name('public.contact');
+Route::get('/direktori', [Publik\DirectoryController::class, 'index'])->name('public.directory');
+Route::get('/direktori/{slug}', [Publik\DirectoryController::class, 'show'])->name('public.organization');
+Route::get('/produk', Publik\ProductController::class)->name('public.products');
+Route::get('/foto-sampul', Publik\CoverPhotoController::class)->name('public.cover');
+Route::get('/sitemap.xml', [Publik\SitemapController::class, 'sitemap'])->name('sitemap');
+Route::get('/robots.txt', [Publik\SitemapController::class, 'robots'])->name('robots');
 
 // Foto produk publik boleh dilihat tanpa login; controller memeriksa hak untuk foto yang tidak publik.
 Route::get('/foto-produk/{product}', [Shared\ProductPhotoController::class, 'show'])->name('product-photos.show')->whereNumber('product');
@@ -96,6 +103,13 @@ Route::middleware('auth')->group(function () use ($organizationRoutes) {
                         Route::patch('/{user}/aktifkan', 'activate')->name('activate')->can('activate', 'user');
                         Route::patch('/{user}/nonaktifkan', 'deactivate')->name('deactivate')->can('deactivate', 'user');
                     });
+                });
+
+                Route::controller(Admin\SiteContentController::class)->prefix('konten')->name('content.')->group(function () {
+                    Route::get('/', 'edit')->name('edit');
+                    Route::put('/', 'update')->name('update');
+                    Route::post('/foto-sampul', 'storeCover')->name('cover.store')->middleware('throttle:uploads');
+                    Route::delete('/foto-sampul', 'destroyCover')->name('cover.destroy');
                 });
 
                 Route::controller(Admin\MasterDataController::class)->prefix('data-master')->name('master.')->group(function () {

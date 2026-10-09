@@ -122,6 +122,19 @@ Laporan `verified` tidak bisa diubah siapa pun. Kelompok `closed` tidak bisa mem
 Setelah login, arahkan pengguna ke dasbor sesuai perannya. Halaman tujuan sebelum login hanya
 dipakai bila berada di area perannya sendiri.
 
+### Website publik (data)
+- Satu pintu data publik: scope `Organization::publiclyListed()` (status `active` + `is_public`) dan
+  `Product::publiclyListed()` (produk `is_public` milik kelompok yang terdaftar publik). Dipakai semua
+  halaman publik, angka beranda, sitemap, dan Open Graph. Kelompok lain → 404, juga bila dulu publik.
+- Query publik memilih kolom publik saja (`select`): nama, jenis, kampung, bidang usaha, deskripsi,
+  tahun berdiri, kapasitas produksi, pasar. Tidak pernah tampil: jumlah anggota, tenaga kerja, aset,
+  fasilitas, peralatan, keuangan, laporan, masalah, lampiran, akun, nomor izin.
+- Kontak (ketua, telepon, email, alamat) baru diambil dari database bila `show_contact_publicly`.
+- Bagian Legalitas hanya tampil bila status hukum `registered` (ditulis "terdaftar") atau ada izin
+  `issued` (jenisnya saja). Status lain tidak pernah tampil di publik.
+- Angka beranda dihitung unik dan di-cache 10 menit (`App\Support\PublicDirectory`). Cache hanya
+  boleh berisi array/teks: Laravel menolak membuka objek dari cache (`cache.serializable_classes`).
+
 ### Login dan session
 - Login dengan username ATAU email + kata sandi. Username disimpan dan dicocokkan dalam huruf
   kecil (trim + lowercase), termasuk di seeder dan saat Admin membuat akun.
@@ -233,7 +246,10 @@ Jangan mengarang kepanjangan akronim resmi (KDMP, KNMP, dsb.). Simpan apa adanya
   Tabel ini sekaligus menjadi riwayat audit laporan.
 
 ### Konten & notifikasi
-- `site_settings`: key, value (teks Profil Ransiki, potensi ekonomi, kontak kantor distrik)
+- `site_settings`: key, value. Kunci di `SiteSetting::KEYS`: home_intro, profile_body,
+  economic_potential (Markdown terbatas, dirender `Format::markdown` tanpa HTML mentah), office_address,
+  office_phone, office_whatsapp, office_email, office_hours, cover_photo_path, cover_caption,
+  cover_credit. Di-cache sampai disimpan ulang.
 - `notifications`: tabel bawaan Laravel (database notifications)
 - (diupayakan) `posts` untuk Berita & Kegiatan
 
@@ -396,6 +412,16 @@ pemisah tetap `line`/`line-strong`. Periksa kontras sebelum mengubah atau menamb
 - **Desktop (≥ 1280px):** sidebar penuh 248px (logo + nama aplikasi, menu, profil pengguna di bawah),
   header halaman berisi judul + aksi. Tabel lengkap.
 - Halaman publik memakai navigasi atas biasa, dengan menu hamburger di HP dan tablet (< 1024px).
+  "Masuk" berupa tautan teks biasa, bukan tombol.
+- Website publik bergaya buletin resmi: judul tipografis, bagian dibuka garis `line-strong` + judul
+  (`publik._section-heading`), angka besar `tabular-nums`. Tanpa hero bergambar atau kartu fitur.
+- Foto produk belum ada → petak inisial (2 huruf) berlatar `subtle`, huruf `ink-muted`. Di beranda,
+  produk unggulan berfoto didahulukan. Foto sampul (opsional, dari Konten Website) tampil lebar di
+  bawah pembuka beranda dengan keterangan dan nama fotografer.
+- Tampilkan "Data diperbarui [tanggal]" di beranda dan profil kelompok.
+- Footer publik: identitas + "Dikelola oleh Pemerintah Distrik Ransiki" + tempat logo (`x-logo`),
+  kontak kantor distrik, daftar OPD.
+- Semua layout punya tautan "Lewati ke konten" ke `#konten`. Area login dan halaman masuk `noindex`.
 - Logo memakai komponen `logo` (sementara placeholder "SK"); di tablet hanya logo yang tampil.
 
 ### Komponen Blade (buat di awal, pakai di semua halaman)
@@ -539,6 +565,8 @@ Data contoh harus terlihat realistis namun jelas bukan data resmi:
 - PHP: ekstensi `gd`, `exif`, `fileinfo` wajib aktif. `upload_max_filesize` dan `post_max_size`
   minimal 12M, `memory_limit` minimal 512M (gambar besar didekode penuh di memori sebelum diperkecil).
 - HTTPS wajib: tombol "Salin info masuk" memakai clipboard browser yang hanya penuh berfungsi di HTTPS.
+- `/sitemap.xml` dan `/robots.txt` dibuat dinamis (tidak ada file `public/robots.txt`). Gambar pratinjau
+  tautan bawaan: `public/og-default.png` (1200×630). Pastikan `APP_URL` benar agar URL Open Graph absolut.
 - Cron: `* * * * * php /path/artisan schedule:run >> /dev/null 2>&1` (bila fitur pengingat dipakai).
 - `APP_ENV=production`, `APP_DEBUG=false`, `APP_TIMEZONE=Asia/Jayapura`.
 - Backup database berkala (fitur backup Hostinger + ekspor manual sebelum update besar).

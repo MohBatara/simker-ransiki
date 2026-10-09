@@ -89,6 +89,15 @@ class Organization extends Model
     }
 
     /**
+     * Kelompok yang boleh tampil di website publik: aktif dan dipublikasikan. Satu-satunya pintu
+     * data kelompok ke halaman publik, sitemap, dan Open Graph.
+     */
+    public function scopePubliclyListed(Builder $query): void
+    {
+        $query->where('organizations.status', OrganizationStatus::Active)->where('organizations.is_public', true);
+    }
+
+    /**
      * Filter daftar kelompok dari query string: q, type, village, sector, opd ("none" = tanpa OPD), status.
      */
     public function scopeFilter(Builder $query, array $filters): void

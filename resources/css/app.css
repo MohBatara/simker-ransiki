@@ -89,3 +89,34 @@
         display: none !important;
     }
 }
+
+/* Teks panjang dari Konten Website (Markdown terbatas) di halaman publik. */
+@layer components {
+    .prose-public {
+        @apply max-w-[42rem] text-body text-ink;
+    }
+    .prose-public > * + * {
+        @apply mt-4;
+    }
+    .prose-public h2 {
+        @apply mt-8 text-card-title font-semibold;
+    }
+    .prose-public h3 {
+        @apply mt-6 text-body font-semibold;
+    }
+    .prose-public ul {
+        @apply list-disc pl-6;
+    }
+    .prose-public ol {
+        @apply list-decimal pl-6;
+    }
+    .prose-public li + li {
+        @apply mt-1;
+    }
+    .prose-public a {
+        @apply text-brand underline hover:text-brand-hover;
+    }
+    .prose-public strong {
+        @apply font-semibold;
+    }
+}

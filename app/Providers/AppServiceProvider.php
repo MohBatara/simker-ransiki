@@ -13,6 +13,8 @@ use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Facades\View;
+use App\Support\PublicDirectory;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -45,6 +47,8 @@ class AppServiceProvider extends ServiceProvider
         Paginator::defaultView('partials.pagination');
 
         // Unggah file: 30 per menit per akun (CLAUDE.md Bagian 9).
+        View::composer('components.layouts.public', fn ($view) => $view->with('footer', PublicDirectory::footer()));
+
         RateLimiter::for('uploads', fn (Request $request) => Limit::perMinute(30)->by($request->user()?->id ?: $request->ip()));
     }
 }

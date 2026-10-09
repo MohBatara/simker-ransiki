@@ -7,10 +7,11 @@
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
-    @include('partials.head', ['title' => $title])
+    @include('partials.head', ['title' => $title, 'noindex' => true])
 </head>
 <body class="min-h-dvh bg-canvas font-sans text-ui text-ink antialiased">
-    <main class="flex min-h-dvh flex-col items-center justify-center px-4 py-10">
+    @include('partials.skip-link')
+    <main id="konten" tabindex="-1" class="flex min-h-dvh flex-col items-center justify-center px-4 py-10">
         <div class="w-full max-w-sm">
             <a href="{{ url('/') }}" class="mb-6 block rounded-control text-center leading-tight">
                 <span class="block text-card-title font-semibold text-ink">SIM-KER</span>

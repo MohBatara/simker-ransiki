@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Enums\OrganizationStatus;
 use App\Models\Concerns\HasAttachments;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -63,6 +64,23 @@ class Product extends Model
             'ukuran' => $thumbnail ? 'kecil' : null,
             'v' => substr(md5($this->photo_path), 0, 8),
         ]));
+    }
+
+    /** Produk yang boleh tampil di website publik: produk publik milik kelompok yang terdaftar publik. */
+    public function scopePubliclyListed(Builder $query): void
+    {
+        $query->where('products.is_public', true)
+            ->whereIn('products.organization_id', Organization::query()->publiclyListed()->select('organizations.id'));
+    }
+
+    /** Inisial untuk petak pengganti foto, mis. "Kakao kering" menjadi "KK". */
+    public function initials(): string
+    {
+        return collect(preg_split('/\s+/', trim($this->name)))
+            ->filter()
+            ->take(2)
+            ->map(fn (string $word) => mb_strtoupper(mb_substr($word, 0, 1)))
+            ->implode('');
     }
 
     /** Foto boleh dilihat tanpa login hanya bila produk dan kelompoknya tampil di direktori publik. */

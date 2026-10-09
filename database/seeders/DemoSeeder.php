@@ -17,6 +17,7 @@ use App\Models\MonthlyReport;
 use App\Models\Opd;
 use App\Models\Organization;
 use App\Models\ReportReview;
+use App\Models\SiteSetting;
 use App\Models\User;
 use App\Models\Village;
 use App\Support\Format;
@@ -149,6 +150,18 @@ class DemoSeeder extends Seeder
                 'organization_id' => $organizations[5]['organization']->id,
             ]),
         ];
+
+        // Teks contoh Konten Website; di produksi dibiarkan kosong sampai diisi Admin.
+        SiteSetting::put([
+            'home_intro' => 'Contoh pengantar: daftar kelompok usaha, koperasi, dan BUMDes di Distrik Ransiki beserta produknya. Ganti dengan teks resmi.',
+            'profile_body' => "Contoh teks profil Distrik Ransiki. Ganti dengan teks resmi dari kantor distrik.\n\nParagraf kedua contoh: gambaran wilayah, kampung, dan kegiatan ekonomi masyarakat.",
+            'economic_potential' => "Contoh teks potensi ekonomi:\n\n- Perkebunan kakao dan kopi\n- Perikanan dan pengolahan hasil laut\n- Pengolahan sagu dan hasil hutan",
+            'office_address' => 'Jalan Contoh No. 1, Distrik Ransiki',
+            'office_phone' => '0800-0000-0000',
+            'office_whatsapp' => '0800-0000-0000',
+            'office_email' => 'distrik@contoh.test',
+            'office_hours' => 'Senin–Jumat, 08.00–15.00 WIT (contoh)',
+        ]);
 
         foreach ($organizations as $n => $seeded) {
             $this->seedReports(

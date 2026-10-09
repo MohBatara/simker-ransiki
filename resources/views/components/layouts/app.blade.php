@@ -42,7 +42,7 @@
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
-    @include('partials.head', ['title' => $title])
+    @include('partials.head', ['title' => $title, 'noindex' => true])
 </head>
 {{-- --app-bottom: tinggi area tetap di bawah layar HP, dipakai x-form-actions sticky. --}}
 <body @class([
@@ -50,6 +50,7 @@
     '[--app-bottom:calc(4rem+env(safe-area-inset-bottom))] [--app-safe-bottom:0px]' => ! $focus,
     '[--app-bottom:0px] [--app-safe-bottom:env(safe-area-inset-bottom)]' => $focus,
 ])>
+    @include('partials.skip-link')
     {{-- Sidebar: ikon + label ringkas di tablet (72px), penuh di desktop (248px) --}}
     <aside class="hidden md:fixed md:inset-y-0 md:left-0 md:z-20 md:flex md:w-[72px] md:flex-col md:border-r md:border-line md:bg-paper xl:w-[248px]">
         <div class="flex h-16 shrink-0 items-center gap-3 border-b border-line px-2 max-xl:justify-center xl:px-5" title="SIM-KER Distrik Ransiki">
@@ -146,7 +147,7 @@
             </div>
         </header>
 
-        <main @class([
+        <main id="konten" tabindex="-1" @class([
             'mx-auto w-full max-w-app px-4 pt-5 md:px-6 md:pb-10 md:pt-8 xl:px-8',
             'pb-24' => ! $focus,
             'pb-6' => $focus,
