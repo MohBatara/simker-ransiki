@@ -9,6 +9,7 @@ use App\Models\Product;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Relation;
+use Illuminate\Pagination\Paginator;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -36,5 +37,8 @@ class AppServiceProvider extends ServiceProvider
 
         // Lazy loading memicu N+1; di luar produksi langsung jadi error agar cepat ketahuan.
         Model::preventLazyLoading(! $this->app->isProduction());
+
+        // Tampilan paginasi bawaan Laravel memakai warna di luar token desain.
+        Paginator::defaultView('partials.pagination');
     }
 }

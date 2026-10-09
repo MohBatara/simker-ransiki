@@ -6,8 +6,10 @@ use App\Enums\LegalStatus;
 use App\Enums\OrganizationStatus;
 use App\Enums\Role;
 use App\Models\Concerns\HasAttachments;
+use App\Support\SimilarNames;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -84,6 +86,40 @@ class Organization extends Model
                 ->where('opd_id', $user->opd_id)),
             Role::Kelompok => $query->where('organizations.id', $user->organization_id),
         };
+    }
+
+    /**
+     * Filter daftar kelompok dari query string: q, type, village, sector, opd ("none" = tanpa OPD), status.
+     */
+    public function scopeFilter(Builder $query, array $filters): void
+    {
+        $query
+            ->when(trim((string) ($filters['q'] ?? '')), fn ($query, $search) => $query->where('organizations.name', 'like', '%'.$search.'%'))
+            ->when((int) ($filters['type'] ?? 0), fn ($query, $id) => $query->where('institution_type_id', $id))
+            ->when((int) ($filters['village'] ?? 0), fn ($query, $id) => $query->where('village_id', $id))
+            ->when((int) ($filters['sector'] ?? 0), fn ($query, $id) => $query->whereHas('sectors', fn ($query) => $query->whereKey($id)))
+            ->when(OrganizationStatus::tryFrom((string) ($filters['status'] ?? '')), fn ($query, $status) => $query->where('status', $status));
+
+        $opd = $filters['opd'] ?? null;
+        if ($opd === 'none') {
+            $query->doesntHave('opds');
+        } elseif ((int) $opd) {
+            $query->whereHas('opds', fn ($query) => $query->whereKey((int) $opd));
+        }
+    }
+
+    /**
+     * Kelompok lain di kampung yang sama dengan nama mirip (lihat App\Support\SimilarNames).
+     */
+    public static function similarTo(string $name, int $villageId, ?int $exceptId = null): Collection
+    {
+        return static::query()
+            ->where('village_id', $villageId)
+            ->when($exceptId, fn ($query) => $query->whereKeyNot($exceptId))
+            ->orderBy('name')
+            ->get(['id', 'name'])
+            ->filter(fn (Organization $other) => SimilarNames::areSimilar($name, $other->name))
+            ->values();
     }
 
     public function isVisibleTo(User $user): bool

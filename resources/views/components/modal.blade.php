@@ -28,6 +28,7 @@
     </div>
 
     @isset($footer)
-        <div class="flex flex-wrap justify-end gap-2 border-t border-line px-4 py-3 md:px-5">{{ $footer }}</div>
+        {{-- Menempel di bawah agar tombol tetap terlihat saat isi modal lebih tinggi dari layar. --}}
+        <div class="sticky bottom-0 flex flex-wrap justify-end gap-2 border-t border-line bg-paper px-4 py-3 md:px-5">{{ $footer }}</div>
     @endisset
 </dialog>

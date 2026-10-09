@@ -5,6 +5,9 @@ use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\PasswordController;
 use App\Http\Controllers\Kelompok;
 use App\Http\Controllers\Opd;
+use App\Models\License;
+use App\Models\Organization;
+use App\Models\Product;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -26,6 +29,34 @@ Route::middleware('auth')->group(function () {
         Route::middleware('password.changed')->group(function () {
             Route::prefix('admin')->name('admin.')->middleware('role:admin')->group(function () {
                 Route::get('/', Admin\DashboardController::class)->name('dashboard');
+
+                Route::controller(Admin\OrganizationController::class)->prefix('kelompok')->name('organizations.')->group(function () {
+                    Route::get('/', 'index')->name('index')->can('viewAny', Organization::class);
+                    Route::get('/tambah', 'create')->name('create')->can('create', Organization::class);
+                    Route::post('/', 'store')->name('store')->can('create', Organization::class);
+
+                    Route::whereNumber('organization')->group(function () {
+                        Route::get('/{organization}', 'show')->name('show')->can('view', 'organization');
+                        Route::get('/{organization}/produk', 'products')->name('products')->can('view', 'organization');
+                        Route::get('/{organization}/izin', 'licenses')->name('licenses')->can('view', 'organization');
+                        Route::get('/{organization}/laporan', 'reports')->name('reports')->can('view', 'organization');
+                        Route::get('/{organization}/akun', 'users')->name('users')->can('view', 'organization');
+                        Route::get('/{organization}/ubah', 'edit')->name('edit')->can('update', 'organization');
+                        Route::put('/{organization}', 'update')->name('update')->can('update', 'organization');
+                        Route::patch('/{organization}/status', 'updateStatus')->name('status')->can('administer', 'organization');
+                        Route::delete('/{organization}', 'destroy')->name('destroy')->can('delete', 'organization');
+                    });
+                });
+
+                // scopeBindings: produk/izin harus milik kelompok di URL, jika tidak 404.
+                Route::prefix('kelompok/{organization}')->name('organizations.')->whereNumber('organization')->scopeBindings()->group(function () {
+                    Route::post('/produk', [Admin\ProductController::class, 'store'])->name('products.store')->can('create', [Product::class, 'organization']);
+                    Route::put('/produk/{product}', [Admin\ProductController::class, 'update'])->name('products.update')->can('update', 'product');
+                    Route::delete('/produk/{product}', [Admin\ProductController::class, 'destroy'])->name('products.destroy')->can('delete', 'product');
+                    Route::post('/izin', [Admin\LicenseController::class, 'store'])->name('licenses.store')->can('create', [License::class, 'organization']);
+                    Route::put('/izin/{license}', [Admin\LicenseController::class, 'update'])->name('licenses.update')->can('update', 'license');
+                    Route::delete('/izin/{license}', [Admin\LicenseController::class, 'destroy'])->name('licenses.destroy')->can('delete', 'license');
+                });
 
                 Route::controller(Admin\MasterDataController::class)->prefix('data-master')->name('master.')->group(function () {
                     Route::get('/', 'index')->name('index');

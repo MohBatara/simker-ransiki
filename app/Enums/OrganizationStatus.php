@@ -15,7 +15,7 @@ enum OrganizationStatus: string
         return match ($this) {
             self::Active => 'Aktif',
             self::Inactive => 'Tidak aktif',
-            self::Closed => 'Tutup',
+            self::Closed => 'Ditutup',
         };
     }
 

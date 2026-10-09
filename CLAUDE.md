@@ -73,8 +73,9 @@ Empat OPD memakai tampilan yang sama; data otomatis tersaring berdasarkan `users
 
 | Data | Admin | OPD (hanya kelompok binaan) | Kelompok (hanya miliknya) |
 |---|---|---|---|
-| Profil kelompok, produk, izin | lihat, buat, ubah, hapus | lihat, ubah (membantu melengkapi data) | lihat, ubah |
-| Status kelompok, relasi OPD/bidang, awal wajib lapor | ubah | – | – |
+| Profil kelompok (termasuk bidang usaha), produk, izin | lihat, buat, ubah, hapus | lihat, ubah (membantu melengkapi data) | lihat, ubah |
+| Nama, jenis, kampung, OPD terkait, status, tampil di direktori publik, bulan mulai wajib lapor | ubah | – (tampil baca-saja) | – (tampil baca-saja) |
+| Penanda "Produk unggulan" (`is_featured`) | ubah | – | – |
 | Laporan bulanan | lihat, verifikasi, minta revisi | lihat, verifikasi, minta revisi (tidak membuat/mengubah isi) | lihat, buat, ubah & ajukan saat `draft`/`revision` |
 | Lampiran | mengikuti hak atas induknya | mengikuti hak atas induknya | mengikuti hak atas induknya |
 | Pengguna | kelola, reset kata sandi (tidak bisa menonaktifkan/menghapus diri sendiri) | – | – |
@@ -88,6 +89,7 @@ Laporan `verified` tidak bisa diubah siapa pun. Kelompok `closed` tidak bisa mem
 - Gunakan Policy untuk `Organization`, `MonthlyReport`, `Product`, `License`, `Attachment`, `User`.
 - Gunakan scope `Organization::visibleTo(User $user)` untuk semua daftar kelompok. Policy memakai
   `Organization::isVisibleTo()` yang hasilnya selalu sama dengan scope (ada tesnya).
+- Kolom khusus admin di form bersama diabaikan (rule `exclude`) bila dikirim pengguna lain, bukan ditolak.
 - Membuka area peran lain (mis. kelompok membuka `/admin`) → 403.
 - Membuka data milik orang lain lewat ID di URL (mis. `/kelompok/laporan/15`) → 404
   (`Response::denyAsNotFound()`), agar keberadaan ID tidak terbongkar. Data yang terlihat tetapi
@@ -173,6 +175,12 @@ Jangan mengarang kepanjangan akronim resmi (KDMP, KNMP, dsb.). Simpan apa adanya
   reporting_starts_on (date, awal bulan; kelompok tidak dianggap terlambat sebelum tanggal ini),
   is_public (bool, default false), show_contact_publicly (bool, default false),
   created_by, updated_by, timestamps
+- Peringatan nama mirip (`App\Support\SimilarNames`, kampung yang sama): buang awalan umum (kelompok,
+  kelompok tani, kelompok nelayan, kub, bumdes, umkm, koperasi; "kel." = kelompok). "Tani" dan
+  "nelayan" adalah penanda jenis: bila berbeda, tidak mirip. Angka di nama berbeda → tidak mirip.
+  Mirip bila sisa nama sama, kemiripan ≥ 90%, atau Levenshtein ≤ 2 untuk sisa nama ≥ 8 huruf.
+  Saat tambah: konfirmasi sekali ("tetap simpan"); saat ubah nama/kampung: disimpan lalu diberi peringatan.
+- URL area login memakai ID (`/admin/kelompok/12`); slug hanya untuk halaman publik.
 - `organization_sector` (pivot): organization_id, business_sector_id
   Primary key gabungan + index tunggal pada `business_sector_id`.
 - `organization_opd` (pivot): organization_id, opd_id
