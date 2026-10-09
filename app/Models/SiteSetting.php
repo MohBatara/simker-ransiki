@@ -25,6 +25,13 @@ class SiteSetting extends Model
         'cover_caption' => 'Keterangan foto sampul',
         'cover_credit' => 'Nama fotografer',
         'cover_photo_path' => 'Foto sampul',
+        'about_photo_path' => 'Foto bagian Tentang',
+    ];
+
+    /** Slot foto lebar di URL (/foto-sampul, /foto-tentang) => kunci pengaturan. */
+    public const PHOTO_SLOTS = [
+        'sampul' => 'cover_photo_path',
+        'tentang' => 'about_photo_path',
     ];
 
     public const CACHE_KEY = 'site_settings';

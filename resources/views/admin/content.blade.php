@@ -1,17 +1,51 @@
 <x-layouts.app title="Konten Website" description="Teks dan foto yang tampil di website publik." :back="route('admin.dashboard')" focus>
     <div class="space-y-5">
-        <x-card title="Foto sampul" description="Opsional. Tampil lebar di bawah pembuka beranda. Gunakan foto lanskap asli Ransiki, bukan infografis atau gambar berisi teks.">
-            <div class="space-y-4">
-                @if ($settings['cover_photo_path'])
-                    <img src="{{ route('public.cover', ['v' => substr(md5($settings['cover_photo_path']), 0, 8)]) }}" alt="Foto sampul saat ini" class="aspect-[4/3] w-full rounded-card object-cover md:aspect-[21/9]">
-                    <form method="POST" action="{{ route('admin.content.cover.destroy') }}">
-                        @csrf
-                        @method('DELETE')
-                        <x-button variant="ghost" type="submit">Hapus foto sampul</x-button>
-                    </form>
-                @endif
-                <x-file-upload :url="route('admin.content.cover.store')" kind="photo" :multiple="false" :remaining="1" hint="Foto lanskap JPG atau PNG, maksimal 10 MB. Foto diperkecil dan data lokasinya dibuang otomatis. Foto lama akan diganti." />
-            </div>
+        @foreach ([
+            'sampul' => ['Foto sampul', 'Opsional. Latar hero beranda dan pita Profil Ransiki. Gunakan foto lanskap asli Ransiki, bukan infografis atau gambar berisi teks.'],
+            'tentang' => ['Foto bagian Tentang', 'Opsional. Tampil di samping ringkasan profil pada bagian gelap beranda.'],
+        ] as $slot => [$title, $description])
+            @php $path = $settings[App\Models\SiteSetting::PHOTO_SLOTS[$slot]]; @endphp
+            <x-card :title="$title" :description="$description">
+                <div class="space-y-4">
+                    @if ($path)
+                        <img src="{{ route('public.site-photo', ['slot' => $slot, 'ukuran' => 960, 'format' => 'webp', 'v' => substr(md5($path), 0, 8)]) }}" alt="{{ $title }} saat ini" class="aspect-[4/3] w-full rounded-card object-cover md:aspect-[21/9]">
+                        <form method="POST" action="{{ route('admin.content.photo.destroy', $slot) }}">
+                            @csrf
+                            @method('DELETE')
+                            <x-button variant="ghost" type="submit">Hapus foto</x-button>
+                        </form>
+                    @endif
+                    <x-file-upload :url="route('admin.content.photo.store', $slot)" kind="photo" :multiple="false" :remaining="1" hint="Foto lanskap JPG atau PNG, maksimal 10 MB. Foto diperkecil dan data lokasinya dibuang otomatis. Foto lama akan diganti." />
+                </div>
+            </x-card>
+        @endforeach
+
+        <x-card title="Foto bidang usaha" description="Opsional. Foto kartu bidang usaha di beranda. Bila kosong, dipakai foto produk dari bidang itu.">
+            <ul class="divide-y divide-line">
+                @foreach ($sectors as $sector)
+                    <li class="space-y-3 py-4 first:pt-0 last:pb-0" x-data="{ open: false }">
+                        <div class="flex items-center gap-3">
+                            @if ($sector->photo_path)
+                                <img src="{{ route('public.sector-photo', ['sector' => $sector, 'ukuran' => 480, 'format' => 'webp', 'v' => substr(md5($sector->photo_path), 0, 8)]) }}" alt="" class="size-14 shrink-0 rounded-control object-cover">
+                            @else
+                                <span class="flex size-14 shrink-0 items-center justify-center rounded-control bg-subtle text-ink-muted" aria-hidden="true"><x-heroicon-o-photo class="size-5" /></span>
+                            @endif
+                            <p class="min-w-0 flex-1 font-semibold">{{ $sector->name }}</p>
+                            @if ($sector->photo_path)
+                                <form method="POST" action="{{ route('admin.content.sector-photo.destroy', $sector) }}">
+                                    @csrf
+                                    @method('DELETE')
+                                    <x-button variant="ghost" type="submit">Hapus</x-button>
+                                </form>
+                            @endif
+                            <x-button variant="secondary" x-on:click="open = ! open" x-bind:aria-expanded="open">{{ $sector->photo_path ? 'Ganti' : 'Unggah' }}</x-button>
+                        </div>
+                        <div x-cloak x-show="open">
+                            <x-file-upload :url="route('admin.content.sector-photo.store', $sector)" kind="photo" :multiple="false" :remaining="1" />
+                        </div>
+                    </li>
+                @endforeach
+            </ul>
         </x-card>
 
         <form method="POST" action="{{ route('admin.content.update') }}" class="space-y-5">

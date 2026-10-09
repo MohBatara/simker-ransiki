@@ -6,6 +6,7 @@ use App\Actions\Files\StoreProductPhoto;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Files\UploadRequest;
 use App\Models\Product;
+use App\Support\ImageVariants;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -29,10 +30,17 @@ class ProductPhotoController extends Controller
             abort_unless($user?->is_active && Gate::forUser($user)->allows('view', $product), 404);
         }
 
-        $path = $request->query('ukuran') === 'kecil' ? $product->thumbnailPath() : $product->photo_path;
+        [$path, $mime] = $request->query('ukuran') === 'kecil'
+            ? [$product->thumbnailPath(), 'image/jpeg']
+            : ImageVariants::resolve(Product::PHOTO_DISK, $product->photo_path, $request->query('ukuran'), $request->query('format'), ImageVariants::PRODUCT);
+
+        // Varian WebP 400 belum ada (foto lama) → pakai JPEG kecil, bukan JPEG 1600 yang berat.
+        if ($mime === 'image/jpeg' && $request->query('format') === 'webp' && (int) $request->query('ukuran') <= 400) {
+            $path = $product->thumbnailPath();
+        }
 
         return Storage::disk(Product::PHOTO_DISK)->response($path, null, [
-            'Content-Type' => 'image/jpeg',
+            'Content-Type' => $mime,
             'X-Content-Type-Options' => 'nosniff',
             // URL berisi ?v= yang berubah setiap foto diganti, jadi aman di-cache lama.
             'Cache-Control' => $public ? 'public, max-age=604800' : 'private, max-age=3600',

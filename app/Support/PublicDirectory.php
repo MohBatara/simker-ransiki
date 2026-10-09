@@ -55,20 +55,40 @@ class PublicDirectory
     }
 
     /**
-     * Bidang usaha yang punya minimal satu kelompok publik, beserta jumlah kelompok uniknya.
+     * Bidang usaha yang punya minimal satu kelompok publik, beserta jumlah kelompok uniknya dan foto kartunya:
+     * foto bidang dari Admin → foto produk publik terbaru di bidang itu → null (kartu polos).
      *
-     * @return Collection<int, object{id: int, name: string, organizations_count: int}>
+     * @return Collection<int, object{id: int, name: string, organizations_count: int, photo: ?array}>
      */
     public static function sectors(): Collection
     {
-        $sectors = Cache::remember(self::SECTORS_CACHE_KEY, self::CACHE_SECONDS, fn () => BusinessSector::query()
-            ->join('organization_sector', 'organization_sector.business_sector_id', '=', 'business_sectors.id')
-            ->whereIn('organization_sector.organization_id', Organization::query()->publiclyListed()->select('organizations.id'))
-            ->groupBy('business_sectors.id', 'business_sectors.name')
-            ->orderBy('business_sectors.name')
-            ->get(['business_sectors.id', 'business_sectors.name', DB::raw('COUNT(DISTINCT organization_sector.organization_id) as organizations_count')])
-            ->map(fn ($sector) => ['id' => $sector->id, 'name' => $sector->name, 'organizations_count' => (int) $sector->organizations_count])
-            ->all());
+        $sectors = Cache::remember(self::SECTORS_CACHE_KEY, self::CACHE_SECONDS, function () {
+            $productPhotos = Product::query()->publiclyListed()
+                ->whereNotNull('products.photo_path')
+                ->join('organization_sector', 'organization_sector.organization_id', '=', 'products.organization_id')
+                ->groupBy('organization_sector.business_sector_id')
+                ->selectRaw('organization_sector.business_sector_id as sector_id, MAX(products.id) as product_id')
+                ->pluck('product_id', 'sector_id');
+            $productPaths = Product::query()->whereKey($productPhotos->values())->pluck('photo_path', 'id');
+
+            return BusinessSector::query()
+                ->join('organization_sector', 'organization_sector.business_sector_id', '=', 'business_sectors.id')
+                ->whereIn('organization_sector.organization_id', Organization::query()->publiclyListed()->select('organizations.id'))
+                ->groupBy('business_sectors.id', 'business_sectors.name', 'business_sectors.photo_path')
+                ->orderBy('business_sectors.name')
+                ->get(['business_sectors.id', 'business_sectors.name', 'business_sectors.photo_path', DB::raw('COUNT(DISTINCT organization_sector.organization_id) as organizations_count')])
+                ->map(fn ($sector) => [
+                    'id' => $sector->id,
+                    'name' => $sector->name,
+                    'organizations_count' => (int) $sector->organizations_count,
+                    'photo' => match (true) {
+                        filled($sector->photo_path) => ['kind' => 'sector', 'id' => $sector->id, 'path' => $sector->photo_path],
+                        isset($productPhotos[$sector->id]) => ['kind' => 'product', 'id' => (int) $productPhotos[$sector->id], 'path' => $productPaths[$productPhotos[$sector->id]]],
+                        default => null,
+                    },
+                ])
+                ->all();
+        });
 
         return collect($sectors)->map(fn (array $sector) => (object) $sector);
     }

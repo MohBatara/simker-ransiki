@@ -17,7 +17,8 @@ Route::get('/kontak', [Publik\PageController::class, 'contact'])->name('public.c
 Route::get('/direktori', [Publik\DirectoryController::class, 'index'])->name('public.directory');
 Route::get('/direktori/{slug}', [Publik\DirectoryController::class, 'show'])->name('public.organization');
 Route::get('/produk', Publik\ProductController::class)->name('public.products');
-Route::get('/foto-sampul', Publik\CoverPhotoController::class)->name('public.cover');
+Route::get('/foto-{slot}', [Publik\SiteImageController::class, 'slot'])->name('public.site-photo')->whereIn('slot', ['sampul', 'tentang']);
+Route::get('/foto-bidang/{sector}', [Publik\SiteImageController::class, 'sector'])->name('public.sector-photo')->whereNumber('sector');
 Route::get('/sitemap.xml', [Publik\SitemapController::class, 'sitemap'])->name('sitemap');
 Route::get('/robots.txt', [Publik\SitemapController::class, 'robots'])->name('robots');
 
@@ -108,8 +109,10 @@ Route::middleware('auth')->group(function () use ($organizationRoutes) {
                 Route::controller(Admin\SiteContentController::class)->prefix('konten')->name('content.')->group(function () {
                     Route::get('/', 'edit')->name('edit');
                     Route::put('/', 'update')->name('update');
-                    Route::post('/foto-sampul', 'storeCover')->name('cover.store')->middleware('throttle:uploads');
-                    Route::delete('/foto-sampul', 'destroyCover')->name('cover.destroy');
+                    Route::post('/foto-{slot}', 'storePhoto')->name('photo.store')->whereIn('slot', ['sampul', 'tentang'])->middleware('throttle:uploads');
+                    Route::delete('/foto-{slot}', 'destroyPhoto')->name('photo.destroy')->whereIn('slot', ['sampul', 'tentang']);
+                    Route::post('/foto-bidang/{sector}', 'storeSectorPhoto')->name('sector-photo.store')->whereNumber('sector')->middleware('throttle:uploads');
+                    Route::delete('/foto-bidang/{sector}', 'destroySectorPhoto')->name('sector-photo.destroy')->whereNumber('sector');
                 });
 
                 Route::controller(Admin\MasterDataController::class)->prefix('data-master')->name('master.')->group(function () {

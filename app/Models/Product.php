@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Enums\OrganizationStatus;
 use App\Models\Concerns\HasAttachments;
+use App\Support\ImageVariants;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -48,8 +49,30 @@ class Product extends Model
     public function deletePhotoFiles(): void
     {
         if ($this->photo_path) {
-            Storage::disk(self::PHOTO_DISK)->delete([$this->photo_path, $this->thumbnailPath()]);
+            Storage::disk(self::PHOTO_DISK)->delete($this->thumbnailPath());
+            ImageVariants::delete(self::PHOTO_DISK, $this->photo_path, ImageVariants::PRODUCT);
         }
+    }
+
+    /**
+     * Sumber <picture> untuk kartu publik: WebP 400/800 + JPEG 400 cadangan. Null bila belum ada foto.
+     *
+     * @return array{webp: array<int, string>, fallback: string}|null
+     */
+    public function photoSources(): ?array
+    {
+        if (! $this->photo_path) {
+            return null;
+        }
+
+        $version = substr(md5($this->photo_path), 0, 8);
+
+        return [
+            'webp' => collect(ImageVariants::PRODUCT)->mapWithKeys(fn (int $width) => [
+                $width => route('product-photos.show', ['product' => $this->id, 'ukuran' => $width, 'format' => 'webp', 'v' => $version]),
+            ])->all(),
+            'fallback' => $this->photoUrl(thumbnail: true),
+        ];
     }
 
     /** Parameter v berubah setiap foto diganti, sehingga cache browser untuk foto lama tidak dipakai. */

@@ -6,9 +6,9 @@ use App\Http\Requests\Files\UploadRequest;
 use Illuminate\Auth\Access\Response;
 
 /**
- * Foto sampul beranda: aturan file sama dengan foto produk (JPG/PNG, 10 MB, maks 8000 px).
+ * Foto sampul, foto "Tentang", dan foto bidang usaha: aturan file sama dengan foto produk.
  */
-class CoverPhotoRequest extends UploadRequest
+class SiteImageRequest extends UploadRequest
 {
     public function authorize(): Response
     {

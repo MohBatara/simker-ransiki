@@ -18,7 +18,7 @@ class ProductController extends Controller
 
         $query = fn () => Product::query()->publiclyListed()
             ->when($sector, fn ($query, $id) => $query->whereHas('organization.sectors', fn ($query) => $query->whereKey($id)))
-            ->with('organization:id,slug,name');
+            ->with(['organization:id,slug,name', 'organization.sectors:id,name']);
 
         return view('publik.products', [
             'sector' => $sector,

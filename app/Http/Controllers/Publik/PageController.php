@@ -18,6 +18,7 @@ class PageController extends Controller
         return view('publik.profile', [
             'settings' => SiteSetting::values(),
             'updatedAt' => SiteSetting::query()->whereIn('key', ['profile_body', 'economic_potential'])->max('updated_at'),
+            'cover' => \App\Support\PublicImages::slot('sampul'),
             'stats' => PublicDirectory::stats(),
             'sectors' => PublicDirectory::sectors(),
         ]);

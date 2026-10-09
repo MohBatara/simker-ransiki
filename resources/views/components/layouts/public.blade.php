@@ -104,35 +104,36 @@
         </nav>
     </header>
 
-    <main id="konten" tabindex="-1" class="mx-auto w-full max-w-public flex-1 px-4 py-8 md:px-6 md:py-12">
+    {{-- Isi halaman lebar penuh; setiap bagian memakai wadah max-w-public sendiri. --}}
+    <main id="konten" tabindex="-1" class="flex-1">
         {{ $slot }}
     </main>
 
-    <footer class="border-t border-line bg-paper">
-        <div class="mx-auto grid max-w-public gap-8 px-4 py-10 md:grid-cols-3 md:px-6">
+    <footer class="on-dark bg-forest text-forest-soft">
+        <div class="mx-auto grid max-w-public gap-10 px-4 py-12 md:grid-cols-3 md:px-6">
             <div class="space-y-3">
                 <div class="flex items-center gap-3">
                     {{-- Tempat logo resmi: ganti isi komponen x-logo. --}}
-                    <x-logo />
+                    <span class="rounded-control bg-paper"><x-logo /></span>
                     <div class="leading-tight">
-                        <p class="font-semibold text-ink">SIM-KER Distrik Ransiki</p>
-                        <p class="text-caption text-ink-muted">Sistem Informasi dan Monitoring Kelembagaan Ekonomi</p>
+                        <p class="font-semibold text-paper">SIM-KER Distrik Ransiki</p>
+                        <p class="text-caption">Sistem Informasi dan Monitoring Kelembagaan Ekonomi</p>
                     </div>
                 </div>
-                <p class="text-caption text-ink-soft">Dikelola oleh Pemerintah Distrik Ransiki.</p>
+                <p class="text-caption">Dikelola oleh Pemerintah Distrik Ransiki.</p>
             </div>
 
             <div>
-                <h2 class="text-ui font-semibold text-ink">Kantor Distrik Ransiki</h2>
-                <dl class="mt-3 space-y-1.5 text-caption text-ink-soft">
+                <h2 class="text-ui font-semibold text-paper">Kantor Distrik Ransiki</h2>
+                <dl class="mt-3 space-y-1.5 text-caption">
                     @if ($office['office_address'])
                         <div><dt class="sr-only">Alamat</dt><dd class="whitespace-pre-line">{{ $office['office_address'] }}</dd></div>
                     @endif
                     @if ($office['office_phone'])
-                        <div><dt class="inline">Telepon: </dt><dd class="inline"><a href="tel:{{ preg_replace('/[^0-9+]/', '', $office['office_phone']) }}" class="rounded-control text-brand hover:text-brand-hover">{{ $office['office_phone'] }}</a></dd></div>
+                        <div><dt class="inline">Telepon: </dt><dd class="inline"><a href="tel:{{ preg_replace('/[^0-9+]/', '', $office['office_phone']) }}" class="rounded-control text-sun hover:underline">{{ $office['office_phone'] }}</a></dd></div>
                     @endif
                     @if ($office['office_email'])
-                        <div><dt class="inline">Email: </dt><dd class="inline"><a href="mailto:{{ $office['office_email'] }}" class="rounded-control text-brand hover:text-brand-hover">{{ $office['office_email'] }}</a></dd></div>
+                        <div><dt class="inline">Email: </dt><dd class="inline"><a href="mailto:{{ $office['office_email'] }}" class="rounded-control text-sun hover:underline">{{ $office['office_email'] }}</a></dd></div>
                     @endif
                     @if ($office['office_hours'])
                         <div><dt class="inline">Jam layanan: </dt><dd class="inline">{{ $office['office_hours'] }}</dd></div>
@@ -141,22 +142,22 @@
                         <div><dd>Kontak kantor sedang disiapkan.</dd></div>
                     @endunless
                 </dl>
-                <a href="{{ route('public.contact') }}" class="mt-3 inline-block rounded-control text-caption text-brand hover:text-brand-hover">Semua kontak</a>
+                <a href="{{ route('public.contact') }}" class="mt-3 inline-block rounded-control text-caption font-semibold text-sun hover:underline">Semua kontak</a>
             </div>
 
             <div>
-                <h2 class="text-ui font-semibold text-ink">OPD terkait</h2>
-                <ul class="mt-3 space-y-1.5 text-caption text-ink-soft">
+                <h2 class="text-ui font-semibold text-paper">OPD terkait</h2>
+                <ul class="mt-3 space-y-1.5 text-caption">
                     @foreach ($footer['opds'] as $opd)
                         <li>{{ $opd }}</li>
                     @endforeach
                 </ul>
             </div>
         </div>
-        <div class="border-t border-line">
-            <div class="mx-auto flex max-w-public flex-wrap justify-between gap-2 px-4 py-4 text-caption text-ink-muted md:px-6">
+        <div class="border-t border-forest-line">
+            <div class="mx-auto flex max-w-public flex-wrap justify-between gap-2 px-4 py-4 text-caption md:px-6">
                 <p>&copy; {{ now()->year }} Distrik Ransiki</p>
-                <a href="{{ route('login') }}" class="rounded-control hover:text-ink">Masuk untuk pengelola</a>
+                <a href="{{ route('login') }}" class="rounded-control hover:text-paper">Masuk untuk pengelola</a>
             </div>
         </div>
     </footer>

@@ -1,4 +1,5 @@
 <x-layouts.public title="Contoh layout publik">
+    <div class="mx-auto max-w-public px-4 py-10 md:px-6">
     <div class="max-w-2xl">
         <p class="text-caption text-ink-muted">Contoh layout publik</p>
         <h1 class="mt-1 text-display-sm font-semibold md:text-display">Direktori kelompok</h1>
@@ -20,4 +21,5 @@
     <p class="mt-8">
         <a href="{{ route('dev.components.app') }}" class="rounded-control text-brand hover:text-brand-hover">Kembali ke halaman komponen</a>
     </p>
+    </div>
 </x-layouts.public>

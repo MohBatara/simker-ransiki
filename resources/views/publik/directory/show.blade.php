@@ -5,26 +5,30 @@
     :description="$organization->description ? Str::limit($organization->description, 160) : $organization->institutionType->name.' di '.$organization->village->name.', Distrik Ransiki.'"
     :image="$ogImage"
 >
-    <nav aria-label="Remah roti" class="text-caption text-ink-muted">
-        <a href="{{ route('public.directory') }}" class="rounded-control hover:text-ink">Direktori</a>
-        <span aria-hidden="true"> / </span>
-        <span>{{ $organization->name }}</span>
-    </nav>
-
-    <div class="mt-4 grid gap-10 lg:grid-cols-[minmax(0,1fr)_18rem] lg:gap-14">
-        <div class="contents lg:block">
-            <header class="order-1">
-                <h1 class="text-display-sm font-semibold text-ink md:text-display">{{ $organization->name }}</h1>
-                <p class="mt-2 text-body text-ink-soft">
-                    {{ $organization->institutionType->name }} · {{ $organization->village->name }}@if ($organization->founded_year) · Berdiri {{ $organization->founded_year }}@endif
-                </p>
-                <p class="mt-1 text-ui text-ink-soft">{{ $organization->sectors->pluck('name')->join(' · ') }}</p>
-                @if ($updatedAt)
-                    <p class="mt-2 text-caption text-ink-muted">Data diperbarui {{ Format::date($updatedAt) }}</p>
+    <x-public.band :title="$organization->name">
+        <x-slot:top>
+            <nav aria-label="Remah roti" class="mb-4 text-caption text-forest-soft">
+                <a href="{{ route('public.directory') }}" class="rounded-control hover:text-paper">Direktori</a>
+                <span aria-hidden="true"> / </span>
+                <span>{{ $organization->name }}</span>
+            </nav>
+            <div class="mb-4 flex flex-wrap gap-2">
+                <x-public.pill tone="dark">{{ $organization->institutionType->name }}</x-public.pill>
+                <x-public.pill tone="dark">{{ $organization->village->name }}</x-public.pill>
+                @if ($organization->founded_year)
+                    <x-public.pill tone="dark">Berdiri {{ $organization->founded_year }}</x-public.pill>
                 @endif
-            </header>
+            </div>
+        </x-slot:top>
+        <p class="mt-3 text-body text-forest-soft">{{ $organization->sectors->pluck('name')->join(' · ') }}</p>
+        @if ($updatedAt)
+            <p class="mt-2 text-caption text-forest-soft">Data diperbarui {{ Format::date($updatedAt) }}</p>
+        @endif
+    </x-public.band>
 
-            <div class="order-3 space-y-12 lg:mt-8">
+    <div class="mx-auto grid max-w-public gap-10 px-4 py-10 md:px-6 lg:grid-cols-[minmax(0,1fr)_18rem] lg:gap-14">
+        <div class="contents lg:block">
+            <div class="order-3 space-y-12">
                 @if ($organization->description)
                     <p class="max-w-[42rem] whitespace-pre-line text-body text-ink">{{ $organization->description }}</p>
                 @endif
@@ -34,17 +38,16 @@
                     @if ($organization->products->isEmpty())
                         <p class="mt-4 text-body text-ink-soft">Belum ada produk yang dipublikasikan.</p>
                     @else
-                        <div class="mt-5 grid gap-6 sm:grid-cols-2">
+                        <div class="mt-5 grid gap-5 sm:grid-cols-2">
                             @foreach ($organization->products as $product)
-                                <article class="flex gap-4">
-                                    <div class="size-24 shrink-0 overflow-hidden rounded-card border border-line bg-subtle">
-                                        @if ($product->photo_path)
-                                            <img src="{{ $product->photoUrl(thumbnail: true) }}" alt="{{ $product->name }}" width="96" height="96" loading="lazy" decoding="async" class="size-full object-cover">
-                                        @else
-                                            <div class="flex size-full items-center justify-center text-page-title font-semibold text-ink-muted" aria-hidden="true">{{ $product->initials() }}</div>
-                                        @endif
-                                    </div>
-                                    <div class="min-w-0">
+                                <article class="overflow-hidden rounded-card border border-line bg-paper">
+                                    @if ($sources = $product->photoSources())
+                                        {{-- Foto utuh (object-contain), tidak dipotong. --}}
+                                        <x-public.picture :image="$sources" :alt="$product->name" sizes="(min-width: 64rem) 20rem, (min-width: 40rem) 50vw, 100vw" width="400" height="300" frame="block bg-subtle" class="aspect-[4/3] w-full object-contain" />
+                                    @else
+                                        <div class="flex aspect-[4/3] items-center justify-center bg-subtle text-display font-semibold text-ink-muted" aria-hidden="true">{{ $product->initials() }}</div>
+                                    @endif
+                                    <div class="p-4">
                                         <h3 class="font-semibold text-ink">{{ $product->name }}</h3>
                                         @if ($product->capacity || $product->unit)
                                             <p class="text-caption text-ink-muted">{{ $product->capacity ?? 'Satuan: '.$product->unit }}</p>

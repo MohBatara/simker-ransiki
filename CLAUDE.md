@@ -424,6 +424,44 @@ pemisah tetap `line`/`line-strong`. Periksa kontras sebelum mengubah atau menamb
 - Semua layout punya tautan "Lewati ke konten" ke `#konten`. Area login dan halaman masuk `noindex`.
 - Logo memakai komponen `logo` (sementara placeholder "SK"); di tablet hanya logo yang tampil.
 
+### Gaya website publik
+Berlaku HANYA untuk halaman publik (`resources/views/publik/`, `components/layouts/public`,
+`components/public/`). Area Admin/OPD/Kelompok tetap memakai aturan di atas tanpa pengecualian.
+
+Pengecualian dari Larangan di atas, khusus publik:
+- Hero lebar penuh di beranda, HANYA dengan foto asli dari Konten Website (bukan foto stok). Tanpa
+  foto: latar `forest` polos. Pita judul halaman lain: `forest` polos; Profil Ransiki boleh berfoto.
+- Gradasi diizinkan KHUSUS sebagai overlay foto (`.overlay-forest`): desktop forest 85% (0%) → 70%
+  (50%) → 20% (100%); HP (< 768px) padat 70%. Teks hero hanya di setengah kiri. Kontras terburuk
+  (teks putih di atas bagian foto yang putih) 5,5:1 di titik 50%; gradasi lurus 85%→20% gagal
+  (3,3:1) sehingga titik 70% wajib ada. Gradasi lain tetap dilarang.
+- Warna tambahan: `forest` #0F2E22 (latar gelap, footer), `forest-soft` #B9C7BF (teks sekunder di
+  atas forest, 8,4:1), `forest-line` #2A4A3D (garis di atas forest), `sun` #E9B949 (pita angka,
+  tombol utama dan cincin fokus di latar gelap). `ink` di atas `sun` 9,0:1; `sun` di atas `forest`
+  8,0:1. DILARANG: teks putih di atas `sun` (1,8:1) dan `sun` sebagai warna teks di latar terang.
+  Di atas `sun` semua teks memakai `ink`.
+- Label pil (`rounded-full`) untuk jenis, kampung, dan bidang usaha. Kartu tetap radius 10px, tanpa
+  bayangan.
+- Judul hero `text-hero` 48px (desktop) / `text-hero-sm` 36px (HP).
+- Bagian gelap diberi kelas `on-dark` agar cincin fokus berwarna `sun`.
+
+Tetap dilarang di publik: bayangan tebal, emoji, ilustrasi, ikon dekoratif, testimoni, angka
+karangan, tombol "Mulai sekarang", teks promosi generik.
+
+Susunan: header putih → (beranda) hero → pita kuning 3 angka asli + "Data diperbarui" → kartu
+bidang usaha berfoto (foto bidang dari Admin → foto produk publik terbaru bidang itu → kartu
+`forest` polos) → kartu produk unggulan → bagian gelap "Tentang" → footer `forest`. Kartu direktori
+tanpa foto: latar `subtle` + inisial `ink-muted`. Profil kelompok: pita `forest` polos; foto produk
+tampil utuh di bagian Produk.
+
+Gambar publik: `<picture>` dengan WebP `srcset` + cadangan JPEG (`x-public.picture`). Foto lebar
+(sampul, bidang usaha, "Tentang"): WebP 480/960/1600, hero 1600 ≤ ~200 KB (kualitas turun bertahap
+70→50). Foto produk: WebP 400/800 + JPEG 400. Hero `fetchpriority="high"`; gambar lain lazy-load.
+Varian dibuat saat unggah; foto lama: `php artisan simker:varian-foto`. Tanpa dukungan WebP di
+server, otomatis JPEG saja.
+
+Token `forest`/`sun` tidak boleh dipakai di luar view publik (dijaga tes).
+
 ### Komponen Blade (buat di awal, pakai di semua halaman)
 Di `resources/views/components/`:
 `button`, `input`, `select`, `textarea`, `checkbox`, `field` (label + input + error + hint),
@@ -562,7 +600,7 @@ Data contoh harus terlihat realistis namun jelas bukan data resmi:
 - Aset dibangun di lokal (`npm run build`) lalu folder `public/build` ikut diunggah;
   Node tidak wajib ada di server.
 - File privat tetap di `storage/app/private`, tidak bisa diakses langsung dari URL.
-- PHP: ekstensi `gd`, `exif`, `fileinfo` wajib aktif. `upload_max_filesize` dan `post_max_size`
+- PHP: ekstensi `gd` (dengan dukungan WebP; tanpa itu gambar publik otomatis JPEG saja), `exif`, `fileinfo` wajib aktif. `upload_max_filesize` dan `post_max_size`
   minimal 12M, `memory_limit` minimal 512M (gambar besar didekode penuh di memori sebelum diperkecil).
 - HTTPS wajib: tombol "Salin info masuk" memakai clipboard browser yang hanya penuh berfungsi di HTTPS.
 - `/sitemap.xml` dan `/robots.txt` dibuat dinamis (tidak ada file `public/robots.txt`). Gambar pratinjau

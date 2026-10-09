@@ -33,6 +33,10 @@
     --text-display-sm--line-height: 2.25rem;
     --text-display: 2rem; /* 32px judul publik */
     --text-display--line-height: 2.5rem;
+    --text-hero-sm: 2.25rem; /* 36px judul hero publik (HP) */
+    --text-hero-sm--line-height: 2.75rem;
+    --text-hero: 3rem; /* 48px judul hero publik */
+    --text-hero--line-height: 3.5rem;
 
     --color-*: initial;
     --color-ink: #1c1f1e;
@@ -57,6 +61,12 @@
     --color-fix-bg: #f9e7e4;
     --color-idle: #5c625f;
     --color-idle-bg: #eeefec;
+
+    /* Khusus website publik (CLAUDE.md Bagian 7 "Gaya website publik"). */
+    --color-forest: #0f2e22;
+    --color-forest-soft: #b9c7bf;
+    --color-forest-line: #2a4a3d;
+    --color-sun: #e9b949;
 
     --radius-*: initial;
     --radius-control: 6px; /* input, tombol, badge */
@@ -87,6 +97,28 @@
 
     [x-cloak] {
         display: none !important;
+    }
+
+    /* Di latar gelap publik, cincin fokus hijau tidak terlihat; pakai kuning. */
+    .on-dark :where(a, button, summary, input, select, [tabindex]):focus-visible {
+        outline-color: var(--color-sun);
+    }
+}
+
+/*
+ * Overlay foto hero publik. Gradasi hanya diizinkan di sini (CLAUDE.md Bagian 7):
+ * HP padat 70%; desktop 85% → 70% (tengah, batas area teks) → 20%. Kontras terburuk 5,5:1.
+ */
+@layer components {
+    .overlay-forest {
+        background-color: rgb(15 46 34 / 0.7);
+    }
+
+    @media (width >= 48rem) {
+        .overlay-forest {
+            background-color: transparent;
+            background-image: linear-gradient(to right, rgb(15 46 34 / 0.85) 0%, rgb(15 46 34 / 0.7) 50%, rgb(15 46 34 / 0.2) 100%);
+        }
     }
 }
 
