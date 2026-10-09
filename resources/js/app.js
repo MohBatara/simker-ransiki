@@ -79,5 +79,31 @@ Alpine.data('recordForm', ({ storeUrl, updateUrl, destroyUrl, initial, hadErrors
     },
 }));
 
+/**
+ * Tombol salin teks. navigator.clipboard butuh HTTPS; di HTTP dipakai cara lama sebagai cadangan.
+ */
+Alpine.data('copyText', (text) => ({
+    copied: false,
+
+    async copy() {
+        try {
+            await navigator.clipboard.writeText(text);
+        } catch {
+            const field = document.createElement('textarea');
+            field.value = text;
+            field.setAttribute('readonly', '');
+            field.style.position = 'fixed';
+            field.style.opacity = '0';
+            document.body.appendChild(field);
+            field.select();
+            document.execCommand('copy');
+            field.remove();
+        }
+
+        this.copied = true;
+        setTimeout(() => (this.copied = false), 2500);
+    },
+}));
+
 window.Alpine = Alpine;
 Alpine.start();

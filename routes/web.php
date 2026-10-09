@@ -8,6 +8,7 @@ use App\Http\Controllers\Opd;
 use App\Models\License;
 use App\Models\Organization;
 use App\Models\Product;
+use App\Models\User;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -56,6 +57,21 @@ Route::middleware('auth')->group(function () {
                     Route::post('/izin', [Admin\LicenseController::class, 'store'])->name('licenses.store')->can('create', [License::class, 'organization']);
                     Route::put('/izin/{license}', [Admin\LicenseController::class, 'update'])->name('licenses.update')->can('update', 'license');
                     Route::delete('/izin/{license}', [Admin\LicenseController::class, 'destroy'])->name('licenses.destroy')->can('delete', 'license');
+                });
+
+                Route::controller(Admin\UserController::class)->prefix('pengguna')->name('users.')->group(function () {
+                    Route::get('/', 'index')->name('index')->can('viewAny', User::class);
+                    Route::get('/tambah', 'create')->name('create')->can('create', User::class);
+                    Route::post('/', 'store')->name('store')->can('create', User::class);
+
+                    Route::whereNumber('user')->group(function () {
+                        Route::get('/{user}', 'show')->name('show')->can('view', 'user');
+                        Route::get('/{user}/ubah', 'edit')->name('edit')->can('update', 'user');
+                        Route::put('/{user}', 'update')->name('update')->can('update', 'user');
+                        Route::post('/{user}/reset-kata-sandi', 'resetPassword')->name('reset-password')->can('resetPassword', 'user');
+                        Route::patch('/{user}/aktifkan', 'activate')->name('activate')->can('activate', 'user');
+                        Route::patch('/{user}/nonaktifkan', 'deactivate')->name('deactivate')->can('deactivate', 'user');
+                    });
                 });
 
                 Route::controller(Admin\MasterDataController::class)->prefix('data-master')->name('master.')->group(function () {

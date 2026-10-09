@@ -32,6 +32,11 @@ class UserPolicy
         return $user->isAdmin();
     }
 
+    public function activate(User $user, User $model): bool
+    {
+        return $user->isAdmin();
+    }
+
     public function deactivate(User $user, User $model): Response
     {
         return $this->manageOther($user, $model, 'Anda tidak bisa menonaktifkan akun sendiri.');

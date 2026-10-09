@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Enums\Role;
 use Database\Factories\UserFactory;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
@@ -50,6 +51,20 @@ class User extends Authenticatable
     protected function username(): Attribute
     {
         return Attribute::make(set: fn (?string $value) => $value === null ? null : Str::lower(trim($value)));
+    }
+
+    /**
+     * Filter daftar pengguna dari query string: q (nama/username/email), role, status (active/inactive).
+     */
+    public function scopeFilter(Builder $query, array $filters): void
+    {
+        $query
+            ->when(trim((string) ($filters['q'] ?? '')), fn ($query, $search) => $query->where(fn ($query) => $query
+                ->where('name', 'like', '%'.$search.'%')
+                ->orWhere('username', 'like', '%'.$search.'%')
+                ->orWhere('email', 'like', '%'.$search.'%')))
+            ->when(Role::tryFrom((string) ($filters['role'] ?? '')), fn ($query, $role) => $query->where('role', $role))
+            ->when(in_array($filters['status'] ?? null, ['active', 'inactive'], true), fn ($query) => $query->where('is_active', $filters['status'] === 'active'));
     }
 
     public function opd(): BelongsTo
