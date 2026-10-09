@@ -25,7 +25,7 @@
         x-on:dragleave.prevent="dragging = false"
         x-on:drop.prevent="drop($event)"
         x-bind:class="dragging && 'border-brand! bg-brand-tint!'"
-        class="flex cursor-pointer flex-col items-center justify-center gap-1 rounded-control border border-dashed border-line-strong bg-paper px-4 py-6 text-center transition-colors hover:bg-subtle"
+        class="flex cursor-pointer flex-col items-center justify-center gap-1 rounded-control border border-dashed border-line-input bg-paper px-4 py-6 text-center transition-colors hover:bg-subtle"
     >
         <span class="text-ui">
             <span class="font-semibold text-brand">Pilih file</span>

@@ -20,7 +20,7 @@
     {{ $attributes->class([
         'block w-full rounded-control border bg-paper px-3 py-2 text-body text-ink transition-colors placeholder:text-ink-muted md:text-ui',
         'focus:outline-none focus:ring-1 disabled:bg-subtle disabled:text-ink-muted',
-        'border-line-strong focus:border-brand focus:ring-brand' => ! $invalid,
+        'border-line-input focus:border-brand focus:ring-brand' => ! $invalid,
         'border-fix focus:border-fix focus:ring-fix' => $invalid,
     ]) }}
 >{{ $value }}</textarea>

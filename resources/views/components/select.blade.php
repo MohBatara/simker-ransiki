@@ -21,7 +21,7 @@
         {{ $attributes->class([
             'block h-11 w-full appearance-none rounded-control border bg-paper pl-3 pr-9 text-body text-ink transition-colors md:h-10 md:text-ui',
             'focus:outline-none focus:ring-1 disabled:bg-subtle disabled:text-ink-muted',
-            'border-line-strong focus:border-brand focus:ring-brand' => ! $invalid,
+            'border-line-input focus:border-brand focus:ring-brand' => ! $invalid,
             'border-fix focus:border-fix focus:ring-fix' => $invalid,
         ]) }}
     >

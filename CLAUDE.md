@@ -2,7 +2,7 @@
 
 Sistem Informasi dan Monitoring Kelembagaan Ekonomi Distrik Ransiki (SIM-KER).
 Platform web untuk mendata kelompok/kelembagaan ekonomi, menampilkan profilnya ke publik,
-menerima laporan bulanan dari kelompok, diverifikasi oleh OPD, dan dipantau lewat dashboard.
+menerima laporan bulanan dari kelompok, diverifikasi oleh OPD, dan dipantau lewat dasbor.
 
 Baca seluruh file ini sebelum mulai bekerja. Jika ada instruksi pengguna yang bertentangan
 dengan file ini, ikuti pengguna lalu sarankan pembaruan file ini.
@@ -92,7 +92,7 @@ Empat OPD memakai tampilan yang sama; data otomatis tersaring berdasarkan `users
 /kelompok/...           middleware auth + role:kelompok
 ```
 
-Setelah login, arahkan pengguna ke dashboard sesuai perannya.
+Setelah login, arahkan pengguna ke dasbor sesuai perannya.
 
 ---
 
@@ -174,7 +174,7 @@ Jangan mengarang kepanjangan akronim resmi (KDMP, KNMP, dsb.). Simpan apa adanya
 - Saat menjumlahkan, tampilkan keterangan bila sebagian data kosong
   (mis. "dari 18 dari 25 kelompok yang mengisi").
 - Jangan menjumlahkan produksi dengan satuan berbeda. Kelompokkan per produk + satuan.
-- Statistik resmi di dashboard hanya dari laporan berstatus `verified`.
+- Statistik resmi di dasbor hanya dari laporan berstatus `verified`.
 - Hitung kelompok secara unik (`COUNT(DISTINCT organizations.id)`); kelompok dengan banyak bidang
   usaha atau banyak OPD tidak boleh terhitung ganda.
 
@@ -238,7 +238,7 @@ Pakai "Dasbor", bukan "Dashboard", di semua teks antarmuka dan semua ukuran laya
 | Pengguna | Pengguna |
 | Data Master | Master |
 | Konten Website | Konten |
-| Masalah & Kebutuhan | Masalah (usulan, menunggu persetujuan) |
+| Masalah & Kebutuhan | Masalah |
 
 Nama menu lengkap tetap tampil di sidebar desktop, dan sebagai tooltip saat label ringkas
 di-hover atau difokuskan.
@@ -270,7 +270,9 @@ dirancang dengan baik, bukan landing page startup.
 --color-ink-soft:   #4A504D   teks sekunder
 --color-ink-muted:  #686E6B   keterangan, placeholder
 --color-line:       #E3E5E1   border default
---color-line-strong:#C9CCC6   border tegas
+--color-line-strong:#C9CCC6   border tegas (kartu, pemisah)
+--color-line-input: #858B87   border kontrol form: input, select, textarea, checkbox, file-upload
+                              (kontras 3.48:1 di atas paper, 3.21:1 di atas canvas)
 --color-paper:      #FFFFFF   permukaan kartu
 --color-canvas:     #F6F6F3   latar halaman (putih hangat, bukan abu dingin)
 --color-subtle:     #EFF0EC   latar baris/hover
@@ -287,7 +289,9 @@ Status (versi kalem, teks gelap di atas latar terang):
 ```
 Hanya satu warna aksen. Warna status hanya untuk badge status dan angka status, bukan dekorasi.
 Semua teks, termasuk teks kecil, wajib berkontras minimal 4.5:1 terhadap latarnya
-(paper, canvas, subtle, atau latar status). Periksa kontras sebelum mengubah atau menambah warna.
+(paper, canvas, subtle, atau latar status). Batas kontrol form (border input) minimal 3:1
+terhadap paper dan canvas, karena itu kontrol form memakai `line-input`; border kartu dan
+pemisah tetap `line`/`line-strong`. Periksa kontras sebelum mengubah atau menambah warna.
 
 ### Tipografi
 - Font: Public Sans, untuk seluruh UI.
@@ -303,7 +307,7 @@ Semua teks, termasuk teks kecil, wajib berkontras minimal 4.5:1 terhadap latarny
 
 ### Bentuk & jarak
 - Radius: 6px untuk input/tombol/badge, 10px untuk kartu dan modal.
-- Border: 1px `--color-line`.
+- Border: 1px `--color-line`. Kontrol form memakai 1px `--color-line-input`.
 - Jarak dasar kelipatan 4px. Padding kartu 20px (desktop), 16px (mobile).
 - Tinggi kontrol: 40px (desktop), 44px (mobile, agar mudah disentuh).
 - Lebar konten maksimal 1200px untuk area aplikasi, 1080px untuk halaman publik.
@@ -353,7 +357,7 @@ Target: versi uji coba ruang lingkup inti dalam 2 minggu.
    Route-nya ada di `routes/dev.php` dan hanya dimuat saat `APP_ENV=local` (bootstrap/app.php).
    Tautan ke halaman ini di menu mana pun hanya ditampilkan bila `Route::has('dev.components.app')`.
 3. Migrasi + model + enum + relasi + seeder data contoh (Bagian 10).
-4. Login (username/email), middleware role, redirect dashboard per peran, Policy dasar,
+4. Login (username/email), middleware role, redirect dasbor per peran, Policy dasar,
    feature test akses.
 5. Admin: CRUD data master, CRUD pengguna, CRUD kelompok (termasuk bidang usaha & OPD terkait).
 6. Kelompok: profil kelompok, produk, legalitas & izin, unggah lampiran.
@@ -363,14 +367,14 @@ Target: versi uji coba ruang lingkup inti dalam 2 minggu.
 **Minggu 2**
 8. Laporan bulanan kelompok (form bagian A–H, simpan draf, ajukan, riwayat).
 9. Verifikasi OPD (daftar menunggu, detail, minta revisi, verifikasi, catatan).
-10. Dashboard Kelompok, OPD, Admin.
+10. Dasbor Kelompok, OPD, Admin.
 11. Notifikasi dalam aplikasi (ikon lonceng + halaman notifikasi).
 12. Uji menyeluruh per peran, perbaikan tampilan HP/tablet, `npm run build`, persiapan deploy.
 
 **Diupayakan setelah inti selesai** (urutan prioritas):
 status organisasi di UI · pemisahan penginput & pemverifikasi · Berita & Kegiatan ·
 peringatan nama ganda · batas waktu & status terlambat · verifikasi profil + riwayat perubahan ·
-grafik ekonomi · dashboard legalitas · tindak lanjut intervensi · email undangan/reset ·
+grafik ekonomi · dasbor legalitas · tindak lanjut intervensi · email undangan/reset ·
 ekspor Excel/PDF & impor spreadsheet.
 
 **Di luar lingkup:** alur perizinan lengkap, integrasi sistem eksternal, WhatsApp, peta,
