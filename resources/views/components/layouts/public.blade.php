@@ -5,6 +5,8 @@
     // URL absolut gambar pratinjau tautan; kosong = gambar bawaan.
     'image' => null,
     'canonical' => null,
+    // Beranda: header gelap menempel di atas hero, berubah putih setelah hero terlewati.
+    'heroHeader' => false,
 ])
 
 @php
@@ -43,13 +45,31 @@
 <body class="flex min-h-dvh flex-col bg-canvas font-sans text-ui text-ink antialiased">
     @include('partials.skip-link')
 
-    <header x-data="{ open: false }" class="border-b border-line bg-paper pt-[env(safe-area-inset-top)]">
+    {{--
+        Header. Di beranda ($heroHeader) menempel di atas hero dengan latar forest 70% dan teks putih
+        (kontras 5,5:1 walau di atas bagian foto yang putih), lalu menjadi putih setelah hero terlewati.
+        data-dark mengatur warna anak-anaknya lewat group-data-[dark=true]/header.
+    --}}
+    <header
+        x-data="{ open: false, solid: @js(! $heroHeader) }"
+        @if ($heroHeader)
+            x-init="const hero = document.querySelector('[data-hero]'); hero ? new IntersectionObserver(([entry]) => solid = ! entry.isIntersecting, { rootMargin: '-64px 0px 0px 0px' }).observe(hero) : solid = true"
+        @endif
+        data-dark="{{ $heroHeader ? 'true' : 'false' }}"
+        x-bind:data-dark="String(! (solid || open))"
+        x-bind:class="{ 'on-dark': ! (solid || open) }"
+        @class([
+            'group/header z-40 border-b pt-[env(safe-area-inset-top)] transition-colors',
+            'sticky top-0 border-transparent bg-paper data-[dark=true]:border-transparent data-[dark=true]:bg-forest/70 data-[dark=false]:border-line' => $heroHeader,
+            'border-line bg-paper' => ! $heroHeader,
+        ])
+    >
         <div class="mx-auto flex h-16 max-w-public items-center justify-between gap-6 px-4 md:px-6">
             <a href="{{ route('home') }}" class="flex items-center gap-3 rounded-control leading-tight">
-                <x-logo />
+                <span class="rounded-control bg-paper"><x-logo /></span>
                 <span>
-                    <span class="block text-ui font-semibold text-ink">SIM-KER</span>
-                    <span class="block text-caption text-ink-muted">Distrik Ransiki</span>
+                    <span class="block text-ui font-semibold text-ink group-data-[dark=true]/header:text-paper">SIM-KER</span>
+                    <span class="block text-caption text-ink-muted group-data-[dark=true]/header:text-paper">Distrik Ransiki</span>
                 </span>
             </a>
 
@@ -59,14 +79,14 @@
                         href="{{ $item['href'] }}"
                         @if ($item['active']) aria-current="page" @endif
                         @class([
-                            'rounded-control px-3 py-2 transition-colors',
-                            'font-semibold text-brand' => $item['active'],
-                            'text-ink-soft hover:text-ink' => ! $item['active'],
+                            'rounded-control px-3 py-2 transition-colors group-data-[dark=true]/header:text-paper',
+                            'font-semibold text-brand underline-offset-8 group-data-[dark=true]/header:underline group-data-[dark=true]/header:decoration-sun group-data-[dark=true]/header:decoration-2' => $item['active'],
+                            'text-ink-soft hover:text-ink group-data-[dark=true]/header:hover:underline' => ! $item['active'],
                         ])
                     >{{ $item['label'] }}</a>
                 @endforeach
-                <span class="mx-2 h-5 w-px bg-line" aria-hidden="true"></span>
-                <a href="{{ $account['href'] }}" class="rounded-control px-3 py-2 text-ink-soft transition-colors hover:text-ink">{{ $account['label'] }}</a>
+                <span class="mx-2 h-5 w-px bg-line group-data-[dark=true]/header:bg-paper/40" aria-hidden="true"></span>
+                <a href="{{ $account['href'] }}" class="rounded-control px-3 py-2 text-ink-soft transition-colors hover:text-ink group-data-[dark=true]/header:text-paper group-data-[dark=true]/header:hover:underline">{{ $account['label'] }}</a>
             </nav>
 
             <button
@@ -74,7 +94,7 @@
                 x-on:click="open = ! open"
                 x-bind:aria-expanded="open"
                 aria-controls="menu-publik"
-                class="-mr-2 flex size-11 items-center justify-center rounded-control text-ink-soft hover:bg-subtle hover:text-ink lg:hidden"
+                class="-mr-2 flex size-11 items-center justify-center rounded-control text-ink-soft hover:bg-subtle hover:text-ink group-data-[dark=true]/header:text-paper group-data-[dark=true]/header:hover:bg-paper/10 lg:hidden"
             >
                 <span class="sr-only">Menu</span>
                 <x-heroicon-o-bars-3 x-show="! open" class="size-6" />
@@ -82,7 +102,7 @@
             </button>
         </div>
 
-        <nav id="menu-publik" aria-label="Menu utama" x-cloak x-show="open" class="border-t border-line lg:hidden">
+        <nav id="menu-publik" aria-label="Menu utama" x-cloak x-show="open" class="border-t border-line bg-paper lg:hidden">
             <ul class="mx-auto max-w-public px-4 py-2 md:px-6">
                 @foreach ($menu as $item)
                     <li>

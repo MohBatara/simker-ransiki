@@ -1,14 +1,23 @@
 @use('App\Support\Format')
 
-<x-layouts.public :description="$settings['home_intro'] ?? 'Direktori kelompok dan kelembagaan ekonomi Distrik Ransiki: profil kelompok, produk, dan kontak.'">
+<x-layouts.public hero-header :description="$settings['home_intro'] ?? 'Direktori kelompok dan kelembagaan ekonomi Distrik Ransiki: profil kelompok, produk, dan kontak.'">
     {{-- Hero: foto sampul + overlay (gradasi hanya di sini), atau forest polos bila belum ada foto. --}}
-    <section class="on-dark relative isolate overflow-hidden bg-forest text-paper" data-hero>
+    @php
+        // "Panen kakao." + "Nama" → "Panen kakao · Foto: Nama" (titik akhir keterangan dibuang).
+        $caption = collect([
+            $settings['cover_credit'] ? rtrim((string) $settings['cover_caption'], '. ') : $settings['cover_caption'],
+            $settings['cover_credit'] ? 'Foto: '.$settings['cover_credit'] : null,
+        ])->filter()->join(' · ');
+    @endphp
+
+    {{-- -mt-16 + pt-16: hero mulai di bawah header beranda yang menempel di atasnya. --}}
+    <section class="on-dark relative isolate -mt-16 overflow-hidden bg-forest pt-16 text-paper" data-hero>
         @if ($cover)
             <x-public.picture :image="$cover" :alt="$settings['cover_caption'] ?? ''" eager sizes="100vw" width="1600" height="686" frame="absolute inset-0 -z-20 block size-full" class="size-full object-cover" />
             <div class="overlay-forest absolute inset-0 -z-10" aria-hidden="true"></div>
         @endif
 
-        <div class="mx-auto flex min-h-[28rem] max-w-public flex-col justify-center px-4 py-14 md:min-h-[32rem] md:px-6">
+        <div @class(['mx-auto flex min-h-[28rem] max-w-public flex-col justify-center px-4 py-14 md:min-h-[32rem] md:px-6', 'pb-20' => $cover && $caption])>
             {{-- Teks hanya di setengah kiri: di sana overlay paling tebal (kontras terburuk 5,5:1). --}}
             <div class="max-w-xl md:max-w-[50%]">
                 <x-public.pill tone="dark">Direktori Kelembagaan Ekonomi</x-public.pill>
@@ -29,15 +38,20 @@
                     />
                     <x-public.button type="submit" icon="magnifying-glass">Cari</x-public.button>
                 </form>
-                <x-public.button variant="outline" :href="route('public.products')" class="mt-3">Lihat produk</x-public.button>
-
-                @if ($cover && ($settings['cover_caption'] || $settings['cover_credit']))
-                    <p class="mt-8 text-caption text-paper">
-                        {{ $settings['cover_caption'] }}@if ($settings['cover_caption'] && $settings['cover_credit']) · @endif @if ($settings['cover_credit'])Foto: {{ $settings['cover_credit'] }}@endif
-                    </p>
-                @endif
+                <a href="{{ route('public.products') }}" class="mt-4 inline-flex items-center gap-1 rounded-control text-ui text-forest-soft underline-offset-4 hover:text-paper hover:underline">
+                    atau lihat semua produk <x-heroicon-o-arrow-right class="size-4" />
+                </a>
             </div>
         </div>
+
+        @if ($cover && $caption)
+            {{-- Pojok kanan bawah: overlay di sisi kanan tipis, jadi teks diberi latar forest 90% (kontras 6,2:1). --}}
+            <div class="pointer-events-none absolute inset-x-0 bottom-0">
+                <div class="mx-auto flex max-w-public justify-end px-4 pb-4 md:px-6">
+                    <p class="pointer-events-auto rounded-control bg-forest/90 px-2 py-1 text-caption text-forest-soft">{{ $caption }}</p>
+                </div>
+            </div>
+        @endif
     </section>
 
     {{-- Pita kuning: angka asli, teks selalu ink (putih di atas kuning tidak lolos kontras). --}}
@@ -67,9 +81,10 @@
         @if ($featured->isNotEmpty())
             <section>
                 @include('publik._section-heading', ['title' => 'Produk unggulan', 'link' => ['href' => route('public.products'), 'label' => 'Lihat semua produk']])
+                {{-- Berfoto: kartu bergambar. Belum ada yang berfoto: kartu ringkas tanpa area gambar. --}}
                 <div class="mt-5 grid grid-cols-2 gap-4 lg:grid-cols-4">
                     @foreach ($featured as $product)
-                        @include('publik._product-card')
+                        @include('publik._product-card', ['compact' => $featuredCompact])
                     @endforeach
                 </div>
             </section>

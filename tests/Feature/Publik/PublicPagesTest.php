@@ -32,22 +32,69 @@ test('angka beranda hanya menghitung yang publik, unik, dan di-cache', function 
     expect(PublicDirectory::stats()['organizations'])->toBe(1);
 });
 
-test('beranda menampilkan angka, tanggal data, bidang usaha, dan produk unggulan', function () {
+test('beranda menampilkan angka, tanggal data, dan bidang usaha', function () {
     $this->travelTo('2026-10-09 10:00:00');
     $sector = BusinessSector::factory()->create(['name' => 'Perkebunan']);
-    $organization = Organization::factory()->public()->create();
-    $organization->sectors()->attach($sector);
-    Product::factory()->for($organization)->create(['name' => 'Kakao kering', 'is_public' => true, 'is_featured' => true]);
-    Product::factory()->for($organization)->create(['name' => 'Abon ikan', 'is_public' => true, 'is_featured' => true, 'photo_path' => 'products/1/a.jpg']);
+    Organization::factory()->public()->create()->sectors()->attach($sector);
 
     $this->get('/')
         ->assertOk()
         ->assertSee('kelompok terdaftar')
         ->assertSee('Data diperbarui 9 Oktober 2026')
         ->assertSee('Perkebunan')
-        ->assertSee('1 kelompok')
-        ->assertSee('KK') // inisial pengganti foto "Kakao kering"
-        ->assertSeeInOrder(['Abon ikan', 'Kakao kering']); // yang berfoto didahulukan
+        ->assertSee('1 kelompok');
+});
+
+test('produk unggulan di beranda hanya yang berfoto, maksimal 4, nama sama tidak berdampingan', function () {
+    $organization = Organization::factory()->public()->create();
+    foreach (['Abon ikan', 'Ikan asap', 'Ikan asap', 'Kopi bubuk', 'Sagu'] as $i => $name) {
+        Product::factory()->for($organization)->create(['name' => $name, 'is_public' => true, 'is_featured' => true, 'photo_path' => "products/{$i}/a.jpg"]);
+    }
+    Product::factory()->for($organization)->create(['name' => 'Tanpa Foto', 'is_public' => true, 'is_featured' => true]);
+
+    $html = $this->get('/')->assertOk()->getContent();
+    preg_match('#Produk unggulan.*?</section>#s', $html, $section);
+    preg_match_all('#<h3[^>]*><a[^>]*>([^<]+)</a></h3>#', $section[0], $names);
+
+    expect($names[1])->toHaveCount(4)
+        ->not->toContain('Tanpa Foto')
+        ->and(collect($names[1])->sliding(2)->contains(fn ($pair) => $pair->first() === $pair->last()))->toBeFalse();
+});
+
+test('tanpa produk unggulan berfoto, beranda memakai kartu ringkas tanpa area gambar', function () {
+    $organization = Organization::factory()->public()->create();
+    Product::factory()->for($organization)->create(['name' => 'Kakao kering', 'is_public' => true, 'is_featured' => true]);
+
+    $html = $this->get('/')->assertOk()->getContent();
+    preg_match('#Produk unggulan.*?</section>#s', $html, $section);
+
+    expect($section[0])->toContain('Kakao kering')->toContain('text-card-title')->not->toContain('aspect-');
+});
+
+test('halaman produk memakai area inisial kecil 16:9 untuk produk tanpa foto', function () {
+    $organization = Organization::factory()->public()->create();
+    Product::factory()->for($organization)->create(['name' => 'Kakao kering', 'is_public' => true]);
+
+    $this->get('/produk')->assertOk()->assertSee('aspect-[16/9]', false)->assertSee('KK');
+});
+
+test('hero memakai tautan teks ke produk dan header gelap hanya di beranda', function () {
+    $this->get('/')
+        ->assertSee('atau lihat semua produk')
+        ->assertDontSee('>Lihat produk<', false)
+        ->assertSee('data-dark="true"', false);
+
+    $this->get('/direktori')->assertSee('data-dark="false"', false)->assertDontSee('data-dark="true"', false);
+});
+
+test('keterangan foto hero di pojok kanan bawah tanpa titik sebelum nama fotografer', function () {
+    Storage::fake('local');
+    Storage::disk('local')->put('site/sampul.jpg', imageBytes(20, 10));
+    SiteSetting::put(['cover_photo_path' => 'site/sampul.jpg', 'cover_caption' => 'Panen kakao di Kampung Contoh 1.', 'cover_credit' => 'Fotografer Contoh']);
+
+    $this->get('/')
+        ->assertSee('Panen kakao di Kampung Contoh 1 · Foto: Fotografer Contoh')
+        ->assertSee('justify-end', false);
 });
 
 test('foto sampul hanya tampil bila diisi', function () {
