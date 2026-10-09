@@ -302,7 +302,8 @@ pemisah tetap `line`/`line-strong`. Periksa kontras sebelum mengubah atau menamb
 - Ketebalan: 400 dan 600 saja. Judul memakai 600, bukan 700/800.
 - Gunakan sentence case: "Laporan bulanan", bukan "Laporan Bulanan" pada tombol dan label.
   Nama menu boleh Title Case singkat.
-- Angka dalam tabel memakai `tabular-nums`, rata kanan.
+- Angka dalam tabel memakai `tabular-nums`, rata kanan, dengan jarak ekstra (32px) sebelum
+  kolom berikutnya.
 - Format Indonesia: `1.250.000`, `Rp 1.250.000`, tanggal `9 Oktober 2026`, bulan `September 2026`.
 
 ### Bentuk & jarak
@@ -317,6 +318,8 @@ pemisah tetap `line`/`line-strong`. Periksa kontras sebelum mengubah atau menamb
   berisi maksimal 5 menu utama, menu lain di "Lainnya". Tabel berubah menjadi daftar kartu.
   Form satu kolom. Aksi page-header tampil di bawah judul dan ikut tergulir.
   Bar aksi yang menempel di bawah layar hanya untuk halaman form, lewat `<x-form-actions sticky>`.
+  Halaman form memakai mode form (`<x-layouts.app focus back="...">`): navigasi bawah dan
+  tombol notifikasi disembunyikan, header berisi tombol kembali + judul.
 - **Tablet (768–1279px):** sidebar ikon ringkas (lebar 72px) dengan label ringkas 11px
   (lihat Bagian 6) dan tooltip nama menu lengkap saat hover/fokus, konten penuh.
   Tabel tampil dengan kolom penting saja.
@@ -330,10 +333,25 @@ Di `resources/views/components/`:
 `button`, `input`, `select`, `textarea`, `checkbox`, `field` (label + input + error + hint),
 `card`, `stat` (angka ringkas), `badge` (status), `table` (+ mode kartu di mobile),
 `empty-state`, `modal`, `dropdown`, `page-header`, `alert`, `tabs`, `file-upload`,
-`form-actions` (bar tombol form; `sticky` hanya untuk halaman form), `logo`,
+`form-actions` (bar tombol form; `sticky` hanya untuk halaman form), `checkbox-group`, `logo`,
 `layouts.app` (area login), `layouts.public` (website publik), `layouts.guest` (login).
 
 Halaman tidak boleh menulis ulang gaya tombol/kartu sendiri. Selalu pakai komponen.
+
+### Tabel dan kartu daftar
+- Tidak ada tombol "Buka" per baris. Baris yang punya halaman detail bisa diklik seluruhnya:
+  `<x-table clickable>` + `<x-table.row href="...">`. Link ada di sel `primary` dan diperluas
+  menutupi baris, sehingga tetap satu link yang bisa difokuskan dengan keyboard (cincin fokus
+  mengelilingi baris). Hover memakai latar `subtle`, chevron-right kecil `ink-muted` di kanan.
+- Tombol aksi lain di dalam baris dihindari; bila terpaksa, beri `relative z-10` agar bisa diklik.
+- Mode kartu di HP: baris atas berisi nama (`primary`) dan badge status (`badge`) sejajar,
+  subjudul (`subtitle`, mis. periode) `ink-soft` di bawah nama, sel lain menjadi baris
+  label-nilai. Seluruh kartu bisa diketuk, chevron di kanan.
+
+### Form
+- Select tanpa nilai terpilih tampil `ink-muted`, sama seperti placeholder input.
+- Grup checkbox memakai `checkbox-group`: lebar kolom mengikuti isi dengan jarak tetap,
+  satu kolom di HP dan maksimal dua kolom mulai tablet.
 
 ### Gaya penulisan teks
 - Bahasa Indonesia baku tapi ringan, kalimat pendek.

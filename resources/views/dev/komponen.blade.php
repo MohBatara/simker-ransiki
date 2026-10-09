@@ -31,6 +31,7 @@
     user-role="Kelompok"
 >
     <x-slot:actions>
+        <x-button variant="secondary" :href="route('dev.components.form')">Mode form</x-button>
         <x-button variant="secondary" :href="route('dev.components.public')">Layout publik</x-button>
         <x-button :href="route('dev.components.guest')">Layout masuk</x-button>
     </x-slot:actions>
@@ -129,13 +130,13 @@
                 <x-field label="Ringkasan kegiatan" for="ringkasan" class="md:col-span-2">
                     <x-textarea name="ringkasan" placeholder="Tuliskan kegiatan utama bulan ini." />
                 </x-field>
-                <x-field label="Bidang usaha" class="md:col-span-2">
-                    <div class="grid sm:grid-cols-3">
-                        <x-checkbox name="bidang[]" value="1" checked>Pertanian</x-checkbox>
-                        <x-checkbox name="bidang[]" value="2">Perkebunan</x-checkbox>
-                        <x-checkbox name="bidang[]" value="3">Perikanan</x-checkbox>
-                    </div>
-                </x-field>
+                <x-checkbox-group label="Bidang usaha" name="bidang[]" class="md:col-span-2">
+                    <x-checkbox name="bidang[]" value="1" checked>Pertanian</x-checkbox>
+                    <x-checkbox name="bidang[]" value="2">Perkebunan</x-checkbox>
+                    <x-checkbox name="bidang[]" value="3">Perikanan</x-checkbox>
+                    <x-checkbox name="bidang[]" value="4">Pengolahan Hasil</x-checkbox>
+                    <x-checkbox name="bidang[]" value="5">UMKM</x-checkbox>
+                </x-checkbox-group>
                 <div class="md:col-span-2">
                     <x-checkbox name="tanpa_aktivitas" hint="Bagian lain menjadi opsional.">Tidak ada aktivitas bulan ini</x-checkbox>
                 </div>
@@ -167,27 +168,23 @@
 
         <div class="space-y-3">
             <h2 class="text-card-title font-semibold">Tabel</h2>
-            <p class="text-ui text-ink-soft">Di HP baris berubah menjadi kartu. Kolom "Diajukan" disembunyikan di tablet.</p>
-            <x-table>
+            <p class="text-ui text-ink-soft">Seluruh baris bisa diklik. Di HP baris berubah menjadi kartu. Kolom "Diajukan" disembunyikan di tablet.</p>
+            <x-table clickable>
                 <x-slot:head>
                     <x-table.heading>Kelompok</x-table.heading>
                     <x-table.heading>Periode</x-table.heading>
                     <x-table.heading>Status</x-table.heading>
                     <x-table.heading numeric>Pendapatan</x-table.heading>
                     <x-table.heading optional>Diajukan</x-table.heading>
-                    <x-table.heading><span class="sr-only">Aksi</span></x-table.heading>
                 </x-slot:head>
 
                 @foreach ($reports as $report)
-                    <x-table.row>
+                    <x-table.row :href="route('dev.components.form')">
                         <x-table.cell primary>{{ $report['organization'] }}</x-table.cell>
-                        <x-table.cell label="Periode">{{ Format::month($report['period']) }}</x-table.cell>
-                        <x-table.cell label="Status"><x-badge :tone="$report['status'][1]">{{ $report['status'][0] }}</x-badge></x-table.cell>
+                        <x-table.cell subtitle>{{ Format::month($report['period']) }}</x-table.cell>
+                        <x-table.cell badge><x-badge :tone="$report['status'][1]">{{ $report['status'][0] }}</x-badge></x-table.cell>
                         <x-table.cell label="Pendapatan" numeric>{{ Format::rupiah($report['revenue']) }}</x-table.cell>
                         <x-table.cell label="Diajukan" optional>{{ Format::date($report['submitted_at']) }}</x-table.cell>
-                        <x-table.cell actions>
-                            <x-button variant="secondary" href="#">Buka</x-button>
-                        </x-table.cell>
                     </x-table.row>
                 @endforeach
 

@@ -7,10 +7,13 @@
     'notificationsUrl' => '#',
     'userName' => null,
     'userRole' => null,
+    // Mode form di HP: navigasi bawah disembunyikan, header berisi tombol kembali + judul.
+    'focus' => false,
 ])
 
 @php
     $userName ??= auth()->user()?->name;
+    $back ??= $focus ? url()->previous() : null;
 
     $navigation = collect($navigation);
     if ($navigation->count() <= 5) {
@@ -35,7 +38,12 @@
 <head>
     @include('partials.head', ['title' => $title])
 </head>
-<body class="min-h-dvh bg-canvas font-sans text-ui text-ink antialiased">
+{{-- --app-bottom: tinggi area tetap di bawah layar HP, dipakai x-form-actions sticky. --}}
+<body @class([
+    'min-h-dvh bg-canvas font-sans text-ui text-ink antialiased',
+    '[--app-bottom:calc(4rem+env(safe-area-inset-bottom))] [--app-safe-bottom:0px]' => ! $focus,
+    '[--app-bottom:0px] [--app-safe-bottom:env(safe-area-inset-bottom)]' => $focus,
+])>
     {{-- Sidebar: ikon + label ringkas di tablet (72px), penuh di desktop (248px) --}}
     <aside class="hidden md:fixed md:inset-y-0 md:left-0 md:z-20 md:flex md:w-[72px] md:flex-col md:border-r md:border-line md:bg-paper xl:w-[248px]">
         <div class="flex h-16 shrink-0 items-center gap-3 border-b border-line px-2 max-xl:justify-center xl:px-5" title="SIM-KER Distrik Ransiki">
@@ -102,15 +110,26 @@
     <div class="md:pl-[72px] xl:pl-[248px]">
         {{-- Header atas tipis di HP --}}
         <header class="sticky top-0 z-20 border-b border-line bg-paper pt-[env(safe-area-inset-top)] md:hidden">
-            <div class="flex h-14 items-center justify-between gap-3 px-4">
-                <p class="truncate text-ui font-semibold text-ink">{{ $title }}</p>
-                <a href="{{ $notificationsUrl }}" class="-mr-2 flex size-11 shrink-0 items-center justify-center rounded-control text-ink-soft hover:bg-subtle hover:text-ink" aria-label="Notifikasi">
-                    <x-heroicon-o-bell class="size-5" />
-                </a>
+            <div class="flex h-14 items-center gap-1 px-4">
+                @if ($back)
+                    <a href="{{ $back }}" class="-ml-2 flex size-11 shrink-0 items-center justify-center rounded-control text-ink-soft hover:bg-subtle hover:text-ink" aria-label="Kembali">
+                        <x-heroicon-o-arrow-left class="size-5" />
+                    </a>
+                @endif
+                <p class="min-w-0 flex-1 truncate text-ui font-semibold text-ink">{{ $title }}</p>
+                @unless ($focus)
+                    <a href="{{ $notificationsUrl }}" class="-mr-2 flex size-11 shrink-0 items-center justify-center rounded-control text-ink-soft hover:bg-subtle hover:text-ink" aria-label="Notifikasi">
+                        <x-heroicon-o-bell class="size-5" />
+                    </a>
+                @endunless
             </div>
         </header>
 
-        <main class="mx-auto w-full max-w-app px-4 pb-24 pt-5 md:px-6 md:pb-10 md:pt-8 xl:px-8">
+        <main @class([
+            'mx-auto w-full max-w-app px-4 pt-5 md:px-6 md:pb-10 md:pt-8 xl:px-8',
+            'pb-24' => ! $focus,
+            'pb-6' => $focus,
+        ])>
             <x-page-header :title="$title" :description="$description" :back="$back" condensed>
                 @isset($actions)
                     <x-slot:actions>{{ $actions }}</x-slot:actions>
@@ -128,6 +147,7 @@
     </div>
 
     {{-- Navigasi bawah HP: maksimal 5 menu, sisanya di "Lainnya" --}}
+    @unless ($focus)
     <nav aria-label="Menu utama" x-data="{ more: false }" class="fixed inset-x-0 bottom-0 z-30 border-t border-line bg-paper pb-[env(safe-area-inset-bottom)] md:hidden">
         <ul class="grid h-16 {{ $bottomColumns }}">
             @foreach ($bottomNav as $item)
@@ -199,5 +219,6 @@
             </div>
         @endif
     </nav>
+    @endunless
 </body>
 </html>

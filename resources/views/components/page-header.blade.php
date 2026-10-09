@@ -2,17 +2,17 @@
     'title',
     'description' => null,
     'back' => null,
-    // Dipakai layout app: di HP judul sudah tampil di header atas, jadi h1 hanya untuk pembaca layar.
+    // Dipakai layout app: di HP judul dan tombol kembali sudah ada di header atas.
     'condensed' => false,
 ])
 
 <div {{ $attributes->class([
     'flex flex-col gap-4 md:flex-row md:items-end md:justify-between',
-    'max-md:hidden' => $condensed && ! $description && ! $back && ! isset($actions),
+    'max-md:hidden' => $condensed && ! $description && ! isset($actions),
 ]) }}>
     <div class="min-w-0">
         @if ($back)
-            <a href="{{ $back }}" class="mb-2 inline-flex items-center gap-1 rounded-control text-caption text-ink-soft hover:text-ink">
+            <a href="{{ $back }}" @class(['mb-2 inline-flex items-center gap-1 rounded-control text-caption text-ink-soft hover:text-ink', 'max-md:hidden' => $condensed])>
                 <x-heroicon-o-arrow-left class="size-4" />
                 Kembali
             </a>

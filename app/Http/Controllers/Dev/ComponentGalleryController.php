@@ -41,6 +41,11 @@ class ComponentGalleryController extends Controller implements HasMiddleware
         ]);
     }
 
+    public function form(): View
+    {
+        return view('dev.form', ['navigation' => $this->sampleNavigation()]);
+    }
+
     public function public(): View
     {
         return view('dev.publik');
