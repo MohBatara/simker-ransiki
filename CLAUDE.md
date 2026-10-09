@@ -397,6 +397,8 @@ Halaman tidak boleh menulis ulang gaya tombol/kartu sendiri. Selalu pakai kompon
   menutupi baris, sehingga tetap satu link yang bisa difokuskan dengan keyboard (cincin fokus
   mengelilingi baris). Hover memakai latar `subtle`, chevron-right kecil `ink-muted` di kanan.
 - Tombol aksi lain di dalam baris dihindari; bila terpaksa, beri `relative z-10` agar bisa diklik.
+- Pengecualian: daftar tanpa halaman detail (mis. Data Master) memakai sel `actions` berisi
+  tombol Ubah/Hapus, dengan tambah/ubah lewat modal (`recordForm` di `resources/js/app.js`).
 - Mode kartu di HP: baris atas berisi nama (`primary`) dan badge status (`badge`) sejajar,
   subjudul (`subtitle`, mis. periode) `ink-soft` di bawah nama, sel lain menjadi baris
   label-nilai. Seluruh kartu bisa diketuk, chevron di kanan.

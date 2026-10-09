@@ -26,6 +26,14 @@ Route::middleware('auth')->group(function () {
         Route::middleware('password.changed')->group(function () {
             Route::prefix('admin')->name('admin.')->middleware('role:admin')->group(function () {
                 Route::get('/', Admin\DashboardController::class)->name('dashboard');
+
+                Route::controller(Admin\MasterDataController::class)->prefix('data-master')->name('master.')->group(function () {
+                    Route::get('/', 'index')->name('index');
+                    Route::get('/{type}', 'items')->name('items');
+                    Route::post('/{type}', 'store')->name('store');
+                    Route::put('/{type}/{id}', 'update')->name('update')->whereNumber('id');
+                    Route::delete('/{type}/{id}', 'destroy')->name('destroy')->whereNumber('id');
+                });
             });
 
             Route::prefix('opd')->name('opd.')->middleware('role:opd')->group(function () {

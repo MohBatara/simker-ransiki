@@ -36,5 +36,48 @@ Alpine.data('fileUpload', ({ maxMb, maxFiles, multiple }) => ({
     },
 }));
 
+/**
+ * Satu modal untuk tambah dan ubah data pada daftar sederhana (mis. data master).
+ * initial: isian lama setelah validasi gagal, agar modal terbuka kembali dengan isian yang sama.
+ */
+Alpine.data('recordForm', ({ storeUrl, updateUrl, destroyUrl, initial, hadErrors }) => ({
+    mode: initial?.id ? 'edit' : 'create',
+    record: initial ?? {},
+    deleting: {},
+    hadErrors,
+
+    get action() {
+        return this.mode === 'edit' ? updateUrl.replace('__ID__', this.record.id) : storeUrl;
+    },
+
+    get deleteAction() {
+        return destroyUrl.replace('__ID__', this.deleting.id);
+    },
+
+    create() {
+        this.mode = 'create';
+        this.record = {};
+        this.$dispatch('open-modal', 'record-form');
+    },
+
+    edit(record) {
+        this.mode = 'edit';
+        this.record = { ...record };
+        this.$dispatch('open-modal', 'record-form');
+    },
+
+    remove(record) {
+        this.deleting = record;
+        this.$dispatch('open-modal', 'record-delete');
+    },
+
+    // Pesan error lama dirender server; muat ulang agar tidak terbawa ke isian berikutnya.
+    closed() {
+        if (this.hadErrors) {
+            window.location.reload();
+        }
+    },
+}));
+
 window.Alpine = Alpine;
 Alpine.start();

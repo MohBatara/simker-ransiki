@@ -16,7 +16,7 @@
         @foreach ($tabs as $key => $label)
             <a
                 href="{{ $links[$key] }}"
-                @if ($key === $active) aria-current="page" @endif
+                @if ($key === $active) aria-current="page" x-data x-init="$el.scrollIntoView({ block: 'nearest', inline: 'nearest' })" @endif
                 @class([
                     $tabClasses,
                     'border-brand font-semibold text-ink' => $key === $active,

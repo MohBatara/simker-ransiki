@@ -10,10 +10,12 @@
     'primary' => false,
     'badge' => false,
     'subtitle' => false,
+    // Tombol aksi untuk daftar tanpa halaman detail (mis. data master); di HP jadi baris paling bawah kartu.
+    'actions' => false,
 ])
 
 @php
-    $showLabel = $label && ! $primary && ! $badge && ! $subtitle;
+    $showLabel = $label && ! $primary && ! $badge && ! $subtitle && ! $actions;
 @endphp
 
 <td
@@ -26,6 +28,7 @@
         'max-md:col-start-1 max-md:row-start-1 max-md:self-center max-md:p-0 max-md:font-semibold' => $primary,
         'max-md:col-start-2 max-md:row-start-1 max-md:self-center max-md:p-0' => $badge,
         'max-md:col-span-2 max-md:col-start-1 max-md:row-start-2 max-md:px-0 max-md:pb-2 max-md:pt-0.5 max-md:text-ink-soft' => $subtitle,
+        'whitespace-nowrap md:text-right max-md:col-span-2 max-md:mt-2 max-md:border-t max-md:border-line max-md:px-0 max-md:pb-0 max-md:pt-3' => $actions,
         'md:max-xl:hidden' => $optional,
     ]) }}
 >
