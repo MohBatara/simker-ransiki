@@ -1,0 +1,9 @@
+@import '@fontsource-variable/public-sans';
+@import 'tailwindcss';
+
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../../storage/framework/views/*.php';
+
+@theme {
+    --font-sans: 'Public Sans Variable', ui-sans-serif, system-ui, sans-serif;
+}
