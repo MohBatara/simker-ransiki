@@ -5,7 +5,9 @@ namespace App\Http\Requests\Organizations;
 use App\Enums\LegalStatus;
 use App\Enums\OrganizationStatus;
 use App\Models\Organization;
+use Illuminate\Auth\Access\Response;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Carbon;
 use Illuminate\Validation\Rule;
@@ -16,16 +18,32 @@ use Illuminate\Validation\Rule;
  */
 class OrganizationRequest extends FormRequest
 {
-    public function authorize(): bool
+    public function authorize(): Response
     {
-        return true;
+        $organization = $this->targetOrganization();
+
+        return $organization
+            ? Gate::forUser($this->user())->inspect('update', $organization)
+            : Gate::forUser($this->user())->inspect('create', Organization::class);
+    }
+
+    /** Kelompok yang diubah: dari URL (Admin/OPD), milik akun (Kelompok), atau null saat Admin menambah. */
+    public function targetOrganization(): ?Organization
+    {
+        $organization = $this->route('organization');
+
+        if ($organization instanceof Organization) {
+            return $organization;
+        }
+
+        return $this->user()->isKelompok() ? Organization::findOrFail($this->user()->organization_id) : null;
     }
 
     public function canAdminister(): bool
     {
-        $organization = $this->route('organization');
+        $organization = $this->targetOrganization();
 
-        return $organization instanceof Organization
+        return $organization
             ? $this->user()->can('administer', $organization)
             : $this->user()->can('create', Organization::class);
     }

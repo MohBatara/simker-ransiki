@@ -1,67 +1,66 @@
 @props([
-    'name',
-    'multiple' => false,
-    'accept' => '.jpg,.jpeg,.png,.pdf',
-    'maxSize' => 10,
-    'maxFiles' => 10,
+    'url' => '',
+    // 'document' = JPG/PNG/PDF (lampiran), 'photo' = JPG/PNG (foto produk).
+    'kind' => 'document',
+    'multiple' => true,
+    // Sisa slot file untuk entitas ini (maks 10 per entitas).
+    'remaining' => 10,
+    // Tampilkan tombol "Ambil foto" yang langsung membuka kamera belakang di HP.
+    'camera' => false,
     'hint' => null,
-    'id' => null,
 ])
 
 @php
-    $key = \App\Support\FormField::key($name);
-    $id ??= \App\Support\FormField::id($name);
-    $hint ??= 'JPG, PNG, atau PDF. Maksimal '.$maxSize.' MB per file'.($multiple ? ', '.$maxFiles.' file.' : '.');
-    $fileError = $errors->first($key.'.*');
+    // Hanya JPEG/PNG agar iPhone otomatis mengonversi foto HEIC menjadi JPEG.
+    $accept = $kind === 'photo' ? 'image/jpeg,image/png' : 'image/jpeg,image/png,application/pdf';
+    $hint ??= ($kind === 'photo' ? 'Foto JPG atau PNG.' : 'JPG, PNG, atau PDF.').' Maksimal 10 MB per file.';
 @endphp
 
 <div
-    x-data="fileUpload(@js(['maxMb' => $maxSize, 'maxFiles' => $maxFiles, 'multiple' => $multiple]))"
-    {{ $attributes->class('space-y-2') }}
+    x-data="uploader(@js(['kind' => $kind, 'maxMb' => 10, 'remaining' => $remaining, 'multiple' => $multiple]))"
+    data-url="{{ $url }}"
+    {{ $attributes->class('space-y-3') }}
 >
-    <label
-        for="{{ $id }}"
+    <div
         x-on:dragover.prevent="dragging = true"
         x-on:dragleave.prevent="dragging = false"
         x-on:drop.prevent="drop($event)"
         x-bind:class="dragging && 'border-brand! bg-brand-tint!'"
-        class="flex cursor-pointer flex-col items-center justify-center gap-1 rounded-control border border-dashed border-line-input bg-paper px-4 py-6 text-center transition-colors hover:bg-subtle"
+        class="flex flex-col items-center gap-3 rounded-control border border-dashed border-line-input bg-paper px-4 py-5 text-center transition-colors"
     >
-        <span class="text-ui">
-            <span class="font-semibold text-brand">Pilih file</span>
-            <span class="text-ink-soft">atau seret ke sini</span>
-        </span>
-        <span class="text-caption text-ink-muted">{{ $hint }}</span>
-        <input
-            type="file"
-            id="{{ $id }}"
-            name="{{ $multiple ? $key.'[]' : $key }}"
-            accept="{{ $accept }}"
-            x-ref="input"
-            x-on:change="sync()"
-            @if ($multiple) multiple @endif
-            class="sr-only"
-        >
-    </label>
+        <div class="flex flex-wrap justify-center gap-2">
+            @if ($camera)
+                <x-button variant="secondary" icon="camera" x-on:click="$refs.camera.click()">Ambil foto</x-button>
+            @endif
+            <x-button variant="secondary" icon="arrow-up-tray" x-on:click="$refs.picker.click()">Pilih file</x-button>
+        </div>
+        <p class="text-caption text-ink-muted">{{ $hint }} <span class="max-md:hidden">Bisa juga diseret ke sini.</span></p>
+    </div>
 
-    <ul x-cloak x-show="files.length" class="divide-y divide-line rounded-control border border-line bg-paper">
-        <template x-for="file in files" :key="file.name">
-            <li class="flex items-center justify-between gap-3 px-3 py-2 text-ui">
-                <span class="truncate" x-text="file.name"></span>
-                <span
-                    class="shrink-0 tabular-nums"
-                    x-bind:class="file.tooBig ? 'text-fix' : 'text-ink-muted'"
-                    x-text="file.tooBig ? 'Lebih dari ' + maxMb + ' MB' : formatSize(file.size)"
-                ></span>
+    <input type="file" x-ref="picker" class="sr-only" tabindex="-1" aria-hidden="true" accept="{{ $accept }}" @if ($multiple) multiple @endif x-on:change="add($event.target.files); $event.target.value = ''">
+    @if ($camera)
+        <input type="file" x-ref="camera" class="sr-only" tabindex="-1" aria-hidden="true" accept="image/jpeg,image/png" capture="environment" x-on:change="add($event.target.files); $event.target.value = ''">
+    @endif
+
+    <ul x-cloak x-show="queue.length" class="divide-y divide-line rounded-control border border-line bg-paper" aria-live="polite">
+        <template x-for="item in queue" :key="item.key">
+            <li class="space-y-1.5 px-3 py-2.5">
+                <div class="flex items-center justify-between gap-3 text-ui">
+                    <span class="truncate" x-text="item.name"></span>
+                    <span class="shrink-0 text-caption tabular-nums" x-bind:class="item.status === 'error' ? 'text-fix' : 'text-ink-muted'" x-text="statusText(item)"></span>
+                </div>
+                <div x-show="item.status === 'uploading' || item.status === 'preparing'" class="h-1.5 overflow-hidden rounded-full bg-subtle" role="progressbar" aria-valuemin="0" aria-valuemax="100" x-bind:aria-valuenow="item.progress">
+                    <div class="h-full bg-brand transition-[width]" x-bind:style="`width: ${item.progress}%`"></div>
+                </div>
+                <div x-show="item.status === 'error'" class="flex items-start justify-between gap-3">
+                    <p class="text-caption text-fix" x-text="item.error"></p>
+                    <button type="button" x-show="item.retryable" x-on:click="retry(item)" class="shrink-0 rounded-control text-caption font-semibold text-brand hover:text-brand-hover">Coba lagi</button>
+                </div>
             </li>
         </template>
     </ul>
 
-    <p x-cloak x-show="tooMany" class="text-caption text-fix">
-        Terlalu banyak file. Pilih paling banyak <span x-text="maxFiles"></span> file.
-    </p>
-
-    @if ($fileError)
-        <p class="text-caption text-fix">{{ $fileError }}</p>
-    @endif
+    <div x-cloak x-show="needsReload" class="flex justify-end">
+        <x-button variant="secondary" x-on:click="window.location.reload()">Muat ulang daftar file</x-button>
+    </div>
 </div>

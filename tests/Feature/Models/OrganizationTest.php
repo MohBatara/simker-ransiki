@@ -49,11 +49,11 @@ test('kelompok yang punya laporan atau akun tidak bisa dihapus', function () {
 
 test('menghapus kelompok ikut menghapus file lampiran dan foto produknya', function () {
     Storage::fake('local');
-    Storage::fake('public');
 
     $organization = Organization::factory()->create();
     $product = Product::factory()->for($organization)->create(['photo_path' => 'products/foto.jpg']);
-    Storage::disk('public')->put('products/foto.jpg', 'foto');
+    Storage::disk('local')->put('products/foto.jpg', 'foto');
+    Storage::disk('local')->put('products/foto-kecil.jpg', 'foto kecil');
 
     $files = [
         Attachment::factory()->create(['attachable_type' => 'organization', 'attachable_id' => $organization->id]),
@@ -67,7 +67,8 @@ test('menghapus kelompok ikut menghapus file lampiran dan foto produknya', funct
 
     expect(Attachment::count())->toBe(0)
         ->and(Product::count())->toBe(0)
-        ->and(Storage::disk('public')->exists('products/foto.jpg'))->toBeFalse();
+        ->and(Storage::disk('local')->exists('products/foto.jpg'))->toBeFalse()
+        ->and(Storage::disk('local')->exists('products/foto-kecil.jpg'))->toBeFalse();
     foreach ($files as $file) {
         expect(Storage::disk('local')->exists($file->path))->toBeFalse();
     }

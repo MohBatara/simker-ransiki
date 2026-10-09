@@ -1,21 +1,24 @@
+{{--
+    Halaman form profil kelompok untuk Admin (tambah/ubah), OPD, dan Kelompok (ubah).
+    Variabel: $organization, $options, $canAdminister, $action, $cancelUrl.
+--}}
 @php
     $editing = $organization->exists;
-    $cancelUrl = $editing ? route('admin.organizations.show', $organization) : route('admin.organizations.index');
 @endphp
 
 <x-layouts.app
-    :title="$editing ? 'Ubah kelompok' : 'Tambah kelompok'"
+    :title="$editing ? 'Ubah profil kelompok' : 'Tambah kelompok'"
     :description="$editing ? $organization->name : 'Isi data utama dulu; bagian lain bisa dilengkapi kemudian.'"
     :back="$cancelUrl"
     focus
 >
-    <form method="POST" action="{{ $editing ? route('admin.organizations.update', $organization) : route('admin.organizations.store') }}" class="space-y-5">
+    <form method="POST" action="{{ $action }}" class="space-y-5">
         @csrf
         @if ($editing)
             @method('PUT')
         @endif
 
-        @include('shared.organizations.form', ['canAdminister' => true])
+        @include('shared.organizations.form')
 
         <x-form-actions sticky>
             <x-button variant="ghost" :href="$cancelUrl">Batal</x-button>

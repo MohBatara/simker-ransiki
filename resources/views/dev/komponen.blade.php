@@ -142,7 +142,7 @@
                     <x-checkbox name="tanpa_aktivitas" hint="Bagian lain menjadi opsional.">Tidak ada aktivitas bulan ini</x-checkbox>
                 </div>
                 <x-field label="Lampiran" for="lampiran" class="md:col-span-2" optional>
-                    <x-file-upload name="lampiran" multiple />
+                    <x-file-upload url="" hint="Contoh tampilan. Unggahan di halaman ini tidak disimpan." />
                 </x-field>
                 <x-form-actions sticky class="md:col-span-2">
                     <x-button variant="secondary" type="submit">Simpan draf</x-button>

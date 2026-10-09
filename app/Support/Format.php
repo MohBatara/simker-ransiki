@@ -32,6 +32,13 @@ class Format
         return $sign.'Rp '.self::number(abs((float) $value));
     }
 
+    public static function fileSize(int $bytes): string
+    {
+        return $bytes < 1024 * 1024
+            ? self::number(max(1, round($bytes / 1024))).' KB'
+            : self::number($bytes / 1024 / 1024, 1).' MB';
+    }
+
     public static function date(CarbonInterface|string|null $value): string
     {
         return $value === null ? self::EMPTY : Carbon::parse($value)->translatedFormat('j F Y');

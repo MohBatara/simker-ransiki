@@ -23,7 +23,7 @@ class Navigation
         return match ($role) {
             Role::Kelompok => [
                 self::item('Dasbor', 'kelompok.dashboard', 'home', primary: true),
-                self::item('Profil Kelompok', 'kelompok.profile.edit', 'building-office', 'Profil', true, 'kelompok.profile.*'),
+                self::item('Profil Kelompok', 'kelompok.profile.show', 'building-office', 'Profil', true, 'kelompok.profile.*'),
                 self::item('Produk', 'kelompok.products.index', 'cube', primary: true, active: 'kelompok.products.*'),
                 self::item('Legalitas & Izin', 'kelompok.licenses.index', 'document-check', 'Izin', active: 'kelompok.licenses.*'),
                 self::item('Laporan Bulanan', 'kelompok.reports.index', 'document-text', 'Laporan', true, 'kelompok.reports.*'),

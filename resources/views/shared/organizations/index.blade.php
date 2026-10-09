@@ -1,9 +1,15 @@
 @php
-    $activeFilters = collect($filters)->except('q')->filter(fn ($value) => filled($value))->count();
+    // OPD hanya melihat kelompok binaannya, jadi filter OPD tidak ditampilkan.
+    $filterKeys = $area === 'opd' ? ['type', 'village', 'sector', 'status'] : ['type', 'village', 'sector', 'opd', 'status'];
+    $activeFilters = collect($filters)->only($filterKeys)->filter(fn ($value) => filled($value))->count();
     $hasFilters = $activeFilters > 0 || filled($filters['q'] ?? null);
 @endphp
 
-<x-layouts.app title="Semua Kelompok" description="Kelompok dan kelembagaan ekonomi di Distrik Ransiki.">
+{{-- Dipakai Admin ("Semua Kelompok") dan OPD ("Kelompok Binaan"); isi sudah disaring scope visibleTo. --}}
+<x-layouts.app
+    :title="$area === 'opd' ? 'Kelompok Binaan' : 'Semua Kelompok'"
+    :description="$area === 'opd' ? 'Kelompok yang dibina OPD Anda.' : 'Kelompok dan kelembagaan ekonomi di Distrik Ransiki.'"
+>
     @can('create', App\Models\Organization::class)
         <x-slot:actions>
             <x-button icon="plus" :href="route('admin.organizations.create')">Tambah kelompok</x-button>
@@ -11,7 +17,7 @@
     @endcan
 
     <div class="space-y-5">
-        <form method="GET" action="{{ route('admin.organizations.index') }}" x-data="{ open: @js($activeFilters > 0) }" class="space-y-3" role="search">
+        <form method="GET" action="{{ route($area.'.organizations.index') }}" x-data="{ open: @js($activeFilters > 0) }" class="space-y-3" role="search">
             <div class="flex flex-wrap gap-2">
                 <label for="q" class="sr-only">Cari nama kelompok</label>
                 <x-input name="q" :value="$filters['q'] ?? ''" placeholder="Cari nama kelompok" class="min-w-0 flex-1 md:max-w-sm" />
@@ -20,7 +26,7 @@
                 </x-button>
                 <x-button variant="secondary" type="submit">Cari</x-button>
                 @if ($hasFilters)
-                    <x-button variant="ghost" :href="route('admin.organizations.index')">Hapus filter</x-button>
+                    <x-button variant="ghost" :href="route($area.'.organizations.index')">Hapus filter</x-button>
                 @endif
             </div>
 
@@ -29,7 +35,9 @@
                 <x-select name="type" :options="$options['types']" :selected="$filters['type'] ?? null" placeholder="Semua jenis" x-on:change="$el.form.requestSubmit()" aria-label="Jenis kelembagaan" />
                 <x-select name="village" :options="$options['villages']" :selected="$filters['village'] ?? null" placeholder="Semua kampung" x-on:change="$el.form.requestSubmit()" aria-label="Kampung" />
                 <x-select name="sector" :options="$options['sectors']" :selected="$filters['sector'] ?? null" placeholder="Semua bidang usaha" x-on:change="$el.form.requestSubmit()" aria-label="Bidang usaha" />
-                <x-select name="opd" :options="['none' => 'Belum ada OPD'] + $options['opds']" :selected="$filters['opd'] ?? null" placeholder="Semua OPD" x-on:change="$el.form.requestSubmit()" aria-label="OPD terkait" />
+                @if ($area !== 'opd')
+                    <x-select name="opd" :options="['none' => 'Belum ada OPD'] + $options['opds']" :selected="$filters['opd'] ?? null" placeholder="Semua OPD" x-on:change="$el.form.requestSubmit()" aria-label="OPD terkait" />
+                @endif
                 <x-select name="status" :options="$options['statuses']" :selected="$filters['status'] ?? null" placeholder="Semua status" x-on:change="$el.form.requestSubmit()" aria-label="Status kelompok" />
             </div>
         </form>
@@ -37,12 +45,16 @@
         @if ($organizations->isEmpty())
             @if ($hasFilters)
                 <x-empty-state title="Tidak ada kelompok yang cocok" description="Ubah kata pencarian atau hapus filter.">
-                    <x-button variant="secondary" :href="route('admin.organizations.index')">Hapus filter</x-button>
+                    <x-button variant="secondary" :href="route($area.'.organizations.index')">Hapus filter</x-button>
                 </x-empty-state>
             @else
-                <x-empty-state title="Belum ada kelompok" description="Tambah kelompok pertama agar bisa dipantau dan mulai melapor.">
-                    <x-button icon="plus" :href="route('admin.organizations.create')">Tambah kelompok</x-button>
-                </x-empty-state>
+                @if ($area === 'opd')
+                    <x-empty-state title="Belum ada kelompok binaan" description="Kelompok dihubungkan ke OPD oleh Admin distrik. Hubungi Admin bila ada kelompok yang belum muncul." />
+                @else
+                    <x-empty-state title="Belum ada kelompok" description="Tambah kelompok pertama agar bisa dipantau dan mulai melapor.">
+                        <x-button icon="plus" :href="route('admin.organizations.create')">Tambah kelompok</x-button>
+                    </x-empty-state>
+                @endif
             @endif
         @else
             <x-table clickable>
@@ -55,7 +67,7 @@
                 </x-slot:head>
 
                 @foreach ($organizations as $organization)
-                    <x-table.row :href="route('admin.organizations.show', $organization)">
+                    <x-table.row :href="route($area.'.organizations.show', $organization)">
                         <x-table.cell primary>{{ $organization->name }}</x-table.cell>
                         <x-table.cell subtitle>{{ $organization->institutionType->name }} · {{ $organization->village->name }}</x-table.cell>
                         <x-table.cell label="Bidang usaha" optional>{{ $organization->sectors->pluck('name')->join(', ') }}</x-table.cell>

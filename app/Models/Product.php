@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\OrganizationStatus;
 use App\Models\Concerns\HasAttachments;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -15,8 +16,10 @@ class Product extends Model
 {
     use HasAttachments, HasFactory;
 
-    /** Foto produk tampil di halaman publik, jadi disimpan di disk public. */
-    public const PHOTO_DISK = 'public';
+    /** Foto disimpan privat dan dibuka lewat route /foto-produk/{id} yang memeriksa hak akses. */
+    public const PHOTO_DISK = 'local';
+
+    public const THUMBNAIL_SUFFIX = '-kecil';
 
     protected $attributes = [
         'is_featured' => false,
@@ -33,11 +36,43 @@ class Product extends Model
 
     protected static function booted(): void
     {
-        static::deleted(function (Product $product) {
-            if ($product->photo_path) {
-                Storage::disk(self::PHOTO_DISK)->delete($product->photo_path);
-            }
-        });
+        static::deleted(fn (Product $product) => $product->deletePhotoFiles());
+    }
+
+    public function thumbnailPath(): ?string
+    {
+        return $this->photo_path ? preg_replace('/\.jpg$/', self::THUMBNAIL_SUFFIX.'.jpg', $this->photo_path) : null;
+    }
+
+    public function deletePhotoFiles(): void
+    {
+        if ($this->photo_path) {
+            Storage::disk(self::PHOTO_DISK)->delete([$this->photo_path, $this->thumbnailPath()]);
+        }
+    }
+
+    /** Parameter v berubah setiap foto diganti, sehingga cache browser untuk foto lama tidak dipakai. */
+    public function photoUrl(bool $thumbnail = false): ?string
+    {
+        if (! $this->photo_path) {
+            return null;
+        }
+
+        return route('product-photos.show', array_filter([
+            'product' => $this->id,
+            'ukuran' => $thumbnail ? 'kecil' : null,
+            'v' => substr(md5($this->photo_path), 0, 8),
+        ]));
+    }
+
+    /** Foto boleh dilihat tanpa login hanya bila produk dan kelompoknya tampil di direktori publik. */
+    public function isPubliclyVisible(): bool
+    {
+        $organization = $this->organization()->first(['id', 'status', 'is_public']);
+
+        return $this->is_public
+            && $organization?->is_public
+            && $organization->status === OrganizationStatus::Active;
     }
 
     public function organization(): BelongsTo

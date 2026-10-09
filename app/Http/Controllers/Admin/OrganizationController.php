@@ -6,38 +6,25 @@ use App\Actions\Organizations\SaveOrganization;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Organizations\OrganizationRequest;
 use App\Http\Requests\Organizations\OrganizationStatusRequest;
-use App\Http\Requests\Organizations\LicenseRequest;
 use App\Models\Organization;
 use App\Support\OrganizationOptions;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
 use Illuminate\View\View;
 
+/**
+ * Tambah, ubah status, dan hapus kelompok (khusus Admin). Daftar, detail, dan ubah profil ada di
+ * Shared\OrganizationController karena dipakai juga oleh OPD.
+ */
 class OrganizationController extends Controller
 {
-    public function index(Request $request): View
-    {
-        $filters = $request->only(['q', 'type', 'village', 'sector', 'opd', 'status']);
-
-        $organizations = Organization::visibleTo($request->user())
-            ->filter($filters)
-            ->with(['institutionType', 'village', 'sectors', 'opds'])
-            ->orderBy('name')
-            ->paginate(20)
-            ->withQueryString();
-
-        return view('admin.organizations.index', [
-            'organizations' => $organizations,
-            'filters' => $filters,
-            'options' => OrganizationOptions::all(),
-        ]);
-    }
-
     public function create(): View
     {
-        return view('admin.organizations.form', [
+        return view('shared.organizations.form-page', [
             'organization' => new Organization(['reporting_starts_on' => now()->startOfMonth()]),
             'options' => OrganizationOptions::all(),
+            'canAdminister' => true,
+            'action' => route('admin.organizations.store'),
+            'cancelUrl' => route('admin.organizations.index'),
         ]);
     }
 
@@ -58,64 +45,6 @@ class OrganizationController extends Controller
         return redirect()->route('admin.organizations.show', $organization)->with('status', 'Kelompok ditambahkan.');
     }
 
-    public function show(Organization $organization): View
-    {
-        return $this->detail($organization, 'profil', [
-            'organization' => $organization->load(['institutionType', 'village', 'sectors', 'opds', 'updater']),
-        ]);
-    }
-
-    public function products(Organization $organization): View
-    {
-        return $this->detail($organization, 'produk', [
-            'products' => $organization->products()->orderBy('name')->get(),
-        ]);
-    }
-
-    public function licenses(Organization $organization): View
-    {
-        return $this->detail($organization, 'izin', [
-            'licenses' => $organization->licenses()->orderBy('type')->get(),
-            'licenseTypes' => LicenseRequest::SUGGESTED_TYPES,
-        ]);
-    }
-
-    public function reports(Organization $organization): View
-    {
-        return $this->detail($organization, 'laporan', [
-            'reports' => $organization->monthlyReports()->orderByDesc('period')->paginate(12),
-        ]);
-    }
-
-    public function users(Organization $organization): View
-    {
-        return $this->detail($organization, 'akun', [
-            'users' => $organization->users()->orderBy('name')->get(),
-        ]);
-    }
-
-    public function edit(Organization $organization): View
-    {
-        return view('admin.organizations.form', [
-            'organization' => $organization->load(['sectors', 'opds']),
-            'options' => OrganizationOptions::all(),
-        ]);
-    }
-
-    public function update(OrganizationRequest $request, Organization $organization, SaveOrganization $save): RedirectResponse
-    {
-        $data = $request->organizationData();
-        $identityChanged = $data['name'] !== $organization->name || (int) $data['village_id'] !== $organization->village_id;
-
-        $save->handle($request->user(), $data, $organization);
-
-        $similar = $identityChanged ? Organization::similarTo($organization->name, $organization->village_id, $organization->id) : collect();
-
-        return redirect()->route('admin.organizations.show', $organization)
-            ->with('status', 'Profil kelompok diperbarui.')
-            ->with('similar', $similar->map->only(['id', 'name'])->all());
-    }
-
     public function updateStatus(OrganizationStatusRequest $request, Organization $organization): RedirectResponse
     {
         $organization->forceFill(['status' => $request->validated('status'), 'updated_by' => $request->user()->id])->save();
@@ -131,13 +60,5 @@ class OrganizationController extends Controller
         }
 
         return redirect()->route('admin.organizations.index')->with('status', 'Kelompok dihapus.');
-    }
-
-    private function detail(Organization $organization, string $tab, array $data): View
-    {
-        $organization->loadMissing(['institutionType', 'village'])
-            ->loadCount(['monthlyReports', 'users', 'products', 'licenses', 'opds']);
-
-        return view('admin.organizations.show', ['organization' => $organization, 'tab' => $tab, ...$data]);
     }
 }

@@ -2,16 +2,32 @@
 
 namespace App\Http\Requests\Organizations;
 
+use App\Models\Product;
+use App\Models\Organization;
+use Illuminate\Auth\Access\Response;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Facades\Gate;
 
 /**
  * Form produk bersama. "Produk unggulan" hanya diatur admin; dari pengguna lain diabaikan.
  */
 class ProductRequest extends FormRequest
 {
-    public function authorize(): bool
+    public function authorize(): Response
     {
-        return true;
+        $record = $this->route('product');
+
+        return $record instanceof Product
+            ? Gate::forUser($this->user())->inspect('update', $record)
+            : Gate::forUser($this->user())->inspect('create', [Product::class, $this->targetOrganization()]);
+    }
+
+    /** Kelompok target: dari URL (Admin/OPD) atau kelompok milik akun yang login (Kelompok). */
+    public function targetOrganization(): Organization
+    {
+        $organization = $this->route('organization');
+
+        return $organization instanceof Organization ? $organization : Organization::findOrFail($this->user()->organization_id);
     }
 
     protected function prepareForValidation(): void

@@ -95,7 +95,15 @@ Laporan `verified` tidak bisa diubah siapa pun. Kelompok `closed` tidak bisa mem
   (`Response::denyAsNotFound()`), agar keberadaan ID tidak terbongkar. Data yang terlihat tetapi
   aksinya tidak diizinkan (mis. mengubah laporan `submitted`) → 403 dengan pesan.
 - File privat disimpan di disk `local` (bukan `public`) dan hanya diunduh melalui route yang
-  memeriksa Policy.
+  memeriksa Policy. Ini berlaku juga untuk foto produk.
+- Route file dipakai bersama semua peran (di luar prefix peran), dijaga `auth` + Policy:
+  `/lampiran/{id}` (tampil inline), `/lampiran/{id}/unduh`, `POST /lampiran/{kelompok|izin}/{id}`,
+  `DELETE /lampiran/{id}`, `POST/DELETE /foto-produk/{id}`. Hak unggah/hapus = hak `update` atas
+  induknya; siapa pun yang berhak boleh menghapus file unggahan orang lain.
+- `GET /foto-produk/{id}` boleh tanpa login bila produk `is_public` dan kelompoknya aktif serta
+  `is_public`; selain itu wajib login + Policy, tamu tanpa hak mendapat 404.
+- Header file: `X-Content-Type-Options: nosniff`; PDF tampil inline dengan
+  `Content-Security-Policy: sandbox`, plus tombol "Unduh" (`Content-Disposition: attachment`).
 - Setiap fitur baru yang menyentuh data wajib punya feature test akses: pemilik bisa, peran lain
   yang tidak berhak ditolak.
 
@@ -251,7 +259,8 @@ draft ──ajukan──▶ submitted ──verifikasi──▶ verified
 
 - Kelompok hanya bisa mengubah laporan berstatus `draft` atau `revision`.
 - Laporan `submitted` terkunci untuk kelompok sampai OPD bertindak.
-- Laporan `verified` tidak bisa diubah (tahap inti).
+- Laporan `verified` tidak bisa diubah (tahap inti). Lampiran laporan berstatus `verified` tidak
+  boleh dihapus siapa pun, termasuk Admin.
 - OPD yang boleh memverifikasi: OPD mana pun yang terhubung dengan kelompok tersebut.
   Admin juga boleh. (Keputusan sementara, menunggu konfirmasi klien.)
 - Permintaan revisi wajib disertai catatan.
@@ -470,11 +479,20 @@ marketplace, PWA/aplikasi mobile, dua bahasa.
 - Enum PHP (backed enum) untuk role, status kelompok, status laporan, status izin, kategori masalah.
   Setiap enum punya method `label()` berbahasa Indonesia dan, bila perlu, `badgeColor()`.
 - Controller dikelompokkan per area: `App\Http\Controllers\Admin\*`, `Opd\*`, `Kelompok\*`,
-  `Publik\*`.
+  `Publik\*`. Pengecualian: fitur yang sama persis di beberapa area (detail kelompok, CRUD
+  produk/izin, unggah file) memakai `App\Http\Controllers\Shared\*`; hak akses sepenuhnya
+  ditentukan Policy, bukan oleh controller mana yang dipakai. View bersama di `resources/views/shared/`.
 - View dikelompokkan sama: `resources/views/admin/...`, `opd/...`, `kelompok/...`, `publik/...`.
 - Hindari N+1: gunakan `with()` dan `withCount()`. Paginasi 20 baris.
 - Format angka/tanggal Indonesia lewat helper bersama, bukan ditulis ulang di view.
 - Upload: validasi mime + ukuran di Form Request, simpan dengan nama acak, jangan percaya nama file asli.
+  Tipe dicek dari isi file (`finfo`), bukan ekstensi. Gambar > 8000 px per sisi ditolak sebelum
+  diproses. Gambar diproses `intervention/image` (driver GD): diputar sesuai EXIF, sisi terpanjang
+  maks 1600 px, disimpan ulang tanpa metadata (EXIF/GPS hilang). Foto produk selalu JPEG + versi
+  kecil 400 px. Input gambar memakai `accept="image/jpeg,image/png"` (iPhone mengonversi HEIC);
+  HEIC yang tetap terkirim ditolak dengan pesan cara mengubah pengaturan kamera.
+- Unggah lewat XHR satu file per permintaan dengan bilah progres; gambar diperkecil dulu di
+  browser (canvas), server tetap memproses ulang. Batas 30 unggahan per menit per akun.
 - Jangan menaruh query di Blade.
 
 ---
@@ -518,6 +536,9 @@ Data contoh harus terlihat realistis namun jelas bukan data resmi:
 - Aset dibangun di lokal (`npm run build`) lalu folder `public/build` ikut diunggah;
   Node tidak wajib ada di server.
 - File privat tetap di `storage/app/private`, tidak bisa diakses langsung dari URL.
+- PHP: ekstensi `gd`, `exif`, `fileinfo` wajib aktif. `upload_max_filesize` dan `post_max_size`
+  minimal 12M, `memory_limit` minimal 512M (gambar besar didekode penuh di memori sebelum diperkecil).
+- HTTPS wajib: tombol "Salin info masuk" memakai clipboard browser yang hanya penuh berfungsi di HTTPS.
 - Cron: `* * * * * php /path/artisan schedule:run >> /dev/null 2>&1` (bila fitur pengingat dipakai).
 - `APP_ENV=production`, `APP_DEBUG=false`, `APP_TIMEZONE=Asia/Jayapura`.
 - Backup database berkala (fitur backup Hostinger + ekspor manual sebelum update besar).

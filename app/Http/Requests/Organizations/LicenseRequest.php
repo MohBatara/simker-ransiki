@@ -3,7 +3,11 @@
 namespace App\Http\Requests\Organizations;
 
 use App\Enums\LicenseStatus;
+use App\Models\License;
+use App\Models\Organization;
+use Illuminate\Auth\Access\Response;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\Rule;
 
 class LicenseRequest extends FormRequest
@@ -11,9 +15,21 @@ class LicenseRequest extends FormRequest
     /** Saran isian jenis izin; jenis lain tetap boleh diketik. */
     public const SUGGESTED_TYPES = ['NIB', 'PIRT', 'Sertifikat Halal', 'BPOM'];
 
-    public function authorize(): bool
+    public function authorize(): Response
     {
-        return true;
+        $record = $this->route('license');
+
+        return $record instanceof License
+            ? Gate::forUser($this->user())->inspect('update', $record)
+            : Gate::forUser($this->user())->inspect('create', [License::class, $this->targetOrganization()]);
+    }
+
+    /** Kelompok target: dari URL (Admin/OPD) atau kelompok milik akun yang login (Kelompok). */
+    public function targetOrganization(): Organization
+    {
+        $organization = $this->route('organization');
+
+        return $organization instanceof Organization ? $organization : Organization::findOrFail($this->user()->organization_id);
     }
 
     public function rules(): array

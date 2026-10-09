@@ -1,6 +1,7 @@
 {{--
     Daftar izin kelompok dengan tambah/ubah/hapus lewat modal.
-    Variabel: $licenses, $licenseTypes (saran isian), $canManage, $urls [store, update, destroy] dengan __ID__.
+    Variabel: $licenses (dengan attachments_count), $licenseTypes (saran isian), $canManage,
+    $urls [store, update, destroy] dengan __ID__, $licenseUrl (halaman detail izin, dengan __ID__).
 --}}
 @use('App\Support\Format')
 
@@ -42,28 +43,31 @@
             </div>
         @endif
 
-        <x-table>
+        <x-table clickable>
             <x-slot:head>
                 <x-table.heading>Jenis izin</x-table.heading>
                 <x-table.heading>Nomor</x-table.heading>
                 <x-table.heading>Status</x-table.heading>
                 <x-table.heading optional>Diajukan</x-table.heading>
                 <x-table.heading>Terbit</x-table.heading>
+                <x-table.heading numeric optional>Lampiran</x-table.heading>
                 @if ($canManage)
                     <x-table.heading><span class="sr-only">Aksi</span></x-table.heading>
                 @endif
             </x-slot:head>
 
             @foreach ($licenses as $license)
-                <x-table.row>
+                <x-table.row :href="str_replace('__ID__', $license->id, $licenseUrl)">
                     <x-table.cell primary>{{ $license->type }}</x-table.cell>
                     <x-table.cell label="Nomor">{{ $license->number ?? '—' }}</x-table.cell>
                     <x-table.cell badge><x-badge :tone="$license->status->badgeColor()">{{ $license->status->label() }}</x-badge></x-table.cell>
                     <x-table.cell label="Diajukan" optional>{{ Format::date($license->submitted_on) }}</x-table.cell>
                     <x-table.cell label="Terbit">{{ Format::date($license->issued_on) }}</x-table.cell>
+                    <x-table.cell label="Lampiran" numeric optional>{{ Format::number($license->attachments_count) }}</x-table.cell>
                     @if ($canManage)
                         <x-table.cell actions>
-                            <div class="inline-flex items-center justify-end gap-2 max-md:w-full">
+                            {{-- relative z-10: tombol tetap bisa diklik di atas tautan baris. --}}
+                            <div class="relative z-10 inline-flex items-center justify-end gap-2 max-md:w-full">
                                 <x-button variant="ghost" x-on:click="remove({{ Js::from(['id' => $license->id, 'name' => $license->type]) }})">Hapus</x-button>
                                 <x-button variant="secondary" x-on:click="edit({{ Js::from($toRecord($license)) }})">Ubah</x-button>
                             </div>
