@@ -211,14 +211,37 @@ Setiap perubahan status mencatat baris di `report_reviews` dan mengirim notifika
 
 **Publik:** Beranda · Profil Ransiki · Direktori Kelompok · Produk Unggulan · Kontak · Masuk
 
-**Kelompok:** Dashboard · Profil Kelompok · Produk · Legalitas & Izin · Laporan Bulanan ·
+**Kelompok:** Dasbor · Profil Kelompok · Produk · Legalitas & Izin · Laporan Bulanan ·
 Notifikasi · Akun Saya
 
-**OPD:** Dashboard · Kelompok Binaan · Verifikasi Laporan · Semua Laporan ·
+**OPD:** Dasbor · Kelompok Binaan · Verifikasi Laporan · Semua Laporan ·
 Masalah & Kebutuhan · Notifikasi · Akun Saya
 
-**Admin:** Dashboard Distrik · Semua Kelompok · Semua Laporan · Pengguna ·
+**Admin:** Dasbor Distrik · Semua Kelompok · Semua Laporan · Pengguna ·
 Data Master (Kampung, Jenis Kelembagaan, Bidang Usaha, OPD) · Konten Website · Notifikasi
+
+Pakai "Dasbor", bukan "Dashboard", di semua teks antarmuka dan semua ukuran layar.
+
+### Label ringkas (sidebar tablet dan navigasi bawah HP)
+
+| Menu lengkap | Label ringkas |
+|---|---|
+| Dasbor, Dasbor Distrik | Dasbor |
+| Profil Kelompok | Profil |
+| Produk | Produk |
+| Legalitas & Izin | Izin |
+| Laporan Bulanan, Semua Laporan | Laporan |
+| Notifikasi | Notifikasi |
+| Akun Saya | Akun |
+| Kelompok Binaan, Semua Kelompok | Kelompok |
+| Verifikasi Laporan | Verifikasi |
+| Pengguna | Pengguna |
+| Data Master | Master |
+| Konten Website | Konten |
+| Masalah & Kebutuhan | Masalah (usulan, menunggu persetujuan) |
+
+Nama menu lengkap tetap tampil di sidebar desktop, dan sebagai tooltip saat label ringkas
+di-hover atau difokuskan.
 
 ---
 
@@ -245,7 +268,7 @@ dirancang dengan baik, bukan landing page startup.
 ```
 --color-ink:        #1C1F1E   teks utama
 --color-ink-soft:   #4A504D   teks sekunder
---color-ink-muted:  #7A807D   keterangan, placeholder
+--color-ink-muted:  #686E6B   keterangan, placeholder
 --color-line:       #E3E5E1   border default
 --color-line-strong:#C9CCC6   border tegas
 --color-paper:      #FFFFFF   permukaan kartu
@@ -263,11 +286,15 @@ Status (versi kalem, teks gelap di atas latar terang):
 --color-idle: #5C625F  bg #EEEFEC   draf / tidak aktif
 ```
 Hanya satu warna aksen. Warna status hanya untuk badge status dan angka status, bukan dekorasi.
+Semua teks, termasuk teks kecil, wajib berkontras minimal 4.5:1 terhadap latarnya
+(paper, canvas, subtle, atau latar status). Periksa kontras sebelum mengubah atau menambah warna.
 
 ### Tipografi
 - Font: Public Sans, untuk seluruh UI.
 - Ukuran: 13px (keterangan), 14px (teks UI default, tabel), 16px (paragraf publik),
   18px (judul kartu), 22px (judul halaman), 28–32px (judul halaman publik).
+- Pengecualian: 11px (`text-micro`) HANYA untuk label ringkas di sidebar tablet. Jangan dipakai
+  di tempat lain.
 - Ketebalan: 400 dan 600 saja. Judul memakai 600, bukan 700/800.
 - Gunakan sentence case: "Laporan bulanan", bukan "Laporan Bulanan" pada tombol dan label.
   Nama menu boleh Title Case singkat.
@@ -284,18 +311,22 @@ Hanya satu warna aksen. Warna status hanya untuk badge status dan angka status, 
 ### Tata letak gaya aplikasi (responsif)
 - **HP (< 768px):** header atas tipis (judul halaman + tombol notifikasi), navigasi bawah tetap
   berisi maksimal 5 menu utama, menu lain di "Lainnya". Tabel berubah menjadi daftar kartu.
-  Form satu kolom. Tombol aksi utama di bawah layar (sticky).
-- **Tablet (768–1279px):** sidebar ikon ringkas (lebar 72px) dengan label kecil, konten penuh.
+  Form satu kolom. Aksi page-header tampil di bawah judul dan ikut tergulir.
+  Bar aksi yang menempel di bawah layar hanya untuk halaman form, lewat `<x-form-actions sticky>`.
+- **Tablet (768–1279px):** sidebar ikon ringkas (lebar 72px) dengan label ringkas 11px
+  (lihat Bagian 6) dan tooltip nama menu lengkap saat hover/fokus, konten penuh.
   Tabel tampil dengan kolom penting saja.
-- **Desktop (≥ 1280px):** sidebar penuh 248px (logo, menu, profil pengguna di bawah),
+- **Desktop (≥ 1280px):** sidebar penuh 248px (logo + nama aplikasi, menu, profil pengguna di bawah),
   header halaman berisi judul + aksi. Tabel lengkap.
-- Halaman publik memakai navigasi atas biasa, dengan menu hamburger di HP.
+- Halaman publik memakai navigasi atas biasa, dengan menu hamburger di HP dan tablet (< 1024px).
+- Logo memakai komponen `logo` (sementara placeholder "SK"); di tablet hanya logo yang tampil.
 
 ### Komponen Blade (buat di awal, pakai di semua halaman)
 Di `resources/views/components/`:
 `button`, `input`, `select`, `textarea`, `checkbox`, `field` (label + input + error + hint),
 `card`, `stat` (angka ringkas), `badge` (status), `table` (+ mode kartu di mobile),
 `empty-state`, `modal`, `dropdown`, `page-header`, `alert`, `tabs`, `file-upload`,
+`form-actions` (bar tombol form; `sticky` hanya untuk halaman form), `logo`,
 `layouts.app` (area login), `layouts.public` (website publik), `layouts.guest` (login).
 
 Halaman tidak boleh menulis ulang gaya tombol/kartu sendiri. Selalu pakai komponen.
@@ -319,6 +350,8 @@ Target: versi uji coba ruang lingkup inti dalam 2 minggu.
    `Asia/Jayapura`, locale `id`.
 2. Token desain + komponen Blade dasar + tiga layout (app, public, guest). Buat halaman
    `/dev/komponen` (hanya di environment local) untuk meninjau semua komponen.
+   Route-nya ada di `routes/dev.php` dan hanya dimuat saat `APP_ENV=local` (bootstrap/app.php).
+   Tautan ke halaman ini di menu mana pun hanya ditampilkan bila `Route::has('dev.components.app')`.
 3. Migrasi + model + enum + relasi + seeder data contoh (Bagian 10).
 4. Login (username/email), middleware role, redirect dashboard per peran, Policy dasar,
    feature test akses.
