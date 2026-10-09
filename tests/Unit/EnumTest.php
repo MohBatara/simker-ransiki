@@ -1,0 +1,32 @@
+<?php
+
+use App\Enums\AttachmentVisibility;
+use App\Enums\IssueKind;
+use App\Enums\LegalStatus;
+use App\Enums\LicenseStatus;
+use App\Enums\OrganizationStatus;
+use App\Enums\ProblemCategory;
+use App\Enums\ReportStatus;
+use App\Enums\ReviewAction;
+use App\Enums\Role;
+use App\Enums\SupportCategory;
+
+$enums = [
+    AttachmentVisibility::class, IssueKind::class, LegalStatus::class, LicenseStatus::class,
+    OrganizationStatus::class, ProblemCategory::class, ReportStatus::class, ReviewAction::class,
+    Role::class, SupportCategory::class,
+];
+
+test('setiap nilai enum punya label Indonesia', function (string $enum) {
+    foreach ($enum::cases() as $case) {
+        expect($case->label())->not->toBeEmpty()->not->toBe($case->value);
+    }
+
+    expect($enum::options())->toHaveCount(count($enum::cases()));
+})->with($enums);
+
+test('warna badge hanya memakai tone status yang ada', function (string $enum) {
+    foreach ($enum::cases() as $case) {
+        expect($case->badgeColor())->toBeIn(['ok', 'wait', 'fix', 'idle']);
+    }
+})->with([OrganizationStatus::class, ReportStatus::class, LicenseStatus::class, LegalStatus::class]);

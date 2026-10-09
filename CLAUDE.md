@@ -101,6 +101,15 @@ Setelah login, arahkan pengguna ke dasbor sesuai perannya.
 Nama tabel Bahasa Inggris, snake_case, jamak. Jangan memakai nama tabel `groups`
 (kata kunci MySQL 8); kelompok ekonomi disebut `organizations` di kode, "Kelompok" di tampilan.
 
+Konvensi kolom:
+- Kolom status/enum disimpan sebagai `varchar` dan di-cast ke enum PHP (`app/Enums`), bukan tipe
+  `ENUM` MySQL, agar menambah nilai tidak perlu mengubah struktur tabel.
+- Uang disimpan sebagai bilangan bulat Rupiah (`bigInteger`), tanpa desimal. Kolom yang bisa
+  negatif (`profit`, `members_change`) signed.
+- Jumlah produksi/penjualan `decimal(12,2)` karena satuan bisa kg/liter.
+- Data master tidak bisa dihapus selama masih dipakai (FK restrict). Kelompok tidak bisa dihapus
+  bila punya laporan atau akun; kelompok yang berhenti diberi status `closed`.
+
 ### Data master
 - `opds`: id, name, short_name, description
 - `villages` (kampung): id, name
@@ -124,13 +133,16 @@ Jangan mengarang kepanjangan akronim resmi (KDMP, KNMP, dsb.). Simpan apa adanya
 - `organizations`: id, slug, name, institution_type_id, village_id, address, founded_year,
   leader_name, phone, email, members_count, description,
   production_capacity, markets, workforce_count, assets, facilities, equipment,
-  legal_status, legal_number,
+  legal_status (enum LegalStatus: unknown, none, in_process, registered; default unknown),
+  legal_number (teks, nullable), legal_notes (text, nullable),
   status (enum: active, inactive, closed; default active),
   reporting_starts_on (date, awal bulan; kelompok tidak dianggap terlambat sebelum tanggal ini),
   is_public (bool, default false), show_contact_publicly (bool, default false),
   created_by, updated_by, timestamps
 - `organization_sector` (pivot): organization_id, business_sector_id
+  Primary key gabungan + index tunggal pada `business_sector_id`.
 - `organization_opd` (pivot): organization_id, opd_id
+  Primary key gabungan + index tunggal pada `opd_id` (dipakai filter data per OPD).
   Satu kelompok boleh punya banyak bidang usaha dan banyak OPD.
   Hubungan OPD ditetapkan manual oleh Admin, tidak otomatis dari bidang usaha.
 - `licenses` (perizinan): id, organization_id, type, number, status
@@ -141,6 +153,10 @@ Jangan mengarang kepanjangan akronim resmi (KDMP, KNMP, dsb.). Simpan apa adanya
   mime_type, size, visibility (enum: private, public; default private), uploaded_by
   Tipe yang diizinkan: JPG, PNG, PDF. Maksimal 10 MB per file, 10 file per entitas.
   Gambar dikompres/diubah ukurannya saat diunggah (koneksi di lapangan lambat).
+  `attachable_type` memakai alias morph map (`organization`, `license`, `product`,
+  `monthly_report`), bukan nama class.
+  File fisik ikut dihapus saat baris lampiran atau induknya dihapus (model event, trait
+  `HasAttachments`). Foto produk (`photo_path`) juga dihapus saat produk dihapus.
 
 ### Laporan bulanan
 - `monthly_reports`: id, organization_id, period (date, selalu tanggal 1),
@@ -151,6 +167,9 @@ Jangan mengarang kepanjangan akronim resmi (KDMP, KNMP, dsb.). Simpan apa adanya
   income_sales, income_other, costs, profit,
   submitted_at, submitted_by, verified_at, verified_by, timestamps
   UNIQUE (organization_id, period): satu laporan per kelompok per bulan.
+  `profit` tidak diisi pengguna: dihitung `income_sales + income_other − costs` dan disimpan saat
+  laporan disimpan (model event). NULL bila salah satu komponen NULL. Di form tampil baca-saja
+  dengan keterangan "dihitung otomatis".
 - `report_items` (produksi & penjualan per produk): id, monthly_report_id, product_id (nullable),
   product_name, production_qty, production_unit, sales_qty, sales_unit, revenue
 - `report_issues` (masalah & kebutuhan): id, monthly_report_id, kind (enum: problem, support),

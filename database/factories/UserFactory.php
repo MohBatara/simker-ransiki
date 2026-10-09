@@ -2,6 +2,9 @@
 
 namespace Database\Factories;
 
+use App\Enums\Role;
+use App\Models\Opd;
+use App\Models\Organization;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;
@@ -26,11 +29,45 @@ class UserFactory extends Factory
     {
         return [
             'name' => fake()->name(),
+            'username' => fake()->unique()->userName(),
             'email' => fake()->unique()->safeEmail(),
             'email_verified_at' => now(),
             'password' => static::$password ??= Hash::make('password'),
             'remember_token' => Str::random(10),
+            'role' => Role::Kelompok,
+            'organization_id' => Organization::factory(),
+            'is_active' => true,
         ];
+    }
+
+    public function admin(): static
+    {
+        return $this->state(fn () => [
+            'role' => Role::Admin,
+            'organization_id' => null,
+        ]);
+    }
+
+    public function opd(?Opd $opd = null): static
+    {
+        return $this->state(fn () => [
+            'role' => Role::Opd,
+            'opd_id' => $opd?->id ?? Opd::factory(),
+            'organization_id' => null,
+        ]);
+    }
+
+    public function kelompok(Organization $organization): static
+    {
+        return $this->state(fn () => [
+            'role' => Role::Kelompok,
+            'organization_id' => $organization->id,
+        ]);
+    }
+
+    public function inactive(): static
+    {
+        return $this->state(fn () => ['is_active' => false]);
     }
 
     /**
