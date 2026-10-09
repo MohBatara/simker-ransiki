@@ -109,6 +109,7 @@ class DemoSeeder extends Seeder
             'username' => 'admin',
             'email' => 'admin@contoh.test',
             'password' => 'password',
+            'must_change_password' => false,
             'role' => Role::Admin,
         ]);
 
@@ -116,6 +117,7 @@ class DemoSeeder extends Seeder
             'name' => "Petugas {$opd->name} (contoh)",
             'username' => 'opd.'.strtolower($shortName),
             'password' => 'password',
+            'must_change_password' => false,
             'role' => Role::Opd,
             'opd_id' => $opd->id,
         ]));
@@ -134,6 +136,7 @@ class DemoSeeder extends Seeder
                 'name' => 'Ketua Contoh 01',
                 'username' => 'kelompok1',
                 'password' => 'password',
+                'must_change_password' => false,
                 'role' => Role::Kelompok,
                 'organization_id' => $organizations[1]['organization']->id,
             ]),
@@ -141,6 +144,7 @@ class DemoSeeder extends Seeder
                 'name' => 'Ketua Contoh 05',
                 'username' => 'kelompok2',
                 'password' => 'password',
+                'must_change_password' => false,
                 'role' => Role::Kelompok,
                 'organization_id' => $organizations[5]['organization']->id,
             ]),

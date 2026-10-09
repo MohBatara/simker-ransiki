@@ -57,12 +57,12 @@ test('mode form menyembunyikan navigasi bawah dan menampilkan tombol kembali', f
         ->assertOk()
         ->assertSee('aria-label="Kembali"', false)
         ->assertDontSee('Menu lainnya')
-        ->assertDontSee('href="#" class="-mr-2 flex size-11', false);
+        ->assertDontSee('aria-label="Notifikasi">', false);
 
     $this->get('/dev/komponen')
         ->assertOk()
         ->assertSee('Menu lainnya')
-        ->assertSee('href="#" class="-mr-2 flex size-11', false);
+        ->assertSee('aria-label="Notifikasi">', false);
 });
 
 test('baris tabel dengan href menjadi satu link dengan chevron, tanpa tombol buka', function () {

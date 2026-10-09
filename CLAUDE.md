@@ -69,13 +69,29 @@ Tiga peran login + pengunjung publik. Kolom `users.role` memakai enum `Role`.
 
 Empat OPD memakai tampilan yang sama; data otomatis tersaring berdasarkan `users.opd_id`.
 
+### Hak per jenis data
+
+| Data | Admin | OPD (hanya kelompok binaan) | Kelompok (hanya miliknya) |
+|---|---|---|---|
+| Profil kelompok, produk, izin | lihat, buat, ubah, hapus | lihat, ubah (membantu melengkapi data) | lihat, ubah |
+| Status kelompok, relasi OPD/bidang, awal wajib lapor | ubah | – | – |
+| Laporan bulanan | lihat, verifikasi, minta revisi | lihat, verifikasi, minta revisi (tidak membuat/mengubah isi) | lihat, buat, ubah & ajukan saat `draft`/`revision` |
+| Lampiran | mengikuti hak atas induknya | mengikuti hak atas induknya | mengikuti hak atas induknya |
+| Pengguna | kelola, reset kata sandi (tidak bisa menonaktifkan/menghapus diri sendiri) | – | – |
+
+Laporan `verified` tidak bisa diubah siapa pun. Kelompok `closed` tidak bisa membuat laporan baru.
+
 ### Aturan akses (WAJIB)
 
 - Setiap pembatasan akses dicek di server melalui Policy dan/atau query scope. Menyembunyikan
   menu atau tombol saja tidak cukup.
-- Gunakan Policy untuk `Organization`, `MonthlyReport`, `Product`, `Attachment`, `User`.
-- Gunakan scope `Organization::visibleTo(User $user)` untuk semua daftar kelompok.
-- Akses lewat ID di URL (mis. `/kelompok/laporan/15`) harus ditolak (403/404) bila bukan miliknya.
+- Gunakan Policy untuk `Organization`, `MonthlyReport`, `Product`, `License`, `Attachment`, `User`.
+- Gunakan scope `Organization::visibleTo(User $user)` untuk semua daftar kelompok. Policy memakai
+  `Organization::isVisibleTo()` yang hasilnya selalu sama dengan scope (ada tesnya).
+- Membuka area peran lain (mis. kelompok membuka `/admin`) → 403.
+- Membuka data milik orang lain lewat ID di URL (mis. `/kelompok/laporan/15`) → 404
+  (`Response::denyAsNotFound()`), agar keberadaan ID tidak terbongkar. Data yang terlihat tetapi
+  aksinya tidak diizinkan (mis. mengubah laporan `submitted`) → 403 dengan pesan.
 - File privat disimpan di disk `local` (bukan `public`) dan hanya diunduh melalui route yang
   memeriksa Policy.
 - Setiap fitur baru yang menyentuh data wajib punya feature test akses: pemilik bisa, peran lain
@@ -86,13 +102,31 @@ Empat OPD memakai tampilan yang sama; data otomatis tersaring berdasarkan `users
 ```
 /                       publik
 /direktori, /direktori/{slug}, /produk, /profil, /kontak
-/login, /logout
-/admin/...              middleware auth + role:admin
-/opd/...                middleware auth + role:opd
-/kelompok/...           middleware auth + role:kelompok
+/login (GET, POST), /logout (POST saja)
+/akun/kata-sandi        auth + active (semua peran; juga halaman ganti kata sandi wajib)
+/admin/...              auth + active + password.changed + role:admin
+/opd/...                auth + active + password.changed + role:opd
+/kelompok/...           auth + active + password.changed + role:kelompok
 ```
 
-Setelah login, arahkan pengguna ke dasbor sesuai perannya.
+Setelah login, arahkan pengguna ke dasbor sesuai perannya. Halaman tujuan sebelum login hanya
+dipakai bila berada di area perannya sendiri.
+
+### Login dan session
+- Login dengan username ATAU email + kata sandi. Username disimpan dan dicocokkan dalam huruf
+  kecil (trim + lowercase), termasuk di seeder dan saat Admin membuat akun.
+- Tidak ada daftar akun sendiri dan tidak ada "lupa kata sandi" via email; reset oleh Admin.
+- Pesan gagal sama untuk username tidak ada dan kata sandi salah. Rate limit: 5 percobaan per
+  menit per (username/email + IP), 20 per menit per IP.
+- Hanya setelah kata sandi benar: akun nonaktif ditolak ("Akun ini dinonaktifkan. Hubungi Admin
+  distrik."), akun OPD tanpa `opd_id` atau kelompok tanpa `organization_id` ditolak ("Akun belum
+  terhubung ke OPD/kelompok. Hubungi Admin distrik.").
+- Middleware `active` mengeluarkan pengguna yang dinonaktifkan atau tidak terhubung saat sedang login.
+- Login meregenerasi session dan mencatat `last_login_at`. Logout hanya lewat POST.
+- `must_change_password` (default true; diset true saat Admin membuat akun atau mereset kata
+  sandi): middleware `password.changed` memaksa ganti kata sandi di `/akun/kata-sandi`.
+  Kata sandi minimal 8 karakter, berbeda dari yang lama, dan wajib mengisi kata sandi saat ini.
+- Session: `SESSION_LIFETIME=240` menit, `SESSION_EXPIRE_ON_CLOSE=true`, tanpa "Ingat saya".
 
 ---
 
@@ -124,7 +158,7 @@ Jangan mengarang kepanjangan akronim resmi (KDMP, KNMP, dsb.). Simpan apa adanya
 ### Pengguna
 - `users`: id, name, username (unik), email (nullable), phone (nullable), password,
   role, opd_id (nullable, wajib bila role=opd), organization_id (nullable, wajib bila role=kelompok),
-  is_active, last_login_at
+  is_active, last_login_at, must_change_password (bool, default true)
 - Login memakai username ATAU email. Banyak ketua kelompok tidak punya email.
 - Akun dibuat oleh Admin. Admin dapat mengatur ulang kata sandi.
 - Satu kelompok boleh punya lebih dari satu akun (beberapa user dengan organization_id sama).

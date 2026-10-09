@@ -27,6 +27,7 @@
     title="Komponen"
     description="Tinjauan token desain dan komponen dasar. Hanya tersedia di environment local."
     :navigation="$navigation"
+    notifications-url="#"
     user-name="Pengguna Contoh"
     user-role="Kelompok"
 >

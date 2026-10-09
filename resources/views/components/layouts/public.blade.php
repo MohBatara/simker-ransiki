@@ -10,6 +10,9 @@
         ['label' => 'Produk Unggulan', 'href' => url('/produk'), 'active' => request()->is('produk*')],
         ['label' => 'Kontak', 'href' => url('/kontak'), 'active' => request()->is('kontak')],
     ];
+    $account = auth()->check()
+        ? ['label' => 'Dasbor', 'href' => route(auth()->user()->role->dashboardRoute())]
+        : ['label' => 'Masuk', 'href' => route('login')];
 @endphp
 
 <!DOCTYPE html>
@@ -37,7 +40,7 @@
                         ])
                     >{{ $item['label'] }}</a>
                 @endforeach
-                <x-button variant="secondary" :href="url('/login')" class="ml-3">Masuk</x-button>
+                <x-button variant="secondary" :href="$account['href']" class="ml-3">{{ $account['label'] }}</x-button>
             </nav>
 
             <button
@@ -69,7 +72,7 @@
                     </li>
                 @endforeach
                 <li class="pb-2 pt-2">
-                    <x-button variant="secondary" :href="url('/login')" class="w-full">Masuk</x-button>
+                    <x-button variant="secondary" :href="$account['href']" class="w-full">{{ $account['label'] }}</x-button>
                 </li>
             </ul>
         </nav>

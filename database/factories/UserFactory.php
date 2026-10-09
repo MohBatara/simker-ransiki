@@ -37,6 +37,7 @@ class UserFactory extends Factory
             'role' => Role::Kelompok,
             'organization_id' => Organization::factory(),
             'is_active' => true,
+            'must_change_password' => false,
         ];
     }
 
@@ -63,6 +64,11 @@ class UserFactory extends Factory
             'role' => Role::Kelompok,
             'organization_id' => $organization->id,
         ]);
+    }
+
+    public function mustChangePassword(): static
+    {
+        return $this->state(fn () => ['must_change_password' => true]);
     }
 
     public function inactive(): static

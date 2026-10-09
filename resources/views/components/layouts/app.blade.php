@@ -3,8 +3,9 @@
     'description' => null,
     'back' => null,
     // Item: ['label', 'href', 'icon' (Heroicons outline), 'short' (label ringkas), 'active', 'primary' (tampil di navigasi bawah HP)]
-    'navigation' => [],
-    'notificationsUrl' => '#',
+    // Kosongkan agar diambil otomatis dari peran pengguna yang login (App\Support\Navigation).
+    'navigation' => null,
+    'notificationsUrl' => null,
     'userName' => null,
     'userRole' => null,
     // Mode form di HP: navigasi bawah disembunyikan, header berisi tombol kembali + judul.
@@ -12,7 +13,12 @@
 ])
 
 @php
-    $userName ??= auth()->user()?->name;
+    $user = auth()->user();
+    $userName ??= $user?->name;
+    $userRole ??= $user?->role?->label();
+    $navigation ??= $user ? \App\Support\Navigation::for($user) : [];
+    $notificationsUrl ??= Route::has('notifications.index') ? route('notifications.index') : null;
+    $accountUrl = $user && Route::has('account.password.edit') ? route('account.password.edit') : null;
     $back ??= $focus ? url()->previous() : null;
 
     $navigation = collect($navigation);
@@ -85,15 +91,20 @@
 
         @if ($userName)
             <div class="shrink-0 border-t border-line p-2 xl:p-3">
-                <div class="flex items-center gap-3 rounded-control px-1 py-2 max-xl:justify-center xl:px-3" title="{{ $userName }}">
+                <a
+                    href="{{ $accountUrl ?? '#' }}"
+                    title="{{ $userName }}"
+                    class="flex items-center gap-3 rounded-control px-1 py-2 transition-colors hover:bg-subtle max-xl:justify-center xl:px-3"
+                >
                     <x-heroicon-o-user-circle class="size-5 shrink-0 text-ink-muted" />
-                    <div class="hidden min-w-0 xl:block">
-                        <p class="truncate text-ui font-semibold text-ink">{{ $userName }}</p>
+                    <span class="hidden min-w-0 xl:block">
+                        <span class="block truncate text-ui font-semibold text-ink">{{ $userName }}</span>
                         @if ($userRole)
-                            <p class="truncate text-caption text-ink-muted">{{ $userRole }}</p>
+                            <span class="block truncate text-caption text-ink-muted">{{ $userRole }}</span>
                         @endif
-                    </div>
-                </div>
+                    </span>
+                    <span class="sr-only xl:hidden">Akun {{ $userName }}</span>
+                </a>
                 @if (Route::has('logout'))
                     <form method="POST" action="{{ route('logout') }}">
                         @csrf
@@ -118,9 +129,19 @@
                 @endif
                 <p class="min-w-0 flex-1 truncate text-ui font-semibold text-ink">{{ $title }}</p>
                 @unless ($focus)
-                    <a href="{{ $notificationsUrl }}" class="-mr-2 flex size-11 shrink-0 items-center justify-center rounded-control text-ink-soft hover:bg-subtle hover:text-ink" aria-label="Notifikasi">
-                        <x-heroicon-o-bell class="size-5" />
-                    </a>
+                    <div class="-mr-2 flex shrink-0">
+                        @if ($notificationsUrl)
+                            <a href="{{ $notificationsUrl }}" class="flex size-11 items-center justify-center rounded-control text-ink-soft hover:bg-subtle hover:text-ink" aria-label="Notifikasi">
+                                <x-heroicon-o-bell class="size-5" />
+                            </a>
+                        @endif
+                        {{-- Jalan ke halaman akun dan tombol keluar di HP, karena menu admin tidak memuat Akun Saya. --}}
+                        @if ($accountUrl)
+                            <a href="{{ $accountUrl }}" class="flex size-11 items-center justify-center rounded-control text-ink-soft hover:bg-subtle hover:text-ink" aria-label="Akun">
+                                <x-heroicon-o-user-circle class="size-5" />
+                            </a>
+                        @endif
+                    </div>
                 @endunless
             </div>
         </header>

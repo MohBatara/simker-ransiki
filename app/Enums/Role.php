@@ -18,4 +18,15 @@ enum Role: string
             self::Kelompok => 'Kelompok',
         };
     }
+
+    /** Prefix URL dan nama route area peran ini: /admin, /opd, /kelompok. */
+    public function area(): string
+    {
+        return $this->value;
+    }
+
+    public function dashboardRoute(): string
+    {
+        return $this->area().'.dashboard';
+    }
 }

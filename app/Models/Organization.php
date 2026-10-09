@@ -4,8 +4,10 @@ namespace App\Models;
 
 use App\Enums\LegalStatus;
 use App\Enums\OrganizationStatus;
+use App\Enums\Role;
 use App\Models\Concerns\HasAttachments;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -66,6 +68,27 @@ class Organization extends Model
             $organization->products()->get()->each->delete();
             $organization->licenses()->get()->each->delete();
         });
+    }
+
+    /**
+     * Kelompok yang boleh dilihat pengguna. Pakai untuk SEMUA daftar kelompok di area login.
+     */
+    public function scopeVisibleTo(Builder $query, User $user): void
+    {
+        match ($user->role) {
+            Role::Admin => null,
+            // Subquery, bukan join, agar kelompok dengan banyak OPD tidak muncul ganda.
+            Role::Opd => $query->whereIn('organizations.id', fn ($sub) => $sub
+                ->select('organization_id')
+                ->from('organization_opd')
+                ->where('opd_id', $user->opd_id)),
+            Role::Kelompok => $query->where('organizations.id', $user->organization_id),
+        };
+    }
+
+    public function isVisibleTo(User $user): bool
+    {
+        return $user->canAccessOrganization($this->id);
     }
 
     public static function uniqueSlug(string $name): string

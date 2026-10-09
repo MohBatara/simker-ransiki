@@ -3,6 +3,7 @@
     description="Contoh halaman form. Di HP navigasi bawah disembunyikan dan bar aksi menempel di bawah layar."
     :back="route('dev.components.app')"
     :navigation="$navigation"
+    notifications-url="#"
     user-name="Pengguna Contoh"
     user-role="Kelompok"
     focus
