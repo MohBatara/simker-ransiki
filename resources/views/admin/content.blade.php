@@ -1,16 +1,16 @@
 <x-layouts.app title="Konten Website" description="Teks dan foto yang tampil di website publik." :back="route('admin.dashboard')" focus>
     <div class="space-y-5">
-        <x-card title="Foto sampul" description="Opsional. Tampil lebar di bawah pembuka beranda. Foto diperkecil dan data lokasinya dibuang otomatis.">
+        <x-card title="Foto sampul" description="Opsional. Tampil lebar di bawah pembuka beranda. Gunakan foto lanskap asli Ransiki, bukan infografis atau gambar berisi teks.">
             <div class="space-y-4">
                 @if ($settings['cover_photo_path'])
-                    <img src="{{ route('public.cover', ['v' => substr(md5($settings['cover_photo_path']), 0, 8)]) }}" alt="Foto sampul saat ini" class="aspect-[16/7] w-full rounded-card border border-line object-cover">
+                    <img src="{{ route('public.cover', ['v' => substr(md5($settings['cover_photo_path']), 0, 8)]) }}" alt="Foto sampul saat ini" class="aspect-[4/3] w-full rounded-card object-cover md:aspect-[21/9]">
                     <form method="POST" action="{{ route('admin.content.cover.destroy') }}">
                         @csrf
                         @method('DELETE')
                         <x-button variant="ghost" type="submit">Hapus foto sampul</x-button>
                     </form>
                 @endif
-                <x-file-upload :url="route('admin.content.cover.store')" kind="photo" :multiple="false" :remaining="1" hint="Foto JPG atau PNG, maksimal 10 MB. Foto lama akan diganti." />
+                <x-file-upload :url="route('admin.content.cover.store')" kind="photo" :multiple="false" :remaining="1" hint="Foto lanskap JPG atau PNG, maksimal 10 MB. Foto diperkecil dan data lokasinya dibuang otomatis. Foto lama akan diganti." />
             </div>
         </x-card>
 

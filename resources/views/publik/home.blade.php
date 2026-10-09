@@ -10,7 +10,14 @@
             @endif
             <form method="GET" action="{{ route('public.directory') }}" role="search" class="mt-6 flex max-w-xl gap-2">
                 <label for="q" class="sr-only">Cari kelompok atau produk</label>
-                <x-input name="q" placeholder="Cari nama kelompok atau produk, mis. kakao" class="min-w-0 flex-1 md:h-12!" />
+                {{-- Placeholder pendek di HP; versi panjang dipasang di layar lebar. --}}
+                <x-input
+                    name="q"
+                    placeholder="Cari kelompok atau produk"
+                    x-data="{ wide: window.matchMedia('(min-width: 48rem)') }"
+                    x-init="const set = () => $el.placeholder = wide.matches ? 'Cari nama kelompok atau produk, mis. kakao' : 'Cari kelompok atau produk'; set(); wide.addEventListener('change', set)"
+                    class="min-w-0 flex-1 md:h-12!"
+                />
                 <x-button type="submit" icon="magnifying-glass" class="md:h-12!">Cari</x-button>
             </form>
         </div>
@@ -28,8 +35,8 @@
             <img
                 src="{{ route('public.cover', ['v' => substr(md5($settings['cover_photo_path']), 0, 8)]) }}"
                 alt="{{ $settings['cover_caption'] ?? 'Foto Distrik Ransiki' }}"
-                width="1600" height="700" decoding="async"
-                class="aspect-[16/7] w-full rounded-card border border-line object-cover"
+                width="1600" height="686" decoding="async"
+                class="aspect-[4/3] w-full rounded-card object-cover md:aspect-[21/9]"
             >
             @if ($settings['cover_caption'] || $settings['cover_credit'])
                 <figcaption class="mt-2 text-caption text-ink-muted">
