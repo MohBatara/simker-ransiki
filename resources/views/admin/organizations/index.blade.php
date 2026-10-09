@@ -24,12 +24,13 @@
                 @endif
             </div>
 
+            {{-- Filter langsung diterapkan saat pilihan berubah; tombol Cari untuk pencarian nama. --}}
             <div id="filter-kelompok" x-bind:class="{ 'max-md:hidden': ! open }" @class(['grid gap-3 sm:grid-cols-2 lg:grid-cols-5', 'max-md:hidden' => ! $activeFilters])>
-                <x-select name="type" :options="$options['types']" :selected="$filters['type'] ?? null" placeholder="Semua jenis" aria-label="Jenis kelembagaan" />
-                <x-select name="village" :options="$options['villages']" :selected="$filters['village'] ?? null" placeholder="Semua kampung" aria-label="Kampung" />
-                <x-select name="sector" :options="$options['sectors']" :selected="$filters['sector'] ?? null" placeholder="Semua bidang usaha" aria-label="Bidang usaha" />
-                <x-select name="opd" :options="['none' => 'Belum ada OPD'] + $options['opds']" :selected="$filters['opd'] ?? null" placeholder="Semua OPD" aria-label="OPD terkait" />
-                <x-select name="status" :options="$options['statuses']" :selected="$filters['status'] ?? null" placeholder="Semua status" aria-label="Status kelompok" />
+                <x-select name="type" :options="$options['types']" :selected="$filters['type'] ?? null" placeholder="Semua jenis" x-on:change="$el.form.requestSubmit()" aria-label="Jenis kelembagaan" />
+                <x-select name="village" :options="$options['villages']" :selected="$filters['village'] ?? null" placeholder="Semua kampung" x-on:change="$el.form.requestSubmit()" aria-label="Kampung" />
+                <x-select name="sector" :options="$options['sectors']" :selected="$filters['sector'] ?? null" placeholder="Semua bidang usaha" x-on:change="$el.form.requestSubmit()" aria-label="Bidang usaha" />
+                <x-select name="opd" :options="['none' => 'Belum ada OPD'] + $options['opds']" :selected="$filters['opd'] ?? null" placeholder="Semua OPD" x-on:change="$el.form.requestSubmit()" aria-label="OPD terkait" />
+                <x-select name="status" :options="$options['statuses']" :selected="$filters['status'] ?? null" placeholder="Semua status" x-on:change="$el.form.requestSubmit()" aria-label="Status kelompok" />
             </div>
         </form>
 
