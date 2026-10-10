@@ -8,7 +8,7 @@
                         Jumlah pendapatan per produk: <span class="tabular-nums" x-text="revenueTotalText"></span>
                         <span x-show="revenueTotal.count < data.items.length" x-text="`(dari ${revenueTotal.count} dari ${data.items.length} produk yang diisi)`"></span>
                     </span>
-                    <button type="button" x-on:click="useRevenueTotal()" class="rounded-control font-semibold text-brand hover:text-brand-hover">Pakai jumlah ini</button>
+                    <x-link x-on:click="useRevenueTotal()">Pakai jumlah ini</x-link>
                 </div>
             </x-field>
             <x-field label="Pendapatan lain" for="income_other" live="'income_other'" hint="Misalnya jasa sewa alat atau bunga simpanan." optional>

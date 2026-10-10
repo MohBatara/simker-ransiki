@@ -4,6 +4,8 @@
     'selected' => null,
     'placeholder' => null,
     'id' => null,
+    // Form Alpine: ekspresi JS; bila bernilai benar, kontrol tampil tidak valid (mis. "error('costs')").
+    'invalidIf' => null,
 ])
 
 @php
@@ -18,6 +20,7 @@
         @if ($name) name="{{ $name }}" @endif
         @if ($id) id="{{ $id }}" @endif
         @if ($invalid) aria-invalid="true" aria-describedby="{{ $id }}-error" @endif
+        @if ($invalidIf) x-bind:aria-invalid="!! ({{ $invalidIf }})" x-bind:class="({{ $invalidIf }}) && 'border-fix! focus:border-fix! focus:ring-fix!'" @endif
         {{ $attributes->class([
             'block h-11 w-full appearance-none rounded-control border bg-paper pl-3 pr-9 text-body text-ink transition-colors md:h-10 md:text-ui',
             // Pilihan kosong (placeholder) tampil redup seperti placeholder input; daftar opsinya tetap ink.

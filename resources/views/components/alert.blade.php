@@ -26,7 +26,7 @@
         <div @class(['mt-0.5' => $title])>{{ $slot }}</div>
     </div>
     @if ($dismissible)
-        <button type="button" x-on:click="show = false" class="-m-1 h-fit rounded-control p-1 text-ink-soft hover:text-ink" aria-label="Tutup">
+        <button type="button" x-on:click="show = false" class="-my-3 -mr-3 flex size-11 shrink-0 items-center justify-center rounded-control text-ink-soft hover:text-ink md:-my-2 md:-mr-2 md:size-9" aria-label="Tutup">
             <x-heroicon-o-x-mark class="size-5" />
         </button>
     @endif

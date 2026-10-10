@@ -48,7 +48,7 @@
                     @if ($due['earlierOutstanding'] > 0)
                         <p class="border-t border-line pt-3 text-ink-soft">
                             {{ $due['earlierOutstanding'] }} bulan sebelumnya belum diajukan.
-                            <a href="{{ route('kelompok.reports.index') }}" class="font-semibold text-brand hover:text-brand-hover">Lihat daftar laporan</a>
+                            <x-link href="{{ route('kelompok.reports.index') }}">Lihat daftar laporan</x-link>
                         </p>
                     @endif
                 </div>
@@ -98,7 +98,7 @@
                             <span class="min-w-0">
                                 <span class="text-ink">{{ $item['label'] }}</span>
                                 <span class="sr-only">belum lengkap.</span>
-                                <a href="{{ route($item['route']) }}" class="ml-1 font-semibold text-brand hover:text-brand-hover">Lengkapi</a>
+                                <x-link href="{{ route($item['route']) }}" class="ml-1">Lengkapi</x-link>
                             </span>
                         @endif
                     </li>
@@ -108,13 +108,13 @@
 
         <x-card title="Riwayat laporan" class="lg:col-start-1" flush>
             <x-slot:actions>
-                <a href="{{ route('kelompok.reports.index') }}" class="rounded-control font-semibold text-brand hover:text-brand-hover">Semua laporan</a>
+                <x-link href="{{ route('kelompok.reports.index') }}">Semua laporan</x-link>
             </x-slot:actions>
 
             @if ($history->isEmpty())
                 <p class="px-4 py-4 text-ink-soft md:px-5">Belum ada bulan yang wajib dilaporkan.</p>
             @else
-                <ul class="divide-y divide-line">
+                <x-list flush>
                     @foreach ($history as $row)
                         @php
                             $report = $row['report'];
@@ -124,8 +124,7 @@
                                 default => route('kelompok.reports.show', $report),
                             };
                         @endphp
-                        <li>
-                            <a href="{{ $href }}" class="flex items-center gap-3 px-4 py-3 transition-colors hover:bg-subtle md:px-5">
+                        <x-list.item :href="$href">
                                 <span class="min-w-0 flex-1">
                                     <span class="block font-semibold text-ink">{{ Format::month($row['period']) }}</span>
                                     @if ($report?->wasSubmittedLate())
@@ -137,11 +136,9 @@
                                 @else
                                     <span class="text-ink-muted">Belum dibuat</span>
                                 @endif
-                                <x-heroicon-o-chevron-right class="size-4 shrink-0 text-ink-muted" />
-                            </a>
-                        </li>
+                        </x-list.item>
                     @endforeach
-                </ul>
+                </x-list>
             @endif
         </x-card>
     </div>

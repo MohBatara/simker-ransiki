@@ -18,25 +18,22 @@
         <x-empty-state title="Belum ada notifikasi" description="Pemberitahuan tentang laporan akan muncul di sini." />
     @else
         <x-card flush>
-            <ul class="divide-y divide-line">
+            <x-list flush>
                 @foreach ($notifications as $notification)
-                    <li>
-                        <a href="{{ route('notifications.open', $notification['id']) }}" class="flex gap-3 px-4 py-3.5 transition-colors hover:bg-subtle md:px-5">
-                            <span @class(['mt-2 size-2 shrink-0 rounded-full', 'bg-brand' => $notification['unread']]) aria-hidden="true"></span>
-                            <span class="min-w-0 flex-1">
-                                <span @class(['block', 'font-semibold text-ink' => $notification['unread'], 'text-ink-soft' => ! $notification['unread']])>
-                                    @if ($notification['unread'])<span class="sr-only">Belum dibaca: </span>@endif{{ $notification['text'] }}
-                                </span>
-                                @if ($notification['note'])
-                                    <span class="mt-0.5 line-clamp-2 block text-ink-soft">“{{ $notification['note'] }}”</span>
-                                @endif
-                                <span class="mt-1 block text-caption text-ink-muted">{{ Format::relativeDateTime($notification['created_at']) }}</span>
+                    <x-list.item :href="route('notifications.open', $notification['id'])" class="items-start">
+                        <span @class(['mt-2 size-2 shrink-0 rounded-full', 'bg-brand' => $notification['unread']]) aria-hidden="true"></span>
+                        <span class="min-w-0 flex-1">
+                            <span @class(['block', 'font-semibold text-ink' => $notification['unread'], 'text-ink-soft' => ! $notification['unread']])>
+                                @if ($notification['unread'])<span class="sr-only">Belum dibaca: </span>@endif{{ $notification['text'] }}
                             </span>
-                            <x-heroicon-o-chevron-right class="mt-1 size-4 shrink-0 text-ink-muted" />
-                        </a>
-                    </li>
+                            @if ($notification['note'])
+                                <span class="mt-0.5 line-clamp-2 block break-words text-ink-soft">“{{ $notification['note'] }}”</span>
+                            @endif
+                            <span class="mt-1 block text-caption text-ink-muted">{{ Format::relativeDateTime($notification['created_at']) }}</span>
+                        </span>
+                    </x-list.item>
                 @endforeach
-            </ul>
+            </x-list>
             @if ($notifications->hasPages())
                 <x-slot:footer>{{ $notifications->links() }}</x-slot:footer>
             @endif

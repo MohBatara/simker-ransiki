@@ -42,12 +42,12 @@
             @foreach ($segments as $segment)
                 <li>
                     @php
-                        $content = '<span class="size-2.5 shrink-0 rounded-sm '.$fill($segment['tone']).'" aria-hidden="true"></span>'
+                        $content = '<span class="size-2.5 shrink-0 rounded-full '.$fill($segment['tone']).'" aria-hidden="true"></span>'
                             .'<span class="text-ink-soft">'.e($segment['label']).'</span>'
                             .'<span class="font-semibold tabular-nums text-ink">'.e(\App\Support\Format::number($segment['value'])).'</span>';
                     @endphp
                     @if ($segment['href'] ?? null)
-                        <a href="{{ $segment['href'] }}" class="inline-flex items-center gap-2 rounded-control hover:underline">{!! $content !!}</a>
+                        <a href="{{ $segment['href'] }}" class="inline-flex min-h-11 items-center gap-2 rounded-control hover:underline md:min-h-0">{!! $content !!}</a>
                     @else
                         <span class="inline-flex items-center gap-2">{!! $content !!}</span>
                     @endif

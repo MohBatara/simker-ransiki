@@ -22,8 +22,7 @@
         :inputmode="$inputmode"
         autocomplete="off"
         x-model="{{ $model }}"
-        x-bind:aria-invalid="{{ $invalid }}"
-        x-bind:class="({{ $invalid }}) && 'border-fix! focus:border-fix! focus:ring-fix!'"
+        :invalid-if="$invalid"
         {{ $attributes }}
     />
     <p x-cloak x-show="{{ $preview }}" x-text="{{ $preview }}?.text" x-bind:class="{{ $preview }}?.invalid ? 'text-fix' : 'text-ink-muted'" class="text-caption tabular-nums"></p>

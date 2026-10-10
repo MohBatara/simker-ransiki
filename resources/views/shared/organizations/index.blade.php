@@ -29,7 +29,7 @@
         @if ($notices)
             <x-alert>
                 Menampilkan {{ implode(' dan ', $notices) }}.
-                <a href="{{ route($area.'.organizations.index') }}" class="font-semibold text-brand hover:text-brand-hover">Tampilkan semua kelompok</a>
+                <x-link href="{{ route($area.'.organizations.index') }}" inline>Tampilkan semua kelompok</x-link>
             </x-alert>
         @endif
 

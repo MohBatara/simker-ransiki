@@ -16,7 +16,7 @@
     Satuan lama yang tidak ada di daftar tampil sebagai "Lainnya" dengan teks aslinya.
 --}}
 @php
-    $invalid = $live ? "!! error({$live})" : 'false';
+    $invalid = $live ? "error({$live})" : null;
     $idExpression = $bindId ?? ($id ? \Illuminate\Support\Js::from($id) : 'null');
 @endphp
 
@@ -32,8 +32,7 @@
         placeholder="Pilih satuan"
         aria-label="Satuan"
         x-bind:id="{{ $idExpression }}"
-        x-bind:aria-invalid="{{ $invalid }}"
-        x-bind:class="({{ $invalid }}) && 'border-fix! focus:border-fix! focus:ring-fix!'"
+        :invalid-if="$invalid"
     />
     <x-input x-cloak x-show="choice === 'lainnya'" x-model="other" maxlength="30" placeholder="Tulis satuan" aria-label="Satuan lainnya" />
     @if ($name)

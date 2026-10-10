@@ -11,8 +11,7 @@
                     rows="4"
                     maxlength="5000"
                     x-model="data.activity_summary"
-                    x-bind:aria-invalid="!! error('activity_summary')"
-                    x-bind:class="error('activity_summary') && 'border-fix! focus:border-fix! focus:ring-fix!'"
+                    invalid-if="error('activity_summary')"
                 />
             </x-field>
 

@@ -54,7 +54,7 @@
                 </div>
                 <div x-show="item.status === 'error'" class="flex items-start justify-between gap-3">
                     <p class="text-caption text-fix" x-text="item.error"></p>
-                    <button type="button" x-show="item.retryable" x-on:click="retry(item)" class="shrink-0 rounded-control text-caption font-semibold text-brand hover:text-brand-hover">Coba lagi</button>
+                    <x-link x-show="item.retryable" x-on:click="retry(item)" class="shrink-0 text-caption">Coba lagi</x-link>
                 </div>
             </li>
         </template>

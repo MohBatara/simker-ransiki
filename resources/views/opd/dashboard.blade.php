@@ -24,9 +24,9 @@
                         <div class="flex flex-wrap gap-x-2">
                             <dt class="text-ink-soft">Paling lama menunggu:</dt>
                             <dd>
-                                <a href="{{ route('opd.reports.show', $oldestWaiting) }}" class="font-semibold text-brand hover:text-brand-hover">
+                                <x-link href="{{ route('opd.reports.show', $oldestWaiting) }}">
                                     {{ $oldestWaiting->organization->name }}, {{ Format::month($oldestWaiting->period) }}
-                                </a>
+                                </x-link>
                                 <span class="text-ink-soft">· {{ Format::waitingSince($oldestWaiting->last_submitted_at) }}</span>
                             </dd>
                         </div>
@@ -34,7 +34,7 @@
                     @if ($waitingLong > 0)
                         <div class="flex flex-wrap gap-x-2">
                             <dt class="text-ink-soft">Menunggu lebih dari 7 hari:</dt>
-                            <dd><a href="{{ route('opd.reports.index', ['status' => 'submitted', 'menunggu' => 7]) }}" class="font-semibold tabular-nums text-brand hover:text-brand-hover">{{ $waitingLong }} laporan</a></dd>
+                            <dd><x-link href="{{ route('opd.reports.index', ['status' => 'submitted', 'menunggu' => 7]) }}" class="tabular-nums">{{ $waitingLong }} laporan</x-link></dd>
                         </div>
                     @endif
                 </dl>
@@ -61,7 +61,7 @@
                             />
                         </section>
                     @endforeach
-                    <a href="{{ route('opd.issues.index', ['period' => $period->format('Y-m')]) }}" class="inline-block font-semibold text-brand hover:text-brand-hover">Lihat semua masalah & kebutuhan</a>
+                    <x-link href="{{ route('opd.issues.index', ['period' => $period->format('Y-m')]) }}">Lihat semua masalah & kebutuhan</x-link>
                 </div>
             </x-card>
         </div>

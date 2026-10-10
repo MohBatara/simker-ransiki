@@ -15,11 +15,10 @@
 @if ($items->isEmpty())
     <p {{ $attributes->class('text-ink-soft') }}>{{ $empty }}</p>
 @else
-    <ul {{ $attributes->class('-mx-2 space-y-0.5') }}>
+    <x-list {{ $attributes->class('divide-y-0') }}>
         @foreach ($items as $item)
-            <li>
-                @php $tag = ($item['href'] ?? null) ? 'a' : 'div'; @endphp
-                <{{ $tag }} @if ($tag === 'a') href="{{ $item['href'] }}" @endif @class(['block rounded-control px-2 py-1.5', 'transition-colors hover:bg-subtle' => $tag === 'a'])>
+            <x-list.item :href="$item['href'] ?? null" :chevron="false" class="py-2">
+                <span class="block min-w-0 flex-1">
                     <span class="flex items-baseline justify-between gap-3">
                         <span class="min-w-0 truncate text-ink">{{ $item['label'] }}</span>
                         <span class="shrink-0 font-semibold tabular-nums text-ink">{{ \App\Support\Format::number($item['value']) }}</span>
@@ -30,8 +29,8 @@
                     @if ($item['hint'] ?? null)
                         <span class="mt-0.5 block text-caption text-ink-muted">{{ $item['hint'] }}</span>
                     @endif
-                </{{ $tag }}>
-            </li>
+                </span>
+            </x-list.item>
         @endforeach
-    </ul>
+    </x-list>
 @endif

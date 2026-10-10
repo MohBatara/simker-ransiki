@@ -12,7 +12,7 @@
             <p x-show="! data.items.length" class="text-ink-soft">
                 Belum ada produk. Tambahkan produk yang diproduksi atau dijual bulan ini.
                 @if ($products->isEmpty())
-                    Produk yang didaftarkan di menu <a href="{{ route('kelompok.products.index') }}" class="text-brand underline hover:text-brand-hover">Produk</a> bisa langsung dipilih di sini.
+                    Produk yang didaftarkan di menu <x-link href="{{ route('kelompok.products.index') }}" inline>Produk</x-link> bisa langsung dipilih di sini.
                 @endif
             </p>
 
@@ -42,8 +42,7 @@
                                 x-bind:id="`item-${i}-name`"
                                 maxlength="255"
                                 x-model="item.product_name"
-                                x-bind:aria-invalid="!! error(`items.${i}.product_name`)"
-                                x-bind:class="error(`items.${i}.product_name`) && 'border-fix! focus:border-fix! focus:ring-fix!'"
+                                invalid-if="error(`items.${i}.product_name`)"
                             />
                         </x-field>
                     </div>

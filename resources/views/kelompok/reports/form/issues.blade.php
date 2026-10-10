@@ -25,8 +25,7 @@
                             x-model="row.category"
                             placeholder="Pilih kategori"
                             :options="$categories"
-                            x-bind:aria-invalid="!! error(`{{ $kind }}.${i}.category`)"
-                            x-bind:class="error(`{{ $kind }}.${i}.category`) && 'border-fix! focus:border-fix! focus:ring-fix!'"
+                            invalid-if="error(`{{ $kind }}.${i}.category`)"
                         />
                     </x-field>
                     <x-field label="Uraian" live="`{{ $kind }}.${i}.description`" bind-for="`{{ $kind }}-${i}-description`" hint="Jelaskan singkat. Wajib bila kategorinya Lainnya.">
@@ -35,8 +34,7 @@
                             rows="3"
                             maxlength="1000"
                             x-model="row.description"
-                            x-bind:aria-invalid="!! error(`{{ $kind }}.${i}.description`)"
-                            x-bind:class="error(`{{ $kind }}.${i}.description`) && 'border-fix! focus:border-fix! focus:ring-fix!'"
+                            invalid-if="error(`{{ $kind }}.${i}.description`)"
                         />
                     </x-field>
                 </div>

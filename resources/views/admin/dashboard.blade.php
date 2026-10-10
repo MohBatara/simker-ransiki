@@ -26,17 +26,14 @@
 
     <div class="space-y-5">
         <x-card title="Perlu perhatian">
-            <ul class="-mx-2 divide-y divide-line">
+            <x-list>
                 @foreach ($attentionRows as $row)
-                    <li>
-                        <a href="{{ $row['href'] }}" class="flex items-baseline gap-3 rounded-control px-2 py-2.5 transition-colors hover:bg-subtle">
+                    <x-list.item :href="$row['href']">
                             <span @class(['w-12 shrink-0 text-right text-card-title font-semibold tabular-nums', 'text-ink' => $row['value'] > 0, 'text-ink-muted' => $row['value'] === 0])>{{ Format::number($row['value']) }}</span>
                             <span class="flex-1 text-ink">{{ ucfirst($row['label']) }}</span>
-                            <x-heroicon-o-chevron-right class="size-4 shrink-0 self-center text-ink-muted" />
-                        </a>
-                    </li>
+                    </x-list.item>
                 @endforeach
-            </ul>
+            </x-list>
         </x-card>
 
         @include('shared.dashboards.progress', ['area' => 'admin'])
@@ -68,11 +65,11 @@
                     <x-table.row>
                         <x-table.cell primary>{{ $row['opd']?->short_name ?: ($row['opd']?->name ?? 'Tanpa OPD pembina') }}</x-table.cell>
                         <x-table.cell label="Wajib lapor" numeric>
-                            <a href="{{ route('admin.organizations.index', ['opd' => $opdFilter]) }}" class="rounded-control hover:underline">{{ Format::number($counts['total']) }}</a>
+                            <a href="{{ route('admin.organizations.index', ['opd' => $opdFilter]) }}" class="inline-flex min-h-11 items-center md:min-h-0 rounded-control hover:underline">{{ Format::number($counts['total']) }}</a>
                         </x-table.cell>
                         @foreach ($cells as [$label, $value, $href, $optional])
                             <x-table.cell :label="$label" numeric :optional="$optional">
-                                <a href="{{ $href }}" class="rounded-control hover:underline">{{ Format::number($value) }}</a>
+                                <a href="{{ $href }}" class="inline-flex min-h-11 items-center md:min-h-0 rounded-control hover:underline">{{ Format::number($value) }}</a>
                             </x-table.cell>
                         @endforeach
                         <x-table.cell class="md:w-40 max-md:col-span-2 max-md:pt-2">
@@ -96,7 +93,7 @@
                         <ul class="mt-2 flex flex-wrap gap-2">
                             @foreach (OrganizationStatus::cases() as $status)
                                 <li>
-                                    <a href="{{ route('admin.organizations.index', ['status' => $status->value]) }}" class="rounded-control">
+                                    <a href="{{ route('admin.organizations.index', ['status' => $status->value]) }}" class="inline-flex min-h-11 items-center md:min-h-0 rounded-control">
                                         <x-badge :tone="$status->badgeColor()">{{ $status->label() }} · {{ $organizations['statuses'][$status->value] }}</x-badge>
                                     </a>
                                 </li>
@@ -122,7 +119,7 @@
                     <p class="text-ink-soft">Belum ada laporan terverifikasi untuk bulan ini.</p>
                 @else
                     <p class="text-ink-soft">
-                        <a href="{{ $verifiedUrl }}" class="font-semibold tabular-nums text-ink hover:underline">{{ $economy['reports'] }} dari {{ $economy['obligated'] }}</a>
+                        <a href="{{ $verifiedUrl }}" class="inline-flex min-h-11 items-center md:min-h-0 font-semibold tabular-nums text-ink hover:underline">{{ $economy['reports'] }} dari {{ $economy['obligated'] }}</a>
                         kelompok wajib lapor sudah terverifikasi.
                     </p>
 
@@ -141,7 +138,7 @@
                                     </span>
                                 </dt>
                                 <dd class="text-right">
-                                    <a href="{{ $verifiedUrl }}" class="font-semibold tabular-nums text-ink hover:underline">{{ Format::rupiah($total['sum']) }}</a>
+                                    <a href="{{ $verifiedUrl }}" class="inline-flex min-h-11 items-center md:min-h-0 font-semibold tabular-nums text-ink hover:underline">{{ Format::rupiah($total['sum']) }}</a>
                                 </dd>
                             </div>
                         @endforeach

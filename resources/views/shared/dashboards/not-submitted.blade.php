@@ -19,17 +19,17 @@
     @if ($notSubmitted->isEmpty())
         <p class="text-ink-soft">Semua kelompok wajib lapor sudah mengajukan laporan bulan ini.</p>
     @else
-        <ul class="divide-y divide-line">
+        <x-list>
             @foreach ($notSubmitted as $row)
                 @php $organization = $row['organization']; @endphp
-                <li class="flex flex-wrap items-center gap-x-3 gap-y-2 py-3 first:pt-0 last:pb-0">
+                <x-list.item class="flex-wrap gap-y-2">
                     <div class="min-w-0 flex-1">
-                        <a href="{{ route($area.'.organizations.reports', $organization) }}" class="block truncate font-semibold text-ink hover:underline">{{ $organization->name }}</a>
+                        <x-link href="{{ route($area.'.organizations.reports', $organization) }}" muted class="max-w-full text-ink"><span class="truncate">{{ $organization->name }}</span></x-link>
                         @if ($organization->leader_name || $organization->phone)
                             <p class="text-caption text-ink-soft">
                                 Ketua{{ $organization->leader_name ? ': '.$organization->leader_name : '' }}
                                 @if ($organization->phone)
-                                    · <a href="tel:{{ preg_replace('/[^\d+]/', '', $organization->phone) }}" class="text-brand hover:text-brand-hover">{{ $organization->phone }}</a>
+                                    · <x-link href="tel:{{ preg_replace('/[^\d+]/', '', $organization->phone) }}" class="font-normal">{{ $organization->phone }}</x-link>
                                 @endif
                             </p>
                         @endif
@@ -45,13 +45,13 @@
                             <span class="sr-only"> untuk {{ $organization->name }}</span>
                         </x-button>
                     </div>
-                </li>
+                </x-list.item>
             @endforeach
-        </ul>
+        </x-list>
         @if ($total > $notSubmitted->count())
-            <a href="{{ route($area.'.organizations.index', ['laporan' => 'belum-diajukan', 'periode' => $period->format('Y-m')]) }}" class="mt-3 inline-block font-semibold text-brand hover:text-brand-hover">
+            <x-link href="{{ route($area.'.organizations.index', ['laporan' => 'belum-diajukan', 'periode' => $period->format('Y-m')]) }}" class="mt-3">
                 Lihat semua ({{ $total }})
-            </a>
+            </x-link>
         @endif
     @endif
 </x-card>

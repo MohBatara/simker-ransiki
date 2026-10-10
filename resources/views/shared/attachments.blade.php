@@ -19,7 +19,7 @@
                     <li class="flex flex-wrap items-center gap-x-3 gap-y-2 px-3 py-2.5">
                         <x-dynamic-component :component="str_starts_with($attachment->mime_type, 'image/') ? 'heroicon-o-photo' : 'heroicon-o-document-text'" class="size-5 shrink-0 text-ink-muted" />
                         <div class="min-w-0 flex-1">
-                            <a href="{{ route('attachments.show', $attachment) }}" target="_blank" rel="noopener" class="block truncate rounded-control text-brand hover:text-brand-hover">{{ $attachment->original_name }}</a>
+                            <x-link href="{{ route('attachments.show', $attachment) }}" target="_blank" rel="noopener" class="min-w-0 max-w-full font-normal"><span class="truncate">{{ $attachment->original_name }}</span></x-link>
                             <p class="text-caption text-ink-muted">
                                 {{ Format::fileSize($attachment->size) }} · {{ Format::date($attachment->created_at) }}@if ($attachment->uploader) · {{ $attachment->uploader->name }}@endif
                             </p>
