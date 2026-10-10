@@ -9,7 +9,7 @@ use App\Models\Organization;
 use App\Models\User;
 use App\Notifications\ReportReviewed;
 
-test('lonceng desktop di atas sidebar; menu Notifikasi disembunyikan di desktop; aktif di halaman Notifikasi', function () {
+test('bilah atas: lonceng dan menu profil; sidebar tanpa lonceng dan menu Notifikasi', function () {
     $organization = Organization::factory()->create();
     $user = User::factory()->kelompok($organization)->create();
     $user->notify(new ReportReviewed(MonthlyReport::factory()->for($organization)->create(), ReviewAction::Verified, null));
@@ -17,8 +17,12 @@ test('lonceng desktop di atas sidebar; menu Notifikasi disembunyikan di desktop;
     $html = $this->actingAs($user)->get('/kelompok')->assertOk()->getContent();
     $sidebar = substr($html, strpos($html, '<aside'), strpos($html, '</aside>') - strpos($html, '<aside'));
 
-    expect($sidebar)->toContain('data-bell="desktop"')->toContain('Notifikasi, 1 belum dibaca')
-        ->and($html)->toMatch('/<li class="xl:hidden">\s*<a\s+href="[^"]*\/notifikasi"/');
+    expect($sidebar)->not->toContain('data-bell')->not->toContain('/notifikasi')->not->toContain('Keluar')
+        ->and($html)->toContain('data-bell="desktop"')->toContain('Notifikasi, 1 belum dibaca')
+        ->toContain('Menu akun')->toContain('data-logout');
+
+    // Kelompok tidak mendapat kotak cari global.
+    expect($html)->not->toContain('aria-label="Cari"');
 
     $this->get('/notifikasi')->assertSee('aria-current="page"', false)->assertSee('bg-brand-tint text-brand', false);
 });
@@ -28,7 +32,7 @@ test('blok pengguna: avatar, nama dua baris, dan nama singkat OPD', function () 
 
     $this->actingAs(User::factory()->opd($opd)->create(['name' => 'Petugas Dengan Nama Yang Cukup Panjang']))
         ->get('/opd')
-        ->assertSee('line-clamp-2 text-ui font-semibold text-ink">Petugas Dengan Nama Yang Cukup Panjang', false)
+        ->assertSee('<p class="line-clamp-2 text-ui font-semibold text-ink">Petugas Dengan Nama Yang Cukup Panjang</p>', false)
         ->assertSee('OPD · DPC')
         ->assertSee('>PD</span>', false);
 });

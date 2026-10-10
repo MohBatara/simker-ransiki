@@ -76,6 +76,7 @@ $reportRoutes = function () {
     });
 
     Route::get('/masalah', [Shared\ReportIssueController::class, 'index'])->name('issues.index');
+    Route::get('/cari', [Shared\SearchController::class, 'index'])->name('search');
 };
 
 Route::middleware('auth')->group(function () use ($organizationRoutes, $reportRoutes) {

@@ -26,6 +26,8 @@
     // Dari view composer (AppServiceProvider); 0 bila tidak ada.
     $unreadNotifications ??= 0;
     $accountUrl = $user && Route::has('account.password.edit') ? route('account.password.edit') : null;
+    // Cari global hanya untuk Admin dan OPD (kelompok hanya punya satu kelompok).
+    $searchUrl = $user && ! $user->isKelompok() && Route::has($user->role->area().'.search') ? route($user->role->area().'.search') : null;
     $back ??= $focus ? url()->previous() : null;
 
     $navigation = collect($navigation);
@@ -63,23 +65,20 @@
     <aside class="hidden md:fixed md:inset-y-0 md:left-0 md:z-20 md:flex md:w-[72px] md:flex-col md:border-r md:border-line md:bg-paper xl:w-[248px]">
         <div class="flex h-16 shrink-0 items-center gap-3 border-b border-line px-2 max-xl:justify-center xl:px-5" title="SIM-KER Distrik Ransiki">
             <x-logo />
-            <div class="hidden min-w-0 flex-1 leading-tight xl:block">
+            <div class="hidden min-w-0 leading-tight xl:block">
                 <span class="block text-ui font-semibold text-ink">SIM-KER</span>
                 <span class="block text-caption text-ink-muted">Distrik Ransiki</span>
             </div>
             <span class="sr-only xl:hidden">SIM-KER Distrik Ransiki</span>
-            {{-- Desktop: lonceng di samping logo. Tablet: menu "Notifikasi" di sidebar ikon. HP: header atas. --}}
-            @if ($notificationsUrl)
-                <x-notification-bell :href="$notificationsUrl" :count="$unreadNotifications" :active="request()->routeIs('notifications.*')" class="-mr-2 max-xl:hidden" data-bell="desktop" />
-            @endif
         </div>
 
         {{-- Di tablet nav tidak di-scroll agar tooltip tidak terpotong oleh tepi sidebar. --}}
         <nav aria-label="Menu utama" class="flex-1 px-1 py-3 xl:overflow-y-auto xl:px-3">
             <ul class="space-y-1">
-                @foreach ($navigation as $item)
+                {{-- Notifikasi tidak di sidebar: lonceng ada di bilah atas (tablet dan desktop). --}}
+                @foreach ($navigation->reject(fn ($item) => ($item['route'] ?? null) === 'notifications.index') as $item)
                     @php $active = $item['active'] ?? false; @endphp
-                    <li @class(['xl:hidden' => ($item['route'] ?? null) === 'notifications.index'])>
+                    <li>
                         <a
                             href="{{ $item['href'] }}"
                             aria-label="{{ $item['label'] }}{{ ($item['route'] ?? null) === 'notifications.index' && $unreadNotifications > 0 ? ', '.$unreadNotifications.' belum dibaca' : '' }}"
@@ -106,36 +105,55 @@
             </ul>
         </nav>
 
-        @if ($userName)
-            <div class="shrink-0 border-t border-line p-2 xl:p-3">
-                <a
-                    href="{{ $accountUrl ?? '#' }}"
-                    title="{{ $userName }}"
-                    class="flex items-center gap-3 rounded-control px-1 py-2 transition-colors hover:bg-subtle max-xl:justify-center xl:px-3"
-                >
-                    <x-avatar :name="$userName" size="sm" />
-                    <span class="hidden min-w-0 xl:block">
-                        <span class="line-clamp-2 text-ui font-semibold text-ink">{{ $userName }}</span>
-                        @if ($userRole)
-                            <span class="block truncate text-caption text-ink-muted">{{ $userRole }}</span>
-                        @endif
-                    </span>
-                    <span class="sr-only xl:hidden">Akun {{ $userName }}</span>
-                </a>
-                @if (Route::has('logout'))
-                    <form method="POST" action="{{ route('logout') }}" data-logout>
-                        @csrf
-                        <button type="submit" class="flex w-full items-center gap-3 rounded-control px-1 py-2 text-ink-soft transition-colors hover:bg-subtle hover:text-ink max-xl:flex-col max-xl:gap-1 xl:px-3">
-                            <x-heroicon-o-arrow-right-start-on-rectangle class="size-5 shrink-0" />
-                            <span class="text-caption xl:text-ui">Keluar</span>
-                        </button>
-                    </form>
-                @endif
-            </div>
-        @endif
     </aside>
 
     <div class="md:pl-[72px] xl:pl-[248px]">
+        {{-- Bilah atas tablet/desktop: cari global (Admin, OPD), lonceng, menu profil. --}}
+        <header class="sticky top-0 z-20 hidden h-16 items-center gap-3 border-b border-line bg-paper px-6 md:flex xl:px-8">
+            @if ($searchUrl)
+                <form method="GET" action="{{ $searchUrl }}" role="search" class="min-w-0 max-w-lg flex-1">
+                    <x-search-input label="Cari kelompok, ketua, kampung, atau produk" :value="request()->routeIs('*.search') ? request('q') : null" />
+                </form>
+            @else
+                <div class="flex-1"></div>
+            @endif
+            <div class="ml-auto flex items-center gap-2">
+                @if ($notificationsUrl)
+                    <x-notification-bell :href="$notificationsUrl" :count="$unreadNotifications" :active="request()->routeIs('notifications.*')" data-bell="desktop" />
+                @endif
+                @if ($userName)
+                    <x-dropdown width="w-64">
+                        <x-slot:trigger>
+                            <button type="button" x-bind:aria-expanded="open" aria-haspopup="menu" class="flex min-h-11 items-center gap-3 rounded-control px-2 text-left transition-colors hover:bg-subtle md:min-h-10">
+                                <x-avatar :name="$userName" size="sm" />
+                                <span class="hidden min-w-0 max-w-48 leading-tight lg:block">
+                                    <span class="block truncate text-ui font-semibold text-ink">{{ $userName }}</span>
+                                    @if ($userRole)
+                                        <span class="block truncate text-caption text-ink-muted">{{ $userRole }}</span>
+                                    @endif
+                                </span>
+                                <x-heroicon-o-chevron-down class="size-4 text-ink-muted" />
+                                <span class="sr-only">Menu akun {{ $userName }}</span>
+                            </button>
+                        </x-slot:trigger>
+                        <div class="border-b border-line px-3 pb-2 pt-1">
+                            <p class="line-clamp-2 text-ui font-semibold text-ink">{{ $userName }}</p>
+                            <p class="truncate text-caption text-ink-muted">{{ $userRole }}</p>
+                        </div>
+                        @if ($accountUrl)
+                            <x-dropdown.item :href="$accountUrl" icon="user-circle">Akun Saya</x-dropdown.item>
+                        @endif
+                        @if (Route::has('logout'))
+                            <form method="POST" action="{{ route('logout') }}" data-logout>
+                                @csrf
+                                <x-dropdown.item type="submit" icon="arrow-right-start-on-rectangle">Keluar</x-dropdown.item>
+                            </form>
+                        @endif
+                    </x-dropdown>
+                @endif
+            </div>
+        </header>
+
         {{-- Header atas tipis di HP --}}
         <header class="sticky top-0 z-20 border-b border-line bg-paper pt-[env(safe-area-inset-top)] md:hidden">
             <div class="flex h-14 items-center gap-1 px-4">
@@ -147,6 +165,11 @@
                 <p class="min-w-0 flex-1 truncate text-ui font-semibold text-ink">{{ $title }}</p>
                 @unless ($focus)
                     <div class="-mr-2 flex shrink-0">
+                        @if ($searchUrl)
+                            <a href="{{ $searchUrl }}" class="flex size-11 items-center justify-center rounded-control text-ink-soft hover:bg-subtle hover:text-ink" aria-label="Cari">
+                                <x-heroicon-o-magnifying-glass class="size-5" />
+                            </a>
+                        @endif
                         @if ($notificationsUrl)
                             <x-notification-bell :href="$notificationsUrl" :count="$unreadNotifications" :active="request()->routeIs('notifications.*')" data-bell="mobile" />
                         @endif
