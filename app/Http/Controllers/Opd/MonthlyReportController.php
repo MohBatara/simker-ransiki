@@ -10,6 +10,11 @@ class MonthlyReportController extends Controller
 {
     public function show(MonthlyReport $report): View
     {
-        return view('opd.reports.show', ['report' => $report->load('organization')]);
+        return view('shared.reports.show', [
+            'report' => $report->loadDetail(),
+            'attachments' => $report->attachments()->with('uploader')->latest()->get()->each->setRelation('attachable', $report),
+            'back' => route('opd.organizations.reports', $report->organization_id),
+            'editUrl' => null,
+        ]);
     }
 }

@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Files;
 
 use App\Models\License;
+use App\Models\MonthlyReport;
 use App\Models\Organization;
 use App\Models\Product;
 use App\Rules\AllowedUpload;
@@ -24,7 +25,7 @@ class UploadRequest extends FormRequest
     }
 
     /**
-     * Induk file: produk (foto) atau kelompok/izin (lampiran). Hak unggah = hak mengubah induknya.
+     * Induk file: produk (foto) atau kelompok/izin/laporan (lampiran). Hak unggah = hak mengubah induknya.
      */
     public function target(): Model
     {
@@ -35,6 +36,7 @@ class UploadRequest extends FormRequest
         return match ($this->route('type')) {
             'kelompok' => Organization::findOrFail($this->route('id')),
             'izin' => License::findOrFail($this->route('id')),
+            'laporan' => MonthlyReport::findOrFail($this->route('id')),
         };
     }
 

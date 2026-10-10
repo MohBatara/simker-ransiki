@@ -1,4 +1,6 @@
 import Alpine from 'alpinejs';
+import { numberPreview } from './numbers';
+import reportForm, { clearReportBackups } from './report-form';
 
 const HEIC_MESSAGE = "Format HEIC belum didukung. Ubah pengaturan kamera iPhone ke 'Paling Kompatibel', atau kirim ulang sebagai JPG.";
 
@@ -245,6 +247,18 @@ Alpine.data('copyText', (text) => ({
         setTimeout(() => (this.copied = false), 2500);
     },
 }));
+
+Alpine.data('reportForm', reportForm);
+
+// Pratinjau "Terbaca: ..." di bawah input angka (komponen x-number-input).
+Alpine.magic('number', () => numberPreview);
+
+// Cadangan isian laporan di perangkat dihapus saat pengguna keluar.
+document.addEventListener('submit', (event) => {
+    if (event.target.matches('[data-logout]')) {
+        clearReportBackups();
+    }
+});
 
 window.Alpine = Alpine;
 Alpine.start();

@@ -82,6 +82,18 @@ class Format
         return $value === null ? self::EMPTY : Carbon::parse($value)->translatedFormat('j F Y');
     }
 
+    /** "9 Oktober 2026, 10.42" */
+    public static function dateTime(CarbonInterface|string|null $value): string
+    {
+        return $value === null ? self::EMPTY : Carbon::parse($value)->translatedFormat('j F Y, H.i');
+    }
+
+    /** Jumlah produksi/penjualan tanpa nol desimal yang tidak perlu: 12.50 → "12,5", 1250.00 → "1.250". */
+    public static function quantity(int|float|string|null $value): string
+    {
+        return $value === null || $value === '' ? self::EMPTY : NumberInput::display($value, true);
+    }
+
     public static function month(CarbonInterface|string|null $value): string
     {
         return $value === null ? self::EMPTY : Carbon::parse($value)->translatedFormat('F Y');

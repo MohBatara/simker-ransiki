@@ -1,0 +1,85 @@
+<?php
+
+namespace App\Actions\Reports;
+
+use App\Enums\ReportStatus;
+use App\Enums\ReviewAction;
+use App\Enums\Role;
+use App\Models\MonthlyReport;
+use App\Models\User;
+use App\Notifications\ReportSubmitted;
+use App\Support\ReportForm;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rule;
+
+/**
+ * Mengajukan laporan (dari draf atau revisi). Kelengkapan dicek dari data yang sudah tersimpan.
+ */
+class SubmitReport
+{
+    public function handle(MonthlyReport $report, User $user): MonthlyReport
+    {
+        $report = DB::transaction(function () use ($report, $user) {
+            $report = MonthlyReport::lockForUpdate()->findOrFail($report->id);
+            Gate::forUser($user)->authorize('submit', $report);
+
+            $this->validate($report);
+
+            // submitted_at menyimpan pengajuan pertama (dasar status terlambat); pengajuan ulang
+            // setelah revisi hanya tercatat di riwayat.
+            $report->forceFill([
+                'status' => ReportStatus::Submitted,
+                'submitted_at' => $report->submitted_at ?? now(),
+                'submitted_by' => $report->submitted_by ?? $user->id,
+            ])->save();
+
+            $report->reviews()->create(['user_id' => $user->id, 'action' => ReviewAction::Submitted]);
+
+            return $report;
+        });
+
+        Notification::send($this->opdUsers($report), new ReportSubmitted($report));
+
+        return $report;
+    }
+
+    private function validate(MonthlyReport $report): void
+    {
+        $required = Rule::requiredIf(! $report->no_activity);
+
+        Validator::make(ReportForm::storedData($report), [
+            'activity_summary' => [$required],
+            'members_active' => [$required],
+            'items.*.product_name' => ['required'],
+            'items.*.production_unit' => ['required_with:items.*.production_qty'],
+            'items.*.sales_unit' => ['required_with:items.*.sales_qty'],
+            'problems.*.category' => ['required'],
+            'problems.*.description' => ['required_if:problems.*.category,lainnya'],
+            'supports.*.category' => ['required'],
+            'supports.*.description' => ['required_if:supports.*.category,lainnya'],
+        ], [
+            'activity_summary.required' => 'Isi ringkasan aktivitas, atau pilih "Tidak ada aktivitas bulan ini".',
+            'members_active.required' => 'Isi jumlah anggota aktif. Isi 0 bila memang tidak ada.',
+            'items.*.product_name.required' => 'Pilih produk atau tulis nama produknya.',
+            'items.*.production_unit.required_with' => 'Isi satuan produksi, misalnya kg.',
+            'items.*.sales_unit.required_with' => 'Isi satuan penjualan, misalnya kg.',
+            'problems.*.category.required' => 'Pilih kategori masalah.',
+            'problems.*.description.required_if' => 'Jelaskan masalah dengan kategori "Lainnya".',
+            'supports.*.category.required' => 'Pilih kategori kebutuhan.',
+            'supports.*.description.required_if' => 'Jelaskan kebutuhan dengan kategori "Lainnya".',
+        ])->validate();
+    }
+
+    /** Semua akun OPD aktif yang membina kelompok ini. */
+    private function opdUsers(MonthlyReport $report)
+    {
+        return User::query()
+            ->where('role', Role::Opd)
+            ->where('is_active', true)
+            ->whereIn('opd_id', $report->organization->opds()->select('opds.id'))
+            ->get();
+    }
+}

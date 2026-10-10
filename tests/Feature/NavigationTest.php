@@ -42,6 +42,7 @@ test('sidebar hanya menampilkan menu yang halamannya sudah ada', function () {
         ->assertSee('aria-label="Dasbor"', false)
         ->assertSee('aria-label="Akun Saya"', false)
         ->assertSee('aria-label="Produk"', false)
-        ->assertDontSee('aria-label="Laporan Bulanan"', false)
+        ->assertSee('aria-label="Laporan Bulanan"', false)
+        ->assertDontSee('aria-label="Notifikasi"', false)
         ->assertSee('Keluar');
 });

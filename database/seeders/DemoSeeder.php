@@ -374,7 +374,8 @@ class DemoSeeder extends Seeder
                 ],
         };
 
-        $lastSubmitted = null;
+        // submitted_at = pengajuan pertama (dasar status terlambat); pengajuan ulang hanya di riwayat.
+        $firstSubmitted = null;
         $verified = null;
         foreach ($steps as [$action, $at, $user, $note]) {
             ReportReview::forceCreate([
@@ -386,17 +387,17 @@ class DemoSeeder extends Seeder
             ]);
 
             if ($action === ReviewAction::Submitted) {
-                $lastSubmitted = [$at, $user];
+                $firstSubmitted ??= [$at, $user];
             }
             if ($action === ReviewAction::Verified) {
                 $verified = [$at, $user];
             }
         }
 
-        if ($lastSubmitted) {
+        if ($firstSubmitted) {
             $report->forceFill([
-                'submitted_at' => $lastSubmitted[0],
-                'submitted_by' => $lastSubmitted[1]?->id,
+                'submitted_at' => $firstSubmitted[0],
+                'submitted_by' => $firstSubmitted[1]?->id,
                 'verified_at' => $verified[0] ?? null,
                 'verified_by' => $verified ? $verified[1]->id : null,
             ])->save();

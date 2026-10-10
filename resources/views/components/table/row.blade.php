@@ -1,3 +1,7 @@
+@aware([
+    'clickable' => false,
+])
+
 @props([
     // Tujuan klik baris. Link ditempatkan di sel "primary" dan diperluas menutupi seluruh baris.
     'href' => null,
@@ -13,5 +17,8 @@
         <td aria-hidden="true" class="w-10 pr-4 text-ink-muted max-md:absolute max-md:right-3 max-md:top-1/2 max-md:-translate-y-1/2 max-md:p-0">
             <x-heroicon-o-chevron-right class="ml-auto size-4" />
         </td>
+    @elseif ($clickable)
+        {{-- Baris tanpa detail di tabel yang bisa diklik: sel kosong agar jumlah kolom tetap sama. --}}
+        <td aria-hidden="true" class="w-10 max-md:hidden"></td>
     @endif
 </tr>

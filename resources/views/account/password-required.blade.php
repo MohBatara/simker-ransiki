@@ -5,7 +5,7 @@
 >
     @include('account._password-form', ['fullWidth' => true])
 
-    <form method="POST" action="{{ route('logout') }}" class="mt-3">
+    <form method="POST" action="{{ route('logout') }}" data-logout class="mt-3">
         @csrf
         <x-button variant="ghost" type="submit" class="w-full">Keluar</x-button>
     </form>

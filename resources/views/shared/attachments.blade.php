@@ -1,6 +1,7 @@
 {{--
     Daftar lampiran + unggah. Variabel: $attachments (dengan relasi uploader dan attachable),
-    $uploadUrl (null bila pengguna tidak boleh mengunggah), $title, $description (opsional).
+    $uploadUrl (null bila pengguna tidak boleh mengunggah), $title, $description (opsional),
+    $camera (opsional: tombol "Ambil foto" untuk kamera HP).
 --}}
 @use('App\Support\Format')
 
@@ -36,7 +37,7 @@
 
         @if ($uploadUrl)
             @if ($remaining > 0)
-                <x-file-upload :url="$uploadUrl" :remaining="$remaining" :hint="'JPG, PNG, atau PDF. Maksimal 10 MB per file, sisa '.$remaining.' file.'" />
+                <x-file-upload :url="$uploadUrl" :remaining="$remaining" :camera="$camera ?? false" :hint="'JPG, PNG, atau PDF. Maksimal 10 MB per file, sisa '.$remaining.' file.'" />
             @else
                 <p class="text-caption text-ink-muted">Sudah ada 10 file. Hapus file lama untuk menambah yang baru.</p>
             @endif

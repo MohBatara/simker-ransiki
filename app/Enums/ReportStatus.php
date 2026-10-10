@@ -21,6 +21,12 @@ enum ReportStatus: string
         };
     }
 
+    /** Hanya draf dan laporan yang diminta revisi yang bisa diubah kelompok. */
+    public function isEditable(): bool
+    {
+        return in_array($this, [self::Draft, self::Revision], true);
+    }
+
     /** Tone untuk komponen x-badge: ok, wait, fix, idle. */
     public function badgeColor(): string
     {

@@ -8,6 +8,7 @@ use App\Models\MonthlyReport;
 use App\Models\Organization;
 use App\Models\User;
 use App\Policies\Concerns\AuthorizesByOrganization;
+use App\Support\Format;
 use Illuminate\Auth\Access\Response;
 
 class MonthlyReportPolicy
@@ -44,14 +45,21 @@ class MonthlyReportPolicy
         return match (true) {
             $access->denied() => $access,
             ! $user->isKelompok() => Response::deny('Laporan bulanan hanya diubah oleh kelompok.'),
-            ! in_array($report->status, [ReportStatus::Draft, ReportStatus::Revision], true) => Response::deny('Laporan yang sudah diajukan atau terverifikasi tidak bisa diubah.'),
+            ! $report->status->isEditable() => Response::deny('Laporan yang sudah diajukan atau terverifikasi tidak bisa diubah.'),
             default => Response::allow(),
         };
     }
 
+    /** Laporan bulan berjalan baru bisa diajukan setelah bulannya selesai. */
     public function submit(User $user, MonthlyReport $report): Response
     {
-        return $this->update($user, $report);
+        $access = $this->update($user, $report);
+
+        return match (true) {
+            $access->denied() => $access,
+            ! $report->submissionIsOpen() => Response::deny('Laporan bulan ini baru bisa diajukan mulai '.Format::date($report->submissionOpensOn()).'.'),
+            default => Response::allow(),
+        };
     }
 
     /** Admin dan OPD pembina; laporan harus berstatus diajukan. */

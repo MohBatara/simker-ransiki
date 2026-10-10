@@ -21,3 +21,11 @@ test('tanggal dan bulan memakai nama bulan Indonesia', function () {
         ->and(Format::month('2026-09-01'))->toBe('September 2026')
         ->and(Format::date(null))->toBe(Format::EMPTY);
 });
+
+test('tanggal dengan jam dan jumlah desimal', function () {
+    expect(Format::dateTime('2026-10-09 10:42:00'))->toBe('9 Oktober 2026, 10.42')
+        ->and(Format::quantity('12.50'))->toBe('12,5')
+        ->and(Format::quantity('1250.00'))->toBe('1.250')
+        ->and(Format::quantity('0.00'))->toBe('0')
+        ->and(Format::quantity(null))->toBe(Format::EMPTY);
+});

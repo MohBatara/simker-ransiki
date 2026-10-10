@@ -70,7 +70,7 @@ Route::middleware('auth')->group(function () use ($organizationRoutes) {
         Route::middleware('password.changed')->group(function () use ($organizationRoutes) {
             // File dipakai bersama semua peran; hak ditentukan Policy atas induknya.
             Route::controller(Shared\AttachmentController::class)->prefix('lampiran')->name('attachments.')->group(function () {
-                Route::post('/{type}/{id}', 'store')->name('store')->whereIn('type', ['kelompok', 'izin'])->whereNumber('id')->middleware('throttle:uploads');
+                Route::post('/{type}/{id}', 'store')->name('store')->whereIn('type', ['kelompok', 'izin', 'laporan'])->whereNumber('id')->middleware('throttle:uploads');
                 Route::get('/{attachment}', 'show')->name('show')->whereNumber('attachment')->can('view', 'attachment');
                 Route::get('/{attachment}/unduh', 'download')->name('download')->whereNumber('attachment')->can('view', 'attachment');
                 Route::delete('/{attachment}', 'destroy')->name('destroy')->whereNumber('attachment')->can('delete', 'attachment');
@@ -151,8 +151,17 @@ Route::middleware('auth')->group(function () use ($organizationRoutes) {
                 Route::put('/izin/{license}', [Shared\LicenseController::class, 'update'])->name('licenses.update')->whereNumber('license');
                 Route::delete('/izin/{license}', [Shared\LicenseController::class, 'destroy'])->name('licenses.destroy')->whereNumber('license');
 
-                Route::get('/laporan/{report}', [Kelompok\MonthlyReportController::class, 'show'])
-                    ->name('reports.show')->can('view', 'report');
+                Route::controller(Kelompok\MonthlyReportController::class)->prefix('laporan')->name('reports.')->group(function () {
+                    Route::get('/', 'index')->name('index');
+                    Route::post('/', 'store')->name('store');
+
+                    Route::whereNumber('report')->group(function () {
+                        Route::get('/{report}', 'show')->name('show')->can('view', 'report');
+                        Route::get('/{report}/ubah', 'edit')->name('edit')->can('update', 'report');
+                        Route::patch('/{report}/draf', 'saveDraft')->name('draft')->can('update', 'report')->middleware('throttle:60,1');
+                        Route::post('/{report}/ajukan', 'submit')->name('submit')->can('submit', 'report');
+                    });
+                });
             });
         });
     });

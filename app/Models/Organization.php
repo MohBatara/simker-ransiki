@@ -7,6 +7,8 @@ use App\Enums\OrganizationStatus;
 use App\Enums\Role;
 use App\Models\Concerns\HasAttachments;
 use App\Support\SimilarNames;
+use Carbon\CarbonImmutable;
+use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
@@ -15,6 +17,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Collection as SupportCollection;
 use Illuminate\Support\Str;
 
 #[Fillable([
@@ -129,6 +132,31 @@ class Organization extends Model
             ->get(['id', 'name'])
             ->filter(fn (Organization $other) => SimilarNames::areSimilar($name, $other->name))
             ->values();
+    }
+
+    /**
+     * Periode wajib lapor dari reporting_starts_on sampai bulan berjalan, terbaru dulu.
+     *
+     * @return SupportCollection<int, CarbonImmutable>
+     */
+    public function reportingPeriods(): SupportCollection
+    {
+        $start = CarbonImmutable::parse($this->reporting_starts_on)->startOfMonth();
+        $periods = collect();
+
+        for ($period = now()->toImmutable()->startOfMonth(); $period->gte($start); $period = $period->subMonthNoOverflow()) {
+            $periods->push($period);
+        }
+
+        return $periods;
+    }
+
+    public function acceptsReportFor(CarbonInterface $period): bool
+    {
+        $period = CarbonImmutable::parse($period)->startOfMonth();
+
+        return $period->gte(CarbonImmutable::parse($this->reporting_starts_on)->startOfMonth())
+            && $period->lte(now()->startOfMonth());
     }
 
     public function isVisibleTo(User $user): bool

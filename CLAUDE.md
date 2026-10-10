@@ -281,11 +281,43 @@ draft ──ajukan──▶ submitted ──verifikasi──▶ verified
   Admin juga boleh. (Keputusan sementara, menunggu konfirmasi klien.)
 - Permintaan revisi wajib disertai catatan.
 - Kelompok bisa memilih "Tidak ada aktivitas bulan ini"; bagian lain menjadi opsional.
-- Batas pengiriman default: tanggal 10 bulan berikutnya, zona waktu `Asia/Jayapura` (WIT).
-  Simpan sebagai konfigurasi, jangan ditulis langsung di banyak tempat.
+- Wajib saat diajukan (bila ada aktivitas): ringkasan aktivitas dan anggota aktif (0 = terisi).
+  Tenaga kerja, keuangan, dokumentasi opsional; keuangan kosong tetap NULL (laba NULL, ada peringatan).
+  Baris yang diisi harus lengkap: nama produk, satuan bila jumlahnya diisi, kategori masalah/kebutuhan,
+  uraian bila kategori "lainnya". Aturan ini ada di `App\Actions\Reports\SubmitReport` dan dicerminkan
+  di `resources/js/report-form.js`. Draf boleh menyimpan baris belum lengkap
+  (`report_items.product_name` dan `report_issues.category` nullable).
+- Daftar laporan: satu baris per bulan dari `reporting_starts_on` sampai bulan berjalan. Laporan dibuat
+  per bulan ("Buat laporan" langsung membuat draf). Bulan berjalan boleh dibuat sebagai draf, tetapi baru
+  bisa diajukan mulai tanggal 1 bulan berikutnya (Policy `submit`).
+- Kelompok `closed` tidak bisa membuat laporan baru, tetapi draf/revisi yang ada tetap boleh diselesaikan.
+- Batas pengiriman: `config/simker.php` (`reports.deadline_day` = 10, `reports.timezone` = Asia/Jayapura),
+  pukul 23.59 WIT. Hitung lewat `MonthlyReport::deadlineFor()`, jangan ditulis langsung di tempat lain.
+- `submitted_at`/`submitted_by` menyimpan pengajuan PERTAMA dan tidak diubah saat diajukan ulang
+  setelah revisi; setiap pengajuan tercatat di `report_reviews`.
+- Terlambat (`isOverdue()`): lewat tenggat dan `submitted_at` kosong. Laporan yang diajukan tepat waktu
+  lalu diminta revisi tidak terlambat. "Diajukan terlambat" (`wasSubmittedLate()`, informasi saja):
+  `submitted_at` melewati tenggat periodenya.
 - Status "belum melapor" dihitung untuk kelompok `active` dan `inactive` yang
   `reporting_starts_on` ≤ periode. Kelompok `closed` tidak dihitung.
   Laporan `submitted` yang belum ditinjau TIDAK dihitung terlambat.
+
+### Form laporan (HP, koneksi lambat)
+- Langkah bertahap A–H dalam satu halaman (Alpine `reportForm`): A Aktivitas, B Produksi & penjualan,
+  C SDM, D Keuangan, E Permasalahan, F Kebutuhan dukungan, G Dokumentasi, H Periksa & ajukan.
+- Simpan otomatis lewat `PATCH /kelompok/laporan/{id}/draf` (JSON) setiap
+  `reports.autosave_seconds` (30), saat pindah bagian, dan saat tab disembunyikan. Versi = `updated_at`;
+  versi beda → 409 (disimpan lebih dulu dari perangkat/akun lain). "Ajukan" menyimpan dulu, lalu
+  `POST .../ajukan` memvalidasi data yang tersimpan.
+- Cadangan `localStorage` dengan kunci `simker:laporan:{user_id}:{report_id}` (hanya ditawarkan ke akun
+  yang sama), dihapus setelah tersimpan ke server dan saat keluar (form logout bertanda `data-logout`).
+- "Salin dari bulan lalu" (bagian B dan C): dari laporan sebelumnya yang terdekat milik kelompok sama;
+  hanya daftar produk + satuan, anggota aktif, dan tenaga kerja.
+- Angka diketik sebagai teks, dibaca `App\Support\NumberInput` (PHP) dan `resources/js/numbers.js`
+  (pratinjau "Terbaca: ..." di `x-number-input`); keduanya harus sama:
+  * uang dan bilangan bulat: buang "Rp", spasi, semua titik dan koma ("12,5" → 125);
+  * jumlah desimal: koma = desimal; titik = pemisah ribuan HANYA bila setiap kelompok tepat 3 digit,
+    selain itu titik = desimal ("12.5" → 12,5; "1.250" → 1250; "1.250,5" → 1250,5); maks 2 desimal.
 
 Setiap perubahan status mencatat baris di `report_reviews` dan mengirim notifikasi:
 - diajukan → semua user OPD terkait

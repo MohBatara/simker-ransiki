@@ -107,7 +107,7 @@
                     <span class="sr-only xl:hidden">Akun {{ $userName }}</span>
                 </a>
                 @if (Route::has('logout'))
-                    <form method="POST" action="{{ route('logout') }}">
+                    <form method="POST" action="{{ route('logout') }}" data-logout>
                         @csrf
                         <button type="submit" class="flex w-full items-center gap-3 rounded-control px-1 py-2 text-ink-soft transition-colors hover:bg-subtle hover:text-ink max-xl:flex-col max-xl:gap-1 xl:px-3">
                             <x-heroicon-o-arrow-right-start-on-rectangle class="size-5 shrink-0" />
