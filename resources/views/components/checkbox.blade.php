@@ -19,7 +19,7 @@
     }
 @endphp
 
-<label @if ($id) for="{{ $id }}" @endif class="flex min-h-11 cursor-pointer items-start gap-3 py-2.5 md:min-h-10">
+<label @if ($id) for="{{ $id }}" @endif class="flex min-h-11 cursor-pointer items-start gap-3 py-3 md:min-h-10">
     <span class="relative flex size-5 shrink-0">
         <input
             type="checkbox"

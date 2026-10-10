@@ -13,7 +13,7 @@
 
         @foreach ($reports as $report)
             {{-- Draf yang belum pernah diajukan tidak bisa dibuka peninjau. --}}
-            <x-table.row :href="$report->submitted_at ? route($area.'.reports.show', $report) : null">
+            <x-table.row :href="$report->submitted_at ? route($area.'.reports.show', [$report, 'dari' => 'kelompok']) : null">
                 <x-table.cell primary>{{ Format::month($report->period) }}</x-table.cell>
                 <x-table.cell badge><x-badge :tone="$report->status->badgeColor()">{{ $report->status->reviewerLabel() }}</x-badge></x-table.cell>
                 <x-table.cell label="Diajukan">{{ Format::date($report->submitted_at) }}</x-table.cell>

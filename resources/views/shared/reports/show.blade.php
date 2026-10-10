@@ -20,6 +20,7 @@
     :title="'Laporan '.Format::month($report->period)"
     :description="$report->organization->name"
     :back="$back"
+    :breadcrumbs="$breadcrumbs ?? null"
 >
     @if ($editUrl || $canVerify || $canReopen)
         <x-slot:actions>
@@ -48,7 +49,7 @@
                     <dl class="space-y-4">
                         <div>
                             <dt class="text-ink-soft">Ringkasan aktivitas</dt>
-                            <dd class="mt-0.5 whitespace-pre-line text-ink">{{ $text($report->activity_summary) }}</dd>
+                            <dd class="mt-0.5 whitespace-pre-line text-ink break-words">{{ $text($report->activity_summary) }}</dd>
                         </div>
                         <div>
                             <dt class="text-ink-soft">Jumlah kegiatan</dt>
@@ -56,7 +57,7 @@
                         </div>
                         <div>
                             <dt class="text-ink-soft">Capaian</dt>
-                            <dd class="mt-0.5 whitespace-pre-line text-ink">{{ $text($report->achievements) }}</dd>
+                            <dd class="mt-0.5 whitespace-pre-line text-ink break-words">{{ $text($report->achievements) }}</dd>
                         </div>
                     </dl>
                 </x-card>
@@ -127,7 +128,7 @@
                                         <li class="py-2 first:pt-0 last:pb-0">
                                             <p class="font-semibold text-ink">{{ $row->category ? $row->categoryLabel() : 'Tanpa kategori' }}</p>
                                             @if (filled($row->description))
-                                                <p class="mt-0.5 whitespace-pre-line text-ink-soft">{{ $row->description }}</p>
+                                                <p class="mt-0.5 whitespace-pre-line text-ink-soft break-words">{{ $row->description }}</p>
                                             @endif
                                         </li>
                                     @endforeach
@@ -189,7 +190,7 @@
                                 <p class="text-ink"><span class="font-semibold">{{ $review->action->label() }}</span> oleh {{ $review->user?->name ?? 'akun yang sudah dihapus' }}</p>
                                 <p class="text-caption text-ink-muted">{{ Format::dateTime($review->created_at) }}</p>
                                 @if (filled($review->note))
-                                    <p class="mt-1 whitespace-pre-line rounded-control bg-subtle px-3 py-2 text-ink-soft">{{ $review->note }}</p>
+                                    <p class="mt-1 whitespace-pre-line rounded-control bg-subtle px-3 py-2 text-ink-soft break-words">{{ $review->note }}</p>
                                 @endif
                             </li>
                         @endforeach

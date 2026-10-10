@@ -15,6 +15,7 @@
     <form method="POST" action="{{ $action }}" class="space-y-5">
         @csrf
         @if ($editing)
+        <x-form-errors />
             @method('PUT')
         @endif
 

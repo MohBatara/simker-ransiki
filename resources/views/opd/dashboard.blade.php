@@ -1,7 +1,7 @@
 @use('App\Support\Format')
 @use('App\Support\Dashboards\ReportingPeriod')
 
-<x-layouts.app title="Dasbor" :description="$user->opd->name">
+<x-layouts.app :title="$user->opd->name" eyebrow="Dasbor">
     <x-slot:actions>
         @include('shared.dashboards.period-picker')
     </x-slot:actions>
@@ -24,7 +24,7 @@
                         <div class="flex flex-wrap gap-x-2">
                             <dt class="text-ink-soft">Paling lama menunggu:</dt>
                             <dd>
-                                <x-link href="{{ route('opd.reports.show', $oldestWaiting) }}">
+                                <x-link href="{{ route('opd.reports.show', [$oldestWaiting, 'dari' => 'antrean']) }}">
                                     {{ $oldestWaiting->organization->name }}, {{ Format::month($oldestWaiting->period) }}
                                 </x-link>
                                 <span class="text-ink-soft">· {{ Format::waitingSince($oldestWaiting->last_submitted_at) }}</span>

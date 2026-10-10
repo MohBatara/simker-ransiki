@@ -80,7 +80,7 @@
 
                 @foreach ($reports as $report)
                     {{-- Draf yang belum pernah diajukan tidak bisa dibuka peninjau (404), jadi barisnya tanpa tautan. --}}
-                    <x-table.row :href="$report->submitted_at ? route($area.'.reports.show', $report) : null">
+                    <x-table.row :href="$report->submitted_at ? route($area.'.reports.show', $queue ? [$report, 'dari' => 'antrean'] : $report) : null">
                         <x-table.cell primary>{{ $report->organization->name }}</x-table.cell>
                         <x-table.cell subtitle>{{ Format::month($report->period) }}</x-table.cell>
                         <x-table.cell badge>

@@ -28,6 +28,8 @@
         'initial' => $initial,
         'hadErrors' => $errors->any(),
     ]))"
+    {{-- Tombol "Tambah izin" ada di header halaman (x-slot:actions) dan mengirim event ini. --}}
+    x-on:license-create.window="create(); record.status = 'none'"
     class="space-y-4"
 >
     @if ($licenses->isEmpty())
@@ -37,12 +39,6 @@
             @endif
         </x-empty-state>
     @else
-        @if ($canManage)
-            <div class="flex justify-end">
-                <x-button icon="plus" x-on:click="create(); record.status = 'none'">Tambah izin</x-button>
-            </div>
-        @endif
-
         <x-table clickable>
             <x-slot:head>
                 <x-table.heading>Jenis izin</x-table.heading>

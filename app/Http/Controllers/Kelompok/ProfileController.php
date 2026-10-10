@@ -76,6 +76,10 @@ class ProfileController extends Controller
             'license' => $license,
             'attachments' => $license->attachments()->with('uploader')->latest()->get()->each->setRelation('attachable', $license),
             'backUrl' => route('kelompok.licenses.index'),
+            'breadcrumbs' => [
+                ['label' => 'Legalitas & Izin', 'href' => route('kelompok.licenses.index')],
+                ['label' => $license->type],
+            ],
         ]);
     }
 

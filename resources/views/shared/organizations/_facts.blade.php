@@ -19,7 +19,7 @@
         <dd class="mt-0.5 flex flex-wrap items-center gap-2">
             @if ($latestReport)
                 @if ($latestReport->submitted_at)
-                    <x-link href="{{ route($area.'.reports.show', $latestReport) }}" class="font-normal">{{ Format::month($latestReport->period) }}</x-link>
+                    <x-link href="{{ route($area.'.reports.show', [$latestReport, 'dari' => 'kelompok']) }}" class="font-normal">{{ Format::month($latestReport->period) }}</x-link>
                 @else
                     <span class="text-ink">{{ Format::month($latestReport->period) }}</span>
                 @endif

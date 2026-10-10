@@ -19,7 +19,7 @@
     $error = $key && ! $live ? $errors->first($key) : null;
 @endphp
 
-<div {{ $attributes->class('space-y-1.5') }}>
+<div {{ $attributes->class('space-y-2') }}>
     <label @if ($id) for="{{ $id }}" @endif @if ($bindFor) x-bind:for="{{ $bindFor }}" @endif class="block text-ui font-semibold text-ink">
         @if ($labelText)<span x-text="{{ $labelText }}">{{ $label }}</span>@else{{ $label }}@endif
         @if ($optional)

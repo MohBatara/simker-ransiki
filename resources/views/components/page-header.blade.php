@@ -3,6 +3,8 @@
     'description' => null,
     'eyebrow' => null,
     'back' => null,
+    // Remah untuk halaman bertingkat (desktop); menggantikan tautan "Kembali". Lihat x-breadcrumbs.
+    'breadcrumbs' => null,
     // Dipakai layout app: di HP judul dan tombol kembali sudah ada di header atas.
     'condensed' => false,
 ])
@@ -12,7 +14,9 @@
     'max-md:hidden' => $condensed && ! $description && ! isset($actions) && ! isset($badge) && ! isset($meta),
 ]) }}>
     <div class="min-w-0">
-        @if ($back)
+        @if ($breadcrumbs)
+            <x-breadcrumbs :items="$breadcrumbs" class="mb-2" />
+        @elseif ($back)
             <a href="{{ $back }}" @class(['mb-2 inline-flex items-center gap-1 rounded-control text-caption text-ink-soft hover:text-ink', 'max-md:hidden' => $condensed])>
                 <x-heroicon-o-arrow-left class="size-4" />
                 Kembali

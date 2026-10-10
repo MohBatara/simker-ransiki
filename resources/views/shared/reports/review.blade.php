@@ -9,7 +9,7 @@
 
 @if ($canVerify)
     <x-modal name="report-verify" title="Verifikasi laporan" :show="$errors->has('verify_note')">
-        <form id="form-verify" method="POST" action="{{ route($area.'.reports.verify', $report) }}" class="space-y-4">
+        <form id="form-verify" method="POST" action="{{ route($area.'.reports.verify', array_filter([$report, 'dari' => $origin ?? null])) }}" class="space-y-4">
             @csrf
             <p>Laporan yang sudah diverifikasi masuk ke statistik resmi dan tidak bisa diubah lagi oleh kelompok.</p>
             <x-field label="Catatan untuk kelompok" for="verify_note" optional>
@@ -23,7 +23,7 @@
     </x-modal>
 
     <x-modal name="report-revision" title="Minta revisi" :show="$errors->has('revision_note')">
-        <form id="form-revision" method="POST" action="{{ route($area.'.reports.revision', $report) }}" class="space-y-4">
+        <form id="form-revision" method="POST" action="{{ route($area.'.reports.revision', array_filter([$report, 'dari' => $origin ?? null])) }}" class="space-y-4">
             @csrf
             <p>Laporan dikembalikan ke kelompok untuk diperbaiki, lalu diajukan lagi.</p>
             <x-field label="Catatan revisi" for="revision_note" hint="Sebut bagian yang perlu diperbaiki. Catatan ini tampil di atas form laporan kelompok.">
@@ -39,7 +39,7 @@
 
 @if ($canReopen)
     <x-modal name="report-reopen" title="Buka kembali untuk revisi" :show="$errors->has('reopen_note')">
-        <form id="form-reopen" method="POST" action="{{ route('admin.reports.reopen', $report) }}" class="space-y-4">
+        <form id="form-reopen" method="POST" action="{{ route('admin.reports.reopen', array_filter([$report, 'dari' => $origin ?? null])) }}" class="space-y-4">
             @csrf
             <p>Verifikasi dicabut dan laporan kembali ke kelompok dengan status perlu revisi. Riwayat verifikasi tetap tersimpan.</p>
             <x-field label="Alasan" for="reopen_note" hint="Wajib. Tampil untuk kelompok sebagai catatan revisi.">

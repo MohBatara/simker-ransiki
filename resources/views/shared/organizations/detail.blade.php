@@ -24,11 +24,23 @@
     :description="$organization->institutionType->name.' · '.$organization->village->name"
     :back="route($area.'.organizations.index')"
 >
-    @can('update', $organization)
+    @php
+        $canAddProduct = $tab === 'produk' && auth()->user()->can('create', [App\Models\Product::class, $organization]);
+        $canAddLicense = $tab === 'izin' && auth()->user()->can('create', [App\Models\License::class, $organization]);
+    @endphp
+    @if (auth()->user()->can('update', $organization) || $canAddProduct || $canAddLicense)
         <x-slot:actions>
-            <x-button variant="secondary" icon="pencil-square" :href="route($area.'.organizations.edit', $organization)">Ubah profil</x-button>
+            @can('update', $organization)
+                <x-button variant="secondary" icon="pencil-square" :href="route($area.'.organizations.edit', $organization)">Ubah profil</x-button>
+            @endcan
+            {{-- Tambah di tab Produk/Izin: tombol header membuka modal milik daftar di bawahnya. --}}
+            @if ($canAddProduct)
+                <x-button icon="plus" x-data x-on:click="$dispatch('product-create')">Tambah produk</x-button>
+            @elseif ($canAddLicense)
+                <x-button icon="plus" x-data x-on:click="$dispatch('license-create')">Tambah izin</x-button>
+            @endif
         </x-slot:actions>
-    @endcan
+    @endif
 
     @if ($organization->status !== App\Enums\OrganizationStatus::Active)
         <x-slot:badge>

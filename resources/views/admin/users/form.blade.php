@@ -17,6 +17,7 @@
 >
     <form method="POST" action="{{ $editing ? route('admin.users.update', $user) : route('admin.users.store') }}" x-data="{ role: @js($role) }" class="space-y-5">
         @csrf
+        <x-form-errors />
         @if ($editing)
             @method('PUT')
         @endif

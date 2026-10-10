@@ -1,4 +1,10 @@
-<x-layouts.app title="Legalitas & Izin" :description="$organization->name">
+<x-layouts.app title="Legalitas & Izin" description="Status hukum dan izin usaha kelompok.">
+    @can('create', [App\Models\License::class, $organization])
+        <x-slot:actions>
+            <x-button icon="plus" x-data x-on:click="$dispatch('license-create')">Tambah izin</x-button>
+        </x-slot:actions>
+    @endcan
+
     <div class="space-y-6">
         <x-card title="Status legalitas" description="Status hukum kelompok, mis. sudah berbadan hukum atau masih dalam proses.">
             <form method="POST" action="{{ route('kelompok.legal.update') }}" class="space-y-4">

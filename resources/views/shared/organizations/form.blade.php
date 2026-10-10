@@ -142,7 +142,7 @@
             <x-field label="Status kelompok" for="status" hint="Kelompok yang ditutup tidak dihitung wajib lapor.">
                 <x-select name="status" :options="$options['statuses']" :selected="$organization->status?->value ?? 'active'" required />
             </x-field>
-            <fieldset class="space-y-1.5">
+            <fieldset class="space-y-2">
                 <legend class="text-ui font-semibold text-ink">Mulai wajib lapor</legend>
                 <div class="grid grid-cols-2 gap-2">
                     <x-select name="reporting_month" :options="$options['months']" :selected="$organization->reporting_starts_on?->month" aria-label="Bulan mulai wajib lapor" required />

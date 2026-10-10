@@ -54,7 +54,7 @@
                 </x-slot:head>
 
                 @foreach ($issues as $issue)
-                    <x-table.row :href="route($area.'.reports.show', $issue->monthly_report_id)">
+                    <x-table.row :href="route($area.'.reports.show', [$issue->monthly_report_id, 'dari' => 'masalah'])">
                         <x-table.cell primary>{{ $issue->monthlyReport->organization->name }}</x-table.cell>
                         <x-table.cell subtitle>{{ Format::month($issue->monthlyReport->period) }}</x-table.cell>
                         <x-table.cell label="Kategori" class="whitespace-nowrap">

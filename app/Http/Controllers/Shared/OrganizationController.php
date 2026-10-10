@@ -75,6 +75,12 @@ class OrganizationController extends Controller
             'license' => $license,
             'attachments' => $license->attachments()->with('uploader')->latest()->get()->each->setRelation('attachable', $license),
             'backUrl' => route($area.'.organizations.licenses', $organization),
+            'breadcrumbs' => [
+                ['label' => $area === 'opd' ? 'Kelompok Binaan' : 'Semua Kelompok', 'href' => route($area.'.organizations.index')],
+                ['label' => $organization->name, 'href' => route($area.'.organizations.show', $organization)],
+                ['label' => 'Izin', 'href' => route($area.'.organizations.licenses', $organization)],
+                ['label' => $license->type],
+            ],
         ]);
     }
 

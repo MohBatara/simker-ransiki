@@ -1,12 +1,13 @@
 <?php
 
 use App\Enums\OrganizationStatus;
+use App\Enums\ReviewAction;
+use App\Models\InstitutionType;
+use App\Models\MonthlyReport;
 use App\Models\Opd;
 use App\Models\Organization;
 use App\Models\User;
 use App\Notifications\ReportReviewed;
-use App\Enums\ReviewAction;
-use App\Models\MonthlyReport;
 
 test('lonceng desktop di atas sidebar; menu Notifikasi disembunyikan di desktop; aktif di halaman Notifikasi', function () {
     $organization = Organization::factory()->create();
@@ -34,7 +35,7 @@ test('blok pengguna: avatar, nama dua baris, dan nama singkat OPD', function () 
 
 test('daftar kelompok: kotak cari berikon, filter ringkas, chip yang bisa dihapus, ringkasan hasil', function () {
     $admin = User::factory()->admin()->create();
-    $type = App\Models\InstitutionType::factory()->create(['name' => 'KUB']);
+    $type = InstitutionType::factory()->create(['name' => 'KUB']);
     Organization::factory()->count(2)->create(['institution_type_id' => $type->id]);
     Organization::factory()->create(['institution_type_id' => $type->id, 'status' => OrganizationStatus::Inactive, 'name' => 'KUB Diam']);
 

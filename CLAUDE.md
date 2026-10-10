@@ -467,7 +467,13 @@ pemisah tetap `line`/`line-strong`. Periksa kontras sebelum mengubah atau menamb
 - Radius: 6px untuk input/tombol/badge, 10px untuk kartu dan modal.
 - Border: 1px `--color-line`. Kontrol form memakai 1px `--color-line-input`.
 - Jarak dasar kelipatan 4px. Padding kartu 20px (desktop), 16px (mobile).
-- Tinggi kontrol: 40px (desktop), 44px (mobile, agar mudah disentuh).
+  Pengecualian: jarak setengah langkah (2px/6px, mis. `mt-0.5`, `gap-1.5`) hanya untuk jarak antarbaris
+  teks dan ikon-teks di dalam satu kelompok kecil (label + nilai, judul + keterangan, ikon + label).
+  Padding baris, jarak label–kontrol, dan jarak antarbagian tetap kelipatan 4px.
+- Tinggi kontrol: 40px (desktop), 44px (mobile, agar mudah disentuh). Pengecualian: select di baris
+  filter daftar memakai `size="sm"` (36px di desktop, tetap 44px di HP).
+- Target sentuh minimal 44px di HP, termasuk tombol ikon (tutup alert/modal), tautan yang berdiri
+  sendiri (`x-link`), chip filter, badge/angka yang bisa diklik.
 - Lebar konten maksimal 1200px untuk area aplikasi, 1080px untuk halaman publik.
 
 ### Tata letak gaya aplikasi (responsif)
@@ -531,7 +537,10 @@ Gambar publik: `<picture>` dengan WebP `srcset` + cadangan JPEG (`x-public.pictu
 Varian dibuat saat unggah; foto lama: `php artisan simker:varian-foto`. Tanpa dukungan WebP di
 server, otomatis JPEG saja.
 
-Token `forest`/`sun` tidak boleh dipakai di luar view publik (dijaga tes).
+Token `forest`/`sun` tidak boleh dipakai di luar view publik (dijaga tes). Satu pengecualian: halaman
+masuk (`layouts.auth`): panel kiri forest dengan foto sampul + overlay padat `bg-forest/70`; di atas foto
+teks sekunder memakai putih (forest-soft bisa turun ke ~3:1 bila fotonya terang), forest-soft hanya di
+atas forest polos.
 
 ### Komponen Blade (buat di awal, pakai di semua halaman)
 Di `resources/views/components/`:
@@ -543,12 +552,33 @@ Di `resources/views/components/`:
 `stacked-bar` (bilah bertumpuk berwarna status + legenda berangka yang bisa diklik),
 `bar-list` (label + bilah tipis warna `brand` + angka, baris bisa diklik),
 `notification-bell` dan `notification-count` (lonceng + angka belum dibaca),
-`layouts.app` (area login), `layouts.public` (website publik), `layouts.guest` (login).
+`link` (tautan teks; berdiri sendiri min 44px di HP, `inline` di dalam kalimat bergaris bawah),
+`list` + `list.item` (baris daftar yang bisa diklik: min 44px, hover `subtle`, chevron),
+`breadcrumbs` (remah, desktop saja), `avatar` (inisial 2 huruf, latar `subtle`, teks `ink-soft`),
+`search-input` (ikon kaca pembesar, Enter mencari), `filter-bar` (cari + select ringkas sebaris di
+desktop, panel "Filter (n)" di HP), `filter-summary` (ringkasan hasil + chip filter aktif yang bisa
+dihapus, `App\Support\FilterChips`), `password-input` (tombol tampilkan kata sandi),
+`form-errors` (ringkasan error di atas form panjang + fokus ke isian pertama yang salah),
+`layouts.app` (area login), `layouts.public` (website publik), `layouts.auth` (halaman masuk),
+`layouts.guest` (halaman error, ganti kata sandi wajib).
 
 Grafik dibuat dengan CSS/SVG di server (tanpa paket grafik), selalu disertai angka yang terlihat dan
 `aria-label` yang membacakan isinya. Warna status hanya untuk segmen status; grafik lain memakai `brand`.
 
-Halaman tidak boleh menulis ulang gaya tombol/kartu sendiri. Selalu pakai komponen.
+Halaman tidak boleh menulis ulang gaya tombol/kartu/tautan/baris daftar sendiri. Selalu pakai komponen.
+
+### Header halaman
+- Judul + keterangan + aksi di `x-layouts.app`. Badge status di samping judul lewat slot `badge`;
+  fakta kunci (mis. detail kelompok) lewat slot `meta`.
+- Dasbor: keterangan kecil "Dasbor" (`eyebrow`) di atas nama (Distrik Ransiki / nama OPD / nama kelompok).
+- Halaman bertingkat memakai remah (`breadcrumbs`, desktop) dan tombol kembali di header HP. Detail
+  laporan Admin/OPD membawa `?dari=kelompok|antrean|masalah` (divalidasi) agar "Kembali" dan remah
+  mengikuti asal halaman, termasuk setelah verifikasi/minta revisi.
+- Tombol "Tambah ..." selalu di aksi header; daftar dengan modal (`recordForm`) mendengarkan event
+  (`product-create`, `license-create`, `master-create`).
+- Badge status kelompok hanya untuk status selain Aktif.
+- Halaman error (403/404/419/429/500/503) memakai `layouts.guest` dengan "Kembali" + tujuan utama
+  (dasbor bila login); 419 mengajak kembali lalu masuk lagi, 500/503 "Muat ulang".
 
 ### Tabel dan kartu daftar
 - Tidak ada tombol "Buka" per baris. Baris yang punya halaman detail bisa diklik seluruhnya:
@@ -563,6 +593,11 @@ Halaman tidak boleh menulis ulang gaya tombol/kartu sendiri. Selalu pakai kompon
   label-nilai. Seluruh kartu bisa diketuk, chevron di kanan.
 
 ### Form
+- Setiap form selain GET mencegah kirim ganda (resources/js/app.js): tombol kirim dinonaktifkan,
+  `aria-busy`, label diganti teks `processing` pada `x-button` (bawaan "Memproses…", mis. "Menyimpan…",
+  "Menghapus…"). Kecualikan dengan `data-no-processing`.
+- Form panjang menampilkan `x-form-errors` di atas form. Form Alpine memakai `invalid-if` pada
+  input/select/textarea, bukan menyalin kelas error.
 - Select tanpa nilai terpilih tampil `ink-muted`, sama seperti placeholder input.
 - Grup checkbox memakai `checkbox-group`: lebar kolom mengikuti isi dengan jarak tetap,
   satu kolom di HP dan maksimal dua kolom mulai tablet.

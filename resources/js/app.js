@@ -331,6 +331,13 @@ document.addEventListener('submit', (event) => {
     });
 });
 
+// Form yang gagal divalidasi: fokus ke isian pertama yang salah (ringkasan x-form-errors ada di atasnya).
+document.addEventListener('DOMContentLoaded', () => {
+    if (document.querySelector('[data-form-errors]')) {
+        document.querySelector('[aria-invalid="true"]')?.focus();
+    }
+});
+
 window.addEventListener('pageshow', (event) => {
     if (!event.persisted) {
         return;

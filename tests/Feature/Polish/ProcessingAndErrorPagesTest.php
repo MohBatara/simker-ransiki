@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\Opd;
 use App\Models\Organization;
 use App\Models\User;
 use Illuminate\Support\Facades\Blade;
@@ -21,7 +22,7 @@ test('tombol kirim utama memakai teks proses yang sesuai', function () {
 });
 
 test('halaman 404 untuk pengguna login menawarkan kembali ke dasbornya', function () {
-    $this->actingAs(User::factory()->opd(App\Models\Opd::factory()->create())->create())
+    $this->actingAs(User::factory()->opd(Opd::factory()->create())->create())
         ->get('/opd/laporan/999999')
         ->assertNotFound()
         ->assertSee('Halaman tidak ditemukan')

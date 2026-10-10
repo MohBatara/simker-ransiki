@@ -17,6 +17,8 @@
         'initial' => $initial,
         'hadErrors' => $errors->any(),
     ]))"
+    {{-- Tombol "Tambah produk" ada di header halaman (x-slot:actions) dan mengirim event ini. --}}
+    x-on:product-create.window="create()"
     class="space-y-4"
 >
     @if ($products->isEmpty())
@@ -26,12 +28,6 @@
             @endif
         </x-empty-state>
     @else
-        @if ($canManage)
-            <div class="flex justify-end">
-                <x-button icon="plus" x-on:click="create()">Tambah produk</x-button>
-            </div>
-        @endif
-
         <x-table>
             <x-slot:head>
                 <x-table.heading>Nama</x-table.heading>

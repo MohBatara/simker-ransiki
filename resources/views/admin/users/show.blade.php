@@ -47,7 +47,7 @@
         <x-card title="Data akun">
             <dl class="divide-y divide-line">
                 @foreach (array_filter($rows, fn ($value) => $value !== null) as $label => $value)
-                    <div class="grid gap-1 py-2.5 first:pt-0 last:pb-0 sm:grid-cols-[minmax(0,12rem)_1fr] sm:gap-4">
+                    <div class="grid gap-1 py-3 first:pt-0 last:pb-0 sm:grid-cols-[minmax(0,12rem)_1fr] sm:gap-4">
                         <dt class="text-ink-soft">{{ $label }}</dt>
                         <dd>
                             @if ($label === 'Kelompok')

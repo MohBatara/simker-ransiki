@@ -19,7 +19,7 @@
     ];
 @endphp
 
-<x-layouts.app title="Dasbor Distrik" description="Seluruh kelompok di Distrik Ransiki.">
+<x-layouts.app title="Distrik Ransiki" eyebrow="Dasbor">
     <x-slot:actions>
         @include('shared.dashboards.period-picker')
     </x-slot:actions>
@@ -126,7 +126,7 @@
                     <dl class="mt-4 divide-y divide-line">
                         @foreach ($moneyRows as $field => $label)
                             @php $total = $economy['totals'][$field]; @endphp
-                            <div class="flex items-baseline justify-between gap-4 py-2.5 first:pt-0">
+                            <div class="flex items-baseline justify-between gap-4 py-3 first:pt-0">
                                 <dt>
                                     <span class="text-ink">{{ $label }}</span>
                                     <span class="block text-caption text-ink-muted">

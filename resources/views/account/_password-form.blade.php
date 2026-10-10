@@ -1,6 +1,7 @@
 <form method="POST" action="{{ route('account.password.update') }}" class="space-y-4">
     @csrf
     @method('PUT')
+    <x-form-errors />
     <x-field label="Kata sandi saat ini" for="current_password">
         <x-password-input name="current_password" autocomplete="current-password" required />
     </x-field>

@@ -51,6 +51,7 @@
         <form method="POST" action="{{ route('admin.content.update') }}" class="space-y-5">
             @csrf
             @method('PUT')
+            <x-form-errors />
 
             <x-card title="Keterangan foto sampul">
                 <div class="grid gap-5 md:grid-cols-2">

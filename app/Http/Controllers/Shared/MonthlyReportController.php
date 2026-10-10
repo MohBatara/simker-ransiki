@@ -61,14 +61,57 @@ class MonthlyReportController extends Controller
     public function show(Request $request, MonthlyReport $report): View
     {
         $area = $request->user()->role->area();
+        $report->loadDetail();
+        [$back, $breadcrumbs] = $this->origin($request, $report, $area);
 
         return view('shared.reports.show', [
-            'report' => $report->loadDetail(),
+            'report' => $report,
             'attachments' => $report->attachments()->with('uploader')->latest()->get()->each->setRelation('attachable', $report),
-            'back' => $report->status === ReportStatus::Submitted && $area === 'opd' ? route('opd.verifications.index') : route($area.'.reports.index'),
+            'back' => $back,
+            'breadcrumbs' => $breadcrumbs,
             'editUrl' => null,
             'area' => $area,
+            'origin' => $this->originKey($request, $area),
         ]);
+    }
+
+    /**
+     * Asal halaman (?dari=): menentukan tujuan "Kembali" dan remah. Nilai lain diabaikan.
+     *
+     * @return array{0: string, 1: list<array{label: string, href?: string}>}
+     */
+    private function origin(Request $request, MonthlyReport $report, string $area): array
+    {
+        $current = ['label' => 'Laporan '.Format::month($report->period)];
+
+        return match ($this->originKey($request, $area)) {
+            'kelompok' => [route($area.'.organizations.reports', $report->organization), [
+                ['label' => $area === 'opd' ? 'Kelompok Binaan' : 'Semua Kelompok', 'href' => route($area.'.organizations.index')],
+                ['label' => $report->organization->name, 'href' => route($area.'.organizations.show', $report->organization)],
+                ['label' => 'Laporan', 'href' => route($area.'.organizations.reports', $report->organization)],
+                $current,
+            ]],
+            'antrean' => [route('opd.verifications.index'), [
+                ['label' => 'Verifikasi Laporan', 'href' => route('opd.verifications.index')],
+                $current,
+            ]],
+            'masalah' => [route($area.'.issues.index'), [
+                ['label' => 'Masalah & Kebutuhan', 'href' => route($area.'.issues.index')],
+                $current,
+            ]],
+            default => [route($area.'.reports.index'), [
+                ['label' => 'Semua Laporan', 'href' => route($area.'.reports.index')],
+                $current,
+            ]],
+        };
+    }
+
+    private function originKey(Request $request, string $area): ?string
+    {
+        $origin = $request->query('dari');
+        $allowed = $area === 'opd' ? ['kelompok', 'antrean', 'masalah'] : ['kelompok', 'masalah'];
+
+        return in_array($origin, $allowed, true) ? $origin : null;
     }
 
     public function verify(Request $request, MonthlyReport $report, ReviewReport $review): RedirectResponse
@@ -97,7 +140,9 @@ class MonthlyReportController extends Controller
     /** Bila peninjau lain sudah bertindak lebih dulu, kembali ke detail dengan penjelasan. */
     private function act(Request $request, MonthlyReport $report, callable $action, string $message): RedirectResponse
     {
-        $show = route($request->user()->role->area().'.reports.show', $report);
+        // Asal halaman ikut dibawa agar "Kembali" dan remah tetap sama setelah tindakan.
+        $area = $request->user()->role->area();
+        $show = route($area.'.reports.show', array_filter([$report, 'dari' => $this->originKey($request, $area)]));
 
         try {
             $action();

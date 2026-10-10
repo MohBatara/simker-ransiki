@@ -44,7 +44,7 @@
 
     <ul x-cloak x-show="queue.length" class="divide-y divide-line rounded-control border border-line bg-paper" aria-live="polite">
         <template x-for="item in queue" :key="item.key">
-            <li class="space-y-1.5 px-3 py-2.5">
+            <li class="space-y-2 px-3 py-3">
                 <div class="flex items-center justify-between gap-3 text-ui">
                     <span class="truncate" x-text="item.name"></span>
                     <span class="shrink-0 text-caption tabular-nums" x-bind:class="item.status === 'error' ? 'text-fix' : 'text-ink-muted'" x-text="statusText(item)"></span>

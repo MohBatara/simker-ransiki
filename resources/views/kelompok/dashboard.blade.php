@@ -69,7 +69,7 @@
         @if ($revision)
             <x-alert tone="fix" :title="'Perlu revisi: Laporan '.Format::month($revision->period)" class="lg:col-start-1">
                 @if ($revision->latestRevisionRequest)
-                    <p class="whitespace-pre-line">{{ $revision->latestRevisionRequest->note }}</p>
+                    <p class="whitespace-pre-line break-words">{{ $revision->latestRevisionRequest->note }}</p>
                     <p class="mt-1 text-caption text-ink-soft">
                         Catatan dari {{ $revision->latestRevisionRequest->user?->name ?? 'peninjau' }}, {{ Format::date($revision->latestRevisionRequest->created_at) }}.
                     </p>

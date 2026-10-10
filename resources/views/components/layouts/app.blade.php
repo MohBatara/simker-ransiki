@@ -4,6 +4,8 @@
     // Keterangan kecil di atas judul, mis. "Dasbor" bila judulnya nama kelompok.
     'eyebrow' => null,
     'back' => null,
+    // Remah halaman bertingkat (desktop). Di HP tetap tombol kembali ke $back.
+    'breadcrumbs' => null,
     // Item: ['label', 'href', 'icon' (Heroicons outline), 'short' (label ringkas), 'active', 'primary' (tampil di navigasi bawah HP)]
     // Kosongkan agar diambil otomatis dari peran pengguna yang login (App\Support\Navigation).
     'navigation' => null,
@@ -83,7 +85,7 @@
                             aria-label="{{ $item['label'] }}{{ ($item['route'] ?? null) === 'notifications.index' && $unreadNotifications > 0 ? ', '.$unreadNotifications.' belum dibaca' : '' }}"
                             @if ($active) aria-current="page" @endif
                             @class([
-                                'group relative flex flex-col items-center gap-1 rounded-control px-0.5 py-2 transition-colors xl:flex-row xl:gap-3 xl:px-3',
+                                'group relative flex flex-col items-center gap-1 rounded-control px-1 py-2 transition-colors xl:flex-row xl:gap-3 xl:px-3',
                                 'bg-brand-tint font-semibold text-brand' => $active,
                                 'text-ink-soft hover:bg-subtle hover:text-ink' => ! $active,
                             ])
@@ -165,7 +167,7 @@
             'pb-8' => $focus,
         ])>
             <div class="flex items-start gap-3">
-                <x-page-header class="min-w-0 flex-1" :title="$title" :description="$description" :eyebrow="$eyebrow" :back="$back" condensed>
+                <x-page-header class="min-w-0 flex-1" :title="$title" :description="$description" :eyebrow="$eyebrow" :back="$back" :breadcrumbs="$breadcrumbs" condensed>
                     @isset($actions)
                         <x-slot:actions>{{ $actions }}</x-slot:actions>
                     @endisset

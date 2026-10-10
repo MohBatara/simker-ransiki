@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Reports\ReportDraftRequest;
 use App\Models\MonthlyReport;
 use App\Models\Organization;
+use App\Support\Format;
 use App\Support\ReportForm;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\JsonResponse;
@@ -87,6 +88,10 @@ class MonthlyReportController extends Controller
             'report' => $report->loadDetail(),
             'attachments' => $report->attachments()->with('uploader')->latest()->get()->each->setRelation('attachable', $report),
             'back' => route('kelompok.reports.index'),
+            'breadcrumbs' => [
+                ['label' => 'Laporan Bulanan', 'href' => route('kelompok.reports.index')],
+                ['label' => 'Laporan '.Format::month($report->period)],
+            ],
             'editUrl' => $request->user()->can('update', $report) ? route('kelompok.reports.edit', $report) : null,
         ]);
     }

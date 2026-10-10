@@ -9,7 +9,7 @@ class FilterChips
 {
     /**
      * @param  array<string, array{0: ?string, 1: array|string|null, 2?: list<string>}>  $definitions
-     *                                                                                               kunci => [nama, pilihan nilai=>label (null = tampilkan nilainya, string = label tetap), kunci lain yang ikut dihapus]
+     *                                                                                                 kunci => [nama, pilihan nilai=>label (null = tampilkan nilainya, string = label tetap), kunci lain yang ikut dihapus]
      * @return list<array{label: string, href: string}>
      */
     public static function from(array $filters, array $definitions): array

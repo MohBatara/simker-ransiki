@@ -35,6 +35,6 @@ test('kontrol form menerima invalid-if untuk form Alpine', function () {
     $html = Blade::render('<x-input invalid-if="error(\'costs\')" />');
 
     expect($html)->toContain('x-bind:aria-invalid="!! (error(&#039;costs&#039;))"')
-        ->toContain("border-fix! focus:border-fix! focus:ring-fix!");
+        ->toContain('border-fix! focus:border-fix! focus:ring-fix!');
     expect(Blade::render('<x-textarea />'))->not->toContain('x-bind:aria-invalid');
 });
