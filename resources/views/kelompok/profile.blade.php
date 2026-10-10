@@ -5,17 +5,17 @@
         </x-slot:actions>
     @endcan
 
+    @if ($organization->status !== App\Enums\OrganizationStatus::Active)
+        <x-slot:badge>
+            <x-badge :tone="$organization->status->badgeColor()">{{ $organization->status->label() }}</x-badge>
+        </x-slot:badge>
+    @endif
+
     <div class="space-y-5">
-        <div class="flex flex-wrap gap-2">
-            @if ($organization->status !== App\Enums\OrganizationStatus::Active)<x-badge :tone="$organization->status->badgeColor()">{{ $organization->status->label() }}</x-badge>@endif
-        </div>
-
-        @include('shared.organizations.profile')
-
-        @include('shared.attachments', [
+        @include('shared.organizations.profile', ['documents' => [
             'title' => 'Dokumen kelompok',
             'description' => 'Mis. foto kegiatan, struktur pengurus, atau akta. JPG, PNG, atau PDF.',
             'uploadUrl' => auth()->user()->can('update', $organization) ? route('attachments.store', ['kelompok', $organization]) : null,
-        ])
+        ]])
     </div>
 </x-layouts.app>

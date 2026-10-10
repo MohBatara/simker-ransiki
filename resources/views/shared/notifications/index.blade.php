@@ -3,7 +3,7 @@
 
 <x-layouts.app
     title="Notifikasi"
-    :description="$unreadCount ? $unreadCount.' belum dibaca.' : 'Semua sudah dibaca.'"
+    :description="$notifications->isEmpty() ? null : ($unreadCount ? $unreadCount.' belum dibaca.' : 'Semua sudah dibaca.')"
 >
     @if ($unreadCount > 0)
         <x-slot:actions>

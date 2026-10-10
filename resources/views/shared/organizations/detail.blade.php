@@ -30,13 +30,17 @@
         </x-slot:actions>
     @endcan
 
+    @if ($organization->status !== App\Enums\OrganizationStatus::Active)
+        <x-slot:badge>
+            <x-badge :tone="$organization->status->badgeColor()">{{ $organization->status->label() }}</x-badge>
+        </x-slot:badge>
+    @endif
+
+    <x-slot:meta>
+        @include('shared.organizations._facts')
+    </x-slot:meta>
+
     <div class="space-y-5">
-        <div class="flex flex-wrap gap-2">
-            @if ($organization->status !== App\Enums\OrganizationStatus::Active)<x-badge :tone="$organization->status->badgeColor()">{{ $organization->status->label() }}</x-badge>@endif
-            @if ($organization->opds_count === 0)
-                <x-badge tone="wait">Belum ada OPD pembina</x-badge>
-            @endif
-        </div>
 
         @if (session('similar'))
             <x-alert tone="wait" title="Ada kelompok dengan nama mirip di kampung yang sama">
@@ -52,11 +56,10 @@
 
         @switch($tab)
             @case('profil')
-                @include('shared.organizations.profile')
-                @include('shared.attachments', [
+                @include('shared.organizations.profile', ['documents' => [
                     'title' => 'Dokumen kelompok',
                     'uploadUrl' => auth()->user()->can('update', $organization) ? route('attachments.store', ['kelompok', $organization]) : null,
-                ])
+                ]])
                 @if ($area === 'admin')
                     @include('admin.organizations._danger')
                 @endif

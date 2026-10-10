@@ -88,12 +88,12 @@
                                 'text-ink-soft hover:bg-subtle hover:text-ink' => ! $active,
                             ])
                         >
-                            @php $badge = ($item['route'] ?? null) === 'notifications.index' ? $unreadNotifications : 0; @endphp
+                            @php $navCount = ($item['route'] ?? null) === 'notifications.index' ? $unreadNotifications : 0; @endphp
                             <x-dynamic-component :component="'heroicon-o-'.$item['icon']" class="size-5 shrink-0" />
                             <span class="w-full truncate text-center text-micro xl:hidden" aria-hidden="true">{{ $item['short'] ?? $item['label'] }}</span>
                             <span class="hidden truncate text-ui xl:inline" aria-hidden="true">{{ $item['label'] }}</span>
-                            @if ($badge > 0)
-                                <x-notification-count :count="$badge" class="absolute right-2 top-1 xl:static xl:ml-auto" />
+                            @if ($navCount > 0)
+                                <x-notification-count :count="$navCount" class="absolute right-2 top-1 xl:static xl:ml-auto" />
                             @endif
                             <span aria-hidden="true" class="pointer-events-none absolute left-full top-1/2 z-30 ml-2 -translate-y-1/2 whitespace-nowrap rounded-control bg-ink px-2 py-1 text-caption font-normal text-paper opacity-0 shadow-float transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100 xl:hidden">
                                 {{ $item['label'] }}
@@ -168,6 +168,12 @@
                 <x-page-header class="min-w-0 flex-1" :title="$title" :description="$description" :eyebrow="$eyebrow" :back="$back" condensed>
                     @isset($actions)
                         <x-slot:actions>{{ $actions }}</x-slot:actions>
+                    @endisset
+                    @isset($badge)
+                        <x-slot:badge>{{ $badge }}</x-slot:badge>
+                    @endisset
+                    @isset($meta)
+                        <x-slot:meta>{{ $meta }}</x-slot:meta>
                     @endisset
                 </x-page-header>
             </div>

@@ -5,7 +5,14 @@
                 Tidak ada aktivitas bulan ini
             </x-checkbox>
 
-            <x-field label="Ringkasan aktivitas" for="activity_summary" live="'activity_summary'" hint="Kegiatan utama bulan ini. Wajib diisi, kecuali tidak ada aktivitas.">
+            <x-field
+                label="Ringkasan aktivitas"
+                label-text="data.no_activity ? 'Keterangan (opsional)' : 'Ringkasan aktivitas'"
+                for="activity_summary"
+                live="'activity_summary'"
+                hint="Kegiatan utama bulan ini. Wajib diisi, kecuali tidak ada aktivitas."
+                hint-text="data.no_activity ? 'Misalnya alasan tidak berkegiatan bulan ini.' : 'Kegiatan utama bulan ini. Wajib diisi, kecuali tidak ada aktivitas.'"
+            >
                 <x-textarea
                     id="activity_summary"
                     rows="4"

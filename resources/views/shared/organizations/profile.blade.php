@@ -41,19 +41,49 @@
     ];
 @endphp
 
-<div class="grid gap-5 xl:grid-cols-2">
-    @foreach ($sections as $title => $rows)
-        <x-card :title="$title">
-            <dl class="divide-y divide-line">
-                @foreach ($rows as $label => $value)
-                    <div class="grid gap-1 py-2.5 first:pt-0 last:pb-0 sm:grid-cols-[minmax(0,12rem)_1fr] sm:gap-4">
-                        <dt class="text-ink-soft">{{ $label }}</dt>
-                        <dd class="whitespace-pre-line text-ink">{{ $value }}</dd>
-                    </div>
-                @endforeach
-            </dl>
-        </x-card>
-    @endforeach
+{{--
+    Layar lebar: kartu utama (Identitas, Informasi Usaha, dokumen) di kiri, kartu ringkas di kolom samping.
+    $documents (opsional): data untuk shared.attachments, ditampilkan di kolom utama.
+--}}
+@php
+    $side = ['Bidang Usaha & OPD Terkait', 'Legalitas', 'Publikasi', 'Pelaporan'];
+@endphp
+
+<div class="grid gap-5 xl:grid-cols-[minmax(0,1fr)_22rem] xl:items-start">
+    <div class="min-w-0 space-y-5">
+        @foreach (collect($sections)->except($side) as $title => $rows)
+            <x-card :title="$title">
+                <dl class="divide-y divide-line">
+                    @foreach ($rows as $label => $value)
+                        <div class="grid gap-1 py-3 first:pt-0 last:pb-0 sm:grid-cols-[minmax(0,12rem)_1fr] sm:gap-4">
+                            <dt class="text-ink-soft">{{ $label }}</dt>
+                            <dd class="whitespace-pre-line break-words text-ink">{{ $value }}</dd>
+                        </div>
+                    @endforeach
+                </dl>
+            </x-card>
+        @endforeach
+
+        @isset($documents)
+            @include('shared.attachments', $documents)
+        @endisset
+    </div>
+
+    {{-- Kolom samping: label di atas nilai karena kolomnya sempit. --}}
+    <div class="space-y-5">
+        @foreach (collect($sections)->only($side) as $title => $rows)
+            <x-card :title="$title">
+                <dl class="space-y-3">
+                    @foreach ($rows as $label => $value)
+                        <div>
+                            <dt class="text-caption text-ink-muted">{{ $label }}</dt>
+                            <dd class="mt-0.5 whitespace-pre-line break-words text-ink">{{ $value }}</dd>
+                        </div>
+                    @endforeach
+                </dl>
+            </x-card>
+        @endforeach
+    </div>
 </div>
 
 <p class="text-caption text-ink-muted">

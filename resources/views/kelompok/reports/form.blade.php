@@ -62,10 +62,15 @@
             </nav>
 
             <div class="min-w-0 space-y-5">
-                <div class="flex items-center gap-3 lg:hidden">
-                    <p class="shrink-0 text-caption text-ink-soft tabular-nums" x-text="`Bagian ${index + 1} dari ${sections.length}`"></p>
-                    <div class="min-w-0 flex-1">
-                        <x-select x-model="section" aria-label="Pilih bagian laporan" :options="$sections->pluck('title', 'key')->all()" />
+                <div class="space-y-2 lg:hidden">
+                    <div class="flex items-center gap-3">
+                        <p class="shrink-0 text-caption text-ink-soft tabular-nums" x-text="`Bagian ${index + 1} dari ${sections.length}`"></p>
+                        <div class="min-w-0 flex-1">
+                            <x-select x-model="section" aria-label="Pilih bagian laporan" :options="$sections->pluck('title', 'key')->all()" />
+                        </div>
+                    </div>
+                    <div class="h-1 overflow-hidden rounded-full bg-subtle" aria-hidden="true">
+                        <div class="h-full rounded-full bg-brand transition-[width]" x-bind:style="`width: ${(index + 1) / sections.length * 100}%`"></div>
                     </div>
                 </div>
 

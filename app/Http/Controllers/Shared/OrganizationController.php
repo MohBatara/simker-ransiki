@@ -122,12 +122,14 @@ class OrganizationController extends Controller
 
     private function detail(Request $request, Organization $organization, string $tab, array $data): View
     {
-        $organization->loadMissing(['institutionType', 'village'])
+        $organization->loadMissing(['institutionType', 'village', 'opds:id,name,short_name'])
             ->loadCount(['monthlyReports', 'users', 'products', 'licenses', 'opds']);
 
         return view('shared.organizations.detail', [
             'area' => $this->area($request),
             'organization' => $organization,
+            // Fakta kunci di header: laporan terakhir (status + periode).
+            'latestReport' => $organization->monthlyReports()->orderByDesc('period')->first(),
             'tab' => $tab,
             ...$data,
         ]);

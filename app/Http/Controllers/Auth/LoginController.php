@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
+use App\Models\SiteSetting;
+use App\Support\PublicImages;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -14,7 +16,11 @@ class LoginController extends Controller
 {
     public function create(): View
     {
-        return view('auth.login');
+        return view('auth.login', [
+            // Foto sampul dari Konten Website untuk panel kiri; tanpa foto, panel forest polos.
+            'cover' => PublicImages::slot('sampul'),
+            'coverCredit' => SiteSetting::get('cover_credit'),
+        ]);
     }
 
     public function store(LoginRequest $request): RedirectResponse

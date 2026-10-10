@@ -9,7 +9,7 @@
 
 <div {{ $attributes->class([
     'flex flex-col gap-4 md:flex-row md:items-end md:justify-between',
-    'max-md:hidden' => $condensed && ! $description && ! isset($actions),
+    'max-md:hidden' => $condensed && ! $description && ! isset($actions) && ! isset($badge) && ! isset($meta),
 ]) }}>
     <div class="min-w-0">
         @if ($back)
@@ -21,10 +21,18 @@
         @if ($eyebrow)
             <p @class(['text-caption text-ink-soft', 'max-md:hidden' => $condensed])>{{ $eyebrow }}</p>
         @endif
-        <h1 @class(['text-page-title font-semibold text-ink', 'max-md:sr-only' => $condensed])>{{ $title }}</h1>
+        <div class="flex flex-wrap items-center gap-x-3 gap-y-1">
+            <h1 @class(['text-page-title font-semibold text-ink', 'max-md:sr-only' => $condensed])>{{ $title }}</h1>
+            @isset($badge)
+                {{ $badge }}
+            @endisset
+        </div>
         @if ($description)
             <p class="mt-1 text-ui text-ink-soft">{{ $description }}</p>
         @endif
+        @isset($meta)
+            <div class="mt-3">{{ $meta }}</div>
+        @endisset
     </div>
 
     @isset($actions)
