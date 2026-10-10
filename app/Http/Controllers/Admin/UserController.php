@@ -21,13 +21,15 @@ class UserController extends Controller
     {
         $filters = $request->only(['q', 'role', 'status']);
 
+        $inactiveCount = User::filter($filters)->where('is_active', false)->count();
+
         $users = User::filter($filters)
             ->with(['opd', 'organization'])
             ->orderBy('name')
             ->paginate(20)
             ->withQueryString();
 
-        return view('admin.users.index', compact('users', 'filters'));
+        return view('admin.users.index', compact('users', 'filters', 'inactiveCount'));
     }
 
     public function create(Request $request): View

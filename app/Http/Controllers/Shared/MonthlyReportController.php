@@ -27,15 +27,17 @@ class MonthlyReportController extends Controller
     {
         $filters = $request->only(['q', 'status', 'period', 'opd', 'menunggu']);
 
-        $reports = MonthlyReport::visibleTo($request->user())
-            ->filter($filters)
+        $query = MonthlyReport::visibleTo($request->user())->filter($filters);
+        $submittedCount = (clone $query)->where('monthly_reports.status', ReportStatus::Submitted)->count();
+
+        $reports = $query
             ->with('organization:id,name')
             ->orderByDesc('period')
             ->orderBy(Organization::select('name')->whereColumn('organizations.id', 'monthly_reports.organization_id'))
             ->paginate(20)
             ->withQueryString();
 
-        return $this->list($request, 'all', $reports, $filters);
+        return $this->list($request, 'all', $reports, $filters, $submittedCount);
     }
 
     /** Antrean verifikasi OPD: laporan diajukan, yang paling lama menunggu di atas. */
@@ -53,7 +55,7 @@ class MonthlyReportController extends Controller
             ->paginate(20)
             ->withQueryString();
 
-        return $this->list($request, 'queue', $reports, $filters);
+        return $this->list($request, 'queue', $reports, $filters, 0);
     }
 
     public function show(Request $request, MonthlyReport $report): View
@@ -115,7 +117,7 @@ class MonthlyReportController extends Controller
         ];
     }
 
-    private function list(Request $request, string $mode, $reports, array $filters): View
+    private function list(Request $request, string $mode, $reports, array $filters, int $submittedCount): View
     {
         $area = $request->user()->role->area();
 
@@ -124,6 +126,7 @@ class MonthlyReportController extends Controller
             'mode' => $mode,
             'reports' => $reports,
             'filters' => $filters,
+            'submittedCount' => $submittedCount,
             'periods' => MonthlyReport::visibleTo($request->user())->distinct()->orderByDesc('period')->pluck('period')
                 ->mapWithKeys(fn ($period) => [$period->format('Y-m') => Format::month($period)])->all(),
             'opds' => $area === 'admin' ? Opd::orderBy('name')->pluck('name', 'id')->all() : [],

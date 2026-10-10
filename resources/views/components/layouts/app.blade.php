@@ -17,7 +17,8 @@
 @php
     $user = auth()->user();
     $userName ??= $user?->name;
-    $userRole ??= $user?->role?->label();
+    // Peran singkat di blok pengguna sidebar: nama singkat OPD untuk petugas OPD.
+    $userRole ??= $user?->isOpd() ? 'OPD · '.($user->opd?->short_name ?: $user->opd?->name) : $user?->role?->label();
     $navigation ??= $user ? \App\Support\Navigation::for($user) : [];
     $notificationsUrl ??= Route::has('notifications.index') ? route('notifications.index') : null;
     // Dari view composer (AppServiceProvider); 0 bila tidak ada.
@@ -44,7 +45,8 @@
 @endphp
 
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+{{-- scroll-padding: elemen yang difokuskan tidak tertutup header atas atau bar aksi yang menempel. --}}
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" @class(['scroll-pt-20 md:scroll-pt-6', 'max-md:scroll-pb-36' => $focus, 'max-md:scroll-pb-20' => ! $focus])>
 <head>
     @include('partials.head', ['title' => $title, 'noindex' => true])
 </head>
@@ -59,11 +61,15 @@
     <aside class="hidden md:fixed md:inset-y-0 md:left-0 md:z-20 md:flex md:w-[72px] md:flex-col md:border-r md:border-line md:bg-paper xl:w-[248px]">
         <div class="flex h-16 shrink-0 items-center gap-3 border-b border-line px-2 max-xl:justify-center xl:px-5" title="SIM-KER Distrik Ransiki">
             <x-logo />
-            <div class="hidden leading-tight xl:block">
+            <div class="hidden min-w-0 flex-1 leading-tight xl:block">
                 <span class="block text-ui font-semibold text-ink">SIM-KER</span>
                 <span class="block text-caption text-ink-muted">Distrik Ransiki</span>
             </div>
             <span class="sr-only xl:hidden">SIM-KER Distrik Ransiki</span>
+            {{-- Desktop: lonceng di samping logo. Tablet: menu "Notifikasi" di sidebar ikon. HP: header atas. --}}
+            @if ($notificationsUrl)
+                <x-notification-bell :href="$notificationsUrl" :count="$unreadNotifications" :active="request()->routeIs('notifications.*')" class="-mr-2 max-xl:hidden" data-bell="desktop" />
+            @endif
         </div>
 
         {{-- Di tablet nav tidak di-scroll agar tooltip tidak terpotong oleh tepi sidebar. --}}
@@ -71,7 +77,7 @@
             <ul class="space-y-1">
                 @foreach ($navigation as $item)
                     @php $active = $item['active'] ?? false; @endphp
-                    <li>
+                    <li @class(['xl:hidden' => ($item['route'] ?? null) === 'notifications.index'])>
                         <a
                             href="{{ $item['href'] }}"
                             aria-label="{{ $item['label'] }}{{ ($item['route'] ?? null) === 'notifications.index' && $unreadNotifications > 0 ? ', '.$unreadNotifications.' belum dibaca' : '' }}"
@@ -105,9 +111,9 @@
                     title="{{ $userName }}"
                     class="flex items-center gap-3 rounded-control px-1 py-2 transition-colors hover:bg-subtle max-xl:justify-center xl:px-3"
                 >
-                    <x-heroicon-o-user-circle class="size-5 shrink-0 text-ink-muted" />
+                    <x-avatar :name="$userName" size="sm" />
                     <span class="hidden min-w-0 xl:block">
-                        <span class="block truncate text-ui font-semibold text-ink">{{ $userName }}</span>
+                        <span class="line-clamp-2 text-ui font-semibold text-ink">{{ $userName }}</span>
                         @if ($userRole)
                             <span class="block truncate text-caption text-ink-muted">{{ $userRole }}</span>
                         @endif
@@ -140,7 +146,7 @@
                 @unless ($focus)
                     <div class="-mr-2 flex shrink-0">
                         @if ($notificationsUrl)
-                            <x-notification-bell :href="$notificationsUrl" :count="$unreadNotifications" data-bell="mobile" />
+                            <x-notification-bell :href="$notificationsUrl" :count="$unreadNotifications" :active="request()->routeIs('notifications.*')" data-bell="mobile" />
                         @endif
                         {{-- Jalan ke halaman akun dan tombol keluar di HP, karena menu admin tidak memuat Akun Saya. --}}
                         @if ($accountUrl)
@@ -156,7 +162,7 @@
         <main id="konten" tabindex="-1" @class([
             'mx-auto w-full max-w-app px-4 pt-5 md:px-6 md:pb-10 md:pt-8 xl:px-8',
             'pb-24' => ! $focus,
-            'pb-6' => $focus,
+            'pb-8' => $focus,
         ])>
             <div class="flex items-start gap-3">
                 <x-page-header class="min-w-0 flex-1" :title="$title" :description="$description" :eyebrow="$eyebrow" :back="$back" condensed>
@@ -164,10 +170,6 @@
                         <x-slot:actions>{{ $actions }}</x-slot:actions>
                     @endisset
                 </x-page-header>
-                {{-- Di HP lonceng ada di header atas. --}}
-                @if ($notificationsUrl)
-                    <x-notification-bell :href="$notificationsUrl" :count="$unreadNotifications" class="-mr-2 -mt-1 max-md:hidden" data-bell="desktop" />
-                @endif
             </div>
 
             @if (session('status'))

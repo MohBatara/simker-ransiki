@@ -28,10 +28,9 @@
             :active="$type->value"
         />
 
-        <form method="GET" action="{{ route('admin.master.items', $type) }}" class="flex flex-wrap gap-2" role="search">
-            <label for="q" class="sr-only">Cari {{ $type->noun() }}</label>
-            <x-input name="q" :value="$search" placeholder="Cari {{ $type->noun() }}" class="min-w-0 flex-1 md:max-w-sm" />
-            <x-button variant="secondary" type="submit">Cari</x-button>
+        <form method="GET" action="{{ route('admin.master.items', $type) }}" class="flex flex-wrap items-center gap-2" role="search">
+            <x-search-input :value="$search" :label="'Cari '.$type->noun()" class="flex-1 md:max-w-xs" />
+            <x-button variant="ghost" type="submit">Cari</x-button>
             @if ($search !== '')
                 <x-button variant="ghost" :href="route('admin.master.items', $type)">Hapus pencarian</x-button>
             @endif

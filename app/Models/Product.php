@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Enums\OrganizationStatus;
 use App\Models\Concerns\HasAttachments;
 use App\Support\ImageVariants;
+use App\Support\Initials;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -99,11 +100,7 @@ class Product extends Model
     /** Inisial untuk petak pengganti foto, mis. "Kakao kering" menjadi "KK". */
     public function initials(): string
     {
-        return collect(preg_split('/\s+/', trim($this->name)))
-            ->filter()
-            ->take(2)
-            ->map(fn (string $word) => mb_strtoupper(mb_substr($word, 0, 1)))
-            ->implode('');
+        return Initials::of($this->name);
     }
 
     /** Foto boleh dilihat tanpa login hanya bila produk dan kelompoknya tampil di direktori publik. */

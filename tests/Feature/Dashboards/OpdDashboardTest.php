@@ -91,7 +91,10 @@ test('filter daftar kelompok dari dasbor: belum dibuat dan belum diajukan', func
         ->and($names('laporan=belum-diajukan&periode=2026-09'))->toBe(['KUB Belum Lapor', 'KUB Draf'])
         ->and($names('laporan=belum-dibuat&periode=salah'))->toHaveCount(3);
 
-    $this->get('/opd/kelompok?laporan=belum-dibuat&periode=2026-09')->assertSee('Menampilkan kelompok wajib lapor yang belum membuat laporan September 2026.');
+    $this->get('/opd/kelompok?laporan=belum-dibuat&periode=2026-09')
+        ->assertSee('Belum membuat laporan September 2026')
+        ->assertSee('aria-label="Hapus filter Belum membuat laporan September 2026"', false)
+        ->assertSee('1 kelompok');
 });
 
 test('filter laporan menunggu lebih dari 7 hari', function () {

@@ -7,40 +7,37 @@
 
 @php
     $url = route($area.'.issues.index');
-    $activeFilters = collect($filters)->only(['kind', 'category', 'period', 'opd'])->filter(fn ($value) => filled($value))->count();
+    $active = collect($filters)->only(['kind', 'category', 'period', 'opd'])->filter(fn ($value) => filled($value))->count();
+    $chips = \App\Support\FilterChips::from($filters, [
+        'kind' => ['Jenis', IssueKind::options()],
+        'category' => ['Kategori', $categories],
+        'period' => ['Periode', $periods],
+        'opd' => ['OPD', $opds],
+    ]);
+    $summary = collect([
+        $kindCounts['problem'] ? $kindCounts['problem'].' masalah' : null,
+        $kindCounts['support'] ? $kindCounts['support'].' kebutuhan' : null,
+    ])->filter()->join(' · ') ?: null;
 @endphp
 
 <x-layouts.app
     title="Masalah & Kebutuhan"
     :description="($area === 'opd' ? 'Dari laporan kelompok binaan' : 'Dari laporan seluruh kelompok').' yang sudah diajukan atau terverifikasi.'"
 >
-    <div class="space-y-5">
-        <form method="GET" action="{{ $url }}" x-data="{ open: @js($activeFilters > 0) }" class="space-y-3">
-            <div class="flex flex-wrap gap-2 md:hidden">
-                <x-button variant="secondary" x-on:click="open = ! open" x-bind:aria-expanded="open" aria-controls="filter-masalah">
-                    Filter{{ $activeFilters ? " ({$activeFilters})" : '' }}
-                </x-button>
-                @if ($activeFilters)
-                    <x-button variant="ghost" :href="$url">Hapus filter</x-button>
-                @endif
-            </div>
+    <div class="space-y-4">
+        <x-filter-bar :action="$url" :active="$active">
+            <x-select size="sm" name="kind" :options="IssueKind::options()" :selected="$filters['kind'] ?? null" placeholder="Masalah dan kebutuhan" x-on:change="$el.form.requestSubmit()" aria-label="Jenis" />
+            <x-select size="sm" name="category" :options="$categories" :selected="$filters['category'] ?? null" placeholder="Semua kategori" x-on:change="$el.form.requestSubmit()" aria-label="Kategori" />
+            <x-select size="sm" name="period" :options="$periods" :selected="$filters['period'] ?? null" placeholder="Semua periode" x-on:change="$el.form.requestSubmit()" aria-label="Periode" />
+            @if ($opds)
+                <x-select size="sm" name="opd" :options="$opds" :selected="$filters['opd'] ?? null" placeholder="Semua OPD" x-on:change="$el.form.requestSubmit()" aria-label="OPD pembina" />
+            @endif
+        </x-filter-bar>
 
-            <div id="filter-masalah" x-bind:class="{ 'max-md:hidden': ! open }" @class(['grid gap-3 sm:grid-cols-2 lg:grid-cols-5', 'max-md:hidden' => ! $activeFilters])>
-                <x-select name="kind" :options="IssueKind::options()" :selected="$filters['kind'] ?? null" placeholder="Masalah dan kebutuhan" x-on:change="$el.form.requestSubmit()" aria-label="Jenis" />
-                <x-select name="category" :options="$categories" :selected="$filters['category'] ?? null" placeholder="Semua kategori" x-on:change="$el.form.requestSubmit()" aria-label="Kategori" />
-                <x-select name="period" :options="$periods" :selected="$filters['period'] ?? null" placeholder="Semua periode" x-on:change="$el.form.requestSubmit()" aria-label="Periode" />
-                @if ($opds)
-                    <x-select name="opd" :options="$opds" :selected="$filters['opd'] ?? null" placeholder="Semua OPD" x-on:change="$el.form.requestSubmit()" aria-label="OPD pembina" />
-                @endif
-                @if ($activeFilters)
-                    <x-button variant="ghost" :href="$url" class="max-md:hidden">Hapus filter</x-button>
-                @endif
-            </div>
-            <noscript><x-button variant="secondary" type="submit">Terapkan filter</x-button></noscript>
-        </form>
+        <x-filter-summary :summary="$summary" :chips="$chips" :clear-url="$url" />
 
         @if ($issues->isEmpty())
-            @if ($activeFilters)
+            @if ($chips)
                 <x-empty-state title="Tidak ada yang cocok dengan filter" description="Ubah atau hapus filter untuk melihat data lain.">
                     <x-button variant="secondary" :href="$url">Hapus filter</x-button>
                 </x-empty-state>

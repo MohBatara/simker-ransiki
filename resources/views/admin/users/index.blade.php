@@ -1,7 +1,15 @@
 @use('App\Support\Format')
 
 @php
-    $hasFilters = collect($filters)->filter(fn ($value) => filled($value))->isNotEmpty();
+    $url = route('admin.users.index');
+    $active = collect($filters)->only(['role', 'status'])->filter(fn ($value) => filled($value))->count();
+    $chips = \App\Support\FilterChips::from($filters, [
+        'q' => [null, null],
+        'role' => ['Peran', App\Enums\Role::options()],
+        'status' => ['Status', ['active' => 'Aktif', 'inactive' => 'Nonaktif']],
+    ]);
+    $hasFilters = $chips !== [];
+    $summary = collect([$users->total().' akun', $inactiveCount ? $inactiveCount.' nonaktif' : null])->filter()->join(' · ');
 @endphp
 
 <x-layouts.app title="Pengguna" description="Akun Admin, petugas OPD, dan pengurus kelompok.">
@@ -9,20 +17,13 @@
         <x-button icon="plus" :href="route('admin.users.create')">Tambah akun</x-button>
     </x-slot:actions>
 
-    <div class="space-y-5">
-        <form method="GET" action="{{ route('admin.users.index') }}" class="flex flex-wrap gap-2" role="search">
-            <label for="q" class="sr-only">Cari nama, username, atau email</label>
-            <x-input name="q" :value="$filters['q'] ?? ''" placeholder="Cari nama, username, atau email" class="min-w-0 flex-1 md:max-w-sm" />
-            <x-button variant="secondary" type="submit">Cari</x-button>
-            {{-- Filter langsung diterapkan saat pilihan berubah. --}}
-            <div class="grid w-full grid-cols-2 gap-2 md:w-auto md:grid-cols-[12rem_12rem]">
-                <x-select name="role" :options="App\Enums\Role::options()" :selected="$filters['role'] ?? null" placeholder="Semua peran" aria-label="Peran" x-data x-on:change="$el.form.requestSubmit()" />
-                <x-select name="status" :options="['active' => 'Aktif', 'inactive' => 'Nonaktif']" :selected="$filters['status'] ?? null" placeholder="Semua status" aria-label="Status akun" x-data x-on:change="$el.form.requestSubmit()" />
-            </div>
-            @if ($hasFilters)
-                <x-button variant="ghost" :href="route('admin.users.index')">Hapus filter</x-button>
-            @endif
-        </form>
+    <div class="space-y-4">
+        <x-filter-bar :action="$url" search-label="Cari nama, username, atau email" :search="$filters['q'] ?? ''" :active="$active">
+            <x-select size="sm" name="role" :options="App\Enums\Role::options()" :selected="$filters['role'] ?? null" placeholder="Semua peran" aria-label="Peran" x-on:change="$el.form.requestSubmit()" />
+            <x-select size="sm" name="status" :options="['active' => 'Aktif', 'inactive' => 'Nonaktif']" :selected="$filters['status'] ?? null" placeholder="Semua status" aria-label="Status akun" x-on:change="$el.form.requestSubmit()" />
+        </x-filter-bar>
+
+        <x-filter-summary :summary="$summary" :chips="$chips" :clear-url="$url" />
 
         @if ($users->isEmpty())
             @if ($hasFilters)
@@ -46,7 +47,12 @@
 
                 @foreach ($users as $user)
                     <x-table.row :href="route('admin.users.show', $user)">
-                        <x-table.cell primary>{{ $user->name }}</x-table.cell>
+                        <x-table.cell primary>
+                            <span class="flex items-center gap-3">
+                                <x-avatar :name="$user->name" size="sm" />
+                                <span class="min-w-0">{{ $user->name }}</span>
+                            </span>
+                        </x-table.cell>
                         <x-table.cell subtitle>{{ $user->username }}</x-table.cell>
                         <x-table.cell label="Peran">
                             {{ $user->role->label() }}@if ($user->opd) · {{ $user->opd->short_name }}@elseif ($user->organization) · {{ $user->organization->name }}@endif

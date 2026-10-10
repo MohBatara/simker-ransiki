@@ -4,6 +4,8 @@
     'selected' => null,
     'placeholder' => null,
     'id' => null,
+    // sm: select filter yang ringkas di layar lebar (36px); di HP tetap 44px agar mudah disentuh.
+    'size' => 'md',
     // Form Alpine: ekspresi JS; bila bernilai benar, kontrol tampil tidak valid (mis. "error('costs')").
     'invalidIf' => null,
 ])
@@ -22,7 +24,9 @@
         @if ($invalid) aria-invalid="true" aria-describedby="{{ $id }}-error" @endif
         @if ($invalidIf) x-bind:aria-invalid="!! ({{ $invalidIf }})" x-bind:class="({{ $invalidIf }}) && 'border-fix! focus:border-fix! focus:ring-fix!'" @endif
         {{ $attributes->class([
-            'block h-11 w-full appearance-none rounded-control border bg-paper pl-3 pr-9 text-body text-ink transition-colors md:h-10 md:text-ui',
+            'block h-11 w-full appearance-none rounded-control border bg-paper pl-3 pr-9 text-body text-ink transition-colors md:text-ui',
+            'md:h-10' => $size !== 'sm',
+            'md:h-9' => $size === 'sm',
             // Pilihan kosong (placeholder) tampil redup seperti placeholder input; daftar opsinya tetap ink.
             'has-[option:first-child:checked]:text-ink-muted *:text-ink' => $placeholder,
             'focus:outline-none focus:ring-1 disabled:bg-subtle disabled:text-ink-muted',

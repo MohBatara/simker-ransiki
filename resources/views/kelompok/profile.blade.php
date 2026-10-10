@@ -7,7 +7,7 @@
 
     <div class="space-y-5">
         <div class="flex flex-wrap gap-2">
-            <x-badge :tone="$organization->status->badgeColor()">{{ $organization->status->label() }}</x-badge>
+            @if ($organization->status !== App\Enums\OrganizationStatus::Active)<x-badge :tone="$organization->status->badgeColor()">{{ $organization->status->label() }}</x-badge>@endif
         </div>
 
         @include('shared.organizations.profile')

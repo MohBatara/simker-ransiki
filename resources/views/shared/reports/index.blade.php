@@ -8,9 +8,19 @@
 @php
     $queue = $mode === 'queue';
     $url = $queue ? route('opd.verifications.index') : route($area.'.reports.index');
-    $filterKeys = $queue ? ['period'] : ['status', 'period', 'opd'];
-    $activeFilters = collect($filters)->only($filterKeys)->filter(fn ($value) => filled($value))->count();
-    $hasFilters = $activeFilters > 0 || filled($filters['q'] ?? null);
+    $selects = $queue ? ['period'] : ['status', 'period', 'opd'];
+    $active = collect($filters)->only($selects)->filter(fn ($value) => filled($value))->count();
+    $chips = \App\Support\FilterChips::from($filters, [
+        'q' => [null, null],
+        'status' => ['Status', ReportStatus::reviewerOptions()],
+        'period' => ['Periode', $periods],
+        'opd' => ['OPD', ['none' => 'Tanpa OPD pembina'] + $opds],
+        'menunggu' => [null, ['7' => 'Menunggu lebih dari 7 hari']],
+    ]);
+    $hasFilters = $chips !== [];
+    $summary = $queue
+        ? $reports->total().' laporan menunggu verifikasi'
+        : collect([$reports->total().' laporan', $submittedCount ? $submittedCount.' menunggu verifikasi' : null])->filter()->join(' · ');
     $title = $queue ? 'Verifikasi Laporan' : 'Semua Laporan';
     $description = match (true) {
         $queue => 'Laporan yang diajukan kelompok binaan. Yang paling lama menunggu ada di atas.',
@@ -20,30 +30,24 @@
 @endphp
 
 <x-layouts.app :title="$title" :description="$description">
-    <div class="space-y-5">
-        <form method="GET" action="{{ $url }}" x-data="{ open: @js($activeFilters > 0) }" class="space-y-3" role="search">
-            <div class="flex flex-wrap gap-2">
-                <label for="q" class="sr-only">Cari nama kelompok</label>
-                <x-input name="q" :value="$filters['q'] ?? ''" placeholder="Cari nama kelompok" class="min-w-0 flex-1 md:max-w-sm" />
-                <x-button variant="secondary" class="md:hidden" x-on:click="open = ! open" x-bind:aria-expanded="open" aria-controls="filter-laporan">
-                    Filter{{ $activeFilters ? " ({$activeFilters})" : '' }}
-                </x-button>
-                <x-button variant="secondary" type="submit">Cari</x-button>
-                @if ($hasFilters)
-                    <x-button variant="ghost" :href="$url">Hapus filter</x-button>
-                @endif
-            </div>
+    <div class="space-y-4">
+        <x-filter-bar
+            :action="$url"
+            search-label="Cari nama kelompok"
+            :search="$filters['q'] ?? ''"
+            :active="$active"
+            :keep="collect($filters)->only(['menunggu'])->all()"
+        >
+            @unless ($queue)
+                <x-select size="sm" name="status" :options="ReportStatus::reviewerOptions()" :selected="$filters['status'] ?? null" placeholder="Semua status" x-on:change="$el.form.requestSubmit()" aria-label="Status laporan" />
+            @endunless
+            <x-select size="sm" name="period" :options="$periods" :selected="$filters['period'] ?? null" placeholder="Semua periode" x-on:change="$el.form.requestSubmit()" aria-label="Periode" />
+            @if ($opds)
+                <x-select size="sm" name="opd" :options="['none' => 'Tanpa OPD pembina'] + $opds" :selected="$filters['opd'] ?? null" placeholder="Semua OPD" x-on:change="$el.form.requestSubmit()" aria-label="OPD pembina" />
+            @endif
+        </x-filter-bar>
 
-            <div id="filter-laporan" x-bind:class="{ 'max-md:hidden': ! open }" @class(['grid gap-3 sm:grid-cols-2 lg:grid-cols-4', 'max-md:hidden' => ! $activeFilters])>
-                @unless ($queue)
-                    <x-select name="status" :options="ReportStatus::reviewerOptions()" :selected="$filters['status'] ?? null" placeholder="Semua status" x-on:change="$el.form.requestSubmit()" aria-label="Status laporan" />
-                @endunless
-                <x-select name="period" :options="$periods" :selected="$filters['period'] ?? null" placeholder="Semua periode" x-on:change="$el.form.requestSubmit()" aria-label="Periode" />
-                @if ($opds)
-                    <x-select name="opd" :options="$opds" :selected="$filters['opd'] ?? null" placeholder="Semua OPD" x-on:change="$el.form.requestSubmit()" aria-label="OPD pembina" />
-                @endif
-            </div>
-        </form>
+        <x-filter-summary :summary="$summary" :chips="$chips" :clear-url="$url" />
 
         @if ($reports->isEmpty())
             @if ($hasFilters)
@@ -51,7 +55,9 @@
                     <x-button variant="secondary" :href="$url">Hapus filter</x-button>
                 </x-empty-state>
             @elseif ($queue)
-                <x-empty-state title="Tidak ada laporan yang menunggu verifikasi" description="Laporan yang diajukan kelompok binaan akan muncul di sini." />
+                <x-empty-state title="Tidak ada laporan yang menunggu verifikasi" description="Laporan yang diajukan kelompok binaan akan muncul di sini.">
+                    <x-button variant="secondary" :href="route('opd.reports.index')">Lihat semua laporan</x-button>
+                </x-empty-state>
             @else
                 <x-empty-state title="Belum ada laporan" description="Laporan muncul di sini setelah kelompok mulai mengisi laporan bulanan." />
             @endif
@@ -60,7 +66,9 @@
                 <x-slot:head>
                     <x-table.heading>Kelompok</x-table.heading>
                     <x-table.heading>Periode</x-table.heading>
-                    <x-table.heading>Status</x-table.heading>
+                    @unless ($queue)
+                        <x-table.heading>Status</x-table.heading>
+                    @endunless
                     @if ($queue)
                         <x-table.heading>Diajukan</x-table.heading>
                         <x-table.heading>Menunggu</x-table.heading>
@@ -76,16 +84,16 @@
                         <x-table.cell primary>{{ $report->organization->name }}</x-table.cell>
                         <x-table.cell subtitle>{{ Format::month($report->period) }}</x-table.cell>
                         <x-table.cell badge>
-                            <span class="inline-flex flex-wrap items-center justify-end gap-1.5 md:justify-start">
+                            {{-- Di antrean semuanya "Diajukan"; yang ditandai hanya pengajuan ulang. --}}
+                            @if (! $queue)
                                 <x-badge :tone="$report->status->badgeColor()">{{ $report->status->reviewerLabel() }}</x-badge>
-                                @if ($queue && $report->resubmitted)
-                                    <span class="text-caption text-ink-soft">Diajukan ulang</span>
-                                @endif
-                            </span>
+                            @elseif ($report->resubmitted)
+                                <x-badge tone="wait">Diajukan ulang</x-badge>
+                            @endif
                         </x-table.cell>
                         @if ($queue)
                             <x-table.cell label="Diajukan">{{ Format::date($report->last_submitted_at) }}</x-table.cell>
-                            <x-table.cell label="Menunggu">{{ Format::waitingSince($report->last_submitted_at) }}</x-table.cell>
+                            <x-table.cell label="Menunggu" @class(['font-semibold text-ink' => $report->last_submitted_at?->lt(now()->subDays(App\Support\Dashboards\DistrictStats::WAITING_DAYS))])>{{ Format::waitingSince($report->last_submitted_at) }}</x-table.cell>
                         @else
                             <x-table.cell label="Diajukan" optional>
                                 {{ Format::date($report->submitted_at) }}

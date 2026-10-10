@@ -23,8 +23,12 @@ class OrganizationController extends Controller
     {
         $filters = $request->only(['q', 'type', 'village', 'sector', 'opd', 'status', 'akun', 'laporan', 'periode']);
 
-        $organizations = Organization::visibleTo($request->user())
-            ->filter($filters)
+        $query = Organization::visibleTo($request->user())->filter($filters);
+
+        // Ringkasan hasil ("25 kelompok · 3 tidak aktif") dihitung dari daftar yang sudah tersaring.
+        $statusCounts = (clone $query)->toBase()->selectRaw('organizations.status, COUNT(*) as total')->groupBy('organizations.status')->pluck('total', 'status');
+
+        $organizations = $query
             ->with(['institutionType', 'village', 'sectors', 'opds'])
             ->orderBy('name')
             ->paginate(20)
@@ -33,6 +37,7 @@ class OrganizationController extends Controller
         return view('shared.organizations.index', [
             'area' => $this->area($request),
             'organizations' => $organizations,
+            'statusCounts' => ['inactive' => (int) ($statusCounts['inactive'] ?? 0), 'closed' => (int) ($statusCounts['closed'] ?? 0)],
             'filters' => $filters,
             'options' => OrganizationOptions::all(),
         ]);

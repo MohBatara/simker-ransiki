@@ -25,8 +25,10 @@ class ReportIssueController extends Controller
         $area = $user->role->area();
         $filters = $request->only(['kind', 'category', 'period', 'opd']);
 
-        $issues = ReportIssue::reviewableBy($user)
-            ->filter($filters)
+        $query = ReportIssue::reviewableBy($user)->filter($filters);
+        $kindCounts = (clone $query)->toBase()->selectRaw('kind, COUNT(*) as total')->groupBy('kind')->pluck('total', 'kind');
+
+        $issues = $query
             ->with('monthlyReport:id,organization_id,period', 'monthlyReport.organization:id,name')
             ->orderByDesc(MonthlyReport::select('period')->whereColumn('monthly_reports.id', 'report_issues.monthly_report_id'))
             ->orderByDesc('id')
@@ -43,6 +45,7 @@ class ReportIssueController extends Controller
             'area' => $area,
             'issues' => $issues,
             'filters' => $filters,
+            'kindCounts' => ['problem' => (int) ($kindCounts['problem'] ?? 0), 'support' => (int) ($kindCounts['support'] ?? 0)],
             'categories' => collect($categories)->sort()->all(),
             'periods' => MonthlyReport::visibleTo($user)->distinct()->orderByDesc('period')->pluck('period')
                 ->mapWithKeys(fn ($period) => [$period->format('Y-m') => Format::month($period)])->all(),
