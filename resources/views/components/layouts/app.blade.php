@@ -1,6 +1,8 @@
 @props([
     'title',
     'description' => null,
+    // Keterangan kecil di atas judul, mis. "Dasbor" bila judulnya nama kelompok.
+    'eyebrow' => null,
     'back' => null,
     // Item: ['label', 'href', 'icon' (Heroicons outline), 'short' (label ringkas), 'active', 'primary' (tampil di navigasi bawah HP)]
     // Kosongkan agar diambil otomatis dari peran pengguna yang login (App\Support\Navigation).
@@ -152,7 +154,7 @@
             'pb-24' => ! $focus,
             'pb-6' => $focus,
         ])>
-            <x-page-header :title="$title" :description="$description" :back="$back" condensed>
+            <x-page-header :title="$title" :description="$description" :eyebrow="$eyebrow" :back="$back" condensed>
                 @isset($actions)
                     <x-slot:actions>{{ $actions }}</x-slot:actions>
                 @endisset

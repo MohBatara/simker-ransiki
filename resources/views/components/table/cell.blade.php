@@ -21,10 +21,12 @@
 <td
     @if ($showLabel) data-label="{{ $label }}" @endif
     {{ $attributes->class([
-        'px-4 py-3 align-middle',
+        'py-3 align-middle',
+        'px-4' => ! $numeric,
+        'pl-4 pr-4 md:pr-8' => $numeric,
         'max-md:col-span-2 max-md:flex max-md:items-center max-md:justify-between max-md:gap-4 max-md:px-0 max-md:py-1 max-md:text-right' => $showLabel,
         'max-md:before:shrink-0 max-md:before:text-left max-md:before:text-ink-soft max-md:before:content-[attr(data-label)]' => $showLabel,
-        'tabular-nums md:pr-8 md:text-right' => $numeric,
+        'tabular-nums md:text-right' => $numeric,
         'max-md:col-start-1 max-md:row-start-1 max-md:self-center max-md:p-0 max-md:font-semibold' => $primary,
         'max-md:col-start-2 max-md:row-start-1 max-md:self-center max-md:p-0' => $badge,
         'max-md:col-span-2 max-md:col-start-1 max-md:row-start-2 max-md:px-0 max-md:pb-2 max-md:pt-0.5 max-md:text-ink-soft' => $subtitle,

@@ -1,6 +1,7 @@
 @props([
     'title',
     'description' => null,
+    'eyebrow' => null,
     'back' => null,
     // Dipakai layout app: di HP judul dan tombol kembali sudah ada di header atas.
     'condensed' => false,
@@ -16,6 +17,9 @@
                 <x-heroicon-o-arrow-left class="size-4" />
                 Kembali
             </a>
+        @endif
+        @if ($eyebrow)
+            <p @class(['text-caption text-ink-soft', 'max-md:hidden' => $condensed])>{{ $eyebrow }}</p>
         @endif
         <h1 @class(['text-page-title font-semibold text-ink', 'max-md:sr-only' => $condensed])>{{ $title }}</h1>
         @if ($description)

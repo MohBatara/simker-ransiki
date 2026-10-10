@@ -40,6 +40,7 @@ class KelompokSummary
             'report' => $report,
             'deadline' => $deadline,
             'distance' => ReportingPeriod::deadlineDistance($deadline),
+            'daysLeft' => ReportingPeriod::daysUntil($deadline),
             'pastDeadline' => MonthlyReport::isPastDeadline($period),
             // Bulan sebelumnya yang belum pernah diajukan (belum dibuat atau masih draf).
             'earlierOutstanding' => $this->organization->reportingPeriods()

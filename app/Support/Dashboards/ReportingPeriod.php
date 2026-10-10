@@ -43,10 +43,16 @@ class ReportingPeriod
         return $options;
     }
 
+    /** Hari kalender sampai tenggat: 0 = hari ini, negatif = sudah lewat. */
+    public static function daysUntil(CarbonImmutable $deadline): int
+    {
+        return (int) now()->startOfDay()->diffInDays($deadline->startOfDay(), false);
+    }
+
     /** Teks jarak ke tenggat: "hari ini", "6 hari lagi", "lewat 3 hari". */
     public static function deadlineDistance(CarbonImmutable $deadline): string
     {
-        $days = (int) now()->startOfDay()->diffInDays($deadline->startOfDay(), false);
+        $days = self::daysUntil($deadline);
 
         return match (true) {
             $days === 0 => 'hari ini',

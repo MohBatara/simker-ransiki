@@ -30,13 +30,8 @@
                 @foreach ($attentionRows as $row)
                     <li>
                         <a href="{{ $row['href'] }}" class="flex items-baseline gap-3 rounded-control px-2 py-2.5 transition-colors hover:bg-subtle">
-                            @if ($row['value'] > 0)
-                                <span class="w-12 shrink-0 text-right text-card-title font-semibold tabular-nums text-ink">{{ Format::number($row['value']) }}</span>
-                                <span class="flex-1 text-ink">{{ ucfirst($row['label']) }}</span>
-                            @else
-                                <span class="w-12 shrink-0 text-right text-card-title font-semibold tabular-nums text-ink-muted">0</span>
-                                <span class="flex-1 text-ink-soft">{{ ucfirst($row['label']) }} · tidak ada</span>
-                            @endif
+                            <span @class(['w-12 shrink-0 text-right text-card-title font-semibold tabular-nums', 'text-ink' => $row['value'] > 0, 'text-ink-muted' => $row['value'] === 0])>{{ Format::number($row['value']) }}</span>
+                            <span class="flex-1 text-ink">{{ ucfirst($row['label']) }}</span>
                             <x-heroicon-o-chevron-right class="size-4 shrink-0 self-center text-ink-muted" />
                         </a>
                     </li>
@@ -46,12 +41,8 @@
 
         @include('shared.dashboards.progress', ['area' => 'admin'])
 
-        <section class="space-y-3">
-            <div>
-                <h2 class="text-card-title font-semibold text-ink">Pelaporan per OPD</h2>
-                <p class="text-ui text-ink-soft">Kelompok dengan beberapa OPD dihitung di setiap OPD-nya; total distrik di atas dihitung unik.</p>
-            </div>
-            <x-table>
+        <x-card title="Pelaporan per OPD" description="Kelompok dengan beberapa OPD dihitung di setiap OPD-nya; total distrik di atas dihitung unik." flush>
+            <x-table bare class="max-md:p-4">
                 <x-slot:head>
                     <x-table.heading>OPD</x-table.heading>
                     <x-table.heading numeric>Wajib lapor</x-table.heading>
@@ -90,7 +81,7 @@
                     </x-table.row>
                 @endforeach
             </x-table>
-        </section>
+        </x-card>
 
         <div class="grid gap-5 lg:grid-cols-2 lg:items-start">
             <x-card title="Kelompok">
@@ -160,7 +151,7 @@
                     @if ($production->isEmpty())
                         <p class="text-ink-soft">Belum ada produksi yang dilaporkan.</p>
                     @else
-                        <x-table>
+                        <x-table bare class="md:-mx-4">
                             <x-slot:head>
                                 <x-table.heading>Produk</x-table.heading>
                                 <x-table.heading numeric>Produksi</x-table.heading>

@@ -8,25 +8,32 @@
     $showCurrent = $current['allowed'] && $canCreate && (! $due || $dueSubmitted || $current['report']);
 @endphp
 
-<x-layouts.app title="Dasbor" :description="$organization->name">
+<x-layouts.app :title="$organization->name" eyebrow="Dasbor">
     <div class="grid gap-5 lg:grid-cols-[minmax(0,1fr)_320px] lg:items-start">
         {{-- Kartu utama: apa yang perlu dilakukan untuk bulan wajib lapor --}}
         <x-card :title="$due ? 'Laporan '.Format::month($due['period']) : 'Laporan bulanan'" class="lg:col-start-1">
             @if ($due)
                 <div class="space-y-4">
-                    <div class="flex flex-wrap items-center gap-x-3 gap-y-2">
-                        @if ($dueReport)
-                            <x-badge :tone="$dueReport->status->badgeColor()">{{ $dueReport->status->label() }}</x-badge>
-                        @else
-                            <x-badge>Belum dibuat</x-badge>
-                        @endif
+                    <div class="space-y-1.5">
+                        <div>
+                            @if ($dueReport)
+                                <x-badge :tone="$dueReport->status->badgeColor()">{{ $dueReport->status->label() }}</x-badge>
+                            @else
+                                <x-badge>Belum dibuat</x-badge>
+                            @endif
+                        </div>
 
                         @if ($dueReport?->submitted_at)
                             <p class="text-ink-soft">
                                 Diajukan {{ Format::date($dueReport->submitted_at) }}{{ $dueReport->wasSubmittedLate() ? ', terlambat' : '' }}
                             </p>
                         @else
-                            <p @class(['text-fix' => $due['pastDeadline'], 'text-ink-soft' => ! $due['pastDeadline']])>
+                            {{-- Lewat tenggat: fix. Tinggal 3 hari atau kurang: wait, tebal. --}}
+                            <p @class([
+                                'text-fix' => $due['pastDeadline'],
+                                'font-semibold text-wait' => ! $due['pastDeadline'] && $due['daysLeft'] <= 3,
+                                'text-ink-soft' => ! $due['pastDeadline'] && $due['daysLeft'] > 3,
+                            ])>
                                 Tenggat {{ Format::date($due['deadline']) }} · {{ $due['distance'] }}
                             </p>
                         @endif

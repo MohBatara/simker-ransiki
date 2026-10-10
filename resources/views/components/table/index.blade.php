@@ -1,6 +1,8 @@
 @props([
     // Isi true bila baris memakai href, agar kepala tabel punya kolom untuk chevron.
     'clickable' => false,
+    // Di dalam kartu: tanpa bingkai sendiri agar tidak berbingkai ganda.
+    'bare' => false,
 ])
 
 {{--
@@ -8,7 +10,7 @@
     sel "subtitle" di bawahnya, sel lain menjadi baris label-nilai (label dari atribut "label").
     Kolom "optional" disembunyikan di tablet agar hanya kolom penting yang tampil.
 --}}
-<div {{ $attributes->class('md:overflow-x-auto md:rounded-card md:border md:border-line md:bg-paper') }}>
+<div {{ $attributes->class(['md:overflow-x-auto', 'md:rounded-card md:border md:border-line md:bg-paper' => ! $bare]) }}>
     <table class="w-full text-ui max-md:block">
         @isset($head)
             <thead class="max-md:hidden">
