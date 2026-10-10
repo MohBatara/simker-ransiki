@@ -10,6 +10,8 @@ enum ReviewAction: string
     case RevisionRequested = 'revision_requested';
     case Verified = 'verified';
     case Comment = 'comment';
+    // Admin membuka kembali laporan terverifikasi untuk direvisi.
+    case Reopened = 'reopened';
 
     public function label(): string
     {
@@ -18,6 +20,7 @@ enum ReviewAction: string
             self::RevisionRequested => 'Diminta revisi',
             self::Verified => 'Diverifikasi',
             self::Comment => 'Komentar',
+            self::Reopened => 'Dibuka kembali untuk revisi',
         };
     }
 }

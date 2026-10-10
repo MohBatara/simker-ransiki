@@ -1,7 +1,8 @@
 {{--
     Detail laporan bulanan baca-saja, dipakai Kelompok dan OPD.
     Variabel: $report (dengan organization, items, issues, reviews.user, latestRevisionRequest.user.opd),
-    $attachments, $back, $editUrl (null bila pengguna tidak boleh mengubah).
+    $attachments, $back, $editUrl (null bila pengguna tidak boleh mengubah), $area ('admin'/'opd' untuk
+    peninjau; tombol tinjau mengikuti Policy).
 --}}
 @use('App\Support\Format')
 @use('App\Enums\IssueKind')
@@ -10,6 +11,9 @@
     $problems = $report->issues->where('kind', IssueKind::Problem)->sortBy('id');
     $supports = $report->issues->where('kind', IssueKind::Support)->sortBy('id');
     $text = fn (?string $value) => filled($value) ? $value : Format::EMPTY;
+    $area ??= null;
+    $canVerify = $area && auth()->user()->can('verify', $report);
+    $canReopen = $area && auth()->user()->can('reopen', $report);
 @endphp
 
 <x-layouts.app
@@ -17,9 +21,18 @@
     :description="$report->organization->name"
     :back="$back"
 >
-    @if ($editUrl)
+    @if ($editUrl || $canVerify || $canReopen)
         <x-slot:actions>
-            <x-button :href="$editUrl" icon="pencil-square">{{ $report->status === App\Enums\ReportStatus::Revision ? 'Perbaiki laporan' : 'Lanjutkan mengisi' }}</x-button>
+            @if ($editUrl)
+                <x-button :href="$editUrl" icon="pencil-square">{{ $report->status === App\Enums\ReportStatus::Revision ? 'Perbaiki laporan' : 'Lanjutkan mengisi' }}</x-button>
+            @endif
+            @if ($canVerify)
+                <x-button variant="secondary" x-data x-on:click="$dispatch('open-modal', 'report-revision')">Minta revisi</x-button>
+                <x-button x-data x-on:click="$dispatch('open-modal', 'report-verify')">Verifikasi</x-button>
+            @endif
+            @if ($canReopen)
+                <x-button variant="secondary" x-data x-on:click="$dispatch('open-modal', 'report-reopen')">Buka kembali untuk revisi</x-button>
+            @endif
         </x-slot:actions>
     @endif
 
@@ -155,7 +168,12 @@
                         </div>
                         <div class="flex justify-between gap-4 py-2 last:pb-0">
                             <dt class="text-ink-soft">Diverifikasi</dt>
-                            <dd class="text-right">{{ Format::date($report->verified_at) }}</dd>
+                            <dd class="text-right">
+                                {{ Format::date($report->verified_at) }}
+                                @if ($report->verified_at && $report->verifier)
+                                    <span class="block text-caption text-ink-soft">oleh {{ $report->verifier->name }}</span>
+                                @endif
+                            </dd>
                         </div>
                     </dl>
                 </x-card>
@@ -180,4 +198,8 @@
             </div>
         </div>
     </div>
+
+    @if ($canVerify || $canReopen)
+        @include('shared.reports.review')
+    @endif
 </x-layouts.app>

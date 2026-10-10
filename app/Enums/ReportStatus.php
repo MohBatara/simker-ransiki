@@ -21,6 +21,18 @@ enum ReportStatus: string
         };
     }
 
+    /** Label di daftar Admin/OPD: draf belum bisa dibuka isinya, jadi dijelaskan. */
+    public function reviewerLabel(): string
+    {
+        return $this === self::Draft ? 'Draf, belum diajukan' : $this->label();
+    }
+
+    /** @return array<string, string> */
+    public static function reviewerOptions(): array
+    {
+        return collect(self::cases())->mapWithKeys(fn (self $case) => [$case->value => $case->reviewerLabel()])->all();
+    }
+
     /** Hanya draf dan laporan yang diminta revisi yang bisa diubah kelompok. */
     public function isEditable(): bool
     {

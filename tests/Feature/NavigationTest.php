@@ -8,7 +8,7 @@ test('menu tiap peran sesuai CLAUDE.md bagian 6', function (Role $role, array $l
     $items = collect(Navigation::definitions($role));
 
     expect($items->pluck('label')->all())->toBe($labels)
-        ->and($items->where('primary', true)->pluck('short')->map(fn ($short, $key) => $short ?? $items[$key]['label'])->values()->all())->toBe($primary);
+        ->and($items->where('primary', true)->map(fn (array $item) => $item['short'] ?? $item['label'])->values()->all())->toBe($primary);
 })->with([
     'kelompok' => [Role::Kelompok,
         ['Dasbor', 'Profil Kelompok', 'Produk', 'Legalitas & Izin', 'Laporan Bulanan', 'Notifikasi', 'Akun Saya'],
@@ -17,7 +17,7 @@ test('menu tiap peran sesuai CLAUDE.md bagian 6', function (Role $role, array $l
         ['Dasbor', 'Kelompok Binaan', 'Verifikasi Laporan', 'Semua Laporan', 'Masalah & Kebutuhan', 'Notifikasi', 'Akun Saya'],
         ['Dasbor', 'Kelompok', 'Verifikasi', 'Masalah']],
     'admin' => [Role::Admin,
-        ['Dasbor Distrik', 'Semua Kelompok', 'Semua Laporan', 'Pengguna', 'Data Master', 'Konten Website', 'Notifikasi'],
+        ['Dasbor Distrik', 'Semua Kelompok', 'Semua Laporan', 'Masalah & Kebutuhan', 'Pengguna', 'Data Master', 'Konten Website', 'Notifikasi'],
         ['Dasbor', 'Kelompok', 'Laporan', 'Pengguna']],
 ]);
 

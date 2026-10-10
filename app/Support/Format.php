@@ -88,6 +88,18 @@ class Format
         return $value === null ? self::EMPTY : Carbon::parse($value)->translatedFormat('j F Y, H.i');
     }
 
+    /** Lama menunggu sejak suatu waktu, dalam hari kalender: "Hari ini", "3 hari". */
+    public static function waitingSince(CarbonInterface|string|null $value): string
+    {
+        if ($value === null) {
+            return self::EMPTY;
+        }
+
+        $days = (int) abs(Carbon::parse($value)->startOfDay()->diffInDays(now()->startOfDay()));
+
+        return $days === 0 ? 'Hari ini' : $days.' hari';
+    }
+
     /** Jumlah produksi/penjualan tanpa nol desimal yang tidak perlu: 12.50 → "12,5", 1250.00 → "1.250". */
     public static function quantity(int|float|string|null $value): string
     {

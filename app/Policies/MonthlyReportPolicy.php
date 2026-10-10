@@ -21,9 +21,19 @@ class MonthlyReportPolicy
         return true;
     }
 
+    /**
+     * Admin dan OPD baru bisa membuka isi laporan setelah pernah diajukan; draf yang belum pernah
+     * diajukan hanya tampil sebagai baris status di daftar.
+     */
     public function view(User $user, MonthlyReport $report): Response
     {
-        return $this->organizationAccess($user, $report->organization_id);
+        $access = $this->organizationAccess($user, $report->organization_id);
+
+        return match (true) {
+            $access->denied() => $access,
+            ! $user->isKelompok() && $report->submitted_at === null => Response::denyAsNotFound(),
+            default => Response::allow(),
+        };
     }
 
     public function create(User $user, Organization $organization): Response
@@ -78,6 +88,19 @@ class MonthlyReportPolicy
     public function requestRevision(User $user, MonthlyReport $report): Response
     {
         return $this->verify($user, $report);
+    }
+
+    /** Khusus Admin: laporan terverifikasi dibuka kembali menjadi "perlu revisi". */
+    public function reopen(User $user, MonthlyReport $report): Response
+    {
+        $access = $this->organizationAccess($user, $report->organization_id);
+
+        return match (true) {
+            $access->denied() => $access,
+            ! $user->isAdmin() => Response::deny('Hanya Admin distrik yang bisa membuka kembali laporan terverifikasi.'),
+            $report->status !== ReportStatus::Verified => Response::deny('Hanya laporan terverifikasi yang bisa dibuka kembali.'),
+            default => Response::allow(),
+        };
     }
 
     public function delete(User $user, MonthlyReport $report): bool

@@ -108,9 +108,9 @@ test('verifikasi dan minta revisi: admin dan OPD pembina, hanya untuk laporan di
     expect(decide($scenario->users['opd'], $ability, $draft))->toBe(403);
 })->with(['verify', 'requestRevision']);
 
-test('lampiran laporan ikut aturan laporan: hanya bisa dihapus saat draf', function () {
+test('lampiran laporan ikut aturan laporan: hanya bisa dihapus saat masih bisa diubah', function () {
     $scenario = accessScenario();
-    $report = MonthlyReport::factory()->for($scenario->organization)->create();
+    $report = MonthlyReport::factory()->for($scenario->organization)->status(ReportStatus::Revision)->create(['submitted_at' => now()]);
     $attachment = Attachment::factory()->create(['attachable_type' => 'monthly_report', 'attachable_id' => $report->id]);
 
     expect(decide($scenario->users['kelompok'], 'delete', $attachment))->toBe('allow')
@@ -136,4 +136,29 @@ test('hanya admin yang mengelola pengguna, dan tidak bisa menonaktifkan atau men
 
     expect(Gate::forUser($admin)->inspect('deactivate', $admin)->message())->toBe('Anda tidak bisa menonaktifkan akun sendiri.')
         ->and($admin->can('delete', $admin))->toBeFalse();
+});
+
+test('draf yang belum pernah diajukan hanya bisa dibuka kelompok pemiliknya', function () {
+    $scenario = accessScenario();
+    $draft = MonthlyReport::factory()->for($scenario->organization)->create();
+    $attachment = Attachment::factory()->create(['attachable_type' => 'monthly_report', 'attachable_id' => $draft->id]);
+
+    expect(collect($scenario->users)->map(fn (User $user) => decide($user, 'view', $draft))->all())->toBe([
+        'admin' => 404, 'opd' => 404, 'opd lain' => 404, 'kelompok' => 'allow', 'kelompok lain' => 404,
+    ])->and(decide($scenario->users['opd'], 'view', $attachment))->toBe(404);
+
+    // Setelah pernah diajukan (mis. kini perlu revisi), isinya bisa dibuka peninjau.
+    $draft->forceFill(['status' => ReportStatus::Revision, 'submitted_at' => now()])->save();
+    expect(decide($scenario->users['opd'], 'view', $draft->fresh()))->toBe('allow')
+        ->and(decide($scenario->users['admin'], 'view', $draft->fresh()))->toBe('allow');
+});
+
+test('membuka kembali laporan terverifikasi hanya Admin', function () {
+    $scenario = accessScenario();
+    $verified = MonthlyReport::factory()->for($scenario->organization)->status(ReportStatus::Verified)->create(['submitted_at' => now()]);
+    $submitted = MonthlyReport::factory()->for($scenario->organization)->status(ReportStatus::Submitted)->create(['period' => '2026-08-01', 'submitted_at' => now()]);
+
+    expect(collect($scenario->users)->map(fn (User $user) => decide($user, 'reopen', $verified))->all())->toBe([
+        'admin' => 'allow', 'opd' => 403, 'opd lain' => 404, 'kelompok' => 403, 'kelompok lain' => 404,
+    ])->and(decide($scenario->users['admin'], 'reopen', $submitted))->toBe(403);
 });

@@ -43,6 +43,7 @@ class Navigation
                 self::item('Dasbor Distrik', 'admin.dashboard', 'home', 'Dasbor', true),
                 self::item('Semua Kelompok', 'admin.organizations.index', 'user-group', 'Kelompok', true, 'admin.organizations.*'),
                 self::item('Semua Laporan', 'admin.reports.index', 'document-text', 'Laporan', true, 'admin.reports.*'),
+                self::item('Masalah & Kebutuhan', 'admin.issues.index', 'exclamation-circle', 'Masalah', active: 'admin.issues.*'),
                 self::item('Pengguna', 'admin.users.index', 'users', primary: true, active: 'admin.users.*'),
                 self::item('Data Master', 'admin.master.index', 'circle-stack', 'Master', active: 'admin.master.*'),
                 self::item('Konten Website', 'admin.content.edit', 'globe-alt', 'Konten', active: 'admin.content.*'),

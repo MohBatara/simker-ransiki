@@ -268,7 +268,7 @@ Jangan mengarang kepanjangan akronim resmi (KDMP, KNMP, dsb.). Simpan apa adanya
 ## 5. Alur laporan bulanan
 
 ```
-draft ──ajukan──▶ submitted ──verifikasi──▶ verified
+draft ──ajukan──▶ submitted ──verifikasi──▶ verified ──buka kembali (Admin)──▶ revision
                       │
                       └──minta revisi──▶ revision ──perbaiki & ajukan──▶ submitted
 ```
@@ -279,7 +279,19 @@ draft ──ajukan──▶ submitted ──verifikasi──▶ verified
   boleh dihapus siapa pun, termasuk Admin.
 - OPD yang boleh memverifikasi: OPD mana pun yang terhubung dengan kelompok tersebut.
   Admin juga boleh. (Keputusan sementara, menunggu konfirmasi klien.)
-- Permintaan revisi wajib disertai catatan.
+- Permintaan revisi wajib disertai catatan (min 10 karakter); catatan verifikasi opsional.
+- Verifikasi final bagi OPD. Hanya Admin yang bisa "Buka kembali untuk revisi" (verified → revision,
+  aksi riwayat `reopened`, alasan wajib min 10 karakter). `verified_at`/`verified_by` dikosongkan;
+  riwayat tetap menyimpan verifikasi lama. Alasannya tampil di form kelompok seperti catatan revisi.
+- Logika tindakan peninjau ada di `App\Actions\Reports\ReviewReport` (transaksi + `lockForUpdate`):
+  hak lihat (404), lalu status, lalu hak tindakan. Bila peninjau lain bertindak lebih dulu, yang kedua
+  mendapat pesan "Laporan ini sudah ditinjau oleh …" tanpa baris riwayat ganda.
+- Draf yang belum pernah diajukan (`submitted_at` kosong) tampil di daftar Admin/OPD sebagai
+  "Draf, belum diajukan" tanpa tautan; isinya (termasuk lampiran) 404 bagi Admin/OPD.
+- Antrean verifikasi OPD (`/opd/verifikasi`): laporan `submitted`, urut dari pengajuan TERAKHIR yang
+  paling lama (dari `report_reviews`), dengan penanda "Diajukan ulang".
+- "Masalah & Kebutuhan" (`/opd/masalah`, `/admin/masalah`): isian bagian E/F hanya dari laporan
+  `submitted`/`verified` (bukan draf atau revisi), scope `ReportIssue::reviewableBy()`.
 - Kelompok bisa memilih "Tidak ada aktivitas bulan ini"; bagian lain menjadi opsional.
 - Wajib saat diajukan (bila ada aktivitas): ringkasan aktivitas dan anggota aktif (0 = terisi).
   Tenaga kerja, keuangan, dokumentasi opsional; keuangan kosong tetap NULL (laba NULL, ada peringatan).
@@ -319,9 +331,9 @@ draft ──ajukan──▶ submitted ──verifikasi──▶ verified
   * jumlah desimal: koma = desimal; titik = pemisah ribuan HANYA bila setiap kelompok tepat 3 digit,
     selain itu titik = desimal ("12.5" → 12,5; "1.250" → 1250; "1.250,5" → 1250,5); maks 2 desimal.
 
-Setiap perubahan status mencatat baris di `report_reviews` dan mengirim notifikasi:
-- diajukan → semua user OPD terkait
-- minta revisi / terverifikasi → semua user kelompok tersebut
+Setiap perubahan status mencatat baris di `report_reviews` dan mengirim notifikasi (hanya akun aktif):
+- diajukan → semua user OPD terkait (`ReportSubmitted`)
+- minta revisi / terverifikasi / dibuka kembali → semua user kelompok tersebut (`ReportReviewed`)
 
 ---
 
@@ -335,7 +347,7 @@ Notifikasi · Akun Saya
 **OPD:** Dasbor · Kelompok Binaan · Verifikasi Laporan · Semua Laporan ·
 Masalah & Kebutuhan · Notifikasi · Akun Saya
 
-**Admin:** Dasbor Distrik · Semua Kelompok · Semua Laporan · Pengguna ·
+**Admin:** Dasbor Distrik · Semua Kelompok · Semua Laporan · Masalah & Kebutuhan · Pengguna ·
 Data Master (Kampung, Jenis Kelembagaan, Bidang Usaha, OPD) · Konten Website · Notifikasi
 
 Pakai "Dasbor", bukan "Dashboard", di semua teks antarmuka dan semua ukuran layar.

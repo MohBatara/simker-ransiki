@@ -60,14 +60,32 @@ $organizationRoutes = function () {
     });
 };
 
-Route::middleware('auth')->group(function () use ($organizationRoutes) {
+/**
+ * Laporan untuk peninjau (Admin dan OPD). Hak tindakan dicek ulang di App\Actions\Reports\ReviewReport
+ * setelah baris dikunci, agar peninjau kedua mendapat pesan "sudah ditinjau", bukan 403.
+ */
+$reportRoutes = function () {
+    Route::controller(Shared\MonthlyReportController::class)->prefix('laporan')->name('reports.')->group(function () {
+        Route::get('/', 'index')->name('index');
+
+        Route::whereNumber('report')->group(function () {
+            Route::get('/{report}', 'show')->name('show')->can('view', 'report');
+            Route::post('/{report}/verifikasi', 'verify')->name('verify');
+            Route::post('/{report}/minta-revisi', 'requestRevision')->name('revision');
+        });
+    });
+
+    Route::get('/masalah', [Shared\ReportIssueController::class, 'index'])->name('issues.index');
+};
+
+Route::middleware('auth')->group(function () use ($organizationRoutes, $reportRoutes) {
     Route::post('/logout', [LoginController::class, 'destroy'])->name('logout');
 
-    Route::middleware('active')->group(function () use ($organizationRoutes) {
+    Route::middleware('active')->group(function () use ($organizationRoutes, $reportRoutes) {
         Route::get('/akun/kata-sandi', [PasswordController::class, 'edit'])->name('account.password.edit');
         Route::put('/akun/kata-sandi', [PasswordController::class, 'update'])->name('account.password.update');
 
-        Route::middleware('password.changed')->group(function () use ($organizationRoutes) {
+        Route::middleware('password.changed')->group(function () use ($organizationRoutes, $reportRoutes) {
             // File dipakai bersama semua peran; hak ditentukan Policy atas induknya.
             Route::controller(Shared\AttachmentController::class)->prefix('lampiran')->name('attachments.')->group(function () {
                 Route::post('/{type}/{id}', 'store')->name('store')->whereIn('type', ['kelompok', 'izin', 'laporan'])->whereNumber('id')->middleware('throttle:uploads');
@@ -78,7 +96,7 @@ Route::middleware('auth')->group(function () use ($organizationRoutes) {
             Route::post('/foto-produk/{product}', [Shared\ProductPhotoController::class, 'store'])->name('product-photos.store')->whereNumber('product')->middleware('throttle:uploads');
             Route::delete('/foto-produk/{product}', [Shared\ProductPhotoController::class, 'destroy'])->name('product-photos.destroy')->whereNumber('product')->can('update', 'product');
 
-            Route::prefix('admin')->name('admin.')->middleware('role:admin')->group(function () use ($organizationRoutes) {
+            Route::prefix('admin')->name('admin.')->middleware('role:admin')->group(function () use ($organizationRoutes, $reportRoutes) {
                 Route::get('/', Admin\DashboardController::class)->name('dashboard');
 
                 Route::controller(Admin\OrganizationController::class)->prefix('kelompok')->name('organizations.')->group(function () {
@@ -90,6 +108,9 @@ Route::middleware('auth')->group(function () use ($organizationRoutes) {
                 Route::get('/kelompok/{organization}/akun', [Shared\OrganizationController::class, 'users'])
                     ->name('organizations.users')->whereNumber('organization')->can('view', 'organization');
                 $organizationRoutes();
+                $reportRoutes();
+                Route::post('/laporan/{report}/buka-kembali', [Shared\MonthlyReportController::class, 'reopen'])
+                    ->name('reports.reopen')->whereNumber('report');
 
                 Route::controller(Admin\UserController::class)->prefix('pengguna')->name('users.')->group(function () {
                     Route::get('/', 'index')->name('index')->can('viewAny', User::class);
@@ -124,11 +145,11 @@ Route::middleware('auth')->group(function () use ($organizationRoutes) {
                 });
             });
 
-            Route::prefix('opd')->name('opd.')->middleware('role:opd')->group(function () use ($organizationRoutes) {
+            Route::prefix('opd')->name('opd.')->middleware('role:opd')->group(function () use ($organizationRoutes, $reportRoutes) {
                 Route::get('/', Opd\DashboardController::class)->name('dashboard');
                 $organizationRoutes();
-                Route::get('/laporan/{report}', [Opd\MonthlyReportController::class, 'show'])
-                    ->name('reports.show')->can('view', 'report');
+                $reportRoutes();
+                Route::get('/verifikasi', [Shared\MonthlyReportController::class, 'queue'])->name('verifications.index');
             });
 
             Route::prefix('kelompok')->name('kelompok.')->middleware('role:kelompok')->group(function () {

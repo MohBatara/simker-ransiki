@@ -8,6 +8,7 @@ use App\Models\Concerns\HasAttachments;
 use Carbon\CarbonImmutable;
 use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -46,6 +47,8 @@ class MonthlyReport extends Model
             'profit' => 'integer',
             'submitted_at' => 'datetime',
             'verified_at' => 'datetime',
+            'last_submitted_at' => 'datetime',
+            'resubmitted' => 'boolean',
         ];
     }
 
@@ -117,11 +120,46 @@ class MonthlyReport extends Model
         return now()->gte($this->submissionOpensOn());
     }
 
+    /** Laporan milik kelompok yang boleh dilihat pengguna (sejalan dengan Organization::visibleTo). */
+    public function scopeVisibleTo(Builder $query, User $user): void
+    {
+        $query->whereIn('monthly_reports.organization_id', Organization::visibleTo($user)->select('organizations.id'));
+    }
+
+    /** Filter daftar Admin/OPD: status, periode (Y-m), nama kelompok (q), dan OPD pembina. */
+    public function scopeFilter(Builder $query, array $filters): void
+    {
+        $period = $filters['period'] ?? null;
+
+        $query
+            ->when(ReportStatus::tryFrom((string) ($filters['status'] ?? '')), fn ($query, $status) => $query->where('monthly_reports.status', $status))
+            ->when(is_string($period) && preg_match('/^\d{4}-\d{2}$/', $period), fn ($query) => $query->whereDate('monthly_reports.period', $period.'-01'))
+            ->when(trim((string) ($filters['q'] ?? '')), fn ($query, $search) => $query->whereHas('organization', fn ($query) => $query->where('name', 'like', '%'.$search.'%')))
+            ->when((int) ($filters['opd'] ?? 0), fn ($query, $opd) => $query->whereIn('monthly_reports.organization_id', fn ($sub) => $sub
+                ->select('organization_id')->from('organization_opd')->where('opd_id', $opd)));
+    }
+
+    /**
+     * last_submitted_at: pengajuan terakhir (urutan antrean), dan resubmitted: pernah diminta revisi
+     * atau dibuka kembali, lalu diajukan lagi.
+     */
+    public function scopeWithSubmissionInfo(Builder $query): void
+    {
+        $query
+            ->addSelect(['last_submitted_at' => ReportReview::select('created_at')
+                ->whereColumn('monthly_report_id', 'monthly_reports.id')
+                ->where('action', ReviewAction::Submitted)
+                ->orderByDesc('created_at')
+                ->orderByDesc('id')
+                ->limit(1)])
+            ->withExists(['reviews as resubmitted' => fn ($query) => $query->whereIn('action', [ReviewAction::RevisionRequested, ReviewAction::Reopened])]);
+    }
+
     /** Relasi untuk halaman detail (shared.reports.show). */
     public function loadDetail(): static
     {
         return $this->load([
-            'organization', 'items', 'issues', 'reviews.user',
+            'organization', 'items', 'issues', 'reviews.user', 'verifier',
             'reviews' => fn ($query) => $query->orderBy('created_at')->orderBy('id'),
             'latestRevisionRequest.user.opd',
         ]);
@@ -147,11 +185,11 @@ class MonthlyReport extends Model
         return $this->hasMany(ReportReview::class);
     }
 
-    /** Permintaan revisi terakhir; catatannya ditampilkan di atas form dan detail. */
+    /** Permintaan revisi terakhir (oleh OPD/Admin, atau Admin membuka kembali); catatannya tampil di atas form dan detail. */
     public function latestRevisionRequest(): HasOne
     {
         return $this->hasOne(ReportReview::class)->ofMany(['id' => 'max'], function ($query) {
-            $query->where('action', ReviewAction::RevisionRequested);
+            $query->whereIn('action', [ReviewAction::RevisionRequested, ReviewAction::Reopened]);
         });
     }
 

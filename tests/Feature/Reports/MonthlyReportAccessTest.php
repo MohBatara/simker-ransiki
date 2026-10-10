@@ -53,8 +53,11 @@ test('admin dan OPD tidak bisa membuka area laporan kelompok', function (string 
     expect($this->report->fresh()->activity_summary)->toBe('Milik kelompok 1');
 })->with(['admin', 'opd']);
 
-test('OPD pembina membuka detail laporan baca-saja, OPD lain 404', function () {
+test('OPD pembina membuka detail laporan setelah diajukan, baca-saja; draf dan OPD lain 404', function () {
     $this->actingAs(User::factory()->opd($this->opd)->create());
+    $this->get("/opd/laporan/{$this->report->id}")->assertNotFound();
+
+    $this->report->forceFill(['status' => ReportStatus::Submitted, 'submitted_at' => now()])->save();
     $this->get("/opd/laporan/{$this->report->id}")
         ->assertOk()
         ->assertSee('Milik kelompok 1')

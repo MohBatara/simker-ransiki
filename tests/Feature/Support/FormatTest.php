@@ -29,3 +29,14 @@ test('tanggal dengan jam dan jumlah desimal', function () {
         ->and(Format::quantity('0.00'))->toBe('0')
         ->and(Format::quantity(null))->toBe(Format::EMPTY);
 });
+
+test('lama menunggu dalam hari kalender', function () {
+    Illuminate\Support\Carbon::setTestNow('2026-10-20 08:00:00');
+
+    expect(Format::waitingSince('2026-10-20 07:00:00'))->toBe('Hari ini')
+        ->and(Format::waitingSince('2026-10-19 23:00:00'))->toBe('1 hari')
+        ->and(Format::waitingSince('2026-10-06 09:00:00'))->toBe('14 hari')
+        ->and(Format::waitingSince(null))->toBe(Format::EMPTY);
+
+    Illuminate\Support\Carbon::setTestNow();
+});
