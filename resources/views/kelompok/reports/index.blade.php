@@ -60,7 +60,7 @@
                             <form method="POST" action="{{ route('kelompok.reports.store') }}" class="relative z-10">
                                 @csrf
                                 <input type="hidden" name="period" value="{{ $row['period']->format('Y-m') }}">
-                                <x-button type="submit" variant="secondary" class="max-md:w-full">Buat laporan</x-button>
+                                <x-button type="submit" variant="secondary" class="max-md:w-full" processing="Membuat…">Buat laporan</x-button>
                             </form>
                         @endif
                     </x-table.cell>

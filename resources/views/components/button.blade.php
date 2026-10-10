@@ -3,6 +3,8 @@
     'type' => 'button',
     'href' => null,
     'icon' => null,
+    // Teks saat form sedang dikirim (lihat penanganan "submit" di resources/js/app.js). Bawaan: "Memproses…".
+    'processing' => null,
 ])
 
 @php
@@ -26,10 +28,10 @@
         {{ $slot }}
     </a>
 @else
-    <button type="{{ $type }}" {{ $attributes->class($classes) }}>
+    <button type="{{ $type }}" @if ($processing) data-processing="{{ $processing }}" @endif {{ $attributes->class($classes) }}>
         @if ($icon)
             <x-dynamic-component :component="'heroicon-o-'.$icon" class="-ml-1 size-5" />
         @endif
-        {{ $slot }}
+        <span data-button-label>{{ $slot }}</span>
     </button>
 @endif

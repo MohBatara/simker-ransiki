@@ -16,7 +16,7 @@
                     </x-field>
                 </div>
                 <x-form-actions>
-                    <x-button type="submit">Simpan status legalitas</x-button>
+                    <x-button type="submit" processing="Menyimpan…">Simpan status legalitas</x-button>
                 </x-form-actions>
             </form>
         </x-card>

@@ -108,7 +108,7 @@
 
             <x-slot:footer>
                 <x-button variant="ghost" x-on:click="$dispatch('close-modal', 'record-form')">Batal</x-button>
-                <x-button type="submit" form="record-form">Simpan</x-button>
+                <x-button type="submit" form="record-form" processing="Menyimpan…">Simpan</x-button>
             </x-slot:footer>
         </x-modal>
 
@@ -120,7 +120,7 @@
                 <form method="POST" x-bind:action="deleteAction">
                     @csrf
                     @method('DELETE')
-                    <x-button variant="danger" type="submit">Hapus</x-button>
+                    <x-button variant="danger" type="submit" processing="Menghapus…">Hapus</x-button>
                 </form>
             </x-slot:footer>
         </x-modal>

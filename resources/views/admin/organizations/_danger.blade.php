@@ -45,7 +45,7 @@
             <form method="POST" action="{{ route('admin.organizations.destroy', $organization) }}">
                 @csrf
                 @method('DELETE')
-                <x-button variant="danger" type="submit">Hapus</x-button>
+                <x-button variant="danger" type="submit" processing="Menghapus…">Hapus</x-button>
             </form>
         </x-slot:footer>
     </x-modal>

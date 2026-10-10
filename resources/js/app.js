@@ -291,5 +291,64 @@ document.addEventListener('submit', (event) => {
     }
 });
 
+/**
+ * Cegah kirim ganda di koneksi lambat: setelah form (selain GET) dikirim, tombol kirimnya dinonaktifkan,
+ * diberi aria-busy, dan labelnya diganti (data-processing pada x-button, bawaan "Memproses…").
+ * Form dengan data-no-processing dilewati. Dipulihkan bila halaman dibuka lagi lewat tombol Back.
+ */
+function submitButtons(form) {
+    const outside = form.id ? [...document.querySelectorAll(`button[type="submit"][form="${CSS.escape(form.id)}"]`)] : [];
+
+    return [...form.querySelectorAll('button[type="submit"], button:not([type])'), ...outside];
+}
+
+document.addEventListener('submit', (event) => {
+    const form = event.target;
+
+    if (event.defaultPrevented || form.matches('[data-no-processing]') || (form.getAttribute('method') ?? 'get').toLowerCase() === 'get') {
+        return;
+    }
+
+    if (form.dataset.submitting) {
+        event.preventDefault();
+        return;
+    }
+
+    form.dataset.submitting = 'true';
+    form.setAttribute('aria-busy', 'true');
+
+    // Ditunda satu giliran agar nilai tombol pengirim (bila ada) tetap ikut terkirim.
+    setTimeout(() => {
+        for (const button of submitButtons(form)) {
+            const label = button.querySelector('[data-button-label]');
+            button.disabled = true;
+            button.setAttribute('aria-busy', 'true');
+            if (label) {
+                label.dataset.original = label.textContent;
+                label.textContent = button.dataset.processing ?? 'Memproses…';
+            }
+        }
+    });
+});
+
+window.addEventListener('pageshow', (event) => {
+    if (!event.persisted) {
+        return;
+    }
+
+    for (const form of document.querySelectorAll('form[data-submitting]')) {
+        delete form.dataset.submitting;
+        form.removeAttribute('aria-busy');
+        for (const button of submitButtons(form)) {
+            const label = button.querySelector('[data-button-label]');
+            button.disabled = false;
+            button.removeAttribute('aria-busy');
+            if (label?.dataset.original !== undefined) {
+                label.textContent = label.dataset.original;
+            }
+        }
+    }
+});
+
 window.Alpine = Alpine;
 Alpine.start();

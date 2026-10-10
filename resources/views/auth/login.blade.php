@@ -7,7 +7,7 @@
         <x-field label="Kata sandi" for="password">
             <x-input name="password" type="password" autocomplete="current-password" required />
         </x-field>
-        <x-button type="submit" class="w-full">Masuk</x-button>
+        <x-button type="submit" class="w-full" processing="Memeriksa…">Masuk</x-button>
     </form>
     <p class="mt-4 text-caption text-ink-soft">Lupa kata sandi? Hubungi Admin distrik.</p>
 </x-layouts.guest>

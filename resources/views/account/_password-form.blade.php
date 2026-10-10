@@ -11,6 +11,6 @@
         <x-input name="password_confirmation" type="password" autocomplete="new-password" required />
     </x-field>
     <x-form-actions>
-        <x-button type="submit" @class(['w-full' => $fullWidth ?? false])>Simpan kata sandi</x-button>
+        <x-button type="submit" processing="Menyimpan…" @class(['w-full' => $fullWidth ?? false])>Simpan kata sandi</x-button>
     </x-form-actions>
 </form>

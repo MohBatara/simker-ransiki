@@ -18,7 +18,7 @@
         </form>
         <x-slot:footer>
             <x-button variant="ghost" x-on:click="$dispatch('close-modal', 'report-verify')">Batal</x-button>
-            <x-button type="submit" form="form-verify">Verifikasi</x-button>
+            <x-button type="submit" form="form-verify" processing="Memverifikasi…">Verifikasi</x-button>
         </x-slot:footer>
     </x-modal>
 
@@ -32,7 +32,7 @@
         </form>
         <x-slot:footer>
             <x-button variant="ghost" x-on:click="$dispatch('close-modal', 'report-revision')">Batal</x-button>
-            <x-button type="submit" form="form-revision">Minta revisi</x-button>
+            <x-button type="submit" form="form-revision" processing="Mengirim…">Minta revisi</x-button>
         </x-slot:footer>
     </x-modal>
 @endif

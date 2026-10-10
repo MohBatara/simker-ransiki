@@ -117,7 +117,7 @@
 
             <x-slot:footer>
                 <x-button variant="ghost" x-on:click="$dispatch('close-modal', 'record-form')">Batal</x-button>
-                <x-button type="submit" form="product-form">Simpan</x-button>
+                <x-button type="submit" form="product-form" processing="Menyimpan…">Simpan</x-button>
             </x-slot:footer>
         </x-modal>
 
@@ -143,7 +143,7 @@
                         <form method="POST" x-bind:action="photo.deleteUrl" x-show="photo.url" class="mr-auto">
                             @csrf
                             @method('DELETE')
-                            <x-button variant="ghost" type="submit">Hapus foto</x-button>
+                            <x-button variant="ghost" type="submit" processing="Menghapus…">Hapus foto</x-button>
                         </form>
                         <x-button variant="secondary" x-on:click="$dispatch('close-modal', 'product-photo')">Tutup</x-button>
                     </x-slot:footer>
@@ -158,7 +158,7 @@
                 <form method="POST" x-bind:action="deleteAction">
                     @csrf
                     @method('DELETE')
-                    <x-button variant="danger" type="submit">Hapus</x-button>
+                    <x-button variant="danger" type="submit" processing="Menghapus…">Hapus</x-button>
                 </form>
             </x-slot:footer>
         </x-modal>

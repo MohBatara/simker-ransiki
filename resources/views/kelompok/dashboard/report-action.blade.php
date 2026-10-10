@@ -22,6 +22,6 @@
     <form method="POST" action="{{ route('kelompok.reports.store') }}" class="inline-flex {{ $class }}">
         @csrf
         <input type="hidden" name="period" value="{{ $period->format('Y-m') }}">
-        <x-button type="submit" :variant="$variant">Buat laporan</x-button>
+        <x-button type="submit" :variant="$variant" processing="Membuat…">Buat laporan</x-button>
     </form>
 @endif

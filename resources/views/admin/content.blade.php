@@ -12,7 +12,7 @@
                         <form method="POST" action="{{ route('admin.content.photo.destroy', $slot) }}">
                             @csrf
                             @method('DELETE')
-                            <x-button variant="ghost" type="submit">Hapus foto</x-button>
+                            <x-button variant="ghost" type="submit" processing="Menghapus…">Hapus foto</x-button>
                         </form>
                     @endif
                     <x-file-upload :url="route('admin.content.photo.store', $slot)" kind="photo" :multiple="false" :remaining="1" hint="Foto lanskap JPG atau PNG, maksimal 10 MB. Foto diperkecil dan data lokasinya dibuang otomatis. Foto lama akan diganti." />
@@ -35,7 +35,7 @@
                                 <form method="POST" action="{{ route('admin.content.sector-photo.destroy', $sector) }}">
                                     @csrf
                                     @method('DELETE')
-                                    <x-button variant="ghost" type="submit">Hapus</x-button>
+                                    <x-button variant="ghost" type="submit" processing="Menghapus…">Hapus</x-button>
                                 </form>
                             @endif
                             <x-button variant="secondary" x-on:click="open = ! open" x-bind:aria-expanded="open">{{ $sector->photo_path ? 'Ganti' : 'Unggah' }}</x-button>
@@ -108,7 +108,7 @@
 
             <x-form-actions sticky>
                 <x-button variant="ghost" :href="route('admin.dashboard')">Batal</x-button>
-                <x-button type="submit">Simpan konten</x-button>
+                <x-button type="submit" processing="Menyimpan…">Simpan konten</x-button>
             </x-form-actions>
         </form>
     </div>

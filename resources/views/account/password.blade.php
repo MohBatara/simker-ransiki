@@ -7,7 +7,7 @@
         <x-card title="Keluar" description="Keluar dari akun ini di perangkat yang sedang dipakai.">
             <form method="POST" action="{{ route('logout') }}" data-logout>
                 @csrf
-                <x-button variant="secondary" type="submit" icon="arrow-right-start-on-rectangle">Keluar</x-button>
+                <x-button variant="secondary" type="submit" icon="arrow-right-start-on-rectangle" processing="Keluar…">Keluar</x-button>
             </form>
         </x-card>
     </div>

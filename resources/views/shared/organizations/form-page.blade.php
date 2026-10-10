@@ -22,7 +22,7 @@
 
         <x-form-actions sticky>
             <x-button variant="ghost" :href="$cancelUrl">Batal</x-button>
-            <x-button type="submit">{{ $editing ? 'Simpan perubahan' : 'Simpan kelompok' }}</x-button>
+            <x-button type="submit" processing="Menyimpan…">{{ $editing ? 'Simpan perubahan' : 'Simpan kelompok' }}</x-button>
         </x-form-actions>
     </form>
 </x-layouts.app>

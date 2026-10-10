@@ -7,6 +7,6 @@
 
     <form method="POST" action="{{ route('logout') }}" data-logout class="mt-3">
         @csrf
-        <x-button variant="ghost" type="submit" class="w-full">Keluar</x-button>
+        <x-button variant="ghost" type="submit" class="w-full" processing="Keluar…">Keluar</x-button>
     </form>
 </x-layouts.guest>

@@ -8,4 +8,6 @@
 
 <x-layouts.guest title="Akses ditolak" heading="Akses ditolak">
     <p class="text-ui text-ink-soft">{{ $message }}</p>
+    @include('errors._actions')
+    <x-slot:footer></x-slot:footer>
 </x-layouts.guest>
