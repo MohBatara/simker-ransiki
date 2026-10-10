@@ -35,7 +35,7 @@ test('verifikasi: status terverifikasi, peninjau tercatat, notifikasi ke akun ke
         ->and($report->verified_at)->not->toBeNull()
         ->and($report->reviews()->sole()->only(['action', 'note', 'user_id']))->toBe(['action' => ReviewAction::Verified, 'note' => 'Data lengkap.', 'user_id' => $this->reviewer->id]);
 
-    Notification::assertSentTo($this->member, ReportReviewed::class, fn ($notification) => $notification->toArray($this->member)['message'] === 'Laporan September 2026 diverifikasi.');
+    Notification::assertSentTo($this->member, ReportReviewed::class, fn ($notification) => $notification->toArray($this->member)['action'] === 'verified');
     Notification::assertNotSentTo([$this->inactiveMember, $this->reviewer], ReportReviewed::class);
 });
 
@@ -76,7 +76,7 @@ test('admin membuka kembali laporan terverifikasi: verifikasi dicabut, alasan me
         ->and($report->latestRevisionRequest->action)->toBe(ReviewAction::Reopened)
         ->and($report->reviews()->orderBy('id')->pluck('action')->map->value->all())->toBe(['verified', 'reopened']);
 
-    Notification::assertSentTo($this->member, ReportReviewed::class, fn ($notification) => $notification->toArray($this->member)['message'] === 'Laporan September 2026 dibuka kembali untuk revisi.');
+    Notification::assertSentTo($this->member, ReportReviewed::class, fn ($notification) => $notification->toArray($this->member)['action'] === 'reopened');
 });
 
 test('OPD tidak bisa membuka kembali laporan terverifikasi', function () {

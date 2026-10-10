@@ -44,37 +44,7 @@
         @include('shared.dashboards.progress', ['area' => 'opd'])
 
         <div class="grid gap-5 lg:grid-cols-2 lg:items-start">
-            @php $deadline = App\Models\MonthlyReport::deadlineFor($period); @endphp
-            <x-card
-                :title="'Belum mengajukan '.Format::month($period)"
-                :description="'Tenggat '.Format::date($deadline).' · '.ReportingPeriod::deadlineDistance($deadline)"
-                id="belum-melapor"
-            >
-                @if ($notSubmitted->isEmpty())
-                    <p class="text-ink-soft">Semua kelompok wajib lapor sudah mengajukan laporan bulan ini.</p>
-                @else
-                    <ul class="-mx-2 divide-y divide-line">
-                        @foreach ($notSubmitted as $row)
-                            <li>
-                                <a href="{{ route('opd.organizations.reports', $row['organization']) }}" class="flex items-center gap-3 rounded-control px-2 py-2.5 transition-colors hover:bg-subtle">
-                                    <span class="min-w-0 flex-1 truncate text-ink">{{ $row['organization']->name }}</span>
-                                    @if ($row['report'])
-                                        <x-badge tone="idle">Draf</x-badge>
-                                    @else
-                                        <span class="text-ink-muted">Belum dibuat</span>
-                                    @endif
-                                </a>
-                            </li>
-                        @endforeach
-                    </ul>
-                    @php $remaining = $progress['draft'] + $progress['missing'] - $notSubmitted->count(); @endphp
-                    @if ($remaining > 0)
-                        <a href="{{ route('opd.organizations.index', ['laporan' => 'belum-diajukan', 'periode' => $period->format('Y-m')]) }}" class="mt-3 inline-block font-semibold text-brand hover:text-brand-hover">
-                            Lihat semua ({{ $progress['draft'] + $progress['missing'] }})
-                        </a>
-                    @endif
-                @endif
-            </x-card>
+            @include('shared.dashboards.not-submitted', ['area' => 'opd'])
 
             <x-card :title="'Masalah & kebutuhan, '.Format::month($period)" description="Jumlah kelompok per kategori, dari laporan yang sudah diajukan.">
                 <div class="space-y-5">

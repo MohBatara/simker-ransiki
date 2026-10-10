@@ -26,6 +26,7 @@ class DashboardController extends Controller
             'attention' => $district->attention(),
             'progress' => $stats->progress(),
             'perOpd' => $stats->progressPerOpd(),
+            'notSubmitted' => $stats->notSubmitted(),
             'organizations' => $district->organizations(),
             'economy' => $district->economy($period),
             'production' => $district->production($period),

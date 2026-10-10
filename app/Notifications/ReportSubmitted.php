@@ -3,15 +3,16 @@
 namespace App\Notifications;
 
 use App\Models\MonthlyReport;
-use App\Support\Format;
+use App\Support\NotificationText;
 use Illuminate\Notifications\Notification;
 
 /**
- * Untuk akun OPD pembina saat kelompok mengajukan laporan. Ditampilkan di halaman notifikasi (langkah 11).
+ * Untuk akun OPD pembina (atau Admin bila kelompok tanpa OPD) saat kelompok mengajukan laporan.
+ * Kalimatnya disusun App\Support\NotificationText saat ditampilkan.
  */
 class ReportSubmitted extends Notification
 {
-    public function __construct(private MonthlyReport $report) {}
+    public function __construct(private MonthlyReport $report, private bool $resubmitted = false) {}
 
     public function via(object $notifiable): array
     {
@@ -21,10 +22,9 @@ class ReportSubmitted extends Notification
     public function toArray(object $notifiable): array
     {
         return [
-            'monthly_report_id' => $this->report->id,
-            'organization_id' => $this->report->organization_id,
-            'message' => $this->report->organization->name.' mengajukan laporan '.Format::month($this->report->period).'.',
-            'url' => route('opd.reports.show', $this->report, absolute: false),
+            'kind' => 'report_submitted',
+            ...NotificationText::reportData($this->report),
+            'resubmitted' => $this->resubmitted,
         ];
     }
 }

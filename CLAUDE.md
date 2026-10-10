@@ -342,8 +342,25 @@ draft ──ajukan──▶ submitted ──verifikasi──▶ verified ──b
     selain itu titik = desimal ("12.5" → 12,5; "1.250" → 1250; "1.250,5" → 1250,5); maks 2 desimal.
 
 Setiap perubahan status mencatat baris di `report_reviews` dan mengirim notifikasi (hanya akun aktif):
-- diajukan → semua user OPD terkait (`ReportSubmitted`)
+- diajukan / diajukan ulang → semua user OPD terkait; bila kelompok tanpa OPD pembina, semua Admin
+  (`ReportSubmitted`). Setelah laporan ditinjau, notifikasi ini ditandai dibaca bagi semua penerimanya.
 - minta revisi / terverifikasi / dibuka kembali → semua user kelompok tersebut (`ReportReviewed`)
+
+### Notifikasi dalam aplikasi
+- Data notifikasi menyimpan fakta (`kind`, `monthly_report_id`, nama kelompok, periode, catatan); kalimatnya
+  disusun saat tampil oleh `App\Support\NotificationText`. Notifikasi lama yang hanya punya `message`
+  ditampilkan apa adanya.
+- `/notifikasi` (semua peran): daftar terbaru di atas, "Tandai semua dibaca". `GET /notifikasi/{id}`
+  menandai dibaca lalu mengarahkan; tujuan dihitung ulang dari `monthly_report_id` + peran saat ini dan
+  dicek Policy `view` (tidak berhak → kembali ke daftar dengan pesan). Notifikasi orang lain → 404.
+- Lonceng + angka belum dibaca (maks "9+", warna `brand`) di header HP, kanan baris judul desktop, dan
+  menu sidebar; angkanya dari view composer layout `app` (satu query, tanpa polling).
+- Pengingat (`php artisan simker:pengingat-laporan`, `ReportReminder`): tanggal `reports.reminder_days`
+  (1 = tahap "awal", 8 = tahap "akhir") pukul `reports.reminder_time` WIT, untuk periode bulan lalu, ke akun
+  kelompok aktif dari kelompok wajib lapor (`obligatedFor`, bukan tutup) yang belum pernah mengajukan
+  (belum dibuat atau draf). Aman dijalankan berulang (tidak dobel per akun, periode, dan tahap).
+- Dasbor OPD dan Admin: daftar "Belum mengajukan" punya tombol "Salin pesan pengingat"
+  (`App\Support\ReminderMessage`, pola `copyText`) untuk dikirim sendiri, misalnya lewat WhatsApp.
 
 ---
 
@@ -525,6 +542,7 @@ Di `resources/views/components/`:
 `number-input` (angka format Indonesia + pratinjau "Terbaca: ..."), `unit-input` (pilihan satuan),
 `stacked-bar` (bilah bertumpuk berwarna status + legenda berangka yang bisa diklik),
 `bar-list` (label + bilah tipis warna `brand` + angka, baris bisa diklik),
+`notification-bell` dan `notification-count` (lonceng + angka belum dibaca),
 `layouts.app` (area login), `layouts.public` (website publik), `layouts.guest` (login).
 
 Grafik dibuat dengan CSS/SVG di server (tanpa paket grafik), selalu disertai angka yang terlihat dan
@@ -665,6 +683,10 @@ Data contoh harus terlihat realistis namun jelas bukan data resmi:
 - HTTPS wajib: tombol "Salin info masuk" memakai clipboard browser yang hanya penuh berfungsi di HTTPS.
 - `/sitemap.xml` dan `/robots.txt` dibuat dinamis (tidak ada file `public/robots.txt`). Gambar pratinjau
   tautan bawaan: `public/og-default.png` (1200×630). Pastikan `APP_URL` benar agar URL Open Graph absolut.
-- Cron: `* * * * * php /path/artisan schedule:run >> /dev/null 2>&1` (bila fitur pengingat dipakai).
+- Cron WAJIB untuk pengingat laporan terjadwal (tanggal 1 dan 8, lihat `routes/console.php`):
+  `* * * * * php /path/artisan schedule:run >> /dev/null 2>&1` (Cron Jobs di hPanel Hostinger).
+  Tanpa cron ini pengingat tidak pernah terkirim. Untuk uji lokal, jalankan perintahnya manual:
+  `sail artisan simker:pengingat-laporan --tahap=awal` (opsi `--periode=2026-09`); cek jadwal dengan
+  `sail artisan schedule:list`.
 - `APP_ENV=production`, `APP_DEBUG=false`, `APP_TIMEZONE=Asia/Jayapura`.
 - Backup database berkala (fitur backup Hostinger + ekspor manual sebelum update besar).

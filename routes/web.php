@@ -86,6 +86,12 @@ Route::middleware('auth')->group(function () use ($organizationRoutes, $reportRo
         Route::put('/akun/kata-sandi', [PasswordController::class, 'update'])->name('account.password.update');
 
         Route::middleware('password.changed')->group(function () use ($organizationRoutes, $reportRoutes) {
+            Route::controller(Shared\NotificationController::class)->prefix('notifikasi')->name('notifications.')->group(function () {
+                Route::get('/', 'index')->name('index');
+                Route::post('/tandai-semua', 'markAllRead')->name('read-all');
+                Route::get('/{notification}', 'open')->name('open')->whereUuid('notification');
+            });
+
             // File dipakai bersama semua peran; hak ditentukan Policy atas induknya.
             Route::controller(Shared\AttachmentController::class)->prefix('lampiran')->name('attachments.')->group(function () {
                 Route::post('/{type}/{id}', 'store')->name('store')->whereIn('type', ['kelompok', 'izin', 'laporan'])->whereNumber('id')->middleware('throttle:uploads');

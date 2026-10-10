@@ -22,11 +22,14 @@ class SubmitReport
 {
     public function handle(MonthlyReport $report, User $user): MonthlyReport
     {
-        $report = DB::transaction(function () use ($report, $user) {
+        $resubmitted = false;
+
+        $report = DB::transaction(function () use ($report, $user, &$resubmitted) {
             $report = MonthlyReport::lockForUpdate()->findOrFail($report->id);
             Gate::forUser($user)->authorize('submit', $report);
 
             $this->validate($report);
+            $resubmitted = $report->reviews()->whereIn('action', [ReviewAction::RevisionRequested, ReviewAction::Reopened])->exists();
 
             // submitted_at menyimpan pengajuan pertama (dasar status terlambat); pengajuan ulang
             // setelah revisi hanya tercatat di riwayat.
@@ -41,7 +44,7 @@ class SubmitReport
             return $report;
         });
 
-        Notification::send($this->opdUsers($report), new ReportSubmitted($report));
+        Notification::send($this->reviewers($report), new ReportSubmitted($report, $resubmitted));
 
         return $report;
     }
@@ -73,13 +76,21 @@ class SubmitReport
         ])->validate();
     }
 
-    /** Semua akun OPD aktif yang membina kelompok ini. */
-    private function opdUsers(MonthlyReport $report)
+    /**
+     * Akun aktif yang bisa memverifikasi: OPD pembina, atau semua Admin bila kelompok belum punya
+     * OPD pembina (hanya Admin yang bisa memverifikasinya).
+     */
+    private function reviewers(MonthlyReport $report)
     {
+        $opdIds = $report->organization->opds()->pluck('opds.id');
+
         return User::query()
-            ->where('role', Role::Opd)
             ->where('is_active', true)
-            ->whereIn('opd_id', $report->organization->opds()->select('opds.id'))
+            ->when(
+                $opdIds->isEmpty(),
+                fn ($query) => $query->where('role', Role::Admin),
+                fn ($query) => $query->where('role', Role::Opd)->whereIn('opd_id', $opdIds),
+            )
             ->get();
     }
 }

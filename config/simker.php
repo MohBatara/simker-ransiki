@@ -11,6 +11,10 @@ return [
         'timezone' => 'Asia/Jayapura',
         // Simpan otomatis di form laporan, dalam detik.
         'autosave_seconds' => 30,
+        // Pengingat untuk kelompok yang belum mengajukan laporan bulan lalu (simker:pengingat-laporan).
+        // Hari pertama = tahap "awal" (laporan sudah bisa diajukan), hari kedua = tahap "akhir" (tenggat dekat).
+        'reminder_days' => [1, 8],
+        'reminder_time' => '08:00',
     ],
 
 ];

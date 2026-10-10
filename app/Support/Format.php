@@ -4,6 +4,7 @@ namespace App\Support;
 
 use Carbon\CarbonInterface;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Str;
 
 /**
  * Indonesian number and date formatting. NULL means "not filled in" and is never shown as 0.
@@ -62,7 +63,7 @@ class Format
      */
     public static function markdown(?string $text): ?string
     {
-        return filled($text) ? \Illuminate\Support\Str::markdown($text, ['html_input' => 'strip', 'allow_unsafe_links' => false]) : null;
+        return filled($text) ? Str::markdown($text, ['html_input' => 'strip', 'allow_unsafe_links' => false]) : null;
     }
 
     /** Paragraf pertama sebagai teks biasa, untuk cuplikan dan meta description. */
@@ -74,12 +75,28 @@ class Format
 
         $first = preg_split('/\R\s*\R/', trim($markdown))[0];
 
-        return \Illuminate\Support\Str::limit(trim(strip_tags(self::markdown($first))), $limit);
+        return Str::limit(trim(strip_tags(self::markdown($first))), $limit);
     }
 
     public static function date(CarbonInterface|string|null $value): string
     {
         return $value === null ? self::EMPTY : Carbon::parse($value)->translatedFormat('j F Y');
+    }
+
+    /** "Hari ini, 10.42", "Kemarin, 10.42", atau "9 Oktober 2026, 10.42". */
+    public static function relativeDateTime(CarbonInterface|string|null $value): string
+    {
+        if ($value === null) {
+            return self::EMPTY;
+        }
+
+        $date = Carbon::parse($value);
+
+        return match (true) {
+            $date->isToday() => 'Hari ini, '.$date->format('H.i'),
+            $date->isYesterday() => 'Kemarin, '.$date->format('H.i'),
+            default => self::dateTime($date),
+        };
     }
 
     /** "9 Oktober 2026, 10.42" */

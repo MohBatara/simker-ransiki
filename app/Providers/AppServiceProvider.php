@@ -7,14 +7,14 @@ use App\Models\MonthlyReport;
 use App\Models\Organization;
 use App\Models\Product;
 use App\Models\User;
+use App\Support\PublicDirectory;
+use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Relation;
-use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\View;
-use App\Support\PublicDirectory;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -48,6 +48,8 @@ class AppServiceProvider extends ServiceProvider
 
         // Unggah file: 30 per menit per akun (CLAUDE.md Bagian 9).
         View::composer('components.layouts.public', fn ($view) => $view->with('footer', PublicDirectory::footer()));
+        // Angka lonceng: satu query per halaman area login.
+        View::composer('components.layouts.app', fn ($view) => $view->with('unreadNotifications', auth()->user()?->unreadNotifications()->count() ?? 0));
 
         RateLimiter::for('uploads', fn (Request $request) => Limit::perMinute(30)->by($request->user()?->id ?: $request->ip()));
     }

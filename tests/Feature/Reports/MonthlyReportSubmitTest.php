@@ -149,8 +149,8 @@ test('pengajuan mengirim notifikasi ke akun OPD pembina yang aktif saja', functi
     Notification::assertSentTo($opdUser, ReportSubmitted::class, function (ReportSubmitted $notification) use ($opdUser, $report) {
         $data = $notification->toArray($opdUser);
 
-        return $data['monthly_report_id'] === $report->id && $data['url'] === "/opd/laporan/{$report->id}"
-            && str_contains($data['message'], 'September 2026');
+        return $data['kind'] === 'report_submitted' && $data['monthly_report_id'] === $report->id
+            && $data['period'] === '2026-09' && $data['resubmitted'] === false;
     });
     Notification::assertNotSentTo([$inactive, $otherOpd, $this->user], ReportSubmitted::class);
 });

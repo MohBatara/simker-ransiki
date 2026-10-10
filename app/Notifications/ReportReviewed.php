@@ -4,7 +4,7 @@ namespace App\Notifications;
 
 use App\Enums\ReviewAction;
 use App\Models\MonthlyReport;
-use App\Support\Format;
+use App\Support\NotificationText;
 use Illuminate\Notifications\Notification;
 
 /**
@@ -21,19 +21,11 @@ class ReportReviewed extends Notification
 
     public function toArray(object $notifiable): array
     {
-        $period = Format::month($this->report->period);
-
         return [
-            'monthly_report_id' => $this->report->id,
+            'kind' => 'report_reviewed',
+            ...NotificationText::reportData($this->report),
             'action' => $this->action->value,
-            'message' => match ($this->action) {
-                ReviewAction::Verified => "Laporan {$period} diverifikasi.",
-                ReviewAction::RevisionRequested => "Laporan {$period} perlu revisi.",
-                ReviewAction::Reopened => "Laporan {$period} dibuka kembali untuk revisi.",
-                default => "Laporan {$period} ditinjau.",
-            },
             'note' => $this->note,
-            'url' => route('kelompok.reports.show', $this->report, absolute: false),
         ];
     }
 }

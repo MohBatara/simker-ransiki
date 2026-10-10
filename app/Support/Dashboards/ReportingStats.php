@@ -74,7 +74,7 @@ class ReportingStats
             ->with(['monthlyReports' => fn ($query) => $query->whereDate('period', $this->period->format('Y-m-d'))])
             ->orderBy('name')
             ->limit($limit)
-            ->get(['id', 'name'])
+            ->get(['id', 'name', 'leader_name', 'phone'])
             ->map(fn (Organization $organization) => ['organization' => $organization, 'report' => $organization->monthlyReports->first()]);
     }
 

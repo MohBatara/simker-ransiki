@@ -57,12 +57,14 @@ test('mode form menyembunyikan navigasi bawah dan menampilkan tombol kembali', f
         ->assertOk()
         ->assertSee('aria-label="Kembali"', false)
         ->assertDontSee('Menu lainnya')
-        ->assertDontSee('aria-label="Notifikasi">', false);
+        // Lonceng di header HP disembunyikan di mode form; lonceng desktop tetap ada.
+        ->assertDontSee('data-bell="mobile"', false)
+        ->assertSee('data-bell="desktop"', false);
 
     $this->get('/dev/komponen')
         ->assertOk()
         ->assertSee('Menu lainnya')
-        ->assertSee('aria-label="Notifikasi">', false);
+        ->assertSee('data-bell="mobile"', false);
 });
 
 test('baris tabel dengan href menjadi satu link dengan chevron, tanpa tombol buka', function () {

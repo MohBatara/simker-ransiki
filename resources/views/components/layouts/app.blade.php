@@ -20,6 +20,8 @@
     $userRole ??= $user?->role?->label();
     $navigation ??= $user ? \App\Support\Navigation::for($user) : [];
     $notificationsUrl ??= Route::has('notifications.index') ? route('notifications.index') : null;
+    // Dari view composer (AppServiceProvider); 0 bila tidak ada.
+    $unreadNotifications ??= 0;
     $accountUrl = $user && Route::has('account.password.edit') ? route('account.password.edit') : null;
     $back ??= $focus ? url()->previous() : null;
 
@@ -72,7 +74,7 @@
                     <li>
                         <a
                             href="{{ $item['href'] }}"
-                            aria-label="{{ $item['label'] }}"
+                            aria-label="{{ $item['label'] }}{{ ($item['route'] ?? null) === 'notifications.index' && $unreadNotifications > 0 ? ', '.$unreadNotifications.' belum dibaca' : '' }}"
                             @if ($active) aria-current="page" @endif
                             @class([
                                 'group relative flex flex-col items-center gap-1 rounded-control px-0.5 py-2 transition-colors xl:flex-row xl:gap-3 xl:px-3',
@@ -80,9 +82,13 @@
                                 'text-ink-soft hover:bg-subtle hover:text-ink' => ! $active,
                             ])
                         >
+                            @php $badge = ($item['route'] ?? null) === 'notifications.index' ? $unreadNotifications : 0; @endphp
                             <x-dynamic-component :component="'heroicon-o-'.$item['icon']" class="size-5 shrink-0" />
                             <span class="w-full truncate text-center text-micro xl:hidden" aria-hidden="true">{{ $item['short'] ?? $item['label'] }}</span>
                             <span class="hidden truncate text-ui xl:inline" aria-hidden="true">{{ $item['label'] }}</span>
+                            @if ($badge > 0)
+                                <x-notification-count :count="$badge" class="absolute right-2 top-1 xl:static xl:ml-auto" />
+                            @endif
                             <span aria-hidden="true" class="pointer-events-none absolute left-full top-1/2 z-30 ml-2 -translate-y-1/2 whitespace-nowrap rounded-control bg-ink px-2 py-1 text-caption font-normal text-paper opacity-0 shadow-float transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100 xl:hidden">
                                 {{ $item['label'] }}
                             </span>
@@ -134,9 +140,7 @@
                 @unless ($focus)
                     <div class="-mr-2 flex shrink-0">
                         @if ($notificationsUrl)
-                            <a href="{{ $notificationsUrl }}" class="flex size-11 items-center justify-center rounded-control text-ink-soft hover:bg-subtle hover:text-ink" aria-label="Notifikasi">
-                                <x-heroicon-o-bell class="size-5" />
-                            </a>
+                            <x-notification-bell :href="$notificationsUrl" :count="$unreadNotifications" data-bell="mobile" />
                         @endif
                         {{-- Jalan ke halaman akun dan tombol keluar di HP, karena menu admin tidak memuat Akun Saya. --}}
                         @if ($accountUrl)
@@ -154,11 +158,17 @@
             'pb-24' => ! $focus,
             'pb-6' => $focus,
         ])>
-            <x-page-header :title="$title" :description="$description" :eyebrow="$eyebrow" :back="$back" condensed>
-                @isset($actions)
-                    <x-slot:actions>{{ $actions }}</x-slot:actions>
-                @endisset
-            </x-page-header>
+            <div class="flex items-start gap-3">
+                <x-page-header class="min-w-0 flex-1" :title="$title" :description="$description" :eyebrow="$eyebrow" :back="$back" condensed>
+                    @isset($actions)
+                        <x-slot:actions>{{ $actions }}</x-slot:actions>
+                    @endisset
+                </x-page-header>
+                {{-- Di HP lonceng ada di header atas. --}}
+                @if ($notificationsUrl)
+                    <x-notification-bell :href="$notificationsUrl" :count="$unreadNotifications" class="-mr-2 -mt-1 max-md:hidden" data-bell="desktop" />
+                @endif
+            </div>
 
             @if (session('status'))
                 <x-alert tone="ok" class="mt-5" dismissible>{{ session('status') }}</x-alert>

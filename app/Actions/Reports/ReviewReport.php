@@ -8,6 +8,8 @@ use App\Enums\Role;
 use App\Models\MonthlyReport;
 use App\Models\User;
 use App\Notifications\ReportReviewed;
+use App\Notifications\ReportSubmitted;
+use Illuminate\Notifications\DatabaseNotification;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Notification;
@@ -69,6 +71,13 @@ class ReviewReport
 
             return $report;
         });
+
+        // Pekerjaan sudah selesai: "menunggu verifikasi" ditandai dibaca bagi semua peninjau.
+        DatabaseNotification::query()
+            ->where('type', ReportSubmitted::class)
+            ->whereNull('read_at')
+            ->where('data->monthly_report_id', $report->id)
+            ->update(['read_at' => now()]);
 
         Notification::send(
             $report->organization->users()->where('role', Role::Kelompok)->where('is_active', true)->get(),

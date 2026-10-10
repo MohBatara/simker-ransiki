@@ -83,6 +83,8 @@
             </x-table>
         </x-card>
 
+        @include('shared.dashboards.not-submitted', ['area' => 'admin'])
+
         <div class="grid gap-5 lg:grid-cols-2 lg:items-start">
             <x-card title="Kelompok">
                 <div class="space-y-6">
