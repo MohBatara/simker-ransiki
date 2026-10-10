@@ -250,6 +250,37 @@ Alpine.data('copyText', (text) => ({
 
 Alpine.data('reportForm', reportForm);
 
+/**
+ * Pilihan satuan (komponen x-unit-input). "value" adalah satuan akhir yang dihubungkan ke x-model luar
+ * lewat x-modelable; satuan yang tidak ada di daftar ditampilkan sebagai "lainnya" + teks aslinya.
+ */
+Alpine.data('unitInput', (initial, units) => ({
+    choice: '',
+    other: '',
+    value: initial ?? '',
+
+    init() {
+        this.sync(this.value);
+        this.$watch('value', (value) => {
+            if (value !== this.compose()) {
+                this.sync(value);
+            }
+        });
+        this.$watch('choice', () => (this.value = this.compose()));
+        this.$watch('other', () => (this.value = this.compose()));
+    },
+
+    sync(value) {
+        const unit = String(value ?? '').trim().replace(/\s+/g, ' ').toLowerCase();
+        this.choice = unit === '' ? '' : units.includes(unit) ? unit : 'lainnya';
+        this.other = this.choice === 'lainnya' ? String(value).trim() : '';
+    },
+
+    compose() {
+        return this.choice === 'lainnya' ? this.other.trim() : this.choice;
+    },
+}));
+
 // Pratinjau "Terbaca: ..." di bawah input angka (komponen x-number-input).
 Alpine.magic('number', () => numberPreview);
 

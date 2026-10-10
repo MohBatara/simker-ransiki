@@ -158,6 +158,23 @@
             <x-stat label="Pendapatan terverifikasi" :value="Format::rupiah(48750000)" hint="dari 18 dari 25 kelompok yang mengisi" />
         </div>
 
+        <x-card title="Grafik ringan" description="x-stacked-bar untuk status (angka legenda bisa diklik) dan x-bar-list untuk peringkat.">
+            <div class="grid gap-6 md:grid-cols-2">
+                <x-stacked-bar label="Pelaporan September 2026" :segments="[
+                    ['label' => 'Terverifikasi', 'value' => 9, 'tone' => 'ok', 'href' => '#'],
+                    ['label' => 'Menunggu', 'value' => 4, 'tone' => 'wait', 'href' => '#'],
+                    ['label' => 'Perlu revisi', 'value' => 2, 'tone' => 'fix', 'href' => '#'],
+                    ['label' => 'Draf', 'value' => 1, 'tone' => 'idle', 'href' => '#'],
+                    ['label' => 'Belum melapor', 'value' => 3, 'tone' => 'empty', 'href' => '#'],
+                ]" />
+                <x-bar-list :items="[
+                    ['label' => 'Modal', 'value' => 6, 'href' => '#'],
+                    ['label' => 'Pemasaran', 'value' => 4, 'href' => '#'],
+                    ['label' => 'Bahan baku', 'value' => 1, 'href' => '#'],
+                ]" />
+            </div>
+        </x-card>
+
         <x-card title="Badge status">
             <div class="flex flex-wrap gap-2">
                 <x-badge tone="idle">Draf</x-badge>

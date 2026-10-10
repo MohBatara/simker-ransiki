@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Enums\LegalStatus;
 use App\Enums\OrganizationStatus;
+use App\Enums\ReportStatus;
 use App\Enums\Role;
 use App\Models\Concerns\HasAttachments;
 use App\Support\SimilarNames;
@@ -112,6 +113,21 @@ class Organization extends Model
             ->when((int) ($filters['sector'] ?? 0), fn ($query, $id) => $query->whereHas('sectors', fn ($query) => $query->whereKey($id)))
             ->when(OrganizationStatus::tryFrom((string) ($filters['status'] ?? '')), fn ($query, $status) => $query->where('status', $status));
 
+        if (($filters['akun'] ?? null) === 'tidak-ada') {
+            $query->doesntHave('users');
+        }
+
+        // Tujuan klik dari dasbor: kelompok wajib lapor yang belum membuat / belum mengajukan laporan.
+        $period = $filters['periode'] ?? null;
+        if (in_array($filters['laporan'] ?? null, ['belum-dibuat', 'belum-diajukan'], true) && is_string($period) && preg_match('/^\d{4}-(0[1-9]|1[0-2])$/', $period)) {
+            $date = CarbonImmutable::createFromFormat('!Y-m', $period);
+            $submittedOnly = $filters['laporan'] === 'belum-diajukan';
+
+            $query->obligatedFor($date)->whereDoesntHave('monthlyReports', fn ($query) => $query
+                ->whereDate('period', $date->format('Y-m-d'))
+                ->when($submittedOnly, fn ($query) => $query->where('status', '!=', ReportStatus::Draft)));
+        }
+
         $opd = $filters['opd'] ?? null;
         if ($opd === 'none') {
             $query->doesntHave('opds');
@@ -132,6 +148,16 @@ class Organization extends Model
             ->get(['id', 'name'])
             ->filter(fn (Organization $other) => SimilarNames::areSimilar($name, $other->name))
             ->values();
+    }
+
+    /**
+     * Kelompok yang wajib melapor untuk suatu periode: aktif atau tidak aktif, dan kewajiban lapornya
+     * sudah dimulai. Kelompok tutup tidak dihitung (CLAUDE.md Bagian 5).
+     */
+    public function scopeObligatedFor(Builder $query, CarbonInterface $period): void
+    {
+        $query->whereIn('organizations.status', [OrganizationStatus::Active, OrganizationStatus::Inactive])
+            ->whereDate('organizations.reporting_starts_on', '<=', $period->format('Y-m-01'));
     }
 
     /**

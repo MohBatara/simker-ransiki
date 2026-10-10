@@ -2,8 +2,9 @@
 
 namespace App\Http\Requests\Organizations;
 
-use App\Models\Product;
 use App\Models\Organization;
+use App\Models\Product;
+use App\Support\Units;
 use Illuminate\Auth\Access\Response;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Gate;
@@ -33,6 +34,7 @@ class ProductRequest extends FormRequest
     protected function prepareForValidation(): void
     {
         $this->merge(array_filter([
+            'unit' => Units::normalize($this->input('unit')),
             'is_public' => $this->boolean('is_public'),
             'is_featured' => $this->user()->isAdmin() ? $this->boolean('is_featured') : null,
         ], fn ($value) => $value !== null));

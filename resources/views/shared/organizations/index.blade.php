@@ -2,7 +2,16 @@
     // OPD hanya melihat kelompok binaannya, jadi filter OPD tidak ditampilkan.
     $filterKeys = $area === 'opd' ? ['type', 'village', 'sector', 'status'] : ['type', 'village', 'sector', 'opd', 'status'];
     $activeFilters = collect($filters)->only($filterKeys)->filter(fn ($value) => filled($value))->count();
-    $hasFilters = $activeFilters > 0 || filled($filters['q'] ?? null);
+    // Filter dari tautan dasbor; tidak ada pilihannya di form, jadi dijelaskan dalam kalimat.
+    $notices = array_filter([
+        ($filters['akun'] ?? null) === 'tidak-ada' ? 'kelompok yang belum punya akun' : null,
+        ! preg_match('/^\d{4}-(0[1-9]|1[0-2])$/', (string) ($filters['periode'] ?? '')) ? null : match ($filters['laporan'] ?? null) {
+            'belum-dibuat' => 'kelompok wajib lapor yang belum membuat laporan '.\App\Support\Format::month(($filters['periode'] ?? '').'-01'),
+            'belum-diajukan' => 'kelompok wajib lapor yang belum mengajukan laporan '.\App\Support\Format::month(($filters['periode'] ?? '').'-01'),
+            default => null,
+        },
+    ]);
+    $hasFilters = $activeFilters > 0 || filled($filters['q'] ?? null) || $notices;
 @endphp
 
 {{-- Dipakai Admin ("Semua Kelompok") dan OPD ("Kelompok Binaan"); isi sudah disaring scope visibleTo. --}}
@@ -17,7 +26,19 @@
     @endcan
 
     <div class="space-y-5">
+        @if ($notices)
+            <x-alert>
+                Menampilkan {{ implode(' dan ', $notices) }}.
+                <a href="{{ route($area.'.organizations.index') }}" class="font-semibold text-brand hover:text-brand-hover">Tampilkan semua kelompok</a>
+            </x-alert>
+        @endif
+
         <form method="GET" action="{{ route($area.'.organizations.index') }}" x-data="{ open: @js($activeFilters > 0) }" class="space-y-3" role="search">
+            @foreach (['akun', 'laporan', 'periode'] as $kept)
+                @if (filled($filters[$kept] ?? null))
+                    <input type="hidden" name="{{ $kept }}" value="{{ $filters[$kept] }}">
+                @endif
+            @endforeach
             <div class="flex flex-wrap gap-2">
                 <label for="q" class="sr-only">Cari nama kelompok</label>
                 <x-input name="q" :value="$filters['q'] ?? ''" placeholder="Cari nama kelompok" class="min-w-0 flex-1 md:max-w-sm" />

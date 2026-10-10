@@ -1,6 +1,101 @@
+@use('App\Support\Format')
+@use('App\Support\Dashboards\ReportingPeriod')
+
 <x-layouts.app title="Dasbor" :description="$user->opd->name">
-    <x-empty-state
-        title="Ringkasan kelompok binaan belum tersedia"
-        description="Laporan yang menunggu verifikasi dan kelompok yang belum melapor akan tampil di sini."
-    />
+    <x-slot:actions>
+        @include('shared.dashboards.period-picker')
+    </x-slot:actions>
+
+    <div class="space-y-5">
+        {{-- Yang perlu dilakukan lebih dulu --}}
+        <x-card title="Perlu tindakan">
+            @if ($waitingCount === 0)
+                <p class="text-ink-soft">Tidak ada laporan yang menunggu verifikasi.</p>
+            @else
+                <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                    <a href="{{ route('opd.verifications.index') }}" class="group rounded-control">
+                        <span class="text-page-title font-semibold tabular-nums text-wait">{{ $waitingCount }}</span>
+                        <span class="text-ink group-hover:underline">laporan menunggu verifikasi</span>
+                    </a>
+                    <x-button :href="route('opd.verifications.index')" class="max-md:w-full">Buka antrean</x-button>
+                </div>
+                <dl class="mt-4 space-y-2 border-t border-line pt-3">
+                    @if ($oldestWaiting)
+                        <div class="flex flex-wrap gap-x-2">
+                            <dt class="text-ink-soft">Paling lama menunggu:</dt>
+                            <dd>
+                                <a href="{{ route('opd.reports.show', $oldestWaiting) }}" class="font-semibold text-brand hover:text-brand-hover">
+                                    {{ $oldestWaiting->organization->name }}, {{ Format::month($oldestWaiting->period) }}
+                                </a>
+                                <span class="text-ink-soft">· {{ Format::waitingSince($oldestWaiting->last_submitted_at) }}</span>
+                            </dd>
+                        </div>
+                    @endif
+                    @if ($waitingLong > 0)
+                        <div class="flex flex-wrap gap-x-2">
+                            <dt class="text-ink-soft">Menunggu lebih dari 7 hari:</dt>
+                            <dd><a href="{{ route('opd.reports.index', ['status' => 'submitted', 'menunggu' => 7]) }}" class="font-semibold tabular-nums text-brand hover:text-brand-hover">{{ $waitingLong }} laporan</a></dd>
+                        </div>
+                    @endif
+                </dl>
+            @endif
+        </x-card>
+
+        @include('shared.dashboards.progress', ['area' => 'opd'])
+
+        <div class="grid gap-5 lg:grid-cols-2 lg:items-start">
+            @php $deadline = App\Models\MonthlyReport::deadlineFor($period); @endphp
+            <x-card
+                :title="'Belum mengajukan '.Format::month($period)"
+                :description="'Tenggat '.Format::date($deadline).' · '.ReportingPeriod::deadlineDistance($deadline)"
+                id="belum-melapor"
+            >
+                @if ($notSubmitted->isEmpty())
+                    <p class="text-ink-soft">Semua kelompok wajib lapor sudah mengajukan laporan bulan ini.</p>
+                @else
+                    <ul class="-mx-2 divide-y divide-line">
+                        @foreach ($notSubmitted as $row)
+                            <li>
+                                <a href="{{ route('opd.organizations.reports', $row['organization']) }}" class="flex items-center gap-3 rounded-control px-2 py-2.5 transition-colors hover:bg-subtle">
+                                    <span class="min-w-0 flex-1 truncate text-ink">{{ $row['organization']->name }}</span>
+                                    @if ($row['report'])
+                                        <x-badge tone="idle">Draf</x-badge>
+                                    @else
+                                        <span class="text-ink-muted">Belum dibuat</span>
+                                    @endif
+                                </a>
+                            </li>
+                        @endforeach
+                    </ul>
+                    @php $remaining = $progress['draft'] + $progress['missing'] - $notSubmitted->count(); @endphp
+                    @if ($remaining > 0)
+                        <a href="{{ route('opd.organizations.index', ['laporan' => 'belum-diajukan', 'periode' => $period->format('Y-m')]) }}" class="mt-3 inline-block font-semibold text-brand hover:text-brand-hover">
+                            Lihat semua ({{ $progress['draft'] + $progress['missing'] }})
+                        </a>
+                    @endif
+                @endif
+            </x-card>
+
+            <x-card :title="'Masalah & kebutuhan, '.Format::month($period)" description="Jumlah kelompok per kategori, dari laporan yang sudah diajukan.">
+                <div class="space-y-5">
+                    @foreach (['problem' => 'Masalah', 'support' => 'Kebutuhan'] as $kind => $title)
+                        <section>
+                            <h3 class="mb-2 text-ui font-semibold text-ink">{{ $title }}</h3>
+                            <x-bar-list
+                                :items="$topIssues[$kind]->map(fn ($row) => [
+                                    'label' => $row['label'],
+                                    'value' => $row['organizations'],
+                                    'href' => route('opd.issues.index', ['kind' => $kind, 'category' => $row['category'], 'period' => $period->format('Y-m')]),
+                                ])"
+                                :empty="'Tidak ada '.mb_strtolower($title).' yang dicatat.'"
+                            />
+                        </section>
+                    @endforeach
+                    <a href="{{ route('opd.issues.index', ['period' => $period->format('Y-m')]) }}" class="inline-block font-semibold text-brand hover:text-brand-hover">Lihat semua masalah & kebutuhan</a>
+                </div>
+            </x-card>
+        </div>
+
+        @include('shared.dashboards.trend', ['area' => 'opd'])
+    </div>
 </x-layouts.app>

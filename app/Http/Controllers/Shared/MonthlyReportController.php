@@ -25,7 +25,7 @@ class MonthlyReportController extends Controller
     /** "Semua Laporan": semua status, termasuk draf (isinya baru bisa dibuka setelah diajukan). */
     public function index(Request $request): View
     {
-        $filters = $request->only(['q', 'status', 'period', 'opd']);
+        $filters = $request->only(['q', 'status', 'period', 'opd', 'menunggu']);
 
         $reports = MonthlyReport::visibleTo($request->user())
             ->filter($filters)

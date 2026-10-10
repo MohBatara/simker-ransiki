@@ -99,8 +99,8 @@
                     <x-input name="name" x-model="record.name" maxlength="255" autofocus required />
                 </x-field>
                 <div class="grid gap-4 sm:grid-cols-2">
-                    <x-field label="Satuan" for="unit" hint="Mis. kg, liter, bungkus." optional>
-                        <x-input name="unit" x-model="record.unit" maxlength="30" />
+                    <x-field label="Satuan" for="unit" hint="Pilih Lainnya bila satuannya tidak ada di daftar." optional>
+                        <x-unit-input name="unit" model="record.unit" id="unit" />
                     </x-field>
                     <x-field label="Kapasitas" for="capacity" hint="Mis. 200 kg/bulan." optional>
                         <x-input name="capacity" x-model="record.capacity" maxlength="255" />

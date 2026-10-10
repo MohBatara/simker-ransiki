@@ -3,12 +3,32 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Organization;
+use App\Support\Dashboards\DistrictStats;
+use App\Support\Dashboards\ReportingPeriod;
+use App\Support\Dashboards\ReportingStats;
+use Carbon\CarbonImmutable;
+use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class DashboardController extends Controller
 {
-    public function __invoke(): View
+    public function __invoke(Request $request, DistrictStats $district): View
     {
-        return view('admin.dashboard');
+        $earliest = Organization::min('reporting_starts_on');
+        $earliest = $earliest ? CarbonImmutable::parse($earliest)->startOfMonth() : null;
+        $period = ReportingPeriod::resolve($request->query('periode'), $earliest);
+        $stats = new ReportingStats($request->user(), $period);
+
+        return view('admin.dashboard', [
+            'period' => $period,
+            'periods' => ReportingPeriod::options($earliest),
+            'attention' => $district->attention(),
+            'progress' => $stats->progress(),
+            'perOpd' => $stats->progressPerOpd(),
+            'organizations' => $district->organizations(),
+            'economy' => $district->economy($period),
+            'production' => $district->production($period),
+        ]);
     }
 }

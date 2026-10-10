@@ -6,6 +6,7 @@ use App\Enums\ProblemCategory;
 use App\Enums\SupportCategory;
 use App\Support\NumberInput;
 use App\Support\ReportForm;
+use App\Support\Units;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -35,6 +36,8 @@ class ReportDraftRequest extends FormRequest
         if (is_array($this->input('items'))) {
             $data['items'] = array_map(fn ($item) => is_array($item) ? [
                 ...$item,
+                'production_unit' => Units::normalize($item['production_unit'] ?? null),
+                'sales_unit' => Units::normalize($item['sales_unit'] ?? null),
                 'production_qty' => NumberInput::decimal($item['production_qty'] ?? null),
                 'sales_qty' => NumberInput::decimal($item['sales_qty'] ?? null),
                 'revenue' => NumberInput::integer($item['revenue'] ?? null),

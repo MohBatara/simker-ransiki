@@ -49,34 +49,20 @@
                     </div>
 
                     <div class="grid gap-4 md:grid-cols-2">
-                        <div class="grid grid-cols-[minmax(0,1fr)_minmax(0,7rem)] gap-3">
+                        <div class="grid grid-cols-[minmax(0,1fr)_minmax(0,9.5rem)] gap-3">
                             <x-field label="Jumlah produksi" live="`items.${i}.production_qty`" bind-for="`item-${i}-production_qty`" optional>
                                 <x-number-input x-bind:id="`item-${i}-production_qty`" model="item.production_qty" kind="decimal" live="`items.${i}.production_qty`" />
                             </x-field>
                             <x-field label="Satuan" live="`items.${i}.production_unit`" bind-for="`item-${i}-production_unit`">
-                                <x-input
-                                    x-bind:id="`item-${i}-production_unit`"
-                                    maxlength="30"
-                                    placeholder="kg"
-                                    x-model="item.production_unit"
-                                    x-bind:aria-invalid="!! error(`items.${i}.production_unit`)"
-                                    x-bind:class="error(`items.${i}.production_unit`) && 'border-fix! focus:border-fix! focus:ring-fix!'"
-                                />
+                                <x-unit-input model="item.production_unit" bind-id="`item-${i}-production_unit`" live="`items.${i}.production_unit`" />
                             </x-field>
                         </div>
-                        <div class="grid grid-cols-[minmax(0,1fr)_minmax(0,7rem)] gap-3">
+                        <div class="grid grid-cols-[minmax(0,1fr)_minmax(0,9.5rem)] gap-3">
                             <x-field label="Jumlah terjual" live="`items.${i}.sales_qty`" bind-for="`item-${i}-sales_qty`" optional>
                                 <x-number-input x-bind:id="`item-${i}-sales_qty`" model="item.sales_qty" kind="decimal" live="`items.${i}.sales_qty`" />
                             </x-field>
                             <x-field label="Satuan" live="`items.${i}.sales_unit`" bind-for="`item-${i}-sales_unit`">
-                                <x-input
-                                    x-bind:id="`item-${i}-sales_unit`"
-                                    maxlength="30"
-                                    placeholder="kg"
-                                    x-model="item.sales_unit"
-                                    x-bind:aria-invalid="!! error(`items.${i}.sales_unit`)"
-                                    x-bind:class="error(`items.${i}.sales_unit`) && 'border-fix! focus:border-fix! focus:ring-fix!'"
-                                />
+                                <x-unit-input model="item.sales_unit" bind-id="`item-${i}-sales_unit`" live="`items.${i}.sales_unit`" />
                             </x-field>
                         </div>
                         <x-field label="Pendapatan dari produk ini" live="`items.${i}.revenue`" bind-for="`item-${i}-revenue`" optional>

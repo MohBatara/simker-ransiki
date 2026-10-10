@@ -136,7 +136,21 @@ class MonthlyReport extends Model
             ->when(is_string($period) && preg_match('/^\d{4}-\d{2}$/', $period), fn ($query) => $query->whereDate('monthly_reports.period', $period.'-01'))
             ->when(trim((string) ($filters['q'] ?? '')), fn ($query, $search) => $query->whereHas('organization', fn ($query) => $query->where('name', 'like', '%'.$search.'%')))
             ->when((int) ($filters['opd'] ?? 0), fn ($query, $opd) => $query->whereIn('monthly_reports.organization_id', fn ($sub) => $sub
-                ->select('organization_id')->from('organization_opd')->where('opd_id', $opd)));
+                ->select('organization_id')->from('organization_opd')->where('opd_id', $opd)))
+            ->when(($filters['opd'] ?? null) === 'none', fn ($query) => $query->whereNotIn('monthly_reports.organization_id', fn ($sub) => $sub
+                ->select('organization_id')->from('organization_opd')))
+            ->when((int) ($filters['menunggu'] ?? 0), fn ($query, $days) => $query->waitingLongerThan($days));
+    }
+
+    /** Laporan diajukan yang pengajuan terakhirnya lebih dari N hari lalu. */
+    public function scopeWaitingLongerThan(Builder $query, int $days): void
+    {
+        $query->where('monthly_reports.status', ReportStatus::Submitted)
+            ->where(fn ($sub) => $sub->select('created_at')->from('report_reviews')
+                ->whereColumn('monthly_report_id', 'monthly_reports.id')
+                ->where('action', ReviewAction::Submitted)
+                ->orderByDesc('created_at')
+                ->limit(1), '<', now()->subDays($days));
     }
 
     /**

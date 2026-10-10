@@ -164,6 +164,10 @@ Konvensi kolom:
 - Uang disimpan sebagai bilangan bulat Rupiah (`bigInteger`), tanpa desimal. Kolom yang bisa
   negatif (`profit`, `members_change`) signed.
 - Jumlah produksi/penjualan `decimal(12,2)` karena satuan bisa kg/liter.
+- Satuan (`products.unit`, `report_items.production_unit`/`sales_unit`) dipilih dari daftar umum
+  `App\Support\Units`: kg, ton, gram, liter, ekor, ikat, bungkus, karung, buah, lembar, lainnya.
+  Isian bebas hanya bila "lainnya" (komponen `unit-input`). Disimpan huruf kecil tanpa spasi tepi
+  (`Units::normalize`); data lama di luar daftar tetap terbaca sebagai "lainnya" + teks aslinya.
 - Data master tidak bisa dihapus selama masih dipakai (FK restrict). Kelompok tidak bisa dihapus
   bila punya laporan atau akun; kelompok yang berhenti diberi status `closed`.
 
@@ -258,8 +262,14 @@ Jangan mengarang kepanjangan akronim resmi (KDMP, KNMP, dsb.). Simpan apa adanya
   Jangan pernah mengubah NULL menjadi 0.
 - Saat menjumlahkan, tampilkan keterangan bila sebagian data kosong
   (mis. "dari 18 dari 25 kelompok yang mengisi").
-- Jangan menjumlahkan produksi dengan satuan berbeda. Kelompokkan per produk + satuan.
+- Jangan menjumlahkan produksi dengan satuan berbeda. Kelompokkan per produk + satuan
+  (keduanya dibandingkan `LOWER(TRIM(...))`).
 - Statistik resmi di dasbor hanya dari laporan berstatus `verified`.
+- Dasbor (`App\Support\Dashboards\*`): "bulan wajib lapor" = bulan lalu; pilihan bulan `?periode=Y-m`
+  dari `reporting_starts_on` paling awal sampai bulan lalu, nilai tidak sah kembali ke default.
+  Kelompok wajib lapor = scope `Organization::obligatedFor($period)`. Status pelaporan per kelompok:
+  terverifikasi / menunggu / perlu revisi / draf / belum melapor (belum ada baris laporan).
+  Setiap angka dasbor menaut ke daftar yang tersaring. Belum memakai cache.
 - Hitung kelompok secara unik (`COUNT(DISTINCT organizations.id)`); kelompok dengan banyak bidang
   usaha atau banyak OPD tidak boleh terhitung ganda.
 
@@ -512,7 +522,13 @@ Di `resources/views/components/`:
 `card`, `stat` (angka ringkas), `badge` (status), `table` (+ mode kartu di mobile),
 `empty-state`, `modal`, `dropdown`, `page-header`, `alert`, `tabs`, `file-upload`,
 `form-actions` (bar tombol form; `sticky` hanya untuk halaman form), `checkbox-group`, `logo`,
+`number-input` (angka format Indonesia + pratinjau "Terbaca: ..."), `unit-input` (pilihan satuan),
+`stacked-bar` (bilah bertumpuk berwarna status + legenda berangka yang bisa diklik),
+`bar-list` (label + bilah tipis warna `brand` + angka, baris bisa diklik),
 `layouts.app` (area login), `layouts.public` (website publik), `layouts.guest` (login).
+
+Grafik dibuat dengan CSS/SVG di server (tanpa paket grafik), selalu disertai angka yang terlihat dan
+`aria-label` yang membacakan isinya. Warna status hanya untuk segmen status; grafik lain memakai `brand`.
 
 Halaman tidak boleh menulis ulang gaya tombol/kartu sendiri. Selalu pakai komponen.
 

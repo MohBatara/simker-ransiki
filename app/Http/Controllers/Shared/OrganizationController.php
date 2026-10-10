@@ -21,7 +21,7 @@ class OrganizationController extends Controller
 {
     public function index(Request $request): View
     {
-        $filters = $request->only(['q', 'type', 'village', 'sector', 'opd', 'status']);
+        $filters = $request->only(['q', 'type', 'village', 'sector', 'opd', 'status', 'akun', 'laporan', 'periode']);
 
         $organizations = Organization::visibleTo($request->user())
             ->filter($filters)
