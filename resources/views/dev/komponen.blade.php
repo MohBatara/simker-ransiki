@@ -155,7 +155,7 @@
             <x-stat label="Kelompok aktif" value="22" hint="dari 25 kelompok terdaftar" />
             <x-stat label="Terverifikasi" :value="Format::number(14)" tone="ok" hint="September 2026" />
             <x-stat label="Menunggu verifikasi" value="5" tone="wait" />
-            <x-stat label="Pendapatan terverifikasi" :value="Format::rupiah(48750000)" hint="dari 18 dari 25 kelompok yang mengisi" />
+            <x-stat label="Pendapatan terverifikasi" :value="Format::rupiah(48750000)" hint="diisi 18 dari 25 kelompok" />
         </div>
 
         <x-card title="Grafik ringan" description="x-stacked-bar untuk status (angka legenda bisa diklik) dan x-bar-list untuk peringkat.">

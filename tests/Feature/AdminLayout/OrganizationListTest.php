@@ -35,7 +35,7 @@ test('kartu ringkasan dari data nyata: unik, anggota NULL tidak jadi nol', funct
     expect($response->viewData('totals'))->toBe([
         'organizations' => 3, 'villages' => 2, 'sectors' => 2, 'members' => 25, 'members_filled' => 2,
     ]);
-    $response->assertSee('Total kelompok')->assertSee('dari 2 dari 3 kelompok yang mengisi')->assertDontSee('sesuai filter');
+    $response->assertSee('Total kelompok')->assertSee('diisi 2 dari 3 kelompok')->assertDontSee('sesuai filter');
 });
 
 test('kartu ringkasan mengikuti filter dan diberi keterangan "sesuai filter"', function () {

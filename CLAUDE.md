@@ -261,7 +261,7 @@ Jangan mengarang kepanjangan akronim resmi (KDMP, KNMP, dsb.). Simpan apa adanya
 - Kolom angka laporan nullable. `NULL` = tidak diketahui/tidak diisi. `0` = nol yang dikonfirmasi.
   Jangan pernah mengubah NULL menjadi 0.
 - Saat menjumlahkan, tampilkan keterangan bila sebagian data kosong
-  (mis. "dari 18 dari 25 kelompok yang mengisi").
+  (mis. "diisi 18 dari 25 kelompok").
 - Jangan menjumlahkan produksi dengan satuan berbeda. Kelompokkan per produk + satuan
   (keduanya dibandingkan `LOWER(TRIM(...))`).
 - Statistik resmi di dasbor hanya dari laporan berstatus `verified`.
@@ -603,8 +603,8 @@ Pengecualian dari Larangan untuk area Admin/OPD/Kelompok (menyesuaikan referensi
 - Label pil (`x-tag`) untuk jenis dan bidang usaha di banner detail kelompok.
 
 ### Daftar dan detail kelompok
-- Daftar (Admin/OPD): 4 kartu ringkasan (total kelompok, kampung, bidang usaha, total anggota + "dari X
-  yang mengisi") yang mengikuti filter aktif dengan keterangan "sesuai filter"; kartu filter berlabel
+- Daftar (Admin/OPD): 4 kartu ringkasan (total kelompok, kampung, bidang usaha, total anggota + "diisi X
+  dari Y kelompok") yang mengikuti filter aktif dengan keterangan "sesuai filter"; kartu filter berlabel
   dengan Terapkan/Reset (tidak langsung diterapkan); chip filter aktif; tabel + panel detail di kanan
   pada ≥ 1280px. Baris pertama atau `?pilih=id` dirender di server; klik baris memuat
   `/{area}/kelompok/{id}/ringkas` (Policy `view`). Layar lebih kecil membuka halaman detail.

@@ -46,7 +46,7 @@ test('dasbor admin: perhatian, progres per OPD, kelompok, dan ekonomi resmi', fu
         ->assertSee('3')
         ->assertSee('kelompok terdaftar')
         ->assertSee('Rp 1.250.000')
-        ->assertSee('dari 1 dari 1 laporan yang mengisi')
+        ->assertSee('diisi 1 dari 1 laporan')
         ->assertSee('Belum ada yang mengisi')
         ->assertSee('Kakao kering')
         ->assertSee('12,5 kg');

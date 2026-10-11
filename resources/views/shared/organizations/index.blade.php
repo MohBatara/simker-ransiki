@@ -41,16 +41,19 @@
         $scopeHint = $filtered ? 'sesuai filter' : null;
         $membersHint = $totals['members'] === null
             ? 'belum ada yang mengisi'
-            : 'dari '.$totals['members_filled'].' dari '.$totals['organizations'].' kelompok yang mengisi';
+            : 'diisi '.$totals['members_filled'].' dari '.$totals['organizations'].' kelompok';
     @endphp
 
     <div class="space-y-5">
         {{-- Kartu ringkasan: mengikuti filter yang aktif agar sama dengan isi tabel. --}}
+        @if ($filtered)
+            <p class="-mb-2 text-caption text-ink-muted md:hidden">Ringkasan sesuai filter.</p>
+        @endif
         <div class="grid grid-cols-2 gap-3 md:gap-4 xl:grid-cols-4">
-            <x-stat icon="user-group" label="Total kelompok" :value="App\Support\Format::number($totals['organizations'])" :hint="$scopeHint" href="#daftar-kelompok" />
-            <x-stat icon="map-pin" label="Kampung" :value="App\Support\Format::number($totals['villages'])" :hint="$scopeHint" :href="$isOpd ? null : route('admin.master.items', 'kampung')" />
-            <x-stat icon="squares-2x2" label="Bidang usaha" :value="App\Support\Format::number($totals['sectors'])" :hint="$scopeHint" :href="$isOpd ? null : route('admin.master.items', 'bidang-usaha')" />
-            <x-stat icon="users" label="Total anggota" :value="App\Support\Format::number($totals['members'])" :hint="collect([$membersHint, $scopeHint])->filter()->join(', ')" />
+            <x-stat icon="user-group" label="Total kelompok" :value="App\Support\Format::number($totals['organizations'])" :hint-md="$scopeHint" href="#daftar-kelompok" />
+            <x-stat icon="map-pin" label="Kampung" :value="App\Support\Format::number($totals['villages'])" :hint-md="$scopeHint" :href="$isOpd ? null : route('admin.master.items', 'kampung')" />
+            <x-stat icon="squares-2x2" label="Bidang usaha" :value="App\Support\Format::number($totals['sectors'])" :hint-md="$scopeHint" :href="$isOpd ? null : route('admin.master.items', 'bidang-usaha')" />
+            <x-stat icon="users" label="Total anggota" :value="App\Support\Format::number($totals['members'])" :hint="$membersHint" :hint-md="$scopeHint" />
         </div>
 
         {{-- Kartu filter: dipilih dulu, lalu Terapkan (hemat muat ulang di koneksi lambat). --}}

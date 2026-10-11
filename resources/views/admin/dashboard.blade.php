@@ -133,7 +133,7 @@
                                         @if ($total['filled'] === 0)
                                             Belum ada yang mengisi
                                         @else
-                                            dari {{ $total['filled'] }} dari {{ $economy['reports'] }} laporan yang mengisi
+                                            diisi {{ $total['filled'] }} dari {{ $economy['reports'] }} laporan
                                         @endif
                                     </span>
                                 </dt>
@@ -165,7 +165,7 @@
                                         @else
                                             {{ Format::quantity($row['quantity']) }} {{ $row['unit'] }}
                                             @if ($row['filled'] < $row['organizations'])
-                                                <span class="block text-caption text-ink-muted">dari {{ $row['filled'] }} yang mengisi</span>
+                                                <span class="block text-caption text-ink-muted">diisi {{ $row['filled'] }} dari {{ $row['organizations'] }} kelompok</span>
                                             @endif
                                         @endif
                                     </x-table.cell>

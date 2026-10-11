@@ -6,7 +6,7 @@
                 <div x-cloak x-show="revenueTotal.count" class="flex flex-wrap items-center gap-x-3 gap-y-1 text-caption text-ink-soft">
                     <span>
                         Jumlah pendapatan per produk: <span class="tabular-nums" x-text="revenueTotalText"></span>
-                        <span x-show="revenueTotal.count < data.items.length" x-text="`(dari ${revenueTotal.count} dari ${data.items.length} produk yang diisi)`"></span>
+                        <span x-show="revenueTotal.count < data.items.length" x-text="`(diisi ${revenueTotal.count} dari ${data.items.length} produk)`"></span>
                     </span>
                     <x-link x-on:click="useRevenueTotal()">Pakai jumlah ini</x-link>
                 </div>
