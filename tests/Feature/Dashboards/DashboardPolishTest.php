@@ -30,7 +30,7 @@ test('dasbor kelompok memakai nama kelompok sebagai judul dengan keterangan Dasb
 
     $this->actingAs(User::factory()->kelompok($organization)->create())->get('/kelompok')
         ->assertOk()
-        ->assertSeeInOrder(['<p class="text-caption text-ink-soft max-md:hidden">Dasbor</p>', '<h1 class="text-page-title font-semibold text-ink max-md:sr-only">KUB Judul Contoh</h1>'], false)
+        ->assertSeeInOrder(['>Dasbor</p>', '>KUB Judul Contoh</h1>'], false)
         ->assertSee('<title>KUB Judul Contoh', false);
 });
 

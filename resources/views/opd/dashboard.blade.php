@@ -1,7 +1,7 @@
 @use('App\Support\Format')
 @use('App\Support\Dashboards\ReportingPeriod')
 
-<x-layouts.app :title="$user->opd->name" eyebrow="Dasbor">
+<x-layouts.app :title="$user->opd->name" eyebrow="Dasbor" :banner="$banner">
     <x-slot:actions>
         @include('shared.dashboards.period-picker')
     </x-slot:actions>

@@ -175,7 +175,8 @@ test('pita judul profil kelompok berlatar forest polos tanpa foto', function () 
 
 test('token warna publik tidak dipakai di area Admin, OPD, dan Kelompok', function () {
     // Halaman masuk (layouts/auth) memakai panel forest atas permintaan; pengecualian tercatat di CLAUDE.md Bagian 7.
-    $publicViews = ['publik/', 'components/layouts/public.blade.php', 'components/public/', 'components/layouts/auth.blade.php'];
+    // Pita/banner forest di header area aplikasi (components/page-header) juga pengecualian Bagian 7.
+    $publicViews = ['publik/', 'components/layouts/public.blade.php', 'components/public/', 'components/layouts/auth.blade.php', 'components/page-header.blade.php'];
     $offenders = collect(Finder::create()->files()->in(resource_path('views'))->name('*.blade.php'))
         ->filter(fn ($file) => ! collect($publicViews)->contains(fn ($prefix) => str_starts_with($file->getRelativePathname(), $prefix)))
         ->filter(fn ($file) => preg_match('/\b[a-z:-]*(bg|text|border|ring|outline|divide|from|to|via)-(forest|sun)\b/', $file->getContents()))

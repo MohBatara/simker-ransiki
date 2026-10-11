@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Organization;
+use App\Support\BannerImage;
 use App\Support\Dashboards\DistrictStats;
 use App\Support\Dashboards\ReportingPeriod;
 use App\Support\Dashboards\ReportingStats;
@@ -21,6 +22,7 @@ class DashboardController extends Controller
         $stats = new ReportingStats($request->user(), $period);
 
         return view('admin.dashboard', [
+            'banner' => BannerImage::cover(),
             'period' => $period,
             'periods' => ReportingPeriod::options($earliest),
             'attention' => $district->attention(),

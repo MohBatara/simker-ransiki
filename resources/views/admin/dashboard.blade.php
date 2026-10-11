@@ -19,7 +19,7 @@
     ];
 @endphp
 
-<x-layouts.app title="Distrik Ransiki" eyebrow="Dasbor">
+<x-layouts.app title="Distrik Ransiki" eyebrow="Dasbor" :banner="$banner">
     <x-slot:actions>
         @include('shared.dashboards.period-picker')
     </x-slot:actions>

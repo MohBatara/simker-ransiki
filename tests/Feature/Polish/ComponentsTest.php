@@ -7,7 +7,7 @@ test('x-link: tautan berdiri sendiri setinggi 44px di HP; di dalam kalimat berga
     $inline = Blade::render('<x-link href="/a" inline>Produk</x-link>');
     $button = Blade::render('<x-link x-on:click="go()">Pakai jumlah ini</x-link>');
 
-    expect($standalone)->toContain('<a href="/a"')->toContain('min-h-11')->toContain('md:min-h-0')->not->toContain('underline')
+    expect($standalone)->toContain('<a href="/a"')->toContain('min-h-11')->toContain('md:min-h-0')->not->toContain('underline underline-offset-2')
         ->and($inline)->toContain('underline')->not->toContain('min-h-11')
         ->and($button)->toContain('<button type="button"');
 });

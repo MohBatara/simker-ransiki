@@ -2,6 +2,7 @@
 
 namespace App\Support;
 
+use App\Models\BusinessSector;
 use App\Models\Product;
 use App\Models\SiteSetting;
 
@@ -27,6 +28,12 @@ class PublicImages
             'product' => (new Product(['photo_path' => $sector->photo['path']]))->forceFill(['id' => $sector->photo['id']])->photoSources(),
             default => null,
         };
+    }
+
+    /** Foto bidang usaha dari Konten Website (route publik), atau null bila belum ada. */
+    public static function sectorPhoto(BusinessSector $sector): ?array
+    {
+        return $sector->photo_path ? self::wide(fn (array $query) => route('public.sector-photo', ['sector' => $sector->id, ...$query]), $sector->photo_path) : null;
     }
 
     private static function wide(callable $url, string $jpegPath): array

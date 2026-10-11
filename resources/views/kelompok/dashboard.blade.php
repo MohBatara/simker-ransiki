@@ -8,7 +8,7 @@
     $showCurrent = $current['allowed'] && $canCreate && (! $due || $dueSubmitted || $current['report']);
 @endphp
 
-<x-layouts.app :title="$organization->name" eyebrow="Dasbor">
+<x-layouts.app :title="$organization->name" eyebrow="Dasbor" :banner="$banner">
     <div class="grid gap-5 lg:grid-cols-[minmax(0,1fr)_320px] lg:items-start">
         {{-- Kartu utama: apa yang perlu dilakukan untuk bulan wajib lapor --}}
         <x-card :title="$due ? 'Laporan '.Format::month($due['period']) : 'Laporan bulanan'" class="lg:col-start-1">

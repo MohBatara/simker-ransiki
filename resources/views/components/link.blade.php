@@ -17,6 +17,8 @@
         'underline underline-offset-2' => $inline,
         'text-brand hover:text-brand-hover' => ! $muted,
         'text-ink-soft hover:text-ink' => $muted,
+        // Di pita/banner forest warna brand tidak terbaca; putih bergaris bawah.
+        'md:in-[.app-band]:text-paper md:in-[.app-band]:underline in-[.app-band-photo]:text-paper in-[.app-band-photo]:underline',
     ];
 @endphp
 

@@ -7,32 +7,63 @@
     'breadcrumbs' => null,
     // Dipakai layout app: di HP judul dan tombol kembali sudah ada di header atas.
     'condensed' => false,
+    // Pita forest polos mulai tablet (di HP tetap putih). Bagian 7: hanya area aplikasi, bukan halaman form.
+    'band' => false,
+    // Banner foto (['webp' => [...], 'fallback' => url], lihat App\Support\BannerImage): dasbor dan detail kelompok.
+    'image' => null,
 ])
 
+{{--
+    Header halaman. Isi slot (aksi, meta, badge) menyesuaikan warna lewat varian in-[.app-band] (pita, mulai
+    tablet) dan in-[.app-band-photo] (banner foto, semua ukuran). Lihat x-button, x-link, x-breadcrumbs.
+--}}
+@php
+    $mode = $image ? 'photo' : ($band ? 'band' : 'plain');
+    $soft = match ($mode) {
+        'photo' => 'text-paper/85',
+        'band' => 'text-ink-soft md:text-paper/85',
+        default => 'text-ink-soft',
+    };
+    $strong = match ($mode) {
+        'photo' => 'text-paper',
+        'band' => 'text-ink md:text-paper',
+        default => 'text-ink',
+    };
+    $hideOnPhone = $condensed && $mode !== 'photo';
+@endphp
+
 <div {{ $attributes->class([
-    'flex flex-col gap-4 md:flex-row md:items-end md:justify-between',
-    'max-md:hidden' => $condensed && ! $description && ! isset($actions) && ! isset($badge) && ! isset($meta),
+    'relative isolate flex flex-col gap-4 md:flex-row md:justify-between',
+    'md:items-end' => $mode !== 'photo',
+    'max-md:hidden' => $hideOnPhone && ! $description && ! isset($actions) && ! isset($badge) && ! isset($meta),
+    'app-band md:overflow-hidden md:rounded-card md:bg-forest md:px-6 md:py-6 xl:px-8' => $mode === 'band',
+    'app-band-photo min-h-40 overflow-hidden rounded-card bg-forest px-4 py-5 md:min-h-52 md:items-start md:px-6 md:py-8 xl:px-8' => $mode === 'photo',
 ]) }}>
-    <div class="min-w-0">
+    @if ($mode === 'photo')
+        <x-public.picture :image="$image" alt="" eager sizes="(min-width: 80rem) 1100px, 100vw" width="1600" height="400" frame="absolute inset-0 -z-20 block size-full" class="size-full object-cover" />
+        <div class="overlay-forest absolute inset-0 -z-10" aria-hidden="true"></div>
+    @endif
+
+    <div class="min-w-0 md:max-w-[60%]">
         @if ($breadcrumbs)
             <x-breadcrumbs :items="$breadcrumbs" class="mb-2" />
         @elseif ($back)
-            <a href="{{ $back }}" @class(['mb-2 inline-flex items-center gap-1 rounded-control text-caption text-ink-soft hover:text-ink', 'max-md:hidden' => $condensed])>
+            <a href="{{ $back }}" @class(['mb-2 inline-flex items-center gap-1 rounded-control text-caption hover:underline', $soft, 'max-md:hidden' => $condensed])>
                 <x-heroicon-o-arrow-left class="size-4" />
                 Kembali
             </a>
         @endif
         @if ($eyebrow)
-            <p @class(['text-caption text-ink-soft', 'max-md:hidden' => $condensed])>{{ $eyebrow }}</p>
+            <p @class(['text-caption', $soft, 'max-md:hidden' => $hideOnPhone])>{{ $eyebrow }}</p>
         @endif
         <div class="flex flex-wrap items-center gap-x-3 gap-y-1">
-            <h1 @class(['text-page-title font-semibold text-ink', 'max-md:sr-only' => $condensed])>{{ $title }}</h1>
+            <h1 @class(['text-page-title font-semibold', $strong, 'max-md:sr-only' => $hideOnPhone])>{{ $title }}</h1>
             @isset($badge)
                 {{ $badge }}
             @endisset
         </div>
         @if ($description)
-            <p class="mt-1 text-ui text-ink-soft">{{ $description }}</p>
+            <p @class(['mt-1 text-ui', $soft])>{{ $description }}</p>
         @endif
         @isset($meta)
             <div class="mt-3">{{ $meta }}</div>

@@ -6,6 +6,8 @@
     'back' => null,
     // Remah halaman bertingkat (desktop). Di HP tetap tombol kembali ke $back.
     'breadcrumbs' => null,
+    // Banner foto (App\Support\BannerImage) untuk dasbor dan detail kelompok; halaman lain pita forest polos.
+    'banner' => null,
     // Item: ['label', 'href', 'icon' (Heroicons outline), 'short' (label ringkas), 'active', 'primary' (tampil di navigasi bawah HP)]
     // Kosongkan agar diambil otomatis dari peran pengguna yang login (App\Support\Navigation).
     'navigation' => null,
@@ -190,7 +192,7 @@
             'pb-8' => $focus,
         ])>
             <div class="flex items-start gap-3">
-                <x-page-header class="min-w-0 flex-1" :title="$title" :description="$description" :eyebrow="$eyebrow" :back="$back" :breadcrumbs="$breadcrumbs" condensed>
+                <x-page-header class="min-w-0 flex-1" :title="$title" :description="$description" :eyebrow="$eyebrow" :back="$back" :breadcrumbs="$breadcrumbs" :band="! $focus" :image="$banner" condensed>
                     @isset($actions)
                         <x-slot:actions>{{ $actions }}</x-slot:actions>
                     @endisset

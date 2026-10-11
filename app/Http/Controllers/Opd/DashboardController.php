@@ -6,6 +6,7 @@ use App\Enums\ReportStatus;
 use App\Http\Controllers\Controller;
 use App\Models\MonthlyReport;
 use App\Models\Organization;
+use App\Support\BannerImage;
 use App\Support\Dashboards\DistrictStats;
 use App\Support\Dashboards\ReportingPeriod;
 use App\Support\Dashboards\ReportingStats;
@@ -26,6 +27,7 @@ class DashboardController extends Controller
 
         return view('opd.dashboard', [
             'user' => $user,
+            'banner' => BannerImage::cover(),
             'period' => $period,
             'periods' => ReportingPeriod::options($earliest),
             'waitingCount' => (clone $waiting)->count(),
