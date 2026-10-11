@@ -16,24 +16,7 @@ beforeEach(function () {
     $this->organization = Organization::factory()->create();
 });
 
-function productWithPhoto(Organization $organization, int $width, int $height): Product
-{
-    $product = Product::factory()->for($organization)->create(['photo_path' => 'products/'.uniqid().'.jpg']);
-    Storage::disk(Product::PHOTO_DISK)->put($product->photo_path, imageBytes($width, $height));
-    Storage::disk(Product::PHOTO_DISK)->put($product->thumbnailPath(), imageBytes((int) ($width / 4), (int) ($height / 4)));
-
-    return $product;
-}
-
-test('banner detail kelompok: foto produk mendatar lebih dulu', function () {
-    productWithPhoto($this->organization, 300, 400);
-    $landscape = productWithPhoto($this->organization, 800, 400);
-
-    expect(BannerImage::forOrganization($this->organization)['fallback'])->toContain('/foto-produk/'.$landscape->id);
-});
-
-test('foto produk tegak dilewati: foto bidang usaha, lalu foto sampul, lalu tanpa gambar', function () {
-    productWithPhoto($this->organization, 300, 400);
+test('banner kelompok: foto bidang usaha, lalu foto sampul, lalu tanpa gambar', function () {
     $sector = BusinessSector::factory()->create(['photo_path' => 'site/bidang.jpg']);
 
     expect(BannerImage::forOrganization($this->organization))->toBeNull();
@@ -43,6 +26,17 @@ test('foto produk tegak dilewati: foto bidang usaha, lalu foto sampul, lalu tanp
 
     $this->organization->sectors()->attach($sector);
     expect(BannerImage::forOrganization($this->organization)['fallback'])->toContain('/foto-bidang/'.$sector->id);
+});
+
+test('foto produk tidak pernah dipakai sebagai latar banner', function () {
+    $product = Product::factory()->for($this->organization)->create(['photo_path' => 'products/mendatar.jpg']);
+    Storage::disk(Product::PHOTO_DISK)->put($product->photo_path, imageBytes(800, 400));
+
+    expect(BannerImage::forOrganization($this->organization))->toBeNull();
+
+    SiteSetting::put(['cover_photo_path' => 'site/sampul.jpg']);
+    expect(BannerImage::forOrganization($this->organization)['fallback'])->toContain('/foto-sampul')
+        ->not->toContain('/foto-produk/');
 });
 
 test('pita forest di halaman biasa mulai tablet, bukan di halaman form', function () {

@@ -590,8 +590,8 @@ Pengecualian dari Larangan untuk area Admin/OPD/Kelompok (menyesuaikan referensi
   tetap putih. Banner foto + `.overlay-forest` HANYA di dasbor, detail kelompok, dan Profil Kelompok,
   di semua ukuran. Semua lewat `x-page-header` (prop `band` dari layout, `image` = prop `banner`).
 - Sumber foto banner (`App\Support\BannerImage`, hanya varian terkompres): dasbor = foto sampul;
-  kelompok = foto produk yang mendatar (lebar > tinggi, dibaca dari versi kecil dan di-cache) → foto
-  bidang usaha (Konten Website) → foto sampul → pita polos.
+  kelompok = HANYA foto kurasi Admin: foto bidang usaha (Konten Website) → foto sampul → pita polos.
+  Foto produk/lampiran tidak pernah menjadi latar banner (tetap tampil di kartu Foto dan panel detail).
 - Di dalam pita/banner, komponen menyesuaikan warna lewat varian `in-[.app-band]` (mulai tablet) dan
   `in-[.app-band-photo]`: tombol utama putih, sekunder/ghost bergaris/teks putih, tautan putih bergaris
   bawah, remah putih 85%. Cincin fokus `sun`. Token `forest` hanya di `components/page-header` (dijaga tes).
