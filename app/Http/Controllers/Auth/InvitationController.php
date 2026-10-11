@@ -23,7 +23,7 @@ class InvitationController extends Controller
             return view('auth.invitation-invalid', ['message' => $problem]);
         }
 
-        return view('auth.invitation', ['user' => $user]);
+        return view('auth.invitation', ['user' => $user, 'current' => $request->user()]);
     }
 
     public function store(NewPasswordRequest $request, User $user, string $token): RedirectResponse|View
@@ -39,6 +39,13 @@ class InvitationController extends Controller
             'email_verified_at' => $user->email_verified_at ?? now(),
             'last_login_at' => now(),
         ])->save();
+
+        // Browser yang sedang masuk dengan akun lain (mis. Admin yang menguji) dikeluarkan dulu.
+        if (Auth::check()) {
+            Auth::guard('web')->logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+        }
 
         Auth::login($user);
         $request->session()->regenerate();

@@ -2,6 +2,10 @@
     <h1 class="text-page-title font-semibold text-ink">Buat kata sandi</h1>
     <p class="mt-1 text-ink-soft">Halo {{ $user->name }}. Buat kata sandi untuk akun <strong class="font-semibold text-ink">{{ $user->username }}</strong>.</p>
 
+    @if ($current && ! $current->is($user))
+        <x-alert tone="wait" class="mt-6">Browser ini sedang masuk sebagai {{ $current->name }}. Saat kata sandi disimpan, akun itu dikeluarkan.</x-alert>
+    @endif
+
     <form method="POST" action="{{ request()->fullUrl() }}" class="mt-6 space-y-4">
         @csrf
         <x-form-errors />

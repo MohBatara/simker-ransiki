@@ -105,3 +105,14 @@ test('tanda tangan URL undangan tetap memeriksa token yang tersimpan', function 
     $forged = URL::temporarySignedRoute('invitation.show', now()->addHour(), ['user' => $user->id, 'token' => 'token-palsu']);
     $this->get($forged)->assertSee('Undangan tidak berlaku');
 });
+
+test('tautan undangan bisa dibuka di browser yang sedang masuk sebagai Admin; Admin dikeluarkan saat disimpan', function () {
+    [$user, $url] = inviteUser($this);
+
+    $this->actingAs($this->admin)->get($url)
+        ->assertOk()->assertSee('Buat kata sandi')->assertSee('Browser ini sedang masuk sebagai '.$this->admin->name);
+
+    $this->post($url, ['password' => 'rahasia-baru-1', 'password_confirmation' => 'rahasia-baru-1'])
+        ->assertRedirect(route('kelompok.dashboard'));
+    $this->assertAuthenticatedAs($user);
+});

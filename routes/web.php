@@ -33,20 +33,20 @@ Route::get('/foto-produk/{product}', [Shared\ProductPhotoController::class, 'sho
 Route::middleware('guest')->group(function () {
     Route::get('/login', [LoginController::class, 'create'])->name('login');
     Route::post('/login', [LoginController::class, 'store']);
+    Route::get('/lupa-kata-sandi', [PasswordResetController::class, 'create'])->name('password.request');
+    Route::post('/lupa-kata-sandi', [PasswordResetController::class, 'store'])->name('password.email')->middleware('throttle:password-reset');
+});
 
-    Route::controller(PasswordResetController::class)->group(function () {
-        Route::get('/lupa-kata-sandi', 'create')->name('password.request');
-        Route::post('/lupa-kata-sandi', 'store')->name('password.email')->middleware('throttle:password-reset');
-        Route::get('/atur-ulang-kata-sandi/{token}', 'edit')->name('password.reset');
-        Route::post('/atur-ulang-kata-sandi', 'update')->name('password.update')->middleware('throttle:10,1');
-    });
+// Tautan dari email (atur ulang kata sandi, undangan) tidak memakai "guest": bisa dibuka di browser yang sedang
+// masuk dengan akun lain (mis. Admin yang menguji). Akun itu dikeluarkan saat kata sandi baru disimpan.
+Route::get('/atur-ulang-kata-sandi/{token}', [PasswordResetController::class, 'edit'])->name('password.reset');
+Route::post('/atur-ulang-kata-sandi', [PasswordResetController::class, 'update'])->name('password.update')->middleware('throttle:10,1');
 
-    // Undangan akun dari email (tautan bertanda tangan, sekali pakai). Tanda tangan dicek di controller
-    // agar tautan kedaluwarsa mendapat halaman penjelasan, bukan 403.
-    Route::controller(InvitationController::class)->prefix('undangan/{user}/{token}')->whereNumber('user')->group(function () {
-        Route::get('/', 'show')->name('invitation.show');
-        Route::post('/', 'store')->name('invitation.store')->middleware('throttle:10,1');
-    });
+// Undangan akun (tautan bertanda tangan, sekali pakai). Tanda tangan dicek di controller agar tautan
+// kedaluwarsa mendapat halaman penjelasan, bukan 403.
+Route::controller(InvitationController::class)->prefix('undangan/{user}/{token}')->whereNumber('user')->group(function () {
+    Route::get('/', 'show')->name('invitation.show');
+    Route::post('/', 'store')->name('invitation.store')->middleware('throttle:10,1');
 });
 
 /**

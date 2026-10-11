@@ -9,6 +9,7 @@ use App\Support\PublicImages;
 use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Str;
@@ -39,7 +40,7 @@ class PasswordResetController extends Controller
 
     public function edit(Request $request, string $token): View
     {
-        return view('auth.reset-password', ['token' => $token, 'email' => (string) $request->query('email'), ...$this->cover()]);
+        return view('auth.reset-password', ['token' => $token, 'email' => (string) $request->query('email'), 'current' => $request->user(), ...$this->cover()]);
     }
 
     public function update(NewPasswordRequest $request): RedirectResponse
@@ -73,6 +74,13 @@ class PasswordResetController extends Controller
         if ($status !== Password::PASSWORD_RESET) {
             return back()->withInput($request->only('email'))
                 ->withErrors(['email' => 'Tautan atur ulang tidak berlaku atau sudah kedaluwarsa. Minta tautan baru.']);
+        }
+
+        // Akun lain yang masih masuk di browser ini dikeluarkan, agar halaman masuk bisa dibuka.
+        if (Auth::check()) {
+            Auth::guard('web')->logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
         }
 
         return redirect()->route('login')->with('status', 'Kata sandi diperbarui. Masuk dengan kata sandi baru.');
