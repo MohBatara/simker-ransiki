@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Publik;
 
 use App\Http\Controllers\Controller;
+use App\Enums\HeroFocus;
+use App\Models\HeroSlide;
 use App\Models\Post;
 use App\Models\Product;
 use App\Models\SiteSetting;
@@ -21,15 +23,12 @@ class HomeController extends Controller
 
     public function __invoke(): View
     {
-        $settings = SiteSetting::values();
-        $sectors = PublicDirectory::sectors();
-
         return view('publik.home', [
             'stats' => PublicDirectory::stats(),
-            'sectors' => $sectors,
+            'sectors' => PublicDirectory::sectors(),
             'types' => PublicDirectory::institutionTypes(),
-            'settings' => $settings,
-            'slides' => $this->slides($settings, $sectors),
+            'settings' => SiteSetting::values(),
+            'slides' => $this->slides(),
             'about' => PublicImages::slot('tentang') ?? PublicImages::slot('sampul'),
             'posts' => Post::query()->publiclyListed()->latest('published_at')->latest('id')->limit(self::POST_LIMIT)->get(PostController::COLUMNS),
             'featured' => $this->featured(),
@@ -37,29 +36,26 @@ class HomeController extends Controller
     }
 
     /**
-     * Foto hero (maks 3), hanya foto kurasi Admin: foto sampul, lalu foto bidang usaha dari Konten Website.
+     * Slide hero yang diatur Admin (maks 3, urut posisi). Belum ada yang aktif: satu foto bawaan dari repo,
+     * tidak pernah foto produk kelompok.
      *
-     * @return list<array{image: array, alt: string, caption: ?string}>
+     * @return list<array{image: array, alt: string, caption: ?string, focus: string}>
      */
-    private function slides(array $settings, Collection $sectors): array
+    private function slides(): array
     {
-        // "Panen kakao." + "Nama" → "Panen kakao · Foto: Nama" (titik akhir keterangan dibuang).
-        $coverCaption = collect([
-            $settings['cover_credit'] ? rtrim((string) $settings['cover_caption'], '. ') : $settings['cover_caption'],
-            $settings['cover_credit'] ? 'Foto: '.$settings['cover_credit'] : null,
-        ])->filter()->join(' · ');
+        $slides = HeroSlide::query()->shown()->get()->map(fn (HeroSlide $slide) => [
+            'image' => PublicImages::hero($slide),
+            'alt' => $slide->alt_text,
+            'caption' => $slide->caption,
+            'focus' => $slide->focus->objectPosition(),
+        ]);
 
-        $cover = PublicImages::slot('sampul');
-
-        return collect($cover ? [['image' => $cover, 'alt' => (string) $settings['cover_caption'], 'caption' => $coverCaption ?: null]] : [])
-            ->concat($sectors->filter(fn ($sector) => ($sector->photo['kind'] ?? null) === 'sector')->map(fn ($sector) => [
-                'image' => PublicImages::sector($sector),
-                'alt' => 'Bidang usaha '.mb_strtolower($sector->name),
-                'caption' => 'Bidang usaha '.mb_strtolower($sector->name),
-            ]))
-            ->take(self::SLIDE_LIMIT)
-            ->values()
-            ->all();
+        return $slides->isNotEmpty() ? $slides->all() : [[
+            'image' => PublicImages::heroDefault(),
+            'alt' => 'Pemandangan pesisir berbukit dengan pohon kakao berbuah di tepi kanan.',
+            'caption' => null,
+            'focus' => HeroFocus::Center->objectPosition(),
+        ]];
     }
 
     /**

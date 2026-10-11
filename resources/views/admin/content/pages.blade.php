@@ -1,8 +1,9 @@
 <x-layouts.app title="Konten Website" description="Teks dan foto yang tampil di website publik." :back="route('admin.dashboard')" focus>
     <div class="space-y-5">
+        @include('admin.content._tabs', ['active' => 'halaman'])
+
         @foreach ([
-            'sampul' => ['Foto sampul', 'Opsional. Latar hero beranda dan pita Profil Ransiki. Gunakan foto lanskap asli Ransiki, bukan infografis atau gambar berisi teks.'],
-            'tentang' => ['Foto bagian Tentang', 'Opsional. Tampil di samping ringkasan profil pada bagian gelap beranda.'],
+            'sampul' => ['Foto sampul', 'Opsional. Latar pita Profil Ransiki, halaman masuk, dan banner dasbor. Foto hero beranda diatur di tab Beranda. Gunakan foto lanskap asli Ransiki, bukan infografis atau gambar berisi teks.'],
         ] as $slot => [$title, $description])
             @php $path = $settings[App\Models\SiteSetting::PHOTO_SLOTS[$slot]]; @endphp
             <x-card :title="$title" :description="$description">
@@ -20,7 +21,7 @@
             </x-card>
         @endforeach
 
-        <x-card title="Foto bidang usaha" description="Opsional. Foto kartu bidang usaha di beranda. Bila kosong, dipakai foto produk dari bidang itu.">
+        <x-card title="Foto bidang usaha" description="Opsional. Dipakai di kartu produk unggulan yang belum punya foto, dan di banner detail kelompok.">
             <ul class="divide-y divide-line">
                 @foreach ($sectors as $sector)
                     <li class="space-y-3 py-4 first:pt-0 last:pb-0" x-data="{ open: false }">
@@ -62,12 +63,6 @@
                         <x-input name="cover_credit" :value="$settings['cover_credit']" maxlength="100" />
                     </x-field>
                 </div>
-            </x-card>
-
-            <x-card title="Beranda">
-                <x-field label="Pengantar beranda" for="home_intro" hint="Satu atau dua kalimat di bawah judul beranda. Maksimal 300 karakter." optional>
-                    <x-textarea name="home_intro" rows="3" maxlength="300" :value="$settings['home_intro']" />
-                </x-field>
             </x-card>
 
             <x-card title="Profil Ransiki" description="Bisa memakai format sederhana: ## Judul, - daftar, **tebal**, [teks](tautan). Pisahkan paragraf dengan satu baris kosong.">

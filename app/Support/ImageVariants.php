@@ -20,6 +20,13 @@ class ImageVariants
     /** Hero beranda 1600 px dibatasi sekitar 200 KB. */
     public const HERO_BUDGET = [1600 => 200 * 1024];
 
+    /** Slide hero beranda (Konten Website > Beranda); JPEG cadangan selebar varian terbesar. */
+    public const HERO = [640, 1280, 1920];
+
+    public const HERO_MAX_SIDE = 1920;
+
+    public const HERO_SLIDE_BUDGET = [1280 => 160 * 1024, 1920 => 260 * 1024];
+
     public static function webpSupported(): bool
     {
         return function_exists('imagewebp') && (bool) (imagetypes() & IMG_WEBP);
@@ -28,7 +35,7 @@ class ImageVariants
     /**
      * @param  array<int, int>  $budgets  lebar => batas byte; kualitas WebP diturunkan 70 → 50 sampai muat
      */
-    public static function store(string $disk, string $sourcePath, string $jpegPath, array $webpWidths, array $budgets = [], bool $writeJpeg = true): void
+    public static function store(string $disk, string $sourcePath, string $jpegPath, array $webpWidths, array $budgets = [], bool $writeJpeg = true, int $jpegMaxSide = ImageProcessor::MAX_SIDE): void
     {
         // Gambar didekode penuh di memori; batas 8000 px per sisi sudah dicek saat validasi.
         @ini_set('memory_limit', '512M');
@@ -37,7 +44,7 @@ class ImageVariants
         $storage = Storage::disk($disk);
 
         if ($writeJpeg) {
-            $storage->put($jpegPath, (string) (clone $image)->scaleDown(ImageProcessor::MAX_SIDE, ImageProcessor::MAX_SIDE)->toJpeg(quality: ImageProcessor::JPEG_QUALITY));
+            $storage->put($jpegPath, (string) (clone $image)->scaleDown($jpegMaxSide, $jpegMaxSide)->toJpeg(quality: ImageProcessor::JPEG_QUALITY));
         }
 
         if (! self::webpSupported()) {

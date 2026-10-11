@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\BusinessSector;
+use App\Models\HeroSlide;
 use App\Models\Organization;
 use App\Models\Product;
 use App\Models\SiteSetting;
@@ -37,16 +38,18 @@ function heroSection(string $html): string
     return $match[0] ?? '';
 }
 
-test('hero tanpa foto sampul memakai latar forest polos tanpa gambar', function () {
+test('hero tanpa slide memakai foto bawaan dengan overlay', function () {
     $hero = heroSection($this->get('/')->assertOk()->getContent());
 
-    expect($hero)->toContain('bg-forest')->not->toContain('<picture')->not->toContain('overlay-hero');
+    expect($hero)->toContain('/foto-hero/bawaan')->toContain('overlay-hero')->toContain('fetchpriority="high"');
 });
 
 test('hero dengan foto memakai WebP srcset, prioritas tinggi, dan overlay; gambar lain lazy-load', function () {
     $path = 'site/sampul-uji.jpg';
     ImageVariants::store('local', photoFile(2400, 1200), $path, ImageVariants::WIDE, ImageVariants::HERO_BUDGET);
-    SiteSetting::put(['cover_photo_path' => $path, 'about_photo_path' => $path, 'profile_body' => 'Profil contoh.']);
+    SiteSetting::put(['about_photo_path' => $path, 'profile_body' => 'Profil contoh.']);
+    $slide = HeroSlide::factory()->create(['position' => 1]);
+    HeroSlide::factory()->create(['position' => 2]);
     $organization = Organization::factory()->public()->create();
     $organization->sectors()->attach(BusinessSector::factory()->create());
     Product::factory()->for($organization)->create(['is_public' => true, 'is_featured' => true, 'photo_path' => 'products/1/a.jpg']);
@@ -55,7 +58,7 @@ test('hero dengan foto memakai WebP srcset, prioritas tinggi, dan overlay; gamba
     $hero = heroSection($html);
 
     expect($hero)->toContain('<source type="image/webp"')
-        ->toContain('/foto-sampul?ukuran=1600&amp;format=webp')
+        ->toContain("/foto-hero/{$slide->id}?ukuran=1920&amp;format=webp")
         ->toContain('fetchpriority="high"')
         ->toContain('overlay-hero');
 
@@ -111,8 +114,8 @@ test('kartu bidang usaha: foto bidang, lalu foto produk publik, lalu polos', fun
         ->and($photos['Bidang Produk'])->toMatchArray(['kind' => 'product', 'id' => $publicProduct->id])
         ->and($photos['Bidang Polos'])->toBeNull()
         ->and($hiddenProduct->id)->not->toBe($photos['Bidang Produk']['id']);
-    // Beranda: strip bidang usaha berikon; foto bidang dari Admin juga dipakai sebagai slide hero.
-    $this->get('/')->assertOk()->assertSee('Bidang Polos')->assertSee("/foto-bidang/{$withPhoto->id}?ukuran=480&amp;format=webp", false);
+    // Beranda: strip bidang usaha berikon, tanpa foto bidang (hero hanya dari slide Admin atau foto bawaan).
+    $this->get('/')->assertOk()->assertSee('Bidang Polos')->assertDontSee('/foto-bidang/', false);
 });
 
 test('admin mengunggah dan menghapus foto bidang usaha serta foto Tentang', function () {

@@ -2,13 +2,13 @@
 @use('App\Support\PublicIcons')
 
 @php
-    $intro = $settings['home_intro'] ?? 'Profil kelompok usaha, produk unggulan, dan kontak kelembagaan ekonomi di kampung-kampung Distrik Ransiki.';
+    $text = fn (string $key) => $settings[$key] ?? App\Models\SiteSetting::DEFAULTS[$key];
     // Strip bidang usaha: 5 bidang dengan kelompok terbanyak.
     $topSectors = $sectors->sortByDesc('organizations_count')->take(5)->values();
 @endphp
 
 <x-layouts.public :description="$settings['home_intro'] ?? 'Direktori kelompok dan kelembagaan ekonomi Distrik Ransiki: profil kelompok, produk, dan kontak.'">
-    {{-- Hero: foto kurasi Admin (maks 3) + overlay, atau forest polos bila belum ada foto. --}}
+    {{-- Hero: slide dari Admin (maks 3) + overlay; tanpa slide aktif, satu foto bawaan. --}}
     <section
         class="on-dark relative isolate overflow-hidden bg-forest text-paper"
         data-hero
@@ -32,19 +32,17 @@
                 @endif
             >
                 {{-- Foto pertama dimuat segera dengan prioritas tinggi; sisanya lazy. --}}
-                <x-public.picture :image="$slide['image']" :alt="$slide['alt']" :eager="$loop->first" sizes="100vw" width="1600" height="686" frame="block size-full" class="size-full object-cover" />
+                <x-public.picture :image="$slide['image']" :alt="$slide['alt']" :eager="$loop->first" sizes="100vw" width="1920" height="823" frame="block size-full" class="size-full object-cover {{ $slide['focus'] }}" />
             </div>
         @endforeach
-        @if ($slides)
-            <div class="overlay-hero absolute inset-0 -z-10" aria-hidden="true"></div>
-        @endif
+        <div class="overlay-hero absolute inset-0 -z-10" aria-hidden="true"></div>
 
         <div @class(['mx-auto flex min-h-[30rem] max-w-public flex-col justify-center px-4 pt-14 md:min-h-[36rem] md:px-6', 'pb-24 md:pb-36' => $topSectors->isNotEmpty(), 'pb-14' => $topSectors->isEmpty()])>
             {{-- Teks hanya di setengah kiri: di sana overlay paling tebal (sun 5,0:1, putih 9,1:1 terburuk). --}}
             <div class="max-w-xl md:max-w-[50%]">
                 <span class="block h-0.5 w-10 bg-sun" aria-hidden="true"></span>
-                <h1 class="mt-5 font-serif text-hero-sm font-semibold md:text-hero">Kelembagaan Ekonomi <span class="text-sun">Distrik Ransiki</span></h1>
-                <p class="mt-4 text-body text-paper">{{ $intro }}</p>
+                <h1 class="mt-5 font-serif text-hero-sm font-semibold md:text-hero">{{ $text('hero_title') }} <span class="text-sun">{{ $text('hero_title_accent') }}</span></h1>
+                <p class="mt-4 text-body text-paper">{{ $text('home_intro') }}</p>
                 <div class="mt-7 flex flex-wrap gap-3">
                     <x-public.button :href="route('public.directory')" arrow>Jelajahi direktori</x-public.button>
                     <x-public.button variant="outline" :href="route('public.products')" arrow>Produk unggulan</x-public.button>
@@ -98,7 +96,7 @@
                     @foreach ($topSectors as $sector)
                         <li class="w-44 shrink-0 snap-start lg:w-auto lg:flex-1">
                             <a href="{{ route('public.directory', ['bidang' => $sector->id]) }}" class="group flex h-full items-start gap-3 p-4 transition-colors hover:bg-subtle md:p-5">
-                                <x-dynamic-component :component="'heroicon-o-'.PublicIcons::sector($sector->name)" class="size-8 shrink-0 text-brand" aria-hidden="true" />
+                                <x-public.icon :name="PublicIcons::sector($sector->name)" class="size-8 shrink-0 text-brand" />
                                 <span class="min-w-0">
                                     <span class="block font-semibold text-ink group-hover:text-brand">{{ $sector->name }}</span>
                                     <span class="block text-caption text-ink-soft tabular-nums">{{ Format::number($sector->organizations_count) }} kelompok</span>

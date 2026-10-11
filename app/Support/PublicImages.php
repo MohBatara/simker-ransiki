@@ -3,6 +3,7 @@
 namespace App\Support;
 
 use App\Models\BusinessSector;
+use App\Models\HeroSlide;
 use App\Models\Product;
 use App\Models\SiteSetting;
 
@@ -36,12 +37,23 @@ class PublicImages
         return $sector->photo_path ? self::wide(fn (array $query) => route('public.sector-photo', ['sector' => $sector->id, ...$query]), $sector->photo_path) : null;
     }
 
-    private static function wide(callable $url, string $jpegPath): array
+    public static function hero(HeroSlide $slide): array
+    {
+        return self::wide(fn (array $query) => route('public.hero-photo', ['slide' => $slide->id, ...$query]), $slide->photo_path, ImageVariants::HERO);
+    }
+
+    /** Foto bawaan di resources/aset, selama Admin belum mengaktifkan slide. */
+    public static function heroDefault(): array
+    {
+        return self::wide(fn (array $query) => route('public.hero-default', $query), 'bawaan-1', ImageVariants::HERO);
+    }
+
+    private static function wide(callable $url, string $jpegPath, array $widths = ImageVariants::WIDE): array
     {
         $version = substr(md5($jpegPath), 0, 8);
 
         return [
-            'webp' => collect(ImageVariants::WIDE)->mapWithKeys(fn (int $width) => [$width => $url(['ukuran' => $width, 'format' => 'webp', 'v' => $version])])->all(),
+            'webp' => collect($widths)->mapWithKeys(fn (int $width) => [$width => $url(['ukuran' => $width, 'format' => 'webp', 'v' => $version])])->all(),
             'fallback' => $url(['v' => $version]),
         ];
     }

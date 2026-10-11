@@ -9,6 +9,7 @@ use App\Http\Controllers\Kelompok;
 use App\Http\Controllers\Opd;
 use App\Http\Controllers\Publik;
 use App\Http\Controllers\Shared;
+use App\Models\HeroSlide;
 use App\Models\Organization;
 use App\Models\User;
 use Illuminate\Support\Facades\Route;
@@ -24,6 +25,8 @@ Route::get('/berita/{slug}', [Publik\PostController::class, 'show'])->name('publ
 Route::get('/foto-berita/{post}', [Publik\PostController::class, 'photo'])->name('public.post-photo')->whereNumber('post');
 Route::get('/foto-{slot}', [Publik\SiteImageController::class, 'slot'])->name('public.site-photo')->whereIn('slot', ['sampul', 'tentang']);
 Route::get('/foto-bidang/{sector}', [Publik\SiteImageController::class, 'sector'])->name('public.sector-photo')->whereNumber('sector');
+Route::get('/foto-hero/bawaan', [Publik\SiteImageController::class, 'heroDefault'])->name('public.hero-default');
+Route::get('/foto-hero/{slide}', [Publik\SiteImageController::class, 'hero'])->name('public.hero-photo')->whereNumber('slide');
 Route::get('/sitemap.xml', [Publik\SitemapController::class, 'sitemap'])->name('sitemap');
 Route::get('/robots.txt', [Publik\SitemapController::class, 'robots'])->name('robots');
 
@@ -211,11 +214,21 @@ Route::middleware('auth')->group(function () use ($organizationRoutes, $reportRo
 
                 Route::controller(Admin\SiteContentController::class)->prefix('konten')->name('content.')->group(function () {
                     Route::get('/', 'edit')->name('edit');
+                    Route::get('/halaman', 'editPages')->name('pages');
                     Route::put('/', 'update')->name('update');
                     Route::post('/foto-{slot}', 'storePhoto')->name('photo.store')->whereIn('slot', ['sampul', 'tentang'])->middleware('throttle:uploads');
                     Route::delete('/foto-{slot}', 'destroyPhoto')->name('photo.destroy')->whereIn('slot', ['sampul', 'tentang']);
                     Route::post('/foto-bidang/{sector}', 'storeSectorPhoto')->name('sector-photo.store')->whereNumber('sector')->middleware('throttle:uploads');
                     Route::delete('/foto-bidang/{sector}', 'destroySectorPhoto')->name('sector-photo.destroy')->whereNumber('sector');
+                });
+
+                Route::controller(Admin\HeroSlideController::class)->prefix('konten/slide')->name('hero-slides.')->group(function () {
+                    Route::post('/', 'store')->name('store')->can('create', HeroSlide::class)->middleware('throttle:uploads');
+                    Route::whereNumber('slide')->group(function () {
+                        Route::post('/{slide}', 'update')->name('update')->can('update', 'slide')->middleware('throttle:uploads');
+                        Route::patch('/{slide}/{direction}', 'move')->name('move')->can('update', 'slide')->whereIn('direction', ['naik', 'turun']);
+                        Route::delete('/{slide}', 'destroy')->name('destroy')->can('delete', 'slide');
+                    });
                 });
 
                 Route::controller(Admin\PostController::class)->prefix('berita')->name('posts.')->group(function () {

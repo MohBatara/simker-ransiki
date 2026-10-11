@@ -7,6 +7,7 @@ use App\Http\Controllers\Publik\SiteImageController;
 use App\Http\Requests\Admin\SiteContentRequest;
 use App\Http\Requests\Admin\SiteImageRequest;
 use App\Models\BusinessSector;
+use App\Models\HeroSlide;
 use App\Models\SiteSetting;
 use App\Support\ImageVariants;
 use App\Support\PublicDirectory;
@@ -18,9 +19,19 @@ use Illuminate\View\View;
 
 class SiteContentController extends Controller
 {
+    /** Tab "Beranda": slide hero, judul + pengantar, foto bagian Tentang. */
     public function edit(): View
     {
-        return view('admin.content', [
+        return view('admin.content.home', [
+            'settings' => SiteSetting::values(),
+            'slides' => HeroSlide::orderBy('position')->orderBy('id')->get(),
+        ]);
+    }
+
+    /** Tab "Halaman & kontak": foto sampul, foto bidang usaha, Profil Ransiki, kontak kantor. */
+    public function editPages(): View
+    {
+        return view('admin.content.pages', [
             'settings' => SiteSetting::values(),
             'sectors' => BusinessSector::orderBy('name')->get(['id', 'name', 'photo_path']),
         ]);

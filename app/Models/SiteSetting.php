@@ -14,6 +14,8 @@ class SiteSetting extends Model
 {
     /** key => label; urutan ini juga urutan di form Konten Website. */
     public const KEYS = [
+        'hero_title' => 'Judul beranda',
+        'hero_title_accent' => 'Bagian judul berwarna',
         'home_intro' => 'Pengantar beranda',
         'profile_body' => 'Profil Ransiki',
         'economic_potential' => 'Potensi ekonomi',
@@ -26,6 +28,13 @@ class SiteSetting extends Model
         'cover_credit' => 'Nama fotografer',
         'cover_photo_path' => 'Foto sampul',
         'about_photo_path' => 'Foto bagian Tentang',
+    ];
+
+    /** Nilai bawaan bila Admin belum mengisi (atau mengosongkan) kuncinya. */
+    public const DEFAULTS = [
+        'hero_title' => 'Kelembagaan Ekonomi',
+        'hero_title_accent' => 'Distrik Ransiki',
+        'home_intro' => 'Profil kelompok usaha, produk unggulan, dan kontak kelembagaan ekonomi di kampung-kampung Distrik Ransiki.',
     ];
 
     /** Slot foto lebar di URL (/foto-sampul, /foto-tentang) => kunci pengaturan. */

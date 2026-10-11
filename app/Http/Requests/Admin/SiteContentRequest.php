@@ -16,6 +16,8 @@ class SiteContentRequest extends FormRequest
         $phone = ['nullable', 'string', 'max:30', 'regex:/^[0-9+\-\s()]+$/'];
 
         return [
+            'hero_title' => ['nullable', 'string', 'max:80'],
+            'hero_title_accent' => ['nullable', 'string', 'max:60'],
             'home_intro' => ['nullable', 'string', 'max:300'],
             'profile_body' => ['nullable', 'string', 'max:20000'],
             'economic_potential' => ['nullable', 'string', 'max:20000'],

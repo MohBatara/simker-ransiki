@@ -32,7 +32,10 @@ dengan file ini, ikuti pengguna lalu sarankan pembaruan file ini.
 - Blade + Tailwind CSS v4 (melalui Vite) + Alpine.js untuk interaksi kecil (dropdown, modal, tab,
   menu mobile). Tidak memakai Livewire, Filament, Inertia, React, atau Vue.
 - MySQL 8 melalui Laravel Sail (Docker), berjalan di Apple Silicon (arm64).
-- Ikon: satu set saja, Heroicons outline (paket `blade-ui-kit/blade-heroicons`).
+- Ikon: satu set saja, Heroicons outline (paket `blade-ui-kit/blade-heroicons`). Pengecualian: ikon bidang usaha di
+  website publik memakai SVG Lucide (ISC) yang disalin ke `resources/svg/lucide` (tanpa paket), garis 1,5 seperti
+  Heroicons, dirender `x-public.icon`. Pemetaan slug nama bidang → ikon di `config/simker.php` `public_icons`
+  (bidang tanpa entri = `default` kotak), dibaca `App\Support\PublicIcons`.
 - Font: Public Sans, dipasang lokal melalui npm `@fontsource-variable/public-sans` (tidak memakai
   Google Fonts CDN). Judul h1–h3 website publik: Source Serif 4 (600), lokal lewat
   `@fontsource-variable/source-serif-4` (token `font-serif`, khusus publik).
@@ -384,7 +387,16 @@ Jangan mengarang kepanjangan akronim resmi (KDMP, KNMP, dsb.). Simpan apa adanya
 - Tabel produksi di HP: kartu dengan nama tebal lalu "Jumlah: 1.384 ekor" dan "Kelompok: 5" (`x-table.cell inline`).
 
 ### Konten & notifikasi
-- `site_settings`: key, value. Kunci di `SiteSetting::KEYS`: home_intro, profile_body,
+- `hero_slides` (foto hero beranda, Konten Website > tab Beranda, maks `HeroSlide::MAX` = 3, Policy `HeroSlidePolicy`
+  hanya Admin): photo_path (JPEG 1920 tanpa EXIF; varian WebP 640/1280/1920 = `ImageVariants::HERO`; file asli tidak
+  disimpan), caption (≤ 100), alt_text (wajib), focus (enum HeroFocus atas/tengah/bawah → object-position), position,
+  is_active, created_by, updated_by. Unggah: JPG/PNG/WebP, maks 8 MB, lebar minimal 1600 px, form biasa (bukan XHR,
+  tidak diperkecil di browser) dengan pratinjau. Isian tiap form slide berawalan sendiri (`baru[...]`,
+  `slide_{id}[...]`). Foto: `GET /foto-hero/{id}` (slide nonaktif hanya Admin). Tanpa slide aktif: satu foto bawaan
+  `resources/aset/hero-bawaan*` (`/foto-hero/bawaan`, foto sementara; ganti dengan foto asli Ransiki), tidak pernah
+  foto produk kelompok.
+- `site_settings`: key, value. Kunci di `SiteSetting::KEYS`: hero_title, hero_title_accent, home_intro (bawaan di
+  `SiteSetting::DEFAULTS` bila kosong), profile_body,
   economic_potential (Markdown terbatas, dirender `Format::markdown` tanpa HTML mentah), office_address,
   office_phone, office_whatsapp, office_email, office_hours, cover_photo_path, cover_caption,
   cover_credit. Di-cache sampai disimpan ulang.
@@ -695,8 +707,8 @@ Berlaku HANYA untuk halaman publik (`resources/views/publik/`, `components/layou
 `components/public/`). Area Admin/OPD/Kelompok tetap memakai aturan di atas tanpa pengecualian.
 
 Pengecualian dari Larangan di atas, khusus publik:
-- Hero lebar penuh di beranda, HANYA dengan foto asli dari Konten Website (bukan foto stok). Tanpa
-  foto: latar `forest` polos. Pita judul halaman lain: `forest` polos; Profil Ransiki boleh berfoto.
+- Hero lebar penuh di beranda, HANYA dengan foto slide dari Konten Website (bukan foto stok). Tanpa
+  slide aktif: satu foto bawaan dari repo (sementara, sampai foto asli tersedia). Pita judul halaman lain: `forest` polos; Profil Ransiki boleh berfoto.
 - Gradasi diizinkan KHUSUS sebagai overlay foto (`.overlay-forest`): desktop forest 85% (0%) → 70%
   (50%) → 20% (100%); HP (< 768px) padat 70%. Teks hero hanya di setengah kiri. Kontras terburuk
   (teks putih di atas bagian foto yang putih) 5,5:1 di titik 50%; gradasi lurus 85%→20% gagal
@@ -713,7 +725,7 @@ Pengecualian dari Larangan di atas, khusus publik:
   `eyebrow`) berwarna `brand` + garis pendek `sun` (teks `sun` di latar terang tetap dilarang).
 - Judul hero `text-hero` 48px (desktop) / `text-hero-sm` 36px (HP). Hero beranda memakai `.overlay-hero` yang lebih
   tebal (HP 85%; desktop 90% → 85% di 55% → 30%) agar aksen `sun` di judul ≥ 4,5:1 (dijaga `PublicContrastTest`).
-  Maks 3 foto (foto sampul, lalu foto bidang usaha dari Konten Website), slider Alpine `heroSlider`
+  Maks 3 foto dari `hero_slides` aktif (urut posisi; tanpa slide aktif: foto bawaan), slider Alpine `heroSlider`
   (`resources/js/hero-slider.js`): 7 detik, panah + titik, berhenti saat hover/fokus/tab tersembunyi, tanpa gerak
   bila `prefers-reduced-motion`. Foto pertama `fetchpriority="high"`, sisanya lazy.
 - Bagian gelap diberi kelas `on-dark` agar cincin fokus berwarna `sun`.
@@ -721,8 +733,9 @@ Pengecualian dari Larangan di atas, khusus publik:
 Tetap dilarang di publik: bayangan tebal, emoji, ilustrasi, ikon dekoratif, testimoni, angka
 karangan, tombol "Mulai sekarang", teks promosi generik.
 
-Susunan: bilah atas `forest` (alamat, telepon, email kantor | Berita · Kontak · Masuk `sun`; disembunyikan di HP)
-→ header putih (logo teks, menu, ikon cari direktori; menu aktif bergaris bawah `brand`) → (beranda) hero → strip
+Susunan: header putih (logo teks, menu, ikon cari direktori, lalu tombol `sun` "Masuk"/"Dasbor" mulai tablet; di HP
+tombol itu ada di menu; menu aktif bergaris bawah `brand`; tanpa bilah atas, kontak kantor ada di footer dan Kontak)
+→ (beranda) hero (judul + aksen + kalimat penjelas dari Konten Website) → strip
 putih melayang 5 bidang usaha terbanyak (ikon + jumlah, geser horizontal di HP) → "Tentang" (foto, ringkasan profil,
 4 angka publik: kelompok terdaftar, kampung, produk unggulan, bidang usaha + "Data diperbarui") → jenis kelembagaan
 (`PublicDirectory::institutionTypes()`) → produk unggulan (berfoto dulu; tanpa foto → foto bidang dari Admin → petak
