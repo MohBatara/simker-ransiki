@@ -49,40 +49,6 @@
     @include('partials.skip-link')
     @include('partials.test-mode')
 
-    {{-- Bilah atas forest (mulai tablet). Di HP isinya ada di footer dan menu. --}}
-    <div class="on-dark hidden bg-forest text-caption text-forest-soft md:block">
-        <div class="mx-auto flex h-10 max-w-public items-center justify-between gap-6 px-6">
-            <ul class="flex min-w-0 items-center gap-5">
-                @if ($office['office_address'])
-                    <li class="flex min-w-0 items-center gap-1.5">
-                        <x-heroicon-o-map-pin class="size-4 shrink-0" aria-hidden="true" />
-                        <span class="sr-only">Alamat: </span>
-                        <span class="truncate" title="{{ $office['office_address'] }}">{{ Str::of($office['office_address'])->replace("\n", ', ') }}</span>
-                    </li>
-                @endif
-                @if ($office['office_phone'])
-                    <li class="flex shrink-0 items-center gap-1.5">
-                        <x-heroicon-o-phone class="size-4" aria-hidden="true" />
-                        <span class="sr-only">Telepon: </span>
-                        <a href="{{ $tel($office['office_phone']) }}" class="rounded-control text-paper hover:underline">{{ $office['office_phone'] }}</a>
-                    </li>
-                @endif
-                @if ($office['office_email'])
-                    <li class="flex shrink-0 items-center gap-1.5 max-lg:hidden">
-                        <x-heroicon-o-envelope class="size-4" aria-hidden="true" />
-                        <span class="sr-only">Email: </span>
-                        <a href="mailto:{{ $office['office_email'] }}" class="rounded-control text-paper hover:underline">{{ $office['office_email'] }}</a>
-                    </li>
-                @endif
-            </ul>
-            <nav aria-label="Tautan atas" class="flex shrink-0 items-center gap-5">
-                <a href="{{ route('public.posts') }}" class="rounded-control text-paper hover:underline">Berita</a>
-                <a href="{{ route('public.contact') }}" class="rounded-control text-paper hover:underline">Kontak</a>
-                <a href="{{ $account['href'] }}" class="inline-flex h-8 items-center rounded-control bg-sun px-4 font-semibold text-ink transition-colors hover:bg-sun/85">{{ $account['label'] }}</a>
-            </nav>
-        </div>
-    </div>
-
     <header
         x-data="{ open: false, search: false }"
         x-on:keydown.escape="search = false; open = false"
@@ -122,6 +88,8 @@
                     <span class="sr-only">Cari kelompok</span>
                     <x-heroicon-o-magnifying-glass class="size-5" />
                 </button>
+                {{-- Masuk/Dasbor di header mulai tablet; di HP ada di dalam menu. --}}
+                <x-public.button :href="$account['href']" size="md" class="ml-2 max-md:hidden">{{ $account['label'] }}</x-public.button>
                 <button
                     type="button"
                     x-on:click="open = ! open; search = false"
@@ -160,7 +128,7 @@
                         >{{ $item['label'] }}</a>
                     </li>
                 @endforeach
-                <li class="mt-1 border-t border-line pt-3 pb-1">
+                <li class="mt-1 border-t border-line pt-3 pb-1 md:hidden">
                     <x-public.button :href="$account['href']" class="w-full">{{ $account['label'] }}</x-public.button>
                 </li>
             </ul>

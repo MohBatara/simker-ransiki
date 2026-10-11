@@ -7,11 +7,17 @@
     'icon' => null,
     // Panah kanan setelah label (tautan ke halaman lain).
     'arrow' => false,
+    // 'lg' = tombol utama halaman (44/48px), 'md' = tombol header (40px; 44px di HP).
+    'size' => 'lg',
 ])
 
 @php
     $classes = [
-        'inline-flex h-11 shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-control px-5 text-ui font-semibold transition-colors md:h-12',
+        'inline-flex shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-control text-ui font-semibold transition-colors',
+        match ($size) {
+            'md' => 'h-11 px-4 md:h-10',
+            default => 'h-11 px-5 md:h-12',
+        },
         match ($variant) {
             'sun' => 'bg-sun text-ink hover:bg-sun/85',
             'outline' => 'border border-paper text-paper hover:bg-paper/10',
