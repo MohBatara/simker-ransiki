@@ -6,6 +6,7 @@ use App\Models\Opd;
 use App\Models\Organization;
 use App\Models\User;
 use App\Models\Village;
+use App\Notifications\PossibleDuplicate;
 use App\Support\Imports\OrganizationImport;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
@@ -302,4 +303,18 @@ test('angka, email, dan bulan wajib lapor yang tidak valid membuat baris gagal',
 
     expect($row['status'])->toBe('failed')
         ->and(implode(' ', $row['messages']))->toContain('Mulai wajib lapor', 'Email', 'Jumlah anggota', 'Tahun berdiri');
+});
+
+test('impor yang memuat kemungkinan data ganda mengirim satu notifikasi ringkas ke admin', function () {
+    Organization::factory()->create(['name' => 'KUB Sagu Lama', 'village_id' => $this->village->id]);
+
+    $token = importToken(uploadImport($this, [
+        validRow(['name' => 'KUB Sagu Lama', 'village' => 'Kampung Contoh 2']),
+        validRow(['name' => 'Koperasi Sagu Lama', 'village' => 'Kampung Contoh 2']),
+        validRow(['name' => 'Kelompok Kakao Baru Sekali']),
+    ]));
+    $this->post("/admin/kelompok/impor/{$token}", ['include' => [3]]);
+
+    $notification = $this->admin->notifications()->where('type', PossibleDuplicate::class)->sole();
+    expect($notification->data)->toMatchArray(['source' => 'impor', 'count' => 2]);
 });

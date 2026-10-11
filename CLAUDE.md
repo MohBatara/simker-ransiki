@@ -462,7 +462,12 @@ draft ──ajukan──▶ submitted ──verifikasi──▶ verified ──b
 Setiap perubahan status mencatat baris di `report_reviews` dan mengirim notifikasi (hanya akun aktif):
 - diajukan / diajukan ulang → semua user OPD terkait; bila kelompok tanpa OPD pembina, semua Admin
   (`ReportSubmitted`). Setelah laporan ditinjau, notifikasi ini ditandai dibaca bagi semua penerimanya.
-- minta revisi / terverifikasi / dibuka kembali → semua user kelompok tersebut (`ReportReviewed`)
+- minta revisi / terverifikasi / dibuka kembali → semua user kelompok tersebut, DAN semua user OPD pembina +
+  akun OPD/Admin yang mengisi/mengajukan atas nama kelompok, kecuali peninjau yang bertindak (`ReportReviewed`,
+  `audience` reviewer: "Laporan {bulan} {kelompok} diminta revisi oleh {nama} ({instansi}).")
+- kemungkinan data ganda (Admin menambah/mengubah kelompok dengan kandidat, atau impor yang memuat kandidat) →
+  semua Admin aktif, termasuk yang menyimpan sebagai pengingat (`PossibleDuplicate` lewat `App\Support\DuplicateAlert`;
+  impor = satu notifikasi ringkas; tujuan `/admin/kelompok/data-ganda`). Pasangan "Bukan data ganda" tidak memicu.
 - status tindak lanjut masalah/kebutuhan berubah → semua user kelompok aktif, sekali per perubahan; catatan tanpa
   ganti status tidak mengirim notifikasi (`IssueFollowUpUpdated`, tujuan = detail laporan)
 

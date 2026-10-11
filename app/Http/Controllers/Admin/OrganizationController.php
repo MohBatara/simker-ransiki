@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Organizations\OrganizationRequest;
 use App\Http\Requests\Organizations\OrganizationStatusRequest;
 use App\Models\Organization;
+use App\Support\DuplicateAlert;
 use App\Support\DuplicateCandidates;
 use App\Support\OrganizationOptions;
 use Illuminate\Http\RedirectResponse;
@@ -41,6 +42,7 @@ class OrganizationController extends Controller
         }
 
         $organization = $save->handle($request->user(), $data);
+        DuplicateAlert::organizationSaved($request->user(), $organization, $candidates, 'tambah');
 
         return redirect()->route('admin.organizations.show', $organization)
             ->with('status', 'Kelompok ditambahkan.')

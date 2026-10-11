@@ -3,6 +3,7 @@
 namespace App\Actions\Organizations;
 
 use App\Models\User;
+use App\Support\DuplicateAlert;
 use App\Support\Imports\OrganizationImport;
 use Illuminate\Support\Facades\DB;
 
@@ -25,11 +26,9 @@ class ImportOrganizations
         $chosen = $rows->filter(fn (array $row) => $row['status'] === OrganizationImport::READY
             || ($row['status'] === OrganizationImport::WARNING && in_array($row['line'], $acceptedWarnings, true)));
 
-        DB::transaction(function () use ($admin, $chosen) {
-            foreach ($chosen as $row) {
-                $this->save->handle($admin, $row['data']);
-            }
-        });
+        $saved = DB::transaction(fn () => $chosen->map(fn (array $row) => $this->save->handle($admin, $row['data']))->values());
+
+        DuplicateAlert::imported($admin, $saved);
 
         return [
             'imported' => $chosen->count(),

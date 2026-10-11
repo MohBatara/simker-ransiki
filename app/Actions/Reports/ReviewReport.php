@@ -83,7 +83,27 @@ class ReviewReport
             $report->organization->users()->where('role', Role::Kelompok)->where('is_active', true)->get(),
             new ReportReviewed($report, $action, $note),
         );
+        Notification::send($this->otherReviewers($report, $user), new ReportReviewed($report, $action, $note, $user->loadMissing('opd')));
 
         return $report;
+    }
+
+    /**
+     * OPD pembina dan akun OPD/Admin yang mengisi atau mengajukan laporan atas nama kelompok (mis. kelompok tanpa
+     * akun), kecuali peninjau yang bertindak. Mereka perlu tahu hasilnya, terutama bila laporan diminta revisi.
+     */
+    private function otherReviewers(MonthlyReport $report, User $actor)
+    {
+        $handlers = $report->reviews()->whereIn('action', ReviewAction::handling())->pluck('user_id')
+            ->push($report->entered_by)->filter()->unique();
+
+        return User::query()
+            ->where('is_active', true)
+            ->whereKeyNot($actor->id)
+            ->where('role', '!=', Role::Kelompok)
+            ->where(fn ($query) => $query
+                ->where(fn ($query) => $query->where('role', Role::Opd)->whereIn('opd_id', $report->organization->opds()->select('opds.id')))
+                ->orWhereIn('id', $handlers))
+            ->get();
     }
 }

@@ -59,6 +59,10 @@ class NotificationController extends Controller
     {
         $data = $notification->data;
 
+        if (($data['kind'] ?? null) === 'possible_duplicate') {
+            return $user->isAdmin() ? route('admin.organizations.duplicates.index') : null;
+        }
+
         if (($data['kind'] ?? null) === 'report_reminder') {
             return $user->isKelompok() ? route('kelompok.reports.index') : null;
         }

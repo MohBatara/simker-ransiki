@@ -10,6 +10,7 @@ use App\Models\License;
 use App\Models\MonthlyReport;
 use App\Models\Organization;
 use App\Support\BannerImage;
+use App\Support\DuplicateAlert;
 use App\Support\DuplicateCandidates;
 use App\Support\Exports\OrganizationList;
 use App\Support\Exports\Spreadsheet;
@@ -172,6 +173,7 @@ class OrganizationController extends Controller
         }
 
         $save->handle($request->user(), $data, $organization);
+        DuplicateAlert::organizationSaved($request->user(), $organization, $candidates, 'ubah');
 
         return redirect()->route($this->area($request).'.organizations.show', $organization)
             ->with('status', 'Profil kelompok diperbarui.')

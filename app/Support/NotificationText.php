@@ -25,13 +25,14 @@ class NotificationText
         $text = match ($data['kind'] ?? null) {
             'report_submitted' => "Laporan {$period} {$data['organization_name']} "
                 .(($data['resubmitted'] ?? false) ? 'diajukan ulang dan menunggu verifikasi.' : 'menunggu verifikasi.'),
-            'report_reviewed' => match (ReviewAction::tryFrom($data['action'] ?? '')) {
+            'report_reviewed' => ($data['audience'] ?? null) === 'reviewer' ? self::reviewedForReviewer($data, $period) : match (ReviewAction::tryFrom($data['action'] ?? '')) {
                 ReviewAction::Verified => "Laporan {$period} sudah diverifikasi.",
                 ReviewAction::RevisionRequested => "Laporan {$period} perlu revisi.",
                 ReviewAction::Reopened => "Laporan {$period} dibuka kembali untuk revisi oleh Admin distrik.",
                 default => "Laporan {$period} sudah ditinjau.",
             },
             'report_reminder' => self::reminder($data, $period),
+            'possible_duplicate' => self::duplicate($data),
             'issue_follow_up' => (IssueKind::tryFrom($data['issue_kind'] ?? '')?->label() ?? 'Masalah')
                 ." \"{$data['category']}\" dari laporan {$period}: ".mb_strtolower(FollowUpStatus::tryFrom($data['status'] ?? '')?->label() ?? 'diperbarui').'.',
             'report_overdue' => ($data['audience'] ?? null) === 'kelompok'
@@ -41,6 +42,32 @@ class NotificationText
         };
 
         return ['text' => $text, 'note' => filled($data['note'] ?? null) ? $data['note'] : null];
+    }
+
+    private static function duplicate(array $data): string
+    {
+        if (($data['source'] ?? null) === 'impor') {
+            return "Impor kelompok oleh {$data['actor_name']}: {$data['count']} kelompok baru mirip dengan data yang sudah ada. Periksa kemungkinan data ganda.";
+        }
+
+        $others = ($data['others'] ?? 0) > 0 ? " dan {$data['others']} kelompok lain" : '';
+
+        return "Kemungkinan data ganda: {$data['organization_name']} mirip dengan {$data['candidate_name']}{$others}"
+            .(($data['strong'] ?? false) ? ' di kampung yang sama' : ' di kampung lain')
+            .' ('.(($data['source'] ?? null) === 'ubah' ? 'diubah' : 'ditambahkan')." oleh {$data['actor_name']}).";
+    }
+
+    /** Untuk OPD pembina/pengisi: menyebut kelompok dan siapa yang meninjau. */
+    private static function reviewedForReviewer(array $data, string $period): string
+    {
+        $what = match (ReviewAction::tryFrom($data['action'] ?? '')) {
+            ReviewAction::Verified => 'diverifikasi',
+            ReviewAction::RevisionRequested => 'diminta revisi',
+            ReviewAction::Reopened => 'dibuka kembali untuk revisi',
+            default => 'ditinjau',
+        };
+
+        return "Laporan {$period} {$data['organization_name']} {$what}".(filled($data['actor_name'] ?? null) ? " oleh {$data['actor_name']}" : '').'.';
     }
 
     /** Jumlah hari dihitung dari tanggal kirim, supaya teks tetap benar walau dibaca belakangan. */
