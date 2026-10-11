@@ -74,4 +74,24 @@ return [
         'timeout' => 600,
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Ikon bidang usaha di website publik (App\Support\PublicIcons)
+    |--------------------------------------------------------------------------
+    | Kunci = slug nama bidang usaha (Str::slug, mis. "Pengolahan Hasil" → "pengolahan-hasil"); nilai = nama file
+    | di resources/svg/lucide. Bidang tanpa entri memakai `default`. Ikon baru: salin isi <svg> dari lucide.dev.
+    */
+    'public_icons' => [
+        'sectors' => [
+            'pertanian' => 'sprout',
+            'perkebunan' => 'trees',
+            'perikanan' => 'fish',
+            'pengolahan-hasil' => 'cooking-pot',
+            'umkm' => 'store',
+            'perdagangan' => 'shopping-basket',
+            'lainnya' => 'box',
+        ],
+        'default' => 'box',
+    ],
+
 ];
