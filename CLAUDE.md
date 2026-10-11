@@ -353,8 +353,8 @@ Setiap perubahan status mencatat baris di `report_reviews` dan mengirim notifika
 - `/notifikasi` (semua peran): daftar terbaru di atas, "Tandai semua dibaca". `GET /notifikasi/{id}`
   menandai dibaca lalu mengarahkan; tujuan dihitung ulang dari `monthly_report_id` + peran saat ini dan
   dicek Policy `view` (tidak berhak → kembali ke daftar dengan pesan). Notifikasi orang lain → 404.
-- Lonceng + angka belum dibaca (maks "9+", warna `brand`) di header HP, kanan baris judul desktop, dan
-  menu sidebar; angkanya dari view composer layout `app` (satu query, tanpa polling).
+- Lonceng + angka belum dibaca (maks "9+", warna `brand`) di header HP dan bilah atas tablet/desktop;
+  angkanya dari view composer layout `app` (satu query, tanpa polling).
 - Pengingat (`php artisan simker:pengingat-laporan`, `ReportReminder`): tanggal `reports.reminder_days`
   (1 = tahap "awal", 8 = tahap "akhir") pukul `reports.reminder_time` WIT, untuk periode bulan lalu, ke akun
   kelompok aktif dari kelompok wajib lapor (`obligatedFor`, bukan tutup) yang belum pernah mengajukan
@@ -477,7 +477,7 @@ pemisah tetap `line`/`line-strong`. Periksa kontras sebelum mengubah atau menamb
 - Lebar konten maksimal 1200px untuk area aplikasi, 1080px untuk halaman publik.
 
 ### Tata letak gaya aplikasi (responsif)
-- **HP (< 768px):** header atas tipis (judul halaman + tombol notifikasi), navigasi bawah tetap
+- **HP (< 768px):** header atas tipis (judul halaman + cari [Admin/OPD] + lonceng + akun), navigasi bawah tetap
   berisi maksimal 5 menu utama, menu lain di "Lainnya". Tabel berubah menjadi daftar kartu.
   Form satu kolom. Aksi page-header tampil di bawah judul dan ikut tergulir.
   Bar aksi yang menempel di bawah layar hanya untuk halaman form, lewat `<x-form-actions sticky>`.
@@ -486,8 +486,10 @@ pemisah tetap `line`/`line-strong`. Periksa kontras sebelum mengubah atau menamb
 - **Tablet (768–1279px):** sidebar ikon ringkas (lebar 72px) dengan label ringkas 11px
   (lihat Bagian 6) dan tooltip nama menu lengkap saat hover/fokus, konten penuh.
   Tabel tampil dengan kolom penting saja.
-- **Desktop (≥ 1280px):** sidebar penuh 248px (logo + nama aplikasi, menu, profil pengguna di bawah),
-  header halaman berisi judul + aksi. Tabel lengkap.
+- **Desktop (≥ 1280px):** sidebar penuh 248px (logo + nama aplikasi, menu). Tabel lengkap.
+- **Bilah atas (tablet dan desktop):** cari global (Admin/OPD; `/{area}/cari`: kelompok menurut nama,
+  ketua, kampung; produk menurut nama; dibatasi `visibleTo`), lonceng, menu profil (avatar, nama,
+  peran/OPD singkat → Akun Saya, Keluar). Lonceng dan profil tidak lagi di sidebar.
 - Halaman publik memakai navigasi atas biasa, dengan menu hamburger di HP dan tablet (< 1024px).
   "Masuk" berupa tautan teks biasa, bukan tombol.
 - Website publik bergaya buletin resmi: judul tipografis, bagian dibuka garis `line-strong` + judul
@@ -537,8 +539,8 @@ Gambar publik: `<picture>` dengan WebP `srcset` + cadangan JPEG (`x-public.pictu
 Varian dibuat saat unggah; foto lama: `php artisan simker:varian-foto`. Tanpa dukungan WebP di
 server, otomatis JPEG saja.
 
-Token `forest`/`sun` tidak boleh dipakai di luar view publik (dijaga tes). Satu pengecualian: halaman
-masuk (`layouts.auth`): panel kiri forest dengan foto sampul + overlay padat `bg-forest/70`; di atas foto
+Token `forest`/`sun` tidak boleh dipakai di luar view publik (dijaga tes). Pengecualian: pita/banner
+`x-page-header` (lihat "Pita dan banner area aplikasi") dan halaman masuk (`layouts.auth`): panel kiri forest dengan foto sampul + overlay padat `bg-forest/70`; di atas foto
 teks sekunder memakai putih (forest-soft bisa turun ke ~3:1 bila fotonya terang), forest-soft hanya di
 atas forest polos.
 
@@ -559,6 +561,8 @@ Di `resources/views/components/`:
 desktop, panel "Filter (n)" di HP), `filter-summary` (ringkasan hasil + chip filter aktif yang bisa
 dihapus, `App\Support\FilterChips`), `password-input` (tombol tampilkan kata sandi),
 `form-errors` (ringkasan error di atas form panjang + fokus ke isian pertama yang salah),
+`stat` (angka ringkas; `icon` + `href` untuk kartu ringkasan), `info-item` (fakta berikon di kartu
+informasi), `tag` (label pil di banner detail kelompok),
 `layouts.app` (area login), `layouts.public` (website publik), `layouts.auth` (halaman masuk),
 `layouts.guest` (halaman error, ganti kata sandi wajib).
 
@@ -569,7 +573,7 @@ Halaman tidak boleh menulis ulang gaya tombol/kartu/tautan/baris daftar sendiri.
 
 ### Header halaman
 - Judul + keterangan + aksi di `x-layouts.app`. Badge status di samping judul lewat slot `badge`;
-  fakta kunci (mis. detail kelompok) lewat slot `meta`.
+  isi tambahan di bawah keterangan (mis. tag detail kelompok) lewat slot `meta`.
 - Dasbor: keterangan kecil "Dasbor" (`eyebrow`) di atas nama (Distrik Ransiki / nama OPD / nama kelompok).
 - Halaman bertingkat memakai remah (`breadcrumbs`, desktop) dan tombol kembali di header HP. Detail
   laporan Admin/OPD membawa `?dari=kelompok|antrean|masalah` (divalidasi) agar "Kembali" dan remah
@@ -579,6 +583,33 @@ Halaman tidak boleh menulis ulang gaya tombol/kartu/tautan/baris daftar sendiri.
 - Badge status kelompok hanya untuk status selain Aktif.
 - Halaman error (403/404/419/429/500/503) memakai `layouts.guest` dengan "Kembali" + tujuan utama
   (dasbor bila login); 419 mengajak kembali lalu masuk lagi, 500/503 "Muat ulang".
+
+### Pita dan banner area aplikasi
+Pengecualian dari Larangan untuk area Admin/OPD/Kelompok (menyesuaikan referensi tampilan admin):
+- Header halaman biasa: pita `forest` polos mulai tablet (di HP tetap putih); halaman form (mode form)
+  tetap putih. Banner foto + `.overlay-forest` HANYA di dasbor, detail kelompok, dan Profil Kelompok,
+  di semua ukuran. Semua lewat `x-page-header` (prop `band` dari layout, `image` = prop `banner`).
+- Sumber foto banner (`App\Support\BannerImage`, hanya varian terkompres): dasbor = foto sampul;
+  kelompok = foto produk yang mendatar (lebar > tinggi, dibaca dari versi kecil dan di-cache) → foto
+  bidang usaha (Konten Website) → foto sampul → pita polos.
+- Di dalam pita/banner, komponen menyesuaikan warna lewat varian `in-[.app-band]` (mulai tablet) dan
+  `in-[.app-band-photo]`: tombol utama putih, sekunder/ghost bergaris/teks putih, tautan putih bergaris
+  bawah, remah putih 85%. Cincin fokus `sun`. Token `forest` hanya di `components/page-header` (dijaga tes).
+- Ikon dalam lingkaran `brand-tint` (ikon `brand`) HANYA di kartu ringkasan (`x-stat icon`) dan baris
+  kartu informasi (`x-info-item`). Ikon kecil `brand` tanpa lingkaran di judul kartu (`x-card icon`) dan
+  ikon tab (`x-tabs icons`) HANYA di detail kelompok/Profil Kelompok. Halaman lain tetap tanpa ikon judul.
+- Label pil (`x-tag`) untuk jenis dan bidang usaha di banner detail kelompok.
+
+### Daftar dan detail kelompok
+- Daftar (Admin/OPD): 4 kartu ringkasan (total kelompok, kampung, bidang usaha, total anggota + "dari X
+  yang mengisi") yang mengikuti filter aktif dengan keterangan "sesuai filter"; kartu filter berlabel
+  dengan Terapkan/Reset (tidak langsung diterapkan); chip filter aktif; tabel + panel detail di kanan
+  pada ≥ 1280px. Baris pertama atau `?pilih=id` dirender di server; klik baris memuat
+  `/{area}/kelompok/{id}/ringkas` (Policy `view`). Layar lebih kecil membuka halaman detail.
+- Detail: remah → banner (status bila tidak aktif, nama, lokasi, tag, Ubah profil, menu "…" Admin untuk
+  tandai ditutup/hapus) → tab berikon → tab Profil: Ringkasan, Informasi umum, Lokasi (tombol "Buka di
+  Google Maps" dari pencarian alamat, tanpa peta tertanam), Deskripsi, Foto (foto produk lalu lampiran
+  gambar), Publikasi & pelaporan, Dokumen. Tidak menambah kolom baru tanpa persetujuan.
 
 ### Tabel dan kartu daftar
 - Tidak ada tombol "Buka" per baris. Baris yang punya halaman detail bisa diklik seluruhnya:
