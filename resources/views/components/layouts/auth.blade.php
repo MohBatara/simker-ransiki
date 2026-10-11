@@ -22,6 +22,7 @@
 </head>
 <body class="min-h-dvh bg-canvas font-sans text-ui text-ink antialiased">
     @include('partials.skip-link')
+    @include('partials.test-mode')
     <div class="min-h-dvh md:grid md:grid-cols-2">
         <aside class="on-dark relative isolate flex flex-col overflow-hidden bg-forest px-4 py-6 text-paper md:min-h-dvh md:justify-between md:px-10 md:py-10">
             @if ($cover)

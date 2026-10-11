@@ -2,99 +2,63 @@
 
 namespace Database\Seeders;
 
+use App\Enums\FollowUpStatus;
 use App\Enums\IssueKind;
 use App\Enums\LegalStatus;
 use App\Enums\LicenseStatus;
 use App\Enums\OrganizationStatus;
-use App\Enums\ProblemCategory;
 use App\Enums\ProfileStatus;
 use App\Enums\ReportStatus;
 use App\Enums\ReviewAction;
 use App\Enums\Role;
-use App\Enums\SupportCategory;
 use App\Models\BusinessSector;
 use App\Models\InstitutionType;
+use App\Models\IssueFollowUp;
 use App\Models\MonthlyReport;
 use App\Models\Opd;
 use App\Models\Organization;
 use App\Models\Post;
+use App\Models\Product;
 use App\Models\ReportReview;
 use App\Models\SiteSetting;
 use App\Models\User;
 use App\Models\Village;
 use App\Support\Format;
+use App\Support\ImageProcessor;
+use App\Support\ImageVariants;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Storage;
 use RuntimeException;
 
 /**
- * Data contoh untuk pengembangan (CLAUDE.md Bagian 10). Semua nama dan nomor jelas bukan data resmi.
- * Tidak memakai angka acak: setiap variasi diturunkan dari nomor kelompok, sehingga
- * migrate:fresh --seed selalu menghasilkan data yang sama.
+ * Data demo untuk pengembangan dan pemolesan tampilan (CLAUDE.md Bagian 10). Isinya di DemoData; semua
+ * nama, nomor, dan email fiktif. Tidak memakai angka acak: setiap variasi diturunkan dari crc32 nomor
+ * kelompok + bulan, sehingga migrate:fresh --seed selalu menghasilkan data yang sama.
  */
 class DemoSeeder extends Seeder
 {
-    private const ORGANIZATION_COUNT = 25;
+    /** Bulan laporan pertama; 12 bulan sampai bulan wajib lapor (September 2026). */
+    private const FIRST_PERIOD = '2025-10-01';
 
-    private const PERIODS = ['2026-07-01', '2026-08-01', '2026-09-01'];
+    /** 12 bulan riwayat + bulan berjalan (Oktober 2026, hanya draf). */
+    private const PERIOD_COUNT = 13;
 
-    /** Riwayat terverifikasi sebelum PERIODS, agar grafik Statistik 12 bulan terlihat berisi. */
-    private const HISTORY_PERIODS = ['2026-01-01', '2026-02-01', '2026-03-01', '2026-04-01', '2026-05-01', '2026-06-01'];
-
-    /** short_name => nama OPD (sesuai blueprint klien; akan diganti nama resmi). */
-    private const OPDS = [
-        'Pertanian' => 'Dinas Pertanian dan Perkebunan',
-        'DPMPTSP' => 'DPMPTSP',
-        'Dinkopdag' => 'Dinkopdag',
-        'Perikanan' => 'Dinas Perikanan',
+    /** Status laporan yang dipaksa agar akun uji punya keadaan yang menarik untuk dicoba. */
+    private const OVERRIDES = [
+        1 => ['2026-08' => ReportStatus::Verified, '2026-09' => ReportStatus::Revision, '2026-10' => ReportStatus::Draft],
+        5 => ['2026-09' => ReportStatus::Draft],
     ];
 
-    /** Kelompok yang hanya dibina Dinas Perikanan, sehingga OPD itu tidak berbagi kelompok. */
-    private const FISHERY_ONLY = [5, 10, 15, 20, 25];
-
-    private const INACTIVE = [8, 14, 21];
-
-    private const CLOSED = [23];
-
-    private const NOT_PUBLIC = [4, 18];
-
-    /** Kelompok baru: wajib lapor mulai September 2026. */
-    private const REPORTING_FROM_SEPTEMBER = [22, 25];
-
-    /** Jenis kelembagaan kelompok ke-1 s.d. ke-25 (kode MasterDataSeeder). */
-    private const TYPES = [
-        'kub', 'kelompok_pertanian', 'bumdes', 'umkm', 'kelompok_perikanan',
-        'kelompok_perkebunan', 'kdmp', 'kub', 'umkm', 'kelompok_perikanan',
-        'kelompok_pertanian', 'knmp', 'umkm', 'kelompok_perkebunan', 'kelompok_perikanan',
-        'bumdes', 'kub', 'kelompok_pertanian', 'umkm', 'kelompok_perikanan',
-        'lainnya', 'kelompok_perkebunan', 'umkm', 'kub', 'kelompok_perikanan',
+    private const REVISION_NOTES = [
+        'Angka penjualan belum sesuai dengan jumlah produksi. Mohon dicek lagi.',
+        'Lengkapi biaya produksi bulan ini, termasuk ongkos angkut.',
+        'Satuan produk tertulis berbeda dengan bulan lalu. Mohon diseragamkan.',
+        'Foto kegiatan belum dilampirkan. Mohon tambahkan satu atau dua foto.',
     ];
 
-    private const PRIMARY_SECTOR = [
-        'bumdes' => 'Perdagangan',
-        'kub' => 'Pengolahan Hasil',
-        'kdmp' => 'Perdagangan',
-        'knmp' => 'Perikanan',
-        'kelompok_pertanian' => 'Pertanian',
-        'kelompok_perkebunan' => 'Perkebunan',
-        'kelompok_perikanan' => 'Perikanan',
-        'umkm' => 'UMKM',
-        'lainnya' => 'Lainnya',
-    ];
-
-    private const EXTRA_SECTORS = ['Pengolahan Hasil', 'Perdagangan', 'UMKM', 'Pertanian', 'Perkebunan'];
-
-    /** Bidang usaha utama => [nama produk, satuan]. */
-    private const PRODUCTS = [
-        'Pertanian' => [['Cabai rawit', 'kg'], ['Sayur kangkung', 'ikat']],
-        'Perkebunan' => [['Kakao kering', 'kg'], ['Kopi bubuk', 'kg'], ['Pinang', 'kg']],
-        'Perikanan' => [['Ikan asap', 'ekor'], ['Abon ikan', 'bungkus']],
-        'UMKM' => [['Keripik pisang', 'bungkus'], ['Keripik keladi', 'bungkus']],
-        'Perdagangan' => [['Sagu', 'kg'], ['Minyak kelapa', 'liter']],
-        'Pengolahan Hasil' => [['Sagu lempeng', 'bungkus'], ['Gula aren', 'kg']],
-        'Lainnya' => [['Anyaman', 'buah']],
-    ];
+    private Carbon $now;
 
     public function run(): void
     {
@@ -104,25 +68,28 @@ class DemoSeeder extends Seeder
             throw new RuntimeException('DemoSeeder hanya untuk environment local. Di server gunakan db:seed --class=ProductionSeeder.');
         }
 
+        $this->now = now();
         $this->call(MasterDataSeeder::class);
 
-        $opds = collect(self::OPDS)->map(
+        $opds = collect(DemoData::OPDS)->map(
             fn (string $name, string $shortName) => Opd::create(['name' => $name, 'short_name' => $shortName])
         );
-        $villages = collect(range(1, 8))->map(fn (int $n) => Village::create(['name' => "Kampung Contoh {$n}"]));
+        $villages = collect(DemoData::VILLAGES)->map(fn (string $name) => Village::create(['name' => $name]));
 
         $admin = User::create([
-            'name' => 'Admin Distrik (contoh)',
+            'name' => 'Maria Wonatorey',
             'username' => 'admin',
-            'email' => 'admin@contoh.test',
+            'email' => 'admin@example.test',
+            'phone' => '0812-0000-0001',
             'password' => 'password',
             'must_change_password' => false,
             'role' => Role::Admin,
         ]);
 
         $opdUsers = $opds->map(fn (Opd $opd, string $shortName) => User::create([
-            'name' => "Petugas {$opd->name} (contoh)",
+            'name' => DemoData::OPD_OFFICERS[$shortName],
             'username' => 'opd.'.strtolower($shortName),
+            'email' => 'opd.'.strtolower($shortName).'@example.test',
             'password' => 'password',
             'must_change_password' => false,
             'role' => Role::Opd,
@@ -133,24 +100,24 @@ class DemoSeeder extends Seeder
         $sectors = BusinessSector::pluck('id', 'name');
 
         $organizations = [];
-        foreach (range(1, self::ORGANIZATION_COUNT) as $n) {
-            $organizations[$n] = $this->seedOrganization($n, $admin, $types, $sectors, $villages, $opds);
+        foreach (DemoData::ORGANIZATIONS as $n => $data) {
+            $organizations[$n] = $this->seedOrganization($n, $data, $admin, $types, $sectors, $villages, $opds);
         }
 
         // kelompok1 dan kelompok2 dibina OPD yang berbeda, untuk uji akses silang.
         $groupUsers = [
             1 => User::create([
-                'name' => 'Ketua Contoh 01',
+                'name' => DemoData::ORGANIZATIONS[1]['leader'],
                 'username' => 'kelompok1',
-                // Email contoh untuk mencoba "Lupa kata sandi?" (email masuk ke Mailpit).
-                'email' => 'kelompok1@contoh.test',
+                // Untuk mencoba "Lupa kata sandi?" (email masuk ke Mailpit).
+                'email' => 'kelompok1@example.test',
                 'password' => 'password',
                 'must_change_password' => false,
                 'role' => Role::Kelompok,
                 'organization_id' => $organizations[1]['organization']->id,
             ]),
             5 => User::create([
-                'name' => 'Ketua Contoh 05',
+                'name' => DemoData::ORGANIZATIONS[5]['leader'],
                 'username' => 'kelompok2',
                 'password' => 'password',
                 'must_change_password' => false,
@@ -159,29 +126,83 @@ class DemoSeeder extends Seeder
             ]),
         ];
 
-        // Teks contoh Konten Website; di produksi dibiarkan kosong sampai diisi Admin.
+        // Konten Website demo; di produksi dibiarkan kosong sampai diisi Admin.
         SiteSetting::put([
-            'home_intro' => 'Contoh pengantar: daftar kelompok usaha, koperasi, dan BUMDes di Distrik Ransiki beserta produknya. Ganti dengan teks resmi.',
-            'profile_body' => "Contoh teks profil Distrik Ransiki. Ganti dengan teks resmi dari kantor distrik.\n\nParagraf kedua contoh: gambaran wilayah, kampung, dan kegiatan ekonomi masyarakat.",
-            'economic_potential' => "Contoh teks potensi ekonomi:\n\n- Perkebunan kakao dan kopi\n- Perikanan dan pengolahan hasil laut\n- Pengolahan sagu dan hasil hutan",
-            'office_address' => 'Jalan Contoh No. 1, Distrik Ransiki',
-            'office_phone' => '0800-0000-0000',
-            'office_whatsapp' => '0800-0000-0000',
-            'office_email' => 'distrik@contoh.test',
-            'office_hours' => 'Senin–Jumat, 08.00–15.00 WIT (contoh)',
+            'home_intro' => 'Direktori kelompok usaha, koperasi, dan BUMDes di Distrik Ransiki beserta produk dan perkembangannya setiap bulan.',
+            'profile_body' => "Distrik Ransiki berada di Kabupaten Manokwari Selatan, Papua Barat. Sebagian besar warga hidup dari kebun, laut, dan usaha olahan rumahan.\n\nHalaman ini memuat gambaran umum wilayah dan kegiatan ekonomi masyarakat. Teks resmi akan diisi kantor distrik.",
+            'economic_potential' => "- Perkebunan kakao, kopi, pinang, dan kelapa\n- Perikanan tangkap, kepiting bakau, dan ikan asap\n- Pengolahan sagu, pisang, dan hasil kebun lain\n- Kerajinan noken dan anyaman",
+            'office_address' => 'Kantor Distrik Ransiki, Kabupaten Manokwari Selatan',
+            'office_phone' => '0812-0000-0002',
+            'office_whatsapp' => '0812-0000-0003',
+            'office_email' => 'distrik@example.test',
+            'office_hours' => 'Senin–Jumat, 08.00–15.00 WIT',
         ]);
+
+        if ($this->photosEnabled()) {
+            $this->seedSitePhotos();
+        }
 
         $this->seedProfileVerification($organizations, $opdUsers);
         $this->seedPosts($admin, $organizations);
 
         foreach ($organizations as $n => $seeded) {
-            $this->seedReports(
-                $n,
-                $seeded['organization'],
-                $seeded['products'],
-                $opdUsers[$seeded['opds'][0]],
-                $groupUsers[$n] ?? null,
-            );
+            $this->seedReports($n, DemoData::ORGANIZATIONS[$n], $seeded, $opdUsers, $groupUsers[$n] ?? null);
+        }
+    }
+
+    /**
+     * Foto hanya diproses di local: tes tidak menulis ke storage asli dan tetap cepat. Sumbernya foto
+     * sementara di database/seeders/photos; path tetap (…-demo.jpg) agar seed ulang menimpa file yang sama.
+     */
+    private function photosEnabled(): bool
+    {
+        return app()->isLocal() && is_dir(database_path('seeders/photos'));
+    }
+
+    private function photo(string $file): string
+    {
+        return database_path('seeders/photos/'.$file);
+    }
+
+    private function storeWidePhoto(string $file, string $path, array $budgets = []): string
+    {
+        ImageVariants::store('local', $this->photo($file), $path, ImageVariants::WIDE, $budgets);
+
+        return $path;
+    }
+
+    private function storeProductPhoto(Product $product, string $file): void
+    {
+        $base = sprintf('products/%d/demo', $product->id);
+
+        ImageVariants::store(Product::PHOTO_DISK, $this->photo($file), $base.'.jpg', ImageVariants::PRODUCT);
+        $thumbnail = ImageProcessor::process($this->photo($file), 'image/jpeg', ImageProcessor::THUMBNAIL_SIDE, 'jpeg');
+        Storage::disk(Product::PHOTO_DISK)->put($base.Product::THUMBNAIL_SUFFIX.'.jpg', $thumbnail['contents']);
+
+        $product->forceFill(['photo_path' => $base.'.jpg'])->save();
+    }
+
+    /** Foto sampul, "Tentang", dan lima bidang usaha. Perdagangan dan Lainnya sengaja tanpa foto. */
+    private function seedSitePhotos(): void
+    {
+        SiteSetting::put([
+            'cover_photo_path' => $this->storeWidePhoto('sampul.jpg', 'site/sampul-demo.jpg', ImageVariants::HERO_BUDGET),
+            'about_photo_path' => $this->storeWidePhoto('panen-kakao.jpg', 'site/tentang-demo.jpg'),
+            'cover_caption' => 'Kebun kakao di pesisir. Foto sementara sampai foto resmi distrik tersedia.',
+            'cover_credit' => 'Dokumentasi sementara',
+        ]);
+
+        $files = [
+            'Pertanian' => 'pertanian.jpg',
+            'Perkebunan' => 'kakao.jpg',
+            'Perikanan' => 'perikanan.jpg',
+            'UMKM' => 'keripik.jpg',
+            'Pengolahan Hasil' => 'pengemasan.jpg',
+        ];
+
+        foreach (BusinessSector::whereIn('name', array_keys($files))->get() as $sector) {
+            $path = $this->storeWidePhoto($files[$sector->name], "site/bidang-{$sector->id}-demo.jpg");
+            $sector->forceFill(['photo_path' => $path])->save();
         }
     }
 
@@ -192,7 +213,7 @@ class DemoSeeder extends Seeder
     private function seedProfileVerification(array $organizations, Collection $opdUsers): void
     {
         foreach ($organizations as $n => $seeded) {
-            if ($n % 3 !== 1) {
+            if ($n % 3 !== 1 || $seeded['organization']->status === OrganizationStatus::Closed) {
                 continue;
             }
 
@@ -206,242 +227,352 @@ class DemoSeeder extends Seeder
         }
     }
 
-    /** Berita contoh: tiga terbit, satu draf, satu terjadwal (tidak tampil publik). */
+    /** Enam berita terbit (empat berfoto), satu draf, dan satu terjadwal (keduanya tidak tampil publik). */
     private function seedPosts(User $admin, array $organizations): void
     {
         $posts = [
-            ['Contoh berita: panen kakao kelompok binaan', 'kegiatan', '2026-09-20 09:00', 'published', [1, 2]],
-            ['Contoh berita: pelatihan pengemasan produk olahan', 'kegiatan', '2026-09-05 10:00', 'published', [4]],
-            ['Contoh berita: jadwal pelaporan bulanan kelompok', 'berita', '2026-08-28 08:00', 'published', []],
-            ['Contoh berita: draf yang belum diterbitkan', 'berita', null, 'draft', []],
-            ['Contoh berita: pengumuman terjadwal', 'berita', '2027-01-05 08:00', 'published', []],
+            [
+                'Pelatihan fermentasi biji kakao untuk tiga kelompok tani', 'kegiatan', '2026-09-24 09:00', 'published', [1, 19, 38], 'panen-kakao.jpg',
+                'Petugas penyuluh melatih anggota tiga kelompok tani cara fermentasi dan penjemuran biji kakao agar mutunya seragam.',
+                "Pelatihan berlangsung dua hari di rumah fermentasi Kelompok Tani Kakao Harapan. Peserta berasal dari tiga kelompok tani kakao binaan.\n\n## Materi\n\n- Memilih buah yang matang penuh\n- Fermentasi dalam kotak kayu selama lima hari\n- Penjemuran di para-para sampai kadar air cukup rendah\n- Sortasi dan pengemasan dalam karung bersih\n\nSetiap kelompok membawa pulang satu set catatan praktik. Petugas akan berkunjung lagi bulan depan untuk melihat hasilnya.",
+            ],
+            [
+                'Produk olahan kelompok tampil di pameran UMKM kabupaten', 'kegiatan', '2026-08-19 10:00', 'published', [2, 20, 34, 36], 'pengemasan.jpg',
+                'Keripik pisang, cokelat batang, dan sagu lempeng dari empat kelompok binaan dipajang dan dijual di pameran UMKM tingkat kabupaten.',
+                "Empat kelompok usaha dari Distrik Ransiki ikut pameran UMKM selama tiga hari. Stan distrik menampilkan keripik pisang, cokelat batang, sagu lempeng, dan bagea.\n\nSebagian besar produk habis terjual pada hari kedua. Beberapa pengunjung meminta kontak kelompok untuk pesanan rutin.\n\nPengalaman ini menunjukkan kemasan dan label yang rapi sangat membantu penjualan.",
+            ],
+            [
+                'Panen raya kakao di kebun kelompok tani', 'kegiatan', '2026-07-08 08:00', 'published', [19], 'kakao.jpg',
+                'Kelompok Tani Kakao Mekar Jaya memanen kakao bersama setelah tiga bulan perawatan kebun dan pemangkasan.',
+                "Panen raya dilakukan bergiliran di kebun anggota selama satu pekan. Hasilnya dikumpulkan di rumah fermentasi kelompok.\n\nAnggota mencatat berat hasil panen setiap kebun agar pembagian hasil penjualan adil.",
+            ],
+            [
+                'Pelatihan pengemasan dan label untuk produk keripik', 'kegiatan', '2026-06-12 09:00', 'published', [2, 14, 20], 'keripik.jpg',
+                'Pelaku usaha keripik belajar memilih kemasan yang tahan lama dan menulis label yang lengkap.',
+                "Peserta mempraktikkan pengemasan dengan plastik tebal dan perekat panas. Materi label mencakup nama produk, berat bersih, tanggal produksi, dan alamat usaha.\n\nKelompok yang sudah siap akan didampingi mengurus izin PIRT.",
+            ],
+            [
+                'Batas pengiriman laporan bulanan setiap tanggal 10', 'berita', '2026-09-01 08:00', 'published', [], null,
+                'Kelompok diminta mengirim laporan bulanan paling lambat tanggal 10 bulan berikutnya pukul 23.59 WIT.',
+                "Laporan bulanan berisi kegiatan, produksi dan penjualan, keuangan, masalah, dan kebutuhan dukungan.\n\nKelompok yang belum punya akun dapat melapor lewat petugas OPD pembina. Bila tidak ada kegiatan, pilih \"Tidak ada aktivitas bulan ini\".",
+            ],
+            [
+                'Pendampingan pengurusan NIB bagi kelompok usaha', 'berita', '2026-08-05 08:00', 'published', [], null,
+                'Petugas membuka jadwal pendampingan pengurusan Nomor Induk Berusaha di kantor distrik setiap Selasa dan Kamis.',
+                "Bawa KTP ketua, data anggota, dan keterangan usaha. Pendampingan tidak dipungut biaya.\n\nKelompok yang sudah punya NIB dapat melanjutkan ke pengurusan PIRT atau sertifikat halal.",
+            ],
+            [
+                'Rencana pelatihan pengolahan ikan asap', 'kegiatan', null, 'draft', [6, 33], null,
+                'Rencana pelatihan pengasapan ikan yang lebih bersih untuk kelompok nelayan.',
+                "Draf. Jadwal dan tempat menyusul.",
+            ],
+            [
+                'Pameran produk kampung akhir tahun', 'berita', '2026-12-01 08:00', 'published', [], null,
+                'Pendaftaran stan pameran produk kampung akhir tahun dibuka untuk kelompok binaan.',
+                "Setiap kelompok mendapat satu meja. Pendaftaran lewat petugas OPD pembina.",
+            ],
         ];
 
-        foreach ($posts as [$title, $category, $publishedAt, $status, $related]) {
+        foreach ($posts as [$title, $category, $publishedAt, $status, $related, $photo, $summary, $body]) {
             $post = new Post([
                 'title' => $title,
                 'slug' => Post::uniqueSlug($title),
                 'category' => $category,
-                'summary' => 'Ringkasan contoh. Ganti dengan berita resmi dari kantor distrik.',
-                'body' => "Ini teks **contoh**, bukan berita resmi.\n\n## Subjudul contoh\n\n- Butir pertama\n- Butir kedua\n\nParagraf penutup contoh.",
+                'summary' => $summary,
+                'body' => $body,
                 'status' => $status,
                 'published_at' => $publishedAt ? Carbon::parse($publishedAt) : null,
             ]);
             $post->forceFill(['created_by' => $admin->id, 'updated_by' => $admin->id])->save();
             $post->organizations()->sync(collect($related)->map(fn (int $n) => $organizations[$n]['organization']->id)->all());
+
+            if ($photo && $this->photosEnabled()) {
+                $path = "posts/berita-{$post->id}-demo.jpg";
+                ImageVariants::store(Post::PHOTO_DISK, $this->photo($photo), $path, ImageVariants::WIDE, ImageVariants::HERO_BUDGET);
+                $post->forceFill(['cover_photo_path' => $path])->save();
+            }
         }
     }
 
     /**
-     * @return array{organization: Organization, opds: list<string>, products: Collection}
+     * @return array{organization: Organization, opds: list<string>, products: list<array{0: Product, 1: int, 2: int, 3: string}>}
      */
-    private function seedOrganization(int $n, User $admin, Collection $types, Collection $sectors, Collection $villages, Collection $opds): array
+    private function seedOrganization(int $n, array $data, User $admin, Collection $types, Collection $sectors, Collection $villages, Collection $opds): array
     {
-        $type = self::TYPES[$n - 1];
-        $status = match (true) {
-            in_array($n, self::CLOSED) => OrganizationStatus::Closed,
-            in_array($n, self::INACTIVE) => OrganizationStatus::Inactive,
-            default => OrganizationStatus::Active,
-        };
-        $members = $n % 9 === 0 ? null : 8 + ($n * 7) % 30;
-        $legal = [LegalStatus::Registered, LegalStatus::InProcess, LegalStatus::None, LegalStatus::Unknown][$n % 4];
-        $village = ($n - 1) % 8;
+        $status = OrganizationStatus::from($data['status'] ?? 'active');
+        $village = $villages[$data['village']];
+        $members = $data['members'];
+        $primarySector = $data['sectors'][0];
+        $firstProduct = $data['products'][0];
+        $productList = collect($data['products'])->map(fn (array $product) => mb_strtolower($product[0]))->join(', ', ' dan ');
+
+        $legal = in_array($data['type'], ['bumdes', 'kdmp', 'knmp'])
+            ? LegalStatus::Registered
+            : [LegalStatus::Registered, LegalStatus::InProcess, LegalStatus::None, LegalStatus::Unknown][$n % 4];
 
         $organization = Organization::create([
-            'name' => sprintf('%s Contoh %02d', MasterDataSeeder::INSTITUTION_TYPES[$type], $n),
-            'institution_type_id' => $types[$type],
-            'village_id' => $villages[$village]->id,
-            'address' => sprintf('Jalan Contoh No. %d, Kampung Contoh %d', $n, $village + 1),
-            'founded_year' => 2010 + $n % 14,
-            'leader_name' => sprintf('Ketua Contoh %02d', $n),
-            'phone' => sprintf('0800-0000-%04d', $n),
-            'email' => $n % 6 === 0 ? sprintf('kelompok%02d@contoh.test', $n) : null,
+            'name' => $data['name'],
+            'institution_type_id' => $types[$data['type']],
+            'village_id' => $village->id,
+            'address' => $n % 8 === 7 ? null : sprintf('RT %03d, %s', 1 + $n % 6, $village->name),
+            'founded_year' => $data['founded'],
+            'leader_name' => $data['leader'],
+            'phone' => $n % 7 === 0 ? null : sprintf('0812-0000-%04d', 1000 + $n),
+            'email' => ($data['email'] ?? false) ? "kelompok{$n}@example.test" : null,
             'members_count' => $members,
-            'workforce_count' => $members === null ? null : intdiv($members, 2),
-            'description' => 'Contoh deskripsi kegiatan usaha kelompok. Data ini bukan data resmi.',
-            'production_capacity' => $n % 3 === 0 ? null : 'Contoh kapasitas produksi per bulan.',
-            'markets' => $n % 2 === 0 ? 'Pasar lokal distrik dan kampung sekitar.' : null,
+            'workforce_count' => $members === null || $n % 5 === 0 ? null : max(1, intdiv($members, 3)),
+            'description' => $n % 11 === 0 ? null : strtr(DemoData::SECTOR_TEXT[$primarySector][0], ['{produk}' => $productList, '{kampung}' => $village->name]),
+            'production_capacity' => $n % 3 === 0 ? null : sprintf('Sekitar %s %s per bulan', Format::number(round($firstProduct[2] * 1.3, -1)), $firstProduct[1]),
+            'markets' => [
+                'Pasar distrik dan pengepul dari kota.',
+                'Kios di kampung, pasar mingguan, dan pesanan langsung.',
+                null,
+                'Pengepul, rumah makan di distrik, dan pembeli dari luar daerah lewat pesanan.',
+            ][$n % 4],
+            'assets' => $n % 2 === 0 ? null : 'Tanah dan bangunan rumah produksi milik bersama.',
+            'facilities' => $n % 3 === 2 ? null : 'Gudang kecil, para-para jemur, dan tempat pertemuan anggota.',
+            'equipment' => $n % 4 === 3 ? null : 'Timbangan duduk, terpal, dan alat kemas sederhana.',
             'legal_status' => $legal,
-            'legal_number' => $legal === LegalStatus::Registered ? sprintf('CONTOH-%04d', $n) : null,
-            'legal_notes' => $legal === LegalStatus::InProcess ? 'Contoh catatan: berkas sedang dilengkapi.' : null,
+            'legal_number' => $legal === LegalStatus::Registered ? sprintf('AHU-FIKTIF-%04d', $n) : null,
+            'legal_notes' => $legal === LegalStatus::InProcess ? 'Akta pendirian sedang disiapkan; berkas anggota masih dilengkapi.' : null,
             'status' => $status,
-            'reporting_starts_on' => in_array($n, self::REPORTING_FROM_SEPTEMBER) ? '2026-09-01' : self::HISTORY_PERIODS[0],
-            'is_public' => $status === OrganizationStatus::Active && ! in_array($n, self::NOT_PUBLIC),
-            'show_contact_publicly' => $n % 4 === 1,
+            'reporting_starts_on' => $data['starts'] ?? self::FIRST_PERIOD,
+            'is_public' => $status !== OrganizationStatus::Closed && ($data['public'] ?? true),
+            'show_contact_publicly' => $n % 3 === 1,
             'created_by' => $admin->id,
             'updated_by' => $admin->id,
         ]);
 
-        $primarySector = self::PRIMARY_SECTOR[$type];
-        $sectorNames = collect([$primarySector])
-            ->merge($this->rotate(self::EXTRA_SECTORS, $n))
-            ->unique()
-            ->take(1 + $n % 3);
-        $organization->sectors()->attach($sectorNames->map(fn (string $name) => $sectors[$name])->all());
+        $organization->sectors()->attach(collect($data['sectors'])->map(fn (string $name) => $sectors[$name])->all());
+        $organization->opds()->attach(collect($data['opds'])->map(fn (string $key) => $opds[$key]->id)->all());
 
-        $opdKeys = in_array($n, self::FISHERY_ONLY)
-            ? ['Perikanan']
-            : array_slice($this->rotate(['Pertanian', 'DPMPTSP', 'Dinkopdag'], $n - 1), 0, 1 + $n % 3);
-        $organization->opds()->attach(collect($opdKeys)->map(fn (string $key) => $opds[$key]->id)->all());
+        $descriptions = [
+            'Hasil anggota kelompok, dijual per {satuan}.',
+            'Dikemas rapi dan siap dikirim. Dijual per {satuan}.',
+            'Dibuat setiap pekan sesuai pesanan.',
+            'Dipilih dan disortir sebelum dijual.',
+            null,
+        ];
 
-        $catalog = self::PRODUCTS[$primarySector];
-        $products = collect(array_slice($catalog, 0, min(1 + $n % 2, count($catalog))))
-            ->map(fn (array $product, int $index) => $organization->products()->create([
-                'name' => $product[0],
-                'description' => 'Contoh deskripsi produk.',
-                'unit' => $product[1],
-                'capacity' => sprintf('%d %s/bulan', 50 + $n * 10, $product[1]),
-                'is_public' => $organization->is_public,
-                'is_featured' => $organization->is_public && $index === 0 && $n % 3 === 0,
-            ]));
-
-        if ($n % 3 !== 0) {
-            $licenseStatus = LicenseStatus::cases()[$n % 4];
-            $organization->licenses()->create([
-                'type' => ['NIB', 'PIRT', 'Sertifikat Halal'][$n % 3],
-                'number' => $licenseStatus === LicenseStatus::Issued ? sprintf('CONTOH-IZIN-%04d', $n) : null,
-                'status' => $licenseStatus,
-                'submitted_on' => $licenseStatus === LicenseStatus::None ? null : '2026-06-15',
-                'issued_on' => $licenseStatus === LicenseStatus::Issued ? '2026-08-20' : null,
-                // Contoh tanggal habis berlaku: sebagian dekat (muncul di "Akan habis dalam 60 hari"), satu kosong.
-                'expires_on' => match (true) {
-                    $licenseStatus !== LicenseStatus::Issued => null,
-                    $n % 3 === 1 => now()->addDays(20 + $n)->toDateString(),
-                    $n > 10 => null,
-                    default => '2029-08-20',
-                },
-                'notes' => $licenseStatus === LicenseStatus::NeedsFix ? 'Contoh catatan: dokumen pendukung perlu diperbaiki.' : null,
+        $products = [];
+        foreach ($data['products'] as $index => [$name, $unit, $base, $price, $season, $photo]) {
+            $description = $descriptions[($n + $index) % count($descriptions)];
+            $product = $organization->products()->create([
+                'name' => $name,
+                'description' => $description ? str_replace('{satuan}', $unit, $description) : null,
+                'unit' => $unit,
+                'capacity' => sprintf('%s %s/bulan', Format::number(round($base * 1.2, -1)), $unit),
+                'is_public' => $organization->is_public && ! ($index > 0 && $n % 4 === 0),
+                'is_featured' => $organization->is_public && $index === 0 && ($photo !== null || $n % 4 === 2),
             ]);
+
+            if ($photo && $this->photosEnabled()) {
+                $this->storeProductPhoto($product, $photo);
+            }
+
+            $products[] = [$product, $base, $price, $season];
         }
 
-        return ['organization' => $organization, 'opds' => $opdKeys, 'products' => $products];
+        $this->seedLicenses($n, $organization);
+
+        return ['organization' => $organization, 'opds' => $data['opds'], 'products' => $products];
     }
 
-    private function seedReports(int $n, Organization $organization, Collection $products, User $verifier, ?User $groupUser): void
+    /** 0–2 izin per kelompok dengan status beragam; sebagian izin terbit akan habis dalam 60 hari. */
+    private function seedLicenses(int $n, Organization $organization): void
     {
-        if ($organization->status === OrganizationStatus::Closed) {
-            return;
-        }
+        $types = ['NIB' => 'NIB', 'PIRT' => 'PIRT', 'Sertifikat Halal' => 'HALAL'];
 
-        foreach ([...self::HISTORY_PERIODS, ...self::PERIODS] as $index => $period) {
-            if ($organization->reporting_starts_on->gt(Carbon::parse($period))) {
-                continue;
+        foreach (range(0, $n % 3 - 1) as $i) {
+            if ($n % 3 === 0) {
+                break;
             }
 
-            // $k < 0 = bulan riwayat: terverifikasi, sebagian kecil sengaja tidak melapor (celah di grafik).
-            $k = $index - count(self::HISTORY_PERIODS);
-            $step = $k >= 0 ? $k : $index % 4;
-            $status = $k >= 0 ? $this->reportStatus($n, $k) : (($n + $index) % 9 === 0 ? null : ReportStatus::Verified);
-            if ($status === null) {
-                continue;
-            }
+            $type = array_keys($types)[($n + $i) % 3];
+            $status = LicenseStatus::cases()[($n + $i) % 4];
 
-            $noActivity = $organization->status === OrganizationStatus::Inactive || ($n === 3 && $k === 1);
-            $sales = $noActivity ? null : ($k >= 0 ? 150_000 * $n + 50_000 * $k : 120_000 * $n + 40_000 * $step);
-
-            // Sebagian angka sengaja dibiarkan NULL (tidak diisi) agar keterangan "dari X kelompok" teruji.
-            $report = $organization->monthlyReports()->create([
-                'period' => $period,
+            $organization->licenses()->create([
+                'type' => $type,
+                'number' => $status === LicenseStatus::Issued ? sprintf('FIKTIF-%s-%04d', $types[$type], $n) : null,
                 'status' => $status,
-                'no_activity' => $noActivity,
-                'activity_summary' => $noActivity ? null : 'Contoh ringkasan kegiatan bulan '.Format::month($period).'.',
-                'activity_count' => $noActivity ? 0 : 1 + ($n + $step) % 5,
-                'achievements' => $noActivity || $n % 2 === 0 ? null : 'Contoh capaian: produksi berjalan sesuai rencana.',
-                'members_active' => $noActivity || $organization->members_count === null ? null : max(1, $organization->members_count - $step),
-                'workforce_count' => $noActivity ? null : $organization->workforce_count,
-                'members_change' => $noActivity ? null : [0, 1, 0, -1][($n + $step) % 4],
-                'income_sales' => $sales,
-                'income_other' => $noActivity || $n % 3 === 0 ? null : ($n % 2) * 100_000,
-                'costs' => $noActivity || $n % 5 === 4 ? null : (int) round($sales * 0.6, -3),
+                'submitted_on' => $status === LicenseStatus::None ? null : Carbon::parse('2026-03-02')->addDays(($n * 9) % 120)->toDateString(),
+                'issued_on' => $status === LicenseStatus::Issued ? Carbon::parse('2026-06-01')->addDays(($n * 7) % 60)->toDateString() : null,
+                'expires_on' => match (true) {
+                    $status !== LicenseStatus::Issued => null,
+                    $n % 3 === 1 => $this->now->copy()->addDays(15 + $n % 40)->toDateString(),
+                    $n > 25 => null,
+                    default => '2029-08-20',
+                },
+                'notes' => $status === LicenseStatus::NeedsFix ? 'Foto tempat produksi dan surat keterangan kampung perlu diunggah ulang.' : null,
             ]);
-
-            if (! $noActivity && $products->isNotEmpty()) {
-                $product = $products->first();
-                $produced = 20 + $n + 5 * $step;
-                $sold = $produced - 5;
-                $report->items()->create([
-                    'product_id' => $product->id,
-                    'product_name' => $product->name,
-                    'production_qty' => $produced,
-                    'production_unit' => $product->unit,
-                    'sales_qty' => $sold,
-                    'sales_unit' => $product->unit,
-                    'revenue' => $sold * 12_000,
-                ]);
-            }
-
-            if (! $noActivity && $n % 3 === 0) {
-                $report->issues()->create([
-                    'kind' => IssueKind::Problem,
-                    'category' => ProblemCategory::Modal->value,
-                    'description' => 'Contoh masalah: modal kerja terbatas.',
-                ]);
-            }
-
-            if (! $noActivity && $n % 4 === 1) {
-                $report->issues()->create([
-                    'kind' => IssueKind::Support,
-                    'category' => SupportCategory::Pelatihan->value,
-                    'description' => 'Contoh kebutuhan: pelatihan pengemasan produk.',
-                ]);
-            }
-
-            $this->seedHistory($report, $status, $n, Carbon::parse($period), $verifier, $groupUser);
         }
     }
 
     /**
-     * Status laporan contoh; null berarti kelompok sengaja belum melapor.
+     * @param  array{organization: Organization, opds: list<string>, products: list<array>}  $seeded
      */
-    private function reportStatus(int $n, int $k): ?ReportStatus
+    private function seedReports(int $n, array $data, array $seeded, Collection $opdUsers, ?User $groupUser): void
     {
-        if (($n + $k) % 7 === 0) {
-            return null;
+        $organization = $seeded['organization'];
+        if ($organization->status === OrganizationStatus::Closed) {
+            return;
         }
 
-        return match ($k) {
-            0 => $n % 10 === 3 ? ReportStatus::Submitted : ReportStatus::Verified,
-            1 => match ($n % 5) {
-                1 => ReportStatus::Revision,
-                2 => ReportStatus::Submitted,
+        $verifier = $opdUsers[$seeded['opds'][0]];
+        $tier = $data['tier'];
+        $inactiveSince = isset($data['since']) ? Carbon::parse($data['since']) : null;
+        $primarySector = $data['sectors'][0];
+
+        foreach (range(0, self::PERIOD_COUNT - 1) as $i) {
+            $period = Carbon::parse(self::FIRST_PERIOD)->addMonthsNoOverflow($i);
+            if ($organization->reporting_starts_on->gt($period)) {
+                continue;
+            }
+
+            $status = array_key_exists($period->format('Y-m'), self::OVERRIDES[$n] ?? [])
+                ? self::OVERRIDES[$n][$period->format('Y-m')]
+                : $this->reportStatus($n, $tier, $i);
+            if ($status === null) {
+                continue;
+            }
+
+            [$status, $steps] = $this->timeline($status, $n, $tier, $i, $period, $verifier, $groupUser);
+
+            // Tidak aktif sementara, atau nelayan tidak melaut saat angin barat bulan Januari.
+            $noActivity = ($inactiveSince && $period->gte($inactiveSince))
+                || ($primarySector === 'Perikanan' && $period->month === 1 && $tier !== 'rajin');
+
+            [$figures, $items] = $noActivity
+                ? [['activity_count' => 0], []]
+                : $this->reportFigures($n, $i, $data, $seeded['products'], $organization, $period);
+
+            $report = $organization->monthlyReports()->create([
+                'period' => $period->toDateString(),
+                'status' => $status,
+                'no_activity' => $noActivity,
+                ...$figures,
+            ]);
+
+            foreach ($items as $item) {
+                $report->items()->create($item);
+            }
+
+            if (! $noActivity) {
+                $this->seedIssues($report, $n, $i);
+            }
+
+            // Kelompok tanpa akun: draf bulan wajib lapor diisi petugas OPD kedua atas nama kelompok.
+            if ($status === ReportStatus::Draft && ! $groupUser && $tier === 'telat' && count($seeded['opds']) > 1 && $i === 11) {
+                $enteredBy = $opdUsers[$seeded['opds'][1]];
+                $report->forceFill(['entered_by' => $enteredBy->id])->save();
+                ReportReview::forceCreate([
+                    'monthly_report_id' => $report->id,
+                    'user_id' => $enteredBy->id,
+                    'action' => ReviewAction::Entered,
+                    'created_at' => Carbon::parse('2026-10-09 14:00'),
+                ]);
+            }
+
+            $this->saveHistory($report, $steps);
+
+            if (in_array($status, [ReportStatus::Submitted, ReportStatus::Verified])) {
+                $this->seedFollowUps($report, $n, $i, $verifier, $steps[0][1]);
+            }
+        }
+    }
+
+    /**
+     * Status awal per kebiasaan melapor; null = tidak melapor bulan itu. Indeks 0–8: Oktober 2025–Juni 2026,
+     * 9: Juli, 10: Agustus, 11: September (bulan wajib lapor, tenggat 10 Oktober), 12: Oktober (bulan berjalan).
+     */
+    private function reportStatus(int $n, string $tier, int $i): ?ReportStatus
+    {
+        $r = $this->chance($n, $i, 'status');
+        $gap = ['rajin' => 0.0, 'biasa' => 0.05, 'telat' => 0.18][$tier];
+
+        return match (true) {
+            $i === 12 => $tier === 'rajin' && $r < 0.5 ? ReportStatus::Draft : null,
+            $i <= 8 => $i > 0 && $r < $gap ? null : ReportStatus::Verified,
+            $i === 9 => match (true) {
+                $r < $gap => null,
+                $r < $gap + 0.05 => ReportStatus::Submitted,
                 default => ReportStatus::Verified,
             },
-            default => $n % 6 === 5 ? ReportStatus::Revision : match ($n % 4) {
-                0 => null,
-                1 => ReportStatus::Draft,
-                2 => ReportStatus::Submitted,
-                default => ReportStatus::Verified,
+            $i === 10 => match ($tier) {
+                'rajin' => $r < 0.2 ? ReportStatus::Submitted : ReportStatus::Verified,
+                'biasa' => $r < 0.1 ? ReportStatus::Revision : ($r < 0.25 ? ReportStatus::Submitted : ReportStatus::Verified),
+                'telat' => $r < 0.2 ? null : ($r < 0.35 ? ReportStatus::Revision : ($r < 0.5 ? ReportStatus::Submitted : ReportStatus::Verified)),
+            },
+            default => match ($tier) {
+                'rajin' => $r < 0.5 ? ReportStatus::Submitted : ($r < 0.85 ? ReportStatus::Verified : ReportStatus::Revision),
+                'biasa' => match (true) {
+                    $r < 0.12 => null,
+                    $r < 0.3 => ReportStatus::Draft,
+                    $r < 0.65 => ReportStatus::Submitted,
+                    $r < 0.75 => ReportStatus::Revision,
+                    default => ReportStatus::Verified,
+                },
+                'telat' => $r < 0.35 ? null : ($r < 0.7 ? ReportStatus::Draft : ReportStatus::Submitted),
             },
         };
     }
 
-    private function seedHistory(MonthlyReport $report, ReportStatus $status, int $n, Carbon $period, User $verifier, ?User $groupUser): void
+    /**
+     * Riwayat pengajuan dan tinjauan. Tanggal pengajuan mengikuti kebiasaan kelompok (yang "telat" sering
+     * lewat tanggal 10). Langkah yang jatuh setelah sekarang dibuang, dan status mengikuti langkah terakhir.
+     *
+     * @return array{0: ReportStatus, 1: list<array{0: ReviewAction, 1: Carbon, 2: ?User, 3: ?string}>}
+     */
+    private function timeline(ReportStatus $status, int $n, string $tier, int $i, Carbon $period, User $verifier, ?User $groupUser): array
     {
-        $submittedAt = $period->copy()->addMonth()->setDay(2 + $n % 5)->setTime(10, 0);
-        $revisionNote = 'Contoh catatan: lengkapi angka penjualan dan biaya.';
+        if ($status === ReportStatus::Draft) {
+            return [$status, []];
+        }
 
-        $steps = match ($status) {
-            ReportStatus::Draft => [],
-            ReportStatus::Submitted => [
-                [ReviewAction::Submitted, $submittedAt, $groupUser, null],
-            ],
-            ReportStatus::Revision => [
-                [ReviewAction::Submitted, $submittedAt, $groupUser, null],
-                [ReviewAction::RevisionRequested, $submittedAt->copy()->addDay(), $verifier, $revisionNote],
-            ],
-            ReportStatus::Verified => $n % 4 === 2
-                ? [
-                    [ReviewAction::Submitted, $submittedAt, $groupUser, null],
-                    [ReviewAction::RevisionRequested, $submittedAt->copy()->addDay(), $verifier, $revisionNote],
-                    [ReviewAction::Submitted, $submittedAt->copy()->addDays(2), $groupUser, null],
-                    [ReviewAction::Verified, $submittedAt->copy()->addDays(3), $verifier, null],
-                ]
-                : [
-                    [ReviewAction::Submitted, $submittedAt, $groupUser, null],
-                    [ReviewAction::Verified, $submittedAt->copy()->addDays(2), $verifier, null],
-                ],
+        $r = $this->chance($n, $i, 'day');
+        $late = $this->chance($n, $i, 'late');
+        $day = match ($tier) {
+            'rajin' => 1 + (int) ($r * 6),
+            'biasa' => $late < 0.12 ? 11 + (int) ($r * 8) : 3 + (int) ($r * 8),
+            'telat' => $late < 0.6 ? 11 + (int) ($r * 18) : 6 + (int) ($r * 5),
         };
 
+        $submittedAt = $period->copy()->addMonthNoOverflow()->setDay($day)->setTime(7 + $n % 10, ($n * 7) % 60);
+        if ($submittedAt->gte($this->now)) {
+            $submittedAt = $this->now->copy()->subHours(3);
+        }
+
+        $review = fn (int $offset) => $submittedAt->copy()->addDays($offset)->setTime(9 + ($n + $i) % 6, ($n * 13) % 60);
+        $note = self::REVISION_NOTES[($n + $i) % count(self::REVISION_NOTES)];
+        $verifyDelay = 1 + (int) ($this->chance($n, $i, 'verify') * 4);
+
+        $steps = [[ReviewAction::Submitted, $submittedAt, $groupUser, null]];
+        $steps = match ($status) {
+            ReportStatus::Submitted => $steps,
+            ReportStatus::Revision => [...$steps, [ReviewAction::RevisionRequested, $review(1 + $n % 2), $verifier, $note]],
+            default => $this->chance($n, $i, 'cycle') < 0.15
+                ? [
+                    ...$steps,
+                    [ReviewAction::RevisionRequested, $review(1), $verifier, $note],
+                    [ReviewAction::Submitted, $review(3)->subHours(2), $groupUser, null],
+                    [ReviewAction::Verified, $review(3 + $verifyDelay), $verifier, null],
+                ]
+                : [...$steps, [ReviewAction::Verified, $review($verifyDelay), $verifier, null]],
+        };
+
+        $steps = array_values(array_filter($steps, fn (array $step) => $step[1]->lt($this->now)));
+        $status = match (end($steps)[0]) {
+            ReviewAction::Verified => ReportStatus::Verified,
+            ReviewAction::RevisionRequested => ReportStatus::Revision,
+            default => ReportStatus::Submitted,
+        };
+
+        return [$status, $steps];
+    }
+
+    /** @param  list<array{0: ReviewAction, 1: Carbon, 2: ?User, 3: ?string}>  $steps */
+    private function saveHistory(MonthlyReport $report, array $steps): void
+    {
         // submitted_at = pengajuan pertama (dasar status terlambat); pengajuan ulang hanya di riwayat.
         $firstSubmitted = null;
         $verified = null;
@@ -473,13 +604,153 @@ class DemoSeeder extends Seeder
     }
 
     /**
-     * @param  list<string>  $items
-     * @return list<string>
+     * Angka satu laporan: produksi mengikuti musim komoditas, keuangan dari penjualan. Kelompok "telat"
+     * kadang tidak mengisi keuangan (NULL, laba ikut NULL), bukan nol.
+     *
+     * @param  list<array{0: Product, 1: int, 2: int, 3: string}>  $products
+     * @return array{0: array<string, mixed>, 1: list<array<string, mixed>>}
      */
-    private function rotate(array $items, int $offset): array
+    private function reportFigures(int $n, int $i, array $data, array $products, Organization $organization, Carbon $period): array
     {
-        $offset %= count($items);
+        $tier = $data['tier'];
+        $chance = fn (string $key) => $this->chance($n, $i, $key);
+        $fillsFinance = ! ($tier === 'telat' && $chance('finance') < 0.3) && ! ($tier === 'biasa' && $chance('finance') < 0.06);
+        $growth = 1 + 0.01 * $i;
 
-        return [...array_slice($items, $offset), ...array_slice($items, 0, $offset)];
+        $items = [];
+        foreach ($products as $index => [$product, $base, $price, $season]) {
+            if ($index > 0 && $chance("skip{$index}") < 0.2) {
+                continue;
+            }
+
+            $factor = DemoData::SEASONS[$season][$period->month - 1] * (0.85 + 0.3 * $chance("qty{$index}")) * $growth;
+            $produced = $this->quantity($base * $factor, $product->unit);
+            $sold = $this->quantity($produced * (0.8 + 0.2 * $chance("sold{$index}")), $product->unit);
+
+            $items[] = [
+                'product_id' => $product->id,
+                'product_name' => $product->name,
+                'production_qty' => $produced,
+                'production_unit' => $product->unit,
+                'sales_qty' => $sold,
+                'sales_unit' => $product->unit,
+                'revenue' => $fillsFinance ? (int) round($sold * $price, -3) : null,
+            ];
+        }
+
+        $sales = $fillsFinance ? array_sum(array_column($items, 'revenue')) : null;
+        $isEnterprise = in_array($data['type'], ['bumdes', 'kdmp']);
+        $members = $organization->members_count;
+        $text = DemoData::SECTOR_TEXT[$data['sectors'][0]];
+        $productName = mb_strtolower($products[0][0]->name);
+
+        return [[
+            'activity_summary' => str_replace('{produk}', $productName, $text[1][($n + $i) % count($text[1])]),
+            'activity_count' => 2 + (int) ($chance('activities') * 7),
+            'achievements' => $chance('achievement') < 0.3 ? $text[2][($n + $i) % count($text[2])] : null,
+            'members_active' => $members === null || ($tier === 'telat' && $chance('members') < 0.2) ? null : max(1, $members - (int) ($chance('active') * 4)),
+            'workforce_count' => $organization->workforce_count,
+            'members_change' => $tier === 'telat' && $chance('members') < 0.2 ? null : match (true) {
+                $chance('change') < 0.08 => 1,
+                $chance('change') < 0.12 => -1,
+                $chance('change') < 0.14 => 2,
+                default => 0,
+            },
+            'income_sales' => $sales,
+            'income_other' => match (true) {
+                ! $fillsFinance => null,
+                $isEnterprise => (int) round(300_000 + 1_200_000 * $chance('other'), -4),
+                $chance('other') < 0.15 => (int) round(100_000 + 400_000 * $chance('other2'), -4),
+                $tier === 'telat' && $chance('other') < 0.5 => null,
+                default => 0,
+            },
+            'costs' => ! $fillsFinance || $chance('costs') < 0.1 ? null : (int) round($sales * (0.55 + 0.2 * $chance('margin')), -3),
+        ], $items];
+    }
+
+    private function seedIssues(MonthlyReport $report, int $n, int $i): void
+    {
+        if ($this->chance($n, $i, 'problem') < 0.28) {
+            [$category, $description] = DemoData::PROBLEMS[($n * 3 + $i) % count(DemoData::PROBLEMS)];
+            $report->issues()->create(['kind' => IssueKind::Problem, 'category' => $category, 'description' => $description]);
+        }
+
+        if ($this->chance($n, $i, 'need') < 0.22) {
+            [$category, $description] = DemoData::NEEDS[($n + $i) % count(DemoData::NEEDS)];
+            $report->issues()->create(['kind' => IssueKind::Support, 'category' => $category, 'description' => $description]);
+        }
+    }
+
+    /**
+     * Tindak lanjut beragam: isian lama kebanyakan sudah Selesai, isian baru sebagian masih Baru (ada yang lebih
+     * dari 30 hari, muncul di "Kebutuhan belum ditindaklanjuti").
+     */
+    private function seedFollowUps(MonthlyReport $report, int $n, int $i, User $verifier, Carbon $submittedAt): void
+    {
+        $paths = [
+            [],
+            ['reviewed'],
+            ['reviewed', 'planned'],
+            ['reviewed', 'planned', 'in_progress'],
+            ['reviewed', 'in_progress', 'done'],
+            ['reviewed', 'unable'],
+        ];
+
+        foreach ($report->issues as $index => $issue) {
+            $r = $this->chance($n, $i, "follow{$index}");
+            $path = $paths[match (true) {
+                // Isian sampai Juni 2026 sudah lama ditangani.
+                $i <= 8 => $r < 0.8 ? 4 : ($r < 0.9 ? 5 : 3),
+                $r < 0.35 => 0,
+                $r < 0.5 => 1,
+                $r < 0.62 => 2,
+                $r < 0.75 => 3,
+                $r < 0.92 => 4,
+                default => 5,
+            }];
+
+            $from = FollowUpStatus::New;
+            $at = $submittedAt->copy()->addDays(3);
+            $last = null;
+            foreach ($path as $to) {
+                if ($at->gte($this->now)) {
+                    break;
+                }
+
+                IssueFollowUp::forceCreate([
+                    'report_issue_id' => $issue->id,
+                    'user_id' => $verifier->id,
+                    'opd_id' => $verifier->opd_id,
+                    'from_status' => $from,
+                    'to_status' => FollowUpStatus::from($to),
+                    'note' => DemoData::FOLLOW_UP_NOTES[$to],
+                    'acted_on' => $at->toDateString(),
+                    'created_at' => $at,
+                ]);
+                $from = FollowUpStatus::from($to);
+                $last = $at->copy();
+                $at->addDays(5 + $n % 6);
+            }
+
+            if ($last) {
+                $issue->forceFill(['follow_up_status' => $from, 'follow_up_opd_id' => $verifier->opd_id, 'follow_up_at' => $last])->save();
+            }
+        }
+    }
+
+    /** kg/liter boleh satu desimal; satuan hitung (ekor, bungkus, buah, ...) selalu bulat. */
+    private function quantity(float $value, string $unit): float|int
+    {
+        if (in_array($unit, ['kg', 'liter'])) {
+            return $value >= 100 ? max(1, (int) round($value)) : max(0.5, round($value, 1));
+        }
+
+        return max(1, (int) round($value));
+    }
+
+    /** Angka 0–1 yang tetap untuk kombinasi kelompok, bulan, dan kunci yang sama. */
+    private function chance(int $n, int $i, string $key): float
+    {
+        return hexdec(substr(md5("{$n}|{$i}|{$key}"), 0, 8)) / 0xFFFFFFFF;
     }
 }

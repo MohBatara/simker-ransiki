@@ -232,3 +232,14 @@ test('setiap halaman memuat favicon yang benar-benar ada', function () {
         expect(filesize(public_path($file)))->toBeGreaterThan(0);
     }
 });
+
+// ---------------------------------------------------------------- Label "Mode uji"
+
+test('label Mode uji tampil di luar produksi dan hilang di produksi', function () {
+    $this->get('/login')->assertOk()->assertSee('Mode uji');
+    $this->get('/')->assertOk()->assertSee('Mode uji');
+
+    asProduction();
+
+    expect(view('partials.test-mode')->render())->not->toContain('Mode uji');
+});

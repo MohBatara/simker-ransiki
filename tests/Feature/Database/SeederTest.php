@@ -29,14 +29,14 @@ test('seeder master aman dijalankan ulang', function () {
         ->and(BusinessSector::count())->toBe(7);
 });
 
-test('data contoh sesuai CLAUDE.md bagian 10', function () {
+test('data demo sesuai CLAUDE.md bagian 10', function () {
     $this->seed(DemoSeeder::class);
 
     expect(Opd::count())->toBe(4)
-        ->and(Organization::count())->toBe(25)
+        ->and(Organization::count())->toBe(40)
         ->and(Organization::where('status', OrganizationStatus::Closed)->count())->toBe(1)
         ->and(Organization::where('status', OrganizationStatus::Inactive)->count())->toBeGreaterThan(1)
-        ->and(MonthlyReport::distinct()->count('period'))->toBe(9)
+        ->and(MonthlyReport::distinct()->count('period'))->toBe(13)
         ->and(MonthlyReport::where('no_activity', true)->exists())->toBeTrue()
         ->and(MonthlyReport::where('no_activity', false)->whereNull('profit')->exists())->toBeTrue();
 

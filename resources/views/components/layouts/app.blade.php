@@ -67,6 +67,7 @@
     '[--app-bottom:0px] [--app-safe-bottom:env(safe-area-inset-bottom)]' => $focus,
 ])>
     @include('partials.skip-link')
+    @include('partials.test-mode')
     {{-- Sidebar: ikon + label ringkas di tablet (72px), penuh di desktop (248px) --}}
     <aside class="hidden md:fixed md:inset-y-0 md:left-0 md:z-20 md:flex md:w-[72px] md:flex-col md:border-r md:border-line md:bg-paper xl:w-[248px]">
         <div class="flex h-16 shrink-0 items-center gap-3 border-b border-line px-2 max-xl:justify-center xl:px-5" title="SIM-KER Distrik Ransiki">

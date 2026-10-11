@@ -17,8 +17,8 @@ function demoUser(string $username): User
 test('scope visibleTo memberi jumlah kelompok sesuai peran', function () {
     $kelompok1 = demoUser('kelompok1');
 
-    expect(Organization::visibleTo(demoUser('admin'))->count())->toBe(25)
-        ->and(Organization::visibleTo(demoUser('opd.perikanan'))->count())->toBe(5)
+    expect(Organization::visibleTo(demoUser('admin'))->count())->toBe(40)
+        ->and(Organization::visibleTo(demoUser('opd.perikanan'))->count())->toBe(9)
         ->and(Organization::visibleTo($kelompok1)->pluck('id')->all())->toBe([$kelompok1->organization_id]);
 });
 

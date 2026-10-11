@@ -48,6 +48,7 @@
 </head>
 <body class="flex min-h-dvh flex-col bg-canvas font-sans text-ui text-ink antialiased">
     @include('partials.skip-link')
+    @include('partials.test-mode')
 
     {{--
         Header. Di beranda ($heroHeader) menempel di atas hero dengan latar forest 70% dan teks putih

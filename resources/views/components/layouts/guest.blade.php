@@ -18,6 +18,7 @@
 </head>
 <body class="min-h-dvh bg-canvas font-sans text-ui text-ink antialiased">
     @include('partials.skip-link')
+    @include('partials.test-mode')
     <main id="konten" tabindex="-1" class="flex min-h-dvh flex-col items-center justify-center px-4 py-10">
         <div class="w-full max-w-sm">
             <a href="{{ url('/') }}" class="mb-6 flex items-center justify-center gap-3 rounded-control leading-tight">
