@@ -52,3 +52,11 @@ test('overlay hero menjaga teks putih terbaca di kondisi terburuk', function () 
         // Gradasi lurus 85% → 20% hanya 52,5% di titik 50% dan gagal; karena itu titik 70% wajib ada.
         ->and(contrast($white, overlayOnWhite(0.85 - 0.65 * 0.5)))->toBeLessThan(4.5);
 });
+
+test('overlay hero beranda menjaga aksen sun di judul terbaca di kondisi terburuk', function () {
+    // HP padat 85%; desktop titik 55% (batas kanan area teks) 85%.
+    expect(contrast(hexRgb('#E9B949'), overlayOnWhite(0.85)))->toBeGreaterThanOrEqual(4.5)
+        ->and(contrast(hexRgb('#FFFFFF'), overlayOnWhite(0.85)))->toBeGreaterThanOrEqual(4.5)
+        // Overlay 70% (overlay-forest) tidak cukup untuk teks sun.
+        ->and(contrast(hexRgb('#E9B949'), overlayOnWhite(0.70)))->toBeLessThan(4.5);
+});

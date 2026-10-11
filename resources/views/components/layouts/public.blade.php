@@ -7,15 +7,13 @@
     'canonical' => null,
     // Open Graph og:type: "website", atau "article" untuk halaman berita.
     'type' => 'website',
-    // Beranda: header gelap menempel di atas hero, berubah putih setelah hero terlewati.
-    'heroHeader' => false,
 ])
 
 @php
     $menu = [
         ['label' => 'Beranda', 'href' => route('home'), 'active' => request()->routeIs('home')],
         ['label' => 'Profil Ransiki', 'href' => route('public.profile'), 'active' => request()->routeIs('public.profile')],
-        ['label' => 'Direktori Kelompok', 'href' => route('public.directory'), 'active' => request()->routeIs('public.directory', 'public.organization')],
+        ['label' => 'Direktori', 'href' => route('public.directory'), 'active' => request()->routeIs('public.directory', 'public.organization')],
         ['label' => 'Produk Unggulan', 'href' => route('public.products'), 'active' => request()->routeIs('public.products')],
         ['label' => 'Berita', 'href' => route('public.posts'), 'active' => request()->routeIs('public.posts', 'public.post')],
         ['label' => 'Kontak', 'href' => route('public.contact'), 'active' => request()->routeIs('public.contact')],
@@ -23,8 +21,9 @@
     $account = auth()->check()
         ? ['label' => 'Dasbor', 'href' => route(auth()->user()->role->dashboardRoute())]
         : ['label' => 'Masuk', 'href' => route('login')];
-    // $footer disiapkan view composer di AppServiceProvider (kontak kantor + daftar OPD, di-cache).
+    // $footer disiapkan view composer di AppServiceProvider (kontak kantor, di-cache).
     $office = $footer['settings'];
+    $tel = fn (string $phone) => 'tel:'.preg_replace('/[^0-9+]/', '', $phone);
     $pageTitle = $title ? $title.' · '.config('app.name') : config('app.name');
     $canonical ??= url()->current();
     $image ??= asset('og-default.png');
@@ -50,61 +49,100 @@
     @include('partials.skip-link')
     @include('partials.test-mode')
 
-    {{--
-        Header. Di beranda ($heroHeader) menempel di atas hero dengan latar forest 70% dan teks putih
-        (kontras 5,5:1 walau di atas bagian foto yang putih), lalu menjadi putih setelah hero terlewati.
-        data-dark mengatur warna anak-anaknya lewat group-data-[dark=true]/header.
-    --}}
+    {{-- Bilah atas forest (mulai tablet). Di HP isinya ada di footer dan menu. --}}
+    <div class="on-dark hidden bg-forest text-caption text-forest-soft md:block">
+        <div class="mx-auto flex h-10 max-w-public items-center justify-between gap-6 px-6">
+            <ul class="flex min-w-0 items-center gap-5">
+                @if ($office['office_address'])
+                    <li class="flex min-w-0 items-center gap-1.5">
+                        <x-heroicon-o-map-pin class="size-4 shrink-0" aria-hidden="true" />
+                        <span class="sr-only">Alamat: </span>
+                        <span class="truncate" title="{{ $office['office_address'] }}">{{ Str::of($office['office_address'])->replace("\n", ', ') }}</span>
+                    </li>
+                @endif
+                @if ($office['office_phone'])
+                    <li class="flex shrink-0 items-center gap-1.5">
+                        <x-heroicon-o-phone class="size-4" aria-hidden="true" />
+                        <span class="sr-only">Telepon: </span>
+                        <a href="{{ $tel($office['office_phone']) }}" class="rounded-control text-paper hover:underline">{{ $office['office_phone'] }}</a>
+                    </li>
+                @endif
+                @if ($office['office_email'])
+                    <li class="flex shrink-0 items-center gap-1.5 max-lg:hidden">
+                        <x-heroicon-o-envelope class="size-4" aria-hidden="true" />
+                        <span class="sr-only">Email: </span>
+                        <a href="mailto:{{ $office['office_email'] }}" class="rounded-control text-paper hover:underline">{{ $office['office_email'] }}</a>
+                    </li>
+                @endif
+            </ul>
+            <nav aria-label="Tautan atas" class="flex shrink-0 items-center gap-5">
+                <a href="{{ route('public.posts') }}" class="rounded-control text-paper hover:underline">Berita</a>
+                <a href="{{ route('public.contact') }}" class="rounded-control text-paper hover:underline">Kontak</a>
+                <a href="{{ $account['href'] }}" class="inline-flex h-8 items-center rounded-control bg-sun px-4 font-semibold text-ink transition-colors hover:bg-sun/85">{{ $account['label'] }}</a>
+            </nav>
+        </div>
+    </div>
+
     <header
-        x-data="{ open: false, solid: @js(! $heroHeader) }"
-        @if ($heroHeader)
-            x-init="const hero = document.querySelector('[data-hero]'); hero ? new IntersectionObserver(([entry]) => solid = ! entry.isIntersecting, { rootMargin: '-64px 0px 0px 0px' }).observe(hero) : solid = true"
-        @endif
-        data-dark="{{ $heroHeader ? 'true' : 'false' }}"
-        x-bind:data-dark="String(! (solid || open))"
-        x-bind:class="{ 'on-dark': ! (solid || open) }"
-        @class([
-            'group/header z-40 border-b pt-[env(safe-area-inset-top)] transition-colors',
-            'sticky top-0 border-transparent bg-paper data-[dark=true]:border-transparent data-[dark=true]:bg-forest/70 data-[dark=false]:border-line' => $heroHeader,
-            'border-line bg-paper' => ! $heroHeader,
-        ])
+        x-data="{ open: false, search: false }"
+        x-on:keydown.escape="search = false; open = false"
+        class="sticky top-0 z-40 border-b border-line bg-paper pt-[env(safe-area-inset-top)]"
     >
-        <div class="mx-auto flex h-16 max-w-public items-center justify-between gap-6 px-4 md:px-6">
+        <div class="mx-auto flex h-16 max-w-public items-center justify-between gap-6 px-4 md:h-18 md:px-6">
             <a href="{{ route('home') }}" class="flex items-center gap-3 rounded-control leading-tight">
-                <span class="rounded-control bg-paper"><x-logo /></span>
+                <x-logo />
                 <span>
-                    <span class="block text-ui font-semibold text-ink group-data-[dark=true]/header:text-paper">SIM-KER</span>
-                    <span class="block text-caption text-ink-muted group-data-[dark=true]/header:text-paper">Distrik Ransiki</span>
+                    <span class="block font-serif text-card-title font-semibold text-ink">SIM-KER</span>
+                    <span class="block text-caption text-ink-soft">Distrik Ransiki</span>
                 </span>
             </a>
 
-            <nav aria-label="Menu utama" class="hidden items-center gap-1 lg:flex">
-                @foreach ($menu as $item)
-                    <a
-                        href="{{ $item['href'] }}"
-                        @if ($item['active']) aria-current="page" @endif
-                        @class([
-                            'rounded-control px-3 py-2 transition-colors group-data-[dark=true]/header:text-paper',
-                            'font-semibold text-brand underline-offset-8 group-data-[dark=true]/header:underline group-data-[dark=true]/header:decoration-sun group-data-[dark=true]/header:decoration-2' => $item['active'],
-                            'text-ink-soft hover:text-ink group-data-[dark=true]/header:hover:underline' => ! $item['active'],
-                        ])
-                    >{{ $item['label'] }}</a>
-                @endforeach
-                <span class="mx-2 h-5 w-px bg-line group-data-[dark=true]/header:bg-paper/40" aria-hidden="true"></span>
-                <a href="{{ $account['href'] }}" class="rounded-control px-3 py-2 text-ink-soft transition-colors hover:text-ink group-data-[dark=true]/header:text-paper group-data-[dark=true]/header:hover:underline">{{ $account['label'] }}</a>
-            </nav>
+            <div class="flex items-center gap-1">
+                <nav aria-label="Menu utama" class="hidden self-stretch lg:flex">
+                    @foreach ($menu as $item)
+                        <a
+                            href="{{ $item['href'] }}"
+                            @if ($item['active']) aria-current="page" @endif
+                            @class([
+                                'flex h-18 items-center border-b-2 px-3 transition-colors',
+                                'border-brand font-semibold text-brand' => $item['active'],
+                                'border-transparent text-ink-soft hover:text-ink' => ! $item['active'],
+                            ])
+                        >{{ $item['label'] }}</a>
+                    @endforeach
+                </nav>
+                <span class="mx-2 hidden h-6 w-px bg-line lg:block" aria-hidden="true"></span>
+                <button
+                    type="button"
+                    x-on:click="search = ! search; open = false; search && $nextTick(() => $refs.q.focus())"
+                    x-bind:aria-expanded="search"
+                    aria-controls="cari-publik"
+                    class="flex size-11 items-center justify-center rounded-control text-ink-soft hover:bg-subtle hover:text-ink"
+                >
+                    <span class="sr-only">Cari kelompok</span>
+                    <x-heroicon-o-magnifying-glass class="size-5" />
+                </button>
+                <button
+                    type="button"
+                    x-on:click="open = ! open; search = false"
+                    x-bind:aria-expanded="open"
+                    aria-controls="menu-publik"
+                    class="-mr-2 flex size-11 items-center justify-center rounded-control text-ink-soft hover:bg-subtle hover:text-ink lg:hidden"
+                >
+                    <span class="sr-only">Menu</span>
+                    <x-heroicon-o-bars-3 x-show="! open" class="size-6" />
+                    <x-heroicon-o-x-mark x-cloak x-show="open" class="size-6" />
+                </button>
+            </div>
+        </div>
 
-            <button
-                type="button"
-                x-on:click="open = ! open"
-                x-bind:aria-expanded="open"
-                aria-controls="menu-publik"
-                class="-mr-2 flex size-11 items-center justify-center rounded-control text-ink-soft hover:bg-subtle hover:text-ink group-data-[dark=true]/header:text-paper group-data-[dark=true]/header:hover:bg-paper/10 lg:hidden"
-            >
-                <span class="sr-only">Menu</span>
-                <x-heroicon-o-bars-3 x-show="! open" class="size-6" />
-                <x-heroicon-o-x-mark x-cloak x-show="open" class="size-6" />
-            </button>
+        {{-- Pencarian direktori dari header (semua ukuran layar). --}}
+        <div id="cari-publik" x-cloak x-show="search" class="border-t border-line bg-paper">
+            <form method="GET" action="{{ route('public.directory') }}" role="search" class="mx-auto flex max-w-public gap-2 px-4 py-3 md:px-6">
+                <label for="cari-header" class="sr-only">Cari nama kelompok atau produk</label>
+                <x-input id="cari-header" name="q" x-ref="q" placeholder="Cari nama kelompok atau produk" class="min-w-0 flex-1" />
+                <x-public.button type="submit" variant="brand" icon="magnifying-glass">Cari</x-public.button>
+            </form>
         </div>
 
         <nav id="menu-publik" aria-label="Menu utama" x-cloak x-show="open" class="border-t border-line bg-paper lg:hidden">
@@ -115,15 +153,15 @@
                             href="{{ $item['href'] }}"
                             @if ($item['active']) aria-current="page" @endif
                             @class([
-                                'flex h-12 items-center text-body',
-                                'font-semibold text-brand' => $item['active'],
-                                'text-ink' => ! $item['active'],
+                                'flex h-12 items-center border-l-2 pl-3 text-body',
+                                'border-brand font-semibold text-brand' => $item['active'],
+                                'border-transparent text-ink' => ! $item['active'],
                             ])
                         >{{ $item['label'] }}</a>
                     </li>
                 @endforeach
-                <li class="border-t border-line">
-                    <a href="{{ $account['href'] }}" class="flex h-12 items-center text-body text-ink-soft">{{ $account['label'] }}</a>
+                <li class="mt-1 border-t border-line pt-3 pb-1">
+                    <x-public.button :href="$account['href']" class="w-full">{{ $account['label'] }}</x-public.button>
                 </li>
             </ul>
         </nav>
@@ -134,55 +172,73 @@
         {{ $slot }}
     </main>
 
+    @php
+        $footerLinks = [
+            'Tautan cepat' => [
+                ['Beranda', route('home')],
+                ['Profil Ransiki', route('public.profile')],
+                ['Kontak', route('public.contact')],
+            ],
+            'Informasi' => [
+                ['Direktori kelompok', route('public.directory')],
+                ['Produk unggulan', route('public.products')],
+                ['Berita & kegiatan', route('public.posts')],
+                [$account['label'], $account['href']],
+            ],
+        ];
+    @endphp
     <footer class="on-dark bg-forest text-forest-soft">
-        <div class="mx-auto grid max-w-public gap-10 px-4 py-12 md:grid-cols-3 md:px-6">
-            <div class="space-y-3">
+        <div class="mx-auto grid max-w-public gap-10 px-4 py-12 sm:grid-cols-2 md:px-6 lg:grid-cols-[1.4fr_1fr_1fr_1.4fr]">
+            <div class="space-y-4">
                 <div class="flex items-center gap-3">
                     {{-- Tempat logo resmi: ganti isi komponen x-logo. --}}
-                    <span class="rounded-control bg-paper"><x-logo /></span>
+                    <x-logo inverse />
                     <div class="leading-tight">
-                        <p class="font-semibold text-paper">SIM-KER Distrik Ransiki</p>
-                        <p class="text-caption">Sistem Informasi dan Monitoring Kelembagaan Ekonomi</p>
+                        <p class="font-serif text-card-title font-semibold text-paper">SIM-KER</p>
+                        <p class="text-caption">Distrik Ransiki</p>
                     </div>
                 </div>
+                <p class="text-caption">Sistem Informasi dan Monitoring Kelembagaan Ekonomi: profil kelompok usaha, produk, dan kontak di Distrik Ransiki.</p>
                 <p class="text-caption">Dikelola oleh Pemerintah Distrik Ransiki.</p>
             </div>
 
+            @foreach ($footerLinks as $heading => $links)
+                <div>
+                    <h2 class="text-caption font-semibold uppercase tracking-wider text-paper">{{ $heading }}</h2>
+                    <ul class="mt-3 text-ui">
+                        @foreach ($links as [$label, $href])
+                            <li><a href="{{ $href }}" class="inline-flex min-h-11 items-center rounded-control hover:text-paper hover:underline md:min-h-8">{{ $label }}</a></li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endforeach
+
             <div>
-                <h2 class="text-ui font-semibold text-paper">Kantor Distrik Ransiki</h2>
-                <dl class="mt-3 space-y-1.5 text-caption">
-                    @if ($office['office_address'])
-                        <div><dt class="sr-only">Alamat</dt><dd class="whitespace-pre-line">{{ $office['office_address'] }}</dd></div>
-                    @endif
-                    @if ($office['office_phone'])
-                        <div><dt class="inline">Telepon: </dt><dd class="inline"><a href="tel:{{ preg_replace('/[^0-9+]/', '', $office['office_phone']) }}" class="rounded-control text-sun hover:underline">{{ $office['office_phone'] }}</a></dd></div>
-                    @endif
-                    @if ($office['office_email'])
-                        <div><dt class="inline">Email: </dt><dd class="inline"><a href="mailto:{{ $office['office_email'] }}" class="rounded-control text-sun hover:underline">{{ $office['office_email'] }}</a></dd></div>
-                    @endif
-                    @if ($office['office_hours'])
-                        <div><dt class="inline">Jam layanan: </dt><dd class="inline">{{ $office['office_hours'] }}</dd></div>
-                    @endif
+                <h2 class="text-caption font-semibold uppercase tracking-wider text-paper">Kantor Distrik Ransiki</h2>
+                <dl class="mt-4 space-y-3 text-ui">
+                    @foreach ([
+                        ['map-pin', 'Alamat', $office['office_address'], null],
+                        ['phone', 'Telepon', $office['office_phone'], $office['office_phone'] ? $tel($office['office_phone']) : null],
+                        ['envelope', 'Email', $office['office_email'], $office['office_email'] ? 'mailto:'.$office['office_email'] : null],
+                        ['clock', 'Jam layanan', $office['office_hours'], null],
+                    ] as [$icon, $label, $value, $href])
+                        @if ($value)
+                            <div class="flex gap-3">
+                                <dt><x-dynamic-component :component="'heroicon-o-'.$icon" class="mt-0.5 size-5 text-sun" aria-hidden="true" /><span class="sr-only">{{ $label }}</span></dt>
+                                <dd class="min-w-0 whitespace-pre-line break-words">@if ($href)<a href="{{ $href }}" class="rounded-control text-paper hover:underline">{{ $value }}</a>@else{{ $value }}@endif</dd>
+                            </div>
+                        @endif
+                    @endforeach
                     @unless ($office['office_address'] || $office['office_phone'] || $office['office_email'])
                         <div><dd>Kontak kantor sedang disiapkan.</dd></div>
                     @endunless
                 </dl>
-                <a href="{{ route('public.contact') }}" class="mt-3 inline-block rounded-control text-caption font-semibold text-sun hover:underline">Semua kontak</a>
-            </div>
-
-            <div>
-                <h2 class="text-ui font-semibold text-paper">OPD terkait</h2>
-                <ul class="mt-3 space-y-1.5 text-caption">
-                    @foreach ($footer['opds'] as $opd)
-                        <li>{{ $opd }}</li>
-                    @endforeach
-                </ul>
             </div>
         </div>
         <div class="border-t border-forest-line">
             <div class="mx-auto flex max-w-public flex-wrap justify-between gap-2 px-4 py-4 text-caption md:px-6">
                 <p>&copy; {{ now()->year }} Distrik Ransiki</p>
-                <a href="{{ route('login') }}" class="rounded-control hover:text-paper">Masuk untuk pengelola</a>
+                <a href="{{ route('public.contact') }}" class="rounded-control hover:text-paper">Hubungi kantor distrik</a>
             </div>
         </div>
     </footer>
