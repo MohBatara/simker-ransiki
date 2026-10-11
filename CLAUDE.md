@@ -34,7 +34,8 @@ dengan file ini, ikuti pengguna lalu sarankan pembaruan file ini.
 - MySQL 8 melalui Laravel Sail (Docker), berjalan di Apple Silicon (arm64).
 - Ikon: satu set saja, Heroicons outline (paket `blade-ui-kit/blade-heroicons`).
 - Font: Public Sans, dipasang lokal melalui npm `@fontsource-variable/public-sans` (tidak memakai
-  Google Fonts CDN).
+  Google Fonts CDN). Judul h1–h3 website publik: Source Serif 4 (600), lokal lewat
+  `@fontsource-variable/source-serif-4` (token `font-serif`, khusus publik).
 - Tes: Pest (atau PHPUnit bawaan bila Pest belum terpasang).
 - Ekspor/impor: `spatie/simple-excel` (Excel/CSV, memakai openspout 4) dan `barryvdh/laravel-dompdf` (PDF).
 - Grafik interaktif: `chart.js` v4 (npm, Paket 3), hanya di halaman Statistik dan dasbor Kelompok.
@@ -685,7 +686,7 @@ pemisah tetap `line`/`line-strong`. Periksa kontras sebelum mengubah atau menamb
   bawah pembuka beranda dengan keterangan dan nama fotografer.
 - Tampilkan "Data diperbarui [tanggal]" di beranda dan profil kelompok.
 - Footer publik: identitas + "Dikelola oleh Pemerintah Distrik Ransiki" + tempat logo (`x-logo`),
-  kontak kantor distrik, daftar OPD.
+  tautan cepat, informasi, kontak kantor distrik (daftar OPD ada di halaman Kontak).
 - Semua layout punya tautan "Lewati ke konten" ke `#konten`. Area login dan halaman masuk `noindex`.
 - Logo memakai komponen `logo` (sementara placeholder "SK"); di tablet hanya logo yang tampil.
 
@@ -705,19 +706,30 @@ Pengecualian dari Larangan di atas, khusus publik:
   tombol utama dan cincin fokus di latar gelap). `ink` di atas `sun` 9,0:1; `sun` di atas `forest`
   8,0:1. DILARANG: teks putih di atas `sun` (1,8:1) dan `sun` sebagai warna teks di latar terang.
   Di atas `sun` semua teks memakai `ink`.
-- Label pil (`rounded-full`) untuk jenis, kampung, dan bidang usaha. Kartu tetap radius 10px, tanpa
-  bayangan.
-- Judul hero `text-hero` 48px (desktop) / `text-hero-sm` 36px (HP).
+- Label pil (`rounded-full`) untuk jenis, kampung, dan bidang usaha. Kartu publik: radius 8px
+  (`rounded-public`), border `line` + bayangan halus `shadow-card` (keduanya khusus publik). Lencana ikon bulat
+  (`x-public.icon-badge`) di tepi foto kartu produk/direktori; ikon dari `App\Support\PublicIcons`.
+- Judul h1–h3 publik memakai `font-serif`. Label kecil di atas judul bagian (`publik._section-heading`
+  `eyebrow`) berwarna `brand` + garis pendek `sun` (teks `sun` di latar terang tetap dilarang).
+- Judul hero `text-hero` 48px (desktop) / `text-hero-sm` 36px (HP). Hero beranda memakai `.overlay-hero` yang lebih
+  tebal (HP 85%; desktop 90% → 85% di 55% → 30%) agar aksen `sun` di judul ≥ 4,5:1 (dijaga `PublicContrastTest`).
+  Maks 3 foto (foto sampul, lalu foto bidang usaha dari Konten Website), slider Alpine `heroSlider`
+  (`resources/js/hero-slider.js`): 7 detik, panah + titik, berhenti saat hover/fokus/tab tersembunyi, tanpa gerak
+  bila `prefers-reduced-motion`. Foto pertama `fetchpriority="high"`, sisanya lazy.
 - Bagian gelap diberi kelas `on-dark` agar cincin fokus berwarna `sun`.
 
 Tetap dilarang di publik: bayangan tebal, emoji, ilustrasi, ikon dekoratif, testimoni, angka
 karangan, tombol "Mulai sekarang", teks promosi generik.
 
-Susunan: header putih → (beranda) hero → pita kuning 3 angka asli + "Data diperbarui" → kartu
-bidang usaha berfoto (foto bidang dari Admin → foto produk publik terbaru bidang itu → kartu
-`forest` polos) → kartu produk unggulan → bagian gelap "Tentang" → footer `forest`. Kartu direktori
-tanpa foto: latar `subtle` + inisial `ink-muted`. Profil kelompok: pita `forest` polos; foto produk
-tampil utuh di bagian Produk.
+Susunan: bilah atas `forest` (alamat, telepon, email kantor | Berita · Kontak · Masuk `sun`; disembunyikan di HP)
+→ header putih (logo teks, menu, ikon cari direktori; menu aktif bergaris bawah `brand`) → (beranda) hero → strip
+putih melayang 5 bidang usaha terbanyak (ikon + jumlah, geser horizontal di HP) → "Tentang" (foto, ringkasan profil,
+4 angka publik: kelompok terdaftar, kampung, produk unggulan, bidang usaha + "Data diperbarui") → jenis kelembagaan
+(`PublicDirectory::institutionTypes()`) → produk unggulan (berfoto dulu; tanpa foto → foto bidang dari Admin → petak
+inisial) → berita & kegiatan (maks 5, disembunyikan bila kosong) → banner ajakan `forest` "Kelompok Anda belum
+terdaftar?" → footer `forest` (identitas, Tautan cepat, Informasi, kontak kantor; tanpa newsletter/media sosial).
+Halaman lain: pita `forest` dengan remah (`x-public.band crumbs`). Kartu direktori tanpa foto: latar `subtle` +
+inisial `ink-muted`. Profil kelompok: pita `forest` polos; foto produk tampil utuh di bagian Produk.
 
 Gambar publik: `<picture>` dengan WebP `srcset` + cadangan JPEG (`x-public.picture`). Foto lebar
 (sampul, bidang usaha, "Tentang"): WebP 480/960/1600, hero 1600 ≤ ~200 KB (kualitas turun bertahap
