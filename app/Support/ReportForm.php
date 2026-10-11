@@ -6,6 +6,8 @@ use App\Enums\IssueKind;
 use App\Models\MonthlyReport;
 use App\Models\ReportIssue;
 use App\Models\ReportItem;
+use App\Models\User;
+use Illuminate\Support\Facades\Gate;
 
 /**
  * Susunan form laporan bulanan (bagian A–H) dan isian awalnya. Isian angka berupa teks dalam
@@ -33,6 +35,28 @@ class ReportForm
     public const TEXT_FIELDS = ['activity_summary', 'achievements'];
 
     public const ITEM_FIELDS = ['product_id', 'product_name', 'production_qty', 'production_unit', 'sales_qty', 'sales_unit', 'revenue'];
+
+    /**
+     * Data view form laporan (kelompok.reports.form), dipakai Kelompok dan OPD/Admin yang mengisi atas nama
+     * kelompok. $urls: save, submit, back, products.
+     */
+    public static function page(MonthlyReport $report, User $user, array $urls): array
+    {
+        $report->load(['organization', 'items', 'issues', 'latestRevisionRequest.user.opd', 'enterer.opd']);
+        $submission = Gate::forUser($user)->inspect('submit', $report);
+
+        return [
+            'report' => $report,
+            'state' => self::state($report),
+            'previous' => self::previous($report),
+            'products' => $report->organization->products()->orderBy('name')->get(['id', 'name', 'unit']),
+            'attachments' => $report->attachments()->with('uploader')->latest()->get()->each->setRelation('attachable', $report),
+            'canSubmit' => $submission->allowed(),
+            'submitNote' => $submission->allowed() ? null : $submission->message(),
+            'onBehalf' => ! $user->isKelompok(),
+            'urls' => $urls,
+        ];
+    }
 
     /** Isian form dari laporan tersimpan. Urutan baris mengikuti id agar sama dengan kunci error saat diajukan. */
     public static function state(MonthlyReport $report): array
@@ -107,6 +131,7 @@ class ReportForm
     {
         return $report->issues->where('kind', $kind)->sortBy('id')
             ->map(fn (ReportIssue $issue) => [
+                'id' => $issue->id,
                 'category' => $issue->category ?? '',
                 'description' => $issue->description ?? '',
             ])->values()->all();

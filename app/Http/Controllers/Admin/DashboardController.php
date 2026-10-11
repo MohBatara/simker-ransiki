@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Enums\IssueKind;
 use App\Http\Controllers\Controller;
 use App\Models\Organization;
+use App\Models\ReportIssue;
 use App\Support\BannerImage;
 use App\Support\Dashboards\DistrictStats;
 use App\Support\Dashboards\ReportingPeriod;
@@ -30,6 +32,7 @@ class DashboardController extends Controller
             'perOpd' => $stats->progressPerOpd(),
             'notSubmitted' => $stats->notSubmitted(),
             'overdue' => $stats->overdue(),
+            'staleNeeds' => ReportIssue::reviewableBy($request->user())->where('kind', IssueKind::Support)->stale(config('simker.follow_up.stale_days'))->count(),
             'organizations' => $district->organizations(),
             'economy' => $district->economy($period),
             'production' => $district->production($period),

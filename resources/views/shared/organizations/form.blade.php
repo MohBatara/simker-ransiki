@@ -7,21 +7,11 @@
     $sectorIds = $organization->exists ? $organization->sectors->pluck('id')->all() : [];
     $opdIds = $organization->exists ? $organization->opds->pluck('id')->all() : [];
     $adminNote = 'Diatur oleh Admin distrik.';
-    $similar = $organization->exists ? [] : session('similar', []);
+    $duplicates = session('duplicates', []);
 @endphp
 
-@if ($similar)
-    <x-alert tone="wait" title="Nama mirip ditemukan di kampung yang sama">
-        <p>Periksa apakah kelompok ini sudah terdaftar:</p>
-        <ul class="mt-1 list-disc pl-5">
-            @foreach ($similar as $other)
-                <li><a href="{{ route('admin.organizations.show', $other['id']) }}" target="_blank" rel="noopener" class="text-brand underline">{{ $other['name'] }}</a></li>
-            @endforeach
-        </ul>
-        <div class="mt-2">
-            <x-checkbox name="confirm_similar">Saya sudah memeriksa, tetap simpan</x-checkbox>
-        </div>
-    </x-alert>
+@if ($duplicates)
+    @include('shared.organizations._duplicates', ['candidates' => $duplicates, 'confirm' => true])
 @endif
 
 <x-card title="Identitas">

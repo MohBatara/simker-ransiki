@@ -32,7 +32,7 @@ class MonthlyReportController extends Controller
         $submittedCount = (clone $query)->where('monthly_reports.status', ReportStatus::Submitted)->count();
 
         $reports = $query
-            ->with('organization:id,name')
+            ->with(['organization:id,name', 'enterer:id,role'])
             ->orderByDesc('period')
             ->orderBy(Organization::select('name')->whereColumn('organizations.id', 'monthly_reports.organization_id'))
             ->paginate(20)
@@ -41,16 +41,22 @@ class MonthlyReportController extends Controller
         return $this->list($request, 'all', $reports, $filters, $submittedCount);
     }
 
-    /** Antrean verifikasi OPD: laporan diajukan, yang paling lama menunggu di atas. */
+    /**
+     * Antrean verifikasi: laporan diajukan, yang paling lama menunggu di atas. OPD: kelompok binaan (laporan
+     * yang ia isi/ajukan sendiri ditandai). Admin: laporan yang tidak bisa diverifikasi petugas OPD mana pun.
+     */
     public function queue(Request $request): View
     {
+        $user = $request->user();
         $filters = $request->only(['q', 'period']);
 
-        $reports = MonthlyReport::visibleTo($request->user())
+        $reports = MonthlyReport::visibleTo($user)
             ->where('monthly_reports.status', ReportStatus::Submitted)
+            ->when($user->isAdmin(), fn ($query) => $query->needsAdminVerification())
             ->filter($filters)
             ->withSubmissionInfo()
-            ->with('organization:id,name')
+            ->when(MonthlyReport::separatesDuties(), fn ($query) => $query->withHandledBy($user))
+            ->with(['organization:id,name', 'enterer:id,role'])
             ->orderBy('last_submitted_at')
             ->orderBy('monthly_reports.id')
             ->paginate(20)
@@ -70,7 +76,7 @@ class MonthlyReportController extends Controller
             'attachments' => $report->attachments()->with('uploader')->latest()->get()->each->setRelation('attachable', $report),
             'back' => $back,
             'breadcrumbs' => $breadcrumbs,
-            'editUrl' => null,
+            'editUrl' => $request->user()->can('update', $report) ? route($area.'.reports.edit', $report) : null,
             'area' => $area,
             'origin' => $this->originKey($request, $area),
         ]);
@@ -92,8 +98,8 @@ class MonthlyReportController extends Controller
                 ['label' => 'Laporan', 'href' => route($area.'.organizations.reports', $report->organization)],
                 $current,
             ]],
-            'antrean' => [route('opd.verifications.index'), [
-                ['label' => 'Verifikasi Laporan', 'href' => route('opd.verifications.index')],
+            'antrean' => [route($area.'.verifications.index'), [
+                ['label' => 'Verifikasi Laporan', 'href' => route($area.'.verifications.index')],
                 $current,
             ]],
             'masalah' => [route($area.'.issues.index'), [
@@ -110,9 +116,8 @@ class MonthlyReportController extends Controller
     private function originKey(Request $request, string $area): ?string
     {
         $origin = $request->query('dari');
-        $allowed = $area === 'opd' ? ['kelompok', 'antrean', 'masalah'] : ['kelompok', 'masalah'];
 
-        return in_array($origin, $allowed, true) ? $origin : null;
+        return in_array($origin, ['kelompok', 'antrean', 'masalah'], true) ? $origin : null;
     }
 
     public function verify(Request $request, MonthlyReport $report, ReviewReport $review): RedirectResponse

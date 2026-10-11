@@ -8,7 +8,10 @@
 
     <div class="space-y-5">
         <div class="grid gap-5 lg:grid-cols-3 lg:items-start">
-            @include('shared.dashboards.overdue-stat', ['area' => 'opd'])
+            <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-1">
+                @include('shared.dashboards.overdue-stat', ['area' => 'opd'])
+                @include('shared.dashboards.stale-needs-stat', ['area' => 'opd'])
+            </div>
 
             {{-- Yang perlu dilakukan lebih dulu --}}
             <x-card title="Perlu tindakan" class="lg:col-span-2 lg:col-start-1 lg:row-start-1">

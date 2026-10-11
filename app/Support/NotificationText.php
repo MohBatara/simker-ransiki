@@ -2,6 +2,8 @@
 
 namespace App\Support;
 
+use App\Enums\FollowUpStatus;
+use App\Enums\IssueKind;
 use App\Enums\ReviewAction;
 use App\Models\MonthlyReport;
 use Illuminate\Notifications\DatabaseNotification;
@@ -30,6 +32,8 @@ class NotificationText
                 default => "Laporan {$period} sudah ditinjau.",
             },
             'report_reminder' => self::reminder($data, $period),
+            'issue_follow_up' => (IssueKind::tryFrom($data['issue_kind'] ?? '')?->label() ?? 'Masalah')
+                ." \"{$data['category']}\" dari laporan {$period}: ".mb_strtolower(FollowUpStatus::tryFrom($data['status'] ?? '')?->label() ?? 'diperbarui').'.',
             'report_overdue' => ($data['audience'] ?? null) === 'kelompok'
                 ? "Laporan {$period} terlambat. Tenggatnya ".Format::date(Carbon::parse($data['deadline'])).'. Segera ajukan laporan.'
                 : "{$data['organization_name']} belum mengajukan laporan {$period} sampai tenggat ".Format::date(Carbon::parse($data['deadline'])).'.',

@@ -48,11 +48,12 @@ class DistrictStats
         ];
     }
 
-    /** @return array{without_opd: int, waiting: int, active_without_account: int} */
+    /** @return array{without_opd: int, admin_queue: int, waiting: int, active_without_account: int} */
     public function attention(): array
     {
         return [
             'without_opd' => Organization::doesntHave('opds')->count(),
+            'admin_queue' => MonthlyReport::needsAdminVerification()->count(),
             'waiting' => MonthlyReport::waitingLongerThan(self::WAITING_DAYS)->count(),
             'active_without_account' => Organization::where('status', OrganizationStatus::Active)->doesntHave('users')->count(),
         ];

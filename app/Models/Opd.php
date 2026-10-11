@@ -22,4 +22,10 @@ class Opd extends Model
     {
         return $this->hasMany(User::class);
     }
+
+    /** Tindak lanjut masalah & kebutuhan dengan OPD ini sebagai penanggung jawab (membuat OPD "dipakai"). */
+    public function issueFollowUps(): HasMany
+    {
+        return $this->hasMany(IssueFollowUp::class);
+    }
 }

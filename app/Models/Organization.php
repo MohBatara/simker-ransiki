@@ -7,12 +7,10 @@ use App\Enums\OrganizationStatus;
 use App\Enums\ReportStatus;
 use App\Enums\Role;
 use App\Models\Concerns\HasAttachments;
-use App\Support\SimilarNames;
 use Carbon\CarbonImmutable;
 use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -138,20 +136,6 @@ class Organization extends Model
         } elseif ((int) $opd) {
             $query->whereHas('opds', fn ($query) => $query->whereKey((int) $opd));
         }
-    }
-
-    /**
-     * Kelompok lain di kampung yang sama dengan nama mirip (lihat App\Support\SimilarNames).
-     */
-    public static function similarTo(string $name, int $villageId, ?int $exceptId = null): Collection
-    {
-        return static::query()
-            ->where('village_id', $villageId)
-            ->when($exceptId, fn ($query) => $query->whereKeyNot($exceptId))
-            ->orderBy('name')
-            ->get(['id', 'name'])
-            ->filter(fn (Organization $other) => SimilarNames::areSimilar($name, $other->name))
-            ->values();
     }
 
     /**

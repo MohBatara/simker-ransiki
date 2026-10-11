@@ -92,7 +92,7 @@ enum MasterDataType: string
     /** Relasi yang membuat data ini "dipakai" sehingga tidak bisa dihapus. */
     public function usageRelations(): array
     {
-        return $this === self::Opd ? ['organizations', 'users'] : ['organizations'];
+        return $this === self::Opd ? ['organizations', 'users', 'issueFollowUps'] : ['organizations'];
     }
 
     /**
@@ -104,8 +104,9 @@ enum MasterDataType: string
         $parts = array_filter([
             $record->organizations_count ? $record->organizations_count.' kelompok' : null,
             ($record->users_count ?? 0) > 0 ? $record->users_count.' akun' : null,
+            ($record->issue_follow_ups_count ?? 0) > 0 ? $record->issue_follow_ups_count.' tindak lanjut' : null,
         ]);
 
-        return $parts ? implode(' dan ', $parts) : null;
+        return $parts ? collect($parts)->join(', ', ' dan ') : null;
     }
 }

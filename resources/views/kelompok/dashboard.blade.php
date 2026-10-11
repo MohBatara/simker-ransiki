@@ -144,6 +144,26 @@
         @endif
     </x-card>
 
+    {{-- Status tindak lanjut OPD atas masalah & kebutuhan yang pernah dilaporkan (baca-saja). --}}
+    @if ($followUps->isNotEmpty())
+        <x-card title="Tindak lanjut masalah & kebutuhan" description="Dari laporan yang sudah diajukan. Status diubah oleh OPD atau Admin distrik." class="mt-5" flush>
+            <x-list flush>
+                @foreach ($followUps as $issue)
+                    <x-list.item :href="route('kelompok.reports.show', $issue->monthly_report_id)">
+                        <span class="min-w-0 flex-1">
+                            <span class="block font-semibold text-ink">{{ $issue->category ? $issue->categoryLabel() : 'Tanpa kategori' }}</span>
+                            <span class="block text-caption text-ink-soft">{{ $issue->kind->label() }} · laporan {{ Format::month($issue->monthlyReport->period) }}</span>
+                            @if ($issue->followUps->isNotEmpty())
+                                <span class="mt-0.5 line-clamp-2 block text-ink-soft break-words">{{ $issue->followUps->first()->note }}</span>
+                            @endif
+                        </span>
+                        <x-badge :tone="$issue->follow_up_status->badgeColor()">{{ $issue->follow_up_status->label() }}</x-badge>
+                    </x-list.item>
+                @endforeach
+            </x-list>
+        </x-card>
+    @endif
+
     {{-- Grafik 12 bulan sampai bulan wajib lapor, hanya dari laporan terverifikasi kelompok ini. --}}
     <div class="mt-5 grid grid-cols-1 gap-5 lg:grid-cols-2 lg:items-stretch">
         <x-chart

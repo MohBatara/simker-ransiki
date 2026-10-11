@@ -22,6 +22,7 @@
     $canAddLicense = $tab === 'izin' && auth()->user()->can('create', [App\Models\License::class, $organization]);
     $canAddUser = $tab === 'akun' && auth()->user()->can('create', App\Models\User::class);
     $canManage = $area === 'admin' && auth()->user()->can('administer', $organization);
+    $canEnterReport = $tab === 'laporan' && ! empty($entryPeriods);
 @endphp
 
 <x-layouts.app
@@ -36,7 +37,7 @@
     compact-banner
     phone-title="Detail kelompok"
 >
-    @if (auth()->user()->can('update', $organization) || $canAddProduct || $canAddLicense || $canAddUser || $canManage)
+    @if (auth()->user()->can('update', $organization) || $canAddProduct || $canAddLicense || $canAddUser || $canEnterReport || $canManage)
         <x-slot:actions>
             @can('update', $organization)
                 <x-button variant="secondary" icon="pencil-square" :href="route($area.'.organizations.edit', $organization)">Ubah profil</x-button>
@@ -46,6 +47,8 @@
                 <x-button icon="plus" x-data x-on:click="$dispatch('product-create')">Tambah produk</x-button>
             @elseif ($canAddLicense)
                 <x-button icon="plus" x-data x-on:click="$dispatch('license-create')">Tambah izin</x-button>
+            @elseif ($canEnterReport)
+                <x-button icon="pencil-square" x-data x-on:click="$dispatch('open-modal', 'report-entry')">Isi laporan</x-button>
             @elseif ($canAddUser)
                 <x-button icon="plus" :href="route('admin.users.create', ['kelompok' => $organization->id])">Tambah akun</x-button>
             @endif
@@ -86,14 +89,8 @@
             </x-alert>
         @endif
 
-        @if (session('similar'))
-            <x-alert tone="wait" title="Ada kelompok dengan nama mirip di kampung yang sama">
-                <p>Periksa apakah datanya ganda:
-                    @foreach (session('similar') as $other)
-                        <a href="{{ route($area.'.organizations.show', $other['id']) }}" class="text-brand underline">{{ $other['name'] }}</a>@if (! $loop->last), @endif
-                    @endforeach
-                </p>
-            </x-alert>
+        @if ($area === 'admin' && session('duplicates'))
+            @include('shared.organizations._duplicates', ['candidates' => session('duplicates'), 'confirm' => false])
         @endif
 
         <x-tabs :tabs="$tabs" :links="$links" :icons="$icons" :active="$tab" />

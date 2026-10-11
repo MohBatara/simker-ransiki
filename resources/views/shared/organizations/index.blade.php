@@ -34,6 +34,7 @@
         {{-- Mengikuti filter yang sedang aktif. --}}
         <x-button variant="secondary" icon="arrow-down-tray" :href="route($area.'.organizations.export', array_filter($filters, 'filled'))">Unduh Excel</x-button>
         @can('create', App\Models\Organization::class)
+            <x-button variant="secondary" icon="document-duplicate" :href="route('admin.organizations.duplicates.index')">Data ganda</x-button>
             <x-button variant="secondary" icon="arrow-up-tray" :href="route('admin.organizations.import.create')">Impor</x-button>
             <x-button icon="plus" :href="route('admin.organizations.create')">Tambah kelompok</x-button>
         @endcan

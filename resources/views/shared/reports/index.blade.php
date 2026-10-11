@@ -1,5 +1,5 @@
 {{--
-    Daftar laporan untuk peninjau. $mode: 'queue' (antrean verifikasi OPD) atau 'all' (Semua Laporan).
+    Daftar laporan untuk peninjau. $mode: 'queue' (antrean verifikasi OPD/Admin) atau 'all' (Semua Laporan).
     Variabel: $area, $reports, $filters, $periods, $opds (Admin saja).
 --}}
 @use('App\Support\Format')
@@ -7,7 +7,7 @@
 
 @php
     $queue = $mode === 'queue';
-    $url = $queue ? route('opd.verifications.index') : route($area.'.reports.index');
+    $url = $queue ? route($area.'.verifications.index') : route($area.'.reports.index');
     $selects = $queue ? ['period'] : ['status', 'period', 'opd'];
     $active = collect($filters)->only($selects)->filter(fn ($value) => filled($value))->count();
     $chips = \App\Support\FilterChips::from($filters, [
@@ -23,6 +23,7 @@
         : collect([$reports->total().' laporan', $submittedCount ? $submittedCount.' menunggu verifikasi' : null])->filter()->join(' · ');
     $title = $queue ? 'Verifikasi Laporan' : 'Semua Laporan';
     $description = match (true) {
+        $queue && $area === 'admin' => 'Laporan yang hanya bisa diverifikasi Admin: kelompok tanpa OPD pembina, atau semua petugas OPD-nya ikut mengisi atau mengajukan.',
         $queue => 'Laporan yang diajukan kelompok binaan. Yang paling lama menunggu ada di atas.',
         $area === 'opd' => 'Laporan kelompok binaan. Draf baru bisa dibuka setelah diajukan.',
         default => 'Laporan seluruh kelompok di distrik. Draf baru bisa dibuka setelah diajukan.',
@@ -61,8 +62,8 @@
                     <x-button variant="secondary" :href="$url">Hapus filter</x-button>
                 </x-empty-state>
             @elseif ($queue)
-                <x-empty-state title="Tidak ada laporan yang menunggu verifikasi" description="Laporan yang diajukan kelompok binaan akan muncul di sini.">
-                    <x-button variant="secondary" :href="route('opd.reports.index')">Lihat semua laporan</x-button>
+                <x-empty-state title="Tidak ada laporan yang menunggu verifikasi" :description="$area === 'admin' ? 'Laporan yang tidak bisa diverifikasi petugas OPD akan muncul di sini.' : 'Laporan yang diajukan kelompok binaan akan muncul di sini.'">
+                    <x-button variant="secondary" :href="route($area.'.reports.index')">Lihat semua laporan</x-button>
                 </x-empty-state>
             @else
                 <x-empty-state title="Belum ada laporan" description="Laporan muncul di sini setelah kelompok mulai mengisi laporan bulanan." />
@@ -85,10 +86,15 @@
                 </x-slot:head>
 
                 @foreach ($reports as $report)
-                    {{-- Draf yang belum pernah diajukan tidak bisa dibuka peninjau (404), jadi barisnya tanpa tautan. --}}
-                    <x-table.row :href="$report->submitted_at ? route($area.'.reports.show', $queue ? [$report, 'dari' => 'antrean'] : $report) : null">
+                    {{-- Draf kelompok yang belum pernah diajukan tidak bisa dibuka peninjau (404), jadi barisnya tanpa tautan. --}}
+                    <x-table.row :href="auth()->user()->can('view', $report) ? route($area.'.reports.show', $queue ? [$report, 'dari' => 'antrean'] : $report) : null">
                         <x-table.cell primary>{{ $report->organization->name }}</x-table.cell>
-                        <x-table.cell subtitle>{{ Format::month($report->period) }}</x-table.cell>
+                        <x-table.cell subtitle>
+                            {{ Format::month($report->period) }}
+                            @if ($report->handled_by_me)
+                                <span class="block text-caption text-ink-soft">Perlu diverifikasi oleh Admin atau petugas OPD lain</span>
+                            @endif
+                        </x-table.cell>
                         <x-table.cell badge>
                             {{-- Di antrean semuanya "Diajukan"; yang ditandai hanya pengajuan ulang. --}}
                             @if (! $queue)

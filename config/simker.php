@@ -31,4 +31,27 @@ return [
         'provisional_min_coverage' => 0.8,
     ],
 
+    /*
+    | Peringatan data ganda kelompok (App\Support\DuplicateCandidates). Nama dianggap mirip bila kemiripannya
+    | (similar_text, setelah awalan umum dibuang) paling sedikit `min_similarity` persen.
+    */
+    'duplicates' => [
+        'min_similarity' => (int) env('SIMKER_DUPLICATE_MIN_SIMILARITY', 85),
+    ],
+
+    /*
+    | Pemisahan tugas: akun yang mengisi, mengubah, atau mengajukan laporan tidak boleh memverifikasinya.
+    */
+    'verification' => [
+        'separate_duties' => (bool) env('SIMKER_SEPARATE_DUTIES', true),
+    ],
+
+    /*
+    | Tindak lanjut masalah & kebutuhan. Kartu dasbor "Kebutuhan belum ditindaklanjuti" menghitung kebutuhan
+    | berstatus Baru/Ditinjau yang tidak berubah lebih dari `stale_days` hari.
+    */
+    'follow_up' => [
+        'stale_days' => 30,
+    ],
+
 ];

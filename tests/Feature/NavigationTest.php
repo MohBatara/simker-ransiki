@@ -17,7 +17,7 @@ test('menu tiap peran sesuai CLAUDE.md bagian 6', function (Role $role, array $l
         ['Dasbor', 'Kelompok Binaan', 'Verifikasi Laporan', 'Semua Laporan', 'Masalah & Kebutuhan', 'Statistik', 'Notifikasi', 'Akun Saya'],
         ['Dasbor', 'Kelompok', 'Verifikasi', 'Masalah']],
     'admin' => [Role::Admin,
-        ['Dasbor Distrik', 'Semua Kelompok', 'Semua Laporan', 'Masalah & Kebutuhan', 'Statistik', 'Pengguna', 'Data Master', 'Konten Website', 'Notifikasi'],
+        ['Dasbor Distrik', 'Semua Kelompok', 'Semua Laporan', 'Verifikasi Laporan', 'Masalah & Kebutuhan', 'Statistik', 'Pengguna', 'Data Master', 'Konten Website', 'Notifikasi'],
         ['Dasbor', 'Kelompok', 'Laporan', 'Pengguna']],
 ]);
 

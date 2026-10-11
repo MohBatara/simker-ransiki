@@ -5,8 +5,8 @@ namespace App\Support\Imports;
 use App\Models\BusinessSector;
 use App\Models\InstitutionType;
 use App\Models\Opd;
-use App\Models\Organization;
 use App\Models\Village;
+use App\Support\DuplicateCandidates;
 use App\Support\NumberInput;
 use App\Support\SimilarNames;
 use Illuminate\Support\Facades\Validator;
@@ -25,8 +25,9 @@ class RowChecker
 
     private array $opds;
 
-    /** @var array<int, list<array{id: int, name: string}>> kelompok yang ada, per kampung */
-    private array $existing;
+    private DuplicateCandidates $duplicates;
+
+    private int $minSimilarity;
 
     public function __construct()
     {
@@ -38,8 +39,8 @@ class RowChecker
         $this->villages = $map(Village::get(['id', 'name']), 'name');
         $this->sectors = $map(BusinessSector::get(['id', 'name']), 'name');
         $this->opds = $map(Opd::get(['id', 'name', 'short_name']), 'name', 'short_name');
-        $this->existing = Organization::query()->get(['id', 'name', 'village_id'])->groupBy('village_id')
-            ->map(fn ($group) => $group->map->only(['id', 'name'])->values()->all())->all();
+        $this->duplicates = new DuplicateCandidates;
+        $this->minSimilarity = (int) config('simker.duplicates.min_similarity');
     }
 
     public function check(array $lines): array
@@ -53,24 +54,49 @@ class RowChecker
                 return [...$line, 'data' => null, 'status' => OrganizationImport::FAILED, 'messages' => $errors];
             }
 
-            $warnings = [];
-            $key = $data['village_id'].'|'.OrganizationImport::normalize($data['name']);
-            if (isset($seen[$key])) {
-                $warnings[] = "Nama dan kampung sama dengan baris {$seen[$key]} di file ini.";
-            } else {
-                $seen[$key] = $line['line'];
-            }
+            [$warnings, $notes] = $this->duplicateMessages($data, $line['line'], $seen);
 
-            foreach ($this->existing[$data['village_id']] ?? [] as $organization) {
-                if (OrganizationImport::normalize($organization['name']) === OrganizationImport::normalize($data['name'])) {
-                    $warnings[] = "Sudah ada di database: {$organization['name']} di kampung yang sama.";
-                } elseif (SimilarNames::areSimilar($data['name'], $organization['name'])) {
-                    $warnings[] = "Mirip dengan {$organization['name']} yang sudah ada di kampung yang sama.";
-                }
-            }
-
-            return [...$line, 'data' => $data, 'status' => $warnings ? OrganizationImport::WARNING : OrganizationImport::READY, 'messages' => $warnings];
+            return [...$line, 'data' => $data, 'status' => $warnings ? OrganizationImport::WARNING : OrganizationImport::READY, 'messages' => [...$warnings, ...$notes]];
         }, $lines);
+    }
+
+    /**
+     * Logika data ganda yang sama dengan form kelompok (DuplicateCandidates): nama mirip di kampung yang sama
+     * menjadi peringatan (baris perlu dicentang); di kampung lain hanya catatan, baris tetap siap.
+     *
+     * @param  array<string, array{line: int, village_id: int, parts: array}>  $seen  baris sebelumnya di file ini
+     * @return array{0: list<string>, 1: list<string>} [peringatan, catatan]
+     */
+    private function duplicateMessages(array $data, int $line, array &$seen): array
+    {
+        $warnings = [];
+        $notes = [];
+        $key = $data['village_id'].'|'.OrganizationImport::normalize($data['name']);
+        $parts = SimilarNames::split($data['name']);
+
+        if (isset($seen[$key])) {
+            $warnings[] = "Nama dan kampung sama dengan baris {$seen[$key]['line']} di file ini.";
+        } else {
+            foreach ($seen as $earlier) {
+                if (! SimilarNames::partsAreSimilar($parts, $earlier['parts'], $this->minSimilarity)) {
+                    continue;
+                }
+                $earlier['village_id'] === $data['village_id']
+                    ? $warnings[] = "Mirip dengan baris {$earlier['line']} di file ini, di kampung yang sama."
+                    : $notes[] = "Mirip dengan baris {$earlier['line']} di file ini, di kampung lain.";
+            }
+            $seen[$key] = ['line' => $line, 'village_id' => $data['village_id'], 'parts' => $parts];
+        }
+
+        foreach ($this->duplicates->for($data['name'], $data['village_id']) as $candidate) {
+            match (true) {
+                $candidate['strong'] && OrganizationImport::normalize($candidate['name']) === OrganizationImport::normalize($data['name']) => $warnings[] = "Sudah ada di database: {$candidate['name']} di kampung yang sama.",
+                $candidate['strong'] => $warnings[] = "Mirip dengan {$candidate['name']} yang sudah ada di kampung yang sama.",
+                default => $notes[] = "Nama mirip dengan {$candidate['name']} di {$candidate['village']} (kampung lain).",
+            };
+        }
+
+        return [$warnings, $notes];
     }
 
     /** @return array{0: array, 1: list<string>} data siap simpan dan daftar kesalahan */

@@ -51,7 +51,7 @@ test('dasbor admin: perhatian, progres per OPD, kelompok, dan ekonomi resmi', fu
         ->assertSee('Kakao kering')
         ->assertSee('12,5 kg');
 
-    expect($response->viewData('attention'))->toBe(['without_opd' => 2, 'waiting' => 0, 'active_without_account' => 1])
+    expect($response->viewData('attention'))->toBe(['without_opd' => 2, 'admin_queue' => 0, 'waiting' => 0, 'active_without_account' => 1])
         ->and($response->viewData('economy')['totals']['profit'])->toBe(['sum' => null, 'filled' => 0])
         ->and($queries)->toBeLessThan(35);
 });

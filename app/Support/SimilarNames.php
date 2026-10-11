@@ -11,7 +11,8 @@ use Illuminate\Support\Str;
  * - Awalan umum dibuang dulu: kelompok, kelompok tani, kelompok nelayan, kub, bumdes, umkm, koperasi.
  * - "Tani" dan "nelayan" adalah penanda jenis; bila keduanya berbeda, nama dianggap tidak mirip.
  * - Bila angka di dalam nama berbeda, nama dianggap tidak mirip.
- * - Mirip bila sisa nama sama, kemiripan >= 90%, atau jarak Levenshtein <= 2 untuk sisa nama >= 8 huruf.
+ * - Mirip bila sisa nama sama, kemiripan similar_text >= ambang (config simker.duplicates.min_similarity,
+ *   bawaan 85%), atau jarak Levenshtein <= 2 untuk sisa nama >= 8 huruf.
  */
 class SimilarNames
 {
@@ -31,16 +32,27 @@ class SimilarNames
         'poktan' => 'kelompok tani',
     ];
 
-    public const MIN_SIMILARITY = 90;
+    public const DEFAULT_MIN_SIMILARITY = 85;
 
     public const MAX_DISTANCE = 2;
 
     public const MIN_LETTERS_FOR_DISTANCE = 8;
 
-    public static function areSimilar(string $first, string $second): bool
+    public static function areSimilar(string $first, string $second, ?int $minSimilarity = null): bool
     {
-        [$firstMarker, $firstCore] = self::split($first);
-        [$secondMarker, $secondCore] = self::split($second);
+        return self::partsAreSimilar(self::split($first), self::split($second), $minSimilarity);
+    }
+
+    /**
+     * Sama dengan areSimilar(), untuk hasil split() yang sudah dihitung (membandingkan banyak pasangan).
+     *
+     * @param  array{0: ?string, 1: string}  $first
+     * @param  array{0: ?string, 1: string}  $second
+     */
+    public static function partsAreSimilar(array $first, array $second, ?int $minSimilarity = null): bool
+    {
+        [$firstMarker, $firstCore] = $first;
+        [$secondMarker, $secondCore] = $second;
 
         if ($firstMarker && $secondMarker && $firstMarker !== $secondMarker) {
             return false;
@@ -55,7 +67,7 @@ class SimilarNames
         }
 
         similar_text($firstCore, $secondCore, $percent);
-        if ($percent >= self::MIN_SIMILARITY) {
+        if ($percent >= ($minSimilarity ?? self::DEFAULT_MIN_SIMILARITY)) {
             return true;
         }
 

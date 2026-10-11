@@ -80,11 +80,13 @@ class ReportDraftRequest extends FormRequest
 
             'problems' => ['nullable', 'array', 'max:'.ReportForm::MAX_ISSUES],
             'problems.*' => ['array'],
+            'problems.*.id' => ['nullable', 'integer'],
             'problems.*.category' => ['nullable', Rule::enum(ProblemCategory::class)],
             'problems.*.description' => ['nullable', 'string', 'max:1000'],
 
             'supports' => ['nullable', 'array', 'max:'.ReportForm::MAX_ISSUES],
             'supports.*' => ['array'],
+            'supports.*.id' => ['nullable', 'integer'],
             'supports.*.category' => ['nullable', Rule::enum(SupportCategory::class)],
             'supports.*.description' => ['nullable', 'string', 'max:1000'],
         ];

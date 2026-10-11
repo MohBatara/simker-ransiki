@@ -3,6 +3,7 @@
 namespace App\Actions\Reports;
 
 use App\Enums\IssueKind;
+use App\Enums\ReviewAction;
 use App\Models\MonthlyReport;
 use App\Models\User;
 use App\Support\ReportForm;
@@ -28,6 +29,12 @@ class SaveReportDraft
 
             if ($version !== null && $version !== $report->updated_at?->getTimestamp()) {
                 abort(409, 'Laporan ini sudah diubah dari perangkat atau akun lain. Muat ulang halaman untuk melihat versi terbaru.');
+            }
+
+            // OPD/Admin yang mengisi atas nama kelompok tercatat di riwayat (sekali per akun), dan karena itu
+            // tidak boleh memverifikasi laporan ini (pemisahan tugas).
+            if (! $user->isKelompok() && ! $report->reviews()->where('user_id', $user->id)->where('action', ReviewAction::Entered)->exists()) {
+                $report->reviews()->create(['user_id' => $user->id, 'action' => ReviewAction::Entered]);
             }
 
             $report->fill(Arr::only($data, ['no_activity', ...ReportForm::TEXT_FIELDS, ...ReportForm::INTEGER_FIELDS]));
@@ -64,18 +71,31 @@ class SaveReportDraft
         }
     }
 
+    /**
+     * Baris yang membawa id miliknya diperbarui di tempat, agar riwayat tindak lanjutnya tetap tersambung
+     * (mis. saat laporan direvisi). Baris tanpa id dibuat baru; baris yang tidak dikirim lagi dihapus.
+     */
     private function saveIssues(MonthlyReport $report, IssueKind $kind, array $rows): void
     {
-        $report->issues()->where('kind', $kind)->delete();
+        $existing = $report->issues()->where('kind', $kind)->get()->keyBy('id');
+        $kept = [];
 
         foreach ($rows as $row) {
+            $id = (int) ($row['id'] ?? 0);
             $row = Arr::only($row, ['category', 'description']);
 
             if (blank($row['category'] ?? null) && blank($row['description'] ?? null)) {
                 continue;
             }
 
-            $report->issues()->create([...$row, 'kind' => $kind]);
+            if ($issue = $existing->get($id)) {
+                $issue->update($row);
+                $kept[] = $id;
+            } else {
+                $report->issues()->create([...$row, 'kind' => $kind]);
+            }
         }
+
+        $existing->except($kept)->each->delete();
     }
 }

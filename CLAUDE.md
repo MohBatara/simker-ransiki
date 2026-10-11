@@ -78,7 +78,8 @@ Empat OPD memakai tampilan yang sama; data otomatis tersaring berdasarkan `users
 | Profil kelompok (termasuk bidang usaha), produk, izin | lihat, buat, ubah, hapus | lihat, ubah (membantu melengkapi data) | lihat, ubah |
 | Nama, jenis, kampung, OPD terkait, status, tampil di direktori publik, bulan mulai wajib lapor | ubah | – (tampil baca-saja) | – (tampil baca-saja) |
 | Penanda "Produk unggulan" (`is_featured`) | ubah | – | – |
-| Laporan bulanan | lihat, verifikasi, minta revisi | lihat, verifikasi, minta revisi (tidak membuat/mengubah isi) | lihat, buat, ubah & ajukan saat `draft`/`revision` |
+| Laporan bulanan | lihat, verifikasi, minta revisi; isi atas nama kelompok | lihat, verifikasi, minta revisi; isi atas nama kelompok | lihat, buat, ubah & ajukan saat `draft`/`revision` |
+| Tindak lanjut masalah & kebutuhan | lihat, ubah status + catatan (pilih OPD penanggung jawab) | lihat, ubah status + catatan (atas nama OPD-nya) | lihat saja |
 | Lampiran | mengikuti hak atas induknya | mengikuti hak atas induknya | mengikuti hak atas induknya |
 | Pengguna | kelola, reset kata sandi (tidak bisa menonaktifkan/menghapus diri sendiri) | – | – |
 
@@ -88,7 +89,7 @@ Laporan `verified` tidak bisa diubah siapa pun. Kelompok `closed` tidak bisa mem
 
 - Setiap pembatasan akses dicek di server melalui Policy dan/atau query scope. Menyembunyikan
   menu atau tombol saja tidak cukup.
-- Gunakan Policy untuk `Organization`, `MonthlyReport`, `Product`, `License`, `Attachment`, `User`.
+- Gunakan Policy untuk `Organization`, `MonthlyReport`, `Product`, `License`, `Attachment`, `User`, `ReportIssue`.
 - Gunakan scope `Organization::visibleTo(User $user)` untuk semua daftar kelompok. Policy memakai
   `Organization::isVisibleTo()` yang hasilnya selalu sama dengan scope (ada tesnya).
 - Kolom khusus admin di form bersama diabaikan (rule `exclude`) bila dikirim pengguna lain, bukan ditolak.
@@ -206,11 +207,20 @@ Jangan mengarang kepanjangan akronim resmi (KDMP, KNMP, dsb.). Simpan apa adanya
   reporting_starts_on (date, awal bulan; kelompok tidak dianggap terlambat sebelum tanggal ini),
   is_public (bool, default false), show_contact_publicly (bool, default false),
   created_by, updated_by, timestamps
-- Peringatan nama mirip (`App\Support\SimilarNames`, kampung yang sama): buang awalan umum (kelompok,
-  kelompok tani, kelompok nelayan, kub, bumdes, umkm, koperasi; "kel." = kelompok). "Tani" dan
-  "nelayan" adalah penanda jenis: bila berbeda, tidak mirip. Angka di nama berbeda → tidak mirip.
-  Mirip bila sisa nama sama, kemiripan ≥ 90%, atau Levenshtein ≤ 2 untuk sisa nama ≥ 8 huruf.
-  Saat tambah: konfirmasi sekali ("tetap simpan"); saat ubah nama/kampung: disimpan lalu diberi peringatan.
+- Peringatan data ganda (Paket 4): kemiripan nama di PHP (`App\Support\SimilarNames`): huruf kecil, tanda baca
+  dan spasi ganda dibuang, buang awalan umum (kelompok, kelompok tani, kelompok nelayan, kub, bumdes, umkm, koperasi;
+  "kel." = kelompok). "Tani" dan "nelayan" adalah penanda jenis: bila berbeda, tidak mirip. Angka di nama berbeda →
+  tidak mirip. Mirip bila sisa nama sama, similar_text ≥ `simker.duplicates.min_similarity` (85%), atau
+  Levenshtein ≤ 2 untuk sisa nama ≥ 8 huruf. SATU tempat untuk kandidat: `App\Support\DuplicateCandidates`
+  (form, halaman data ganda, pratinjau impor). Mirip + kampung sama = peringatan KUAT; kampung lain = RINGAN.
+  Saat Admin menambah, atau mengubah nama/kampung: peringatan kuat → kembali ke form dengan daftar kandidat (nama,
+  jenis, kampung, tautan) + centang "Saya sudah memeriksa, tetap simpan"; peringatan ringan → langsung disimpan,
+  kandidat tampil di detail kelompok. Tidak pernah memblokir penyimpanan.
+- "Kemungkinan data ganda" (Admin, tombol "Data ganda" di Semua Kelompok): `/admin/kelompok/data-ganda`, daftar
+  pasangan (kuat dulu; pasangan yang salah satunya `closed` tidak tampil). "Bukan data ganda" menyimpan pasangan di
+  `duplicate_dismissals` (organization_id = id kecil, other_organization_id = id besar, user_id, created_at; unik)
+  sehingga tidak muncul lagi di halaman maupun peringatan form. TIDAK ada gabung otomatis: Admin membuka kedua
+  kelompok dan memutuskan sendiri (mis. ubah status jadi Ditutup dengan alasan).
 - URL area login memakai ID (`/admin/kelompok/12`); slug hanya untuk halaman publik.
 - Status kelompok diisi di form hanya saat menambah. Setelah itu hanya Admin yang mengubahnya, lewat menu
   "…" di detail kelompok (`PATCH /admin/kelompok/{id}/status`, `App\Actions\Organizations\ChangeOrganizationStatus`),
@@ -246,6 +256,7 @@ Jangan mengarang kepanjangan akronim resmi (KDMP, KNMP, dsb.). Simpan apa adanya
   activity_summary, activity_count, achievements,
   members_active, workforce_count, members_change,
   income_sales, income_other, costs, profit,
+  entered_by (user yang membuat laporan: akun kelompok, atau OPD/Admin yang mengisi atas nama kelompok),
   submitted_at, submitted_by, verified_at, verified_by, timestamps
   UNIQUE (organization_id, period): satu laporan per kelompok per bulan.
   `profit` tidak diisi pengguna: dihitung `income_sales + income_other − costs` dan disimpan saat
@@ -254,7 +265,15 @@ Jangan mengarang kepanjangan akronim resmi (KDMP, KNMP, dsb.). Simpan apa adanya
 - `report_items` (produksi & penjualan per produk): id, monthly_report_id, product_id (nullable),
   product_name, production_qty, production_unit, sales_qty, sales_unit, revenue
 - `report_issues` (masalah & kebutuhan): id, monthly_report_id, kind (enum: problem, support),
-  category, description
+  category, description, follow_up_status (enum FollowUpStatus, default `new`), follow_up_opd_id (OPD penanggung
+  jawab terkini, nullable), follow_up_at (perubahan status terakhir). Status terkini disalin dari riwayat agar
+  query ringan. Simpan draf memperbarui baris yang membawa `id` miliknya (bukan hapus-buat ulang) agar riwayat
+  tindak lanjut tetap tersambung saat laporan direvisi.
+- `issue_follow_ups` (riwayat tindak lanjut, tidak pernah diubah): id, report_issue_id, user_id, opd_id (penanggung
+  jawab), from_status, to_status, note (wajib), acted_on (tanggal tindakan, ≤ hari ini), created_at.
+  FollowUpStatus: new "Baru", reviewed "Ditinjau", planned "Direncanakan", in_progress "Sedang ditindaklanjuti",
+  done "Selesai", unable "Tidak dapat ditindaklanjuti". OPD yang dipakai sebagai penanggung jawab tidak bisa dihapus
+  dari Data Master.
   Kategori masalah: modal, bahan_baku, peralatan, sdm, pemasaran, transportasi, legalitas,
   produksi, lainnya
   Kategori kebutuhan: bantuan_alat, pelatihan, modal, pendampingan, pemasaran, legalitas,
@@ -278,8 +297,9 @@ Jangan mengarang kepanjangan akronim resmi (KDMP, KNMP, dsb.). Simpan apa adanya
 - PDF satu laporan: `GET /{admin|opd|kelompok}/laporan/{id}/pdf` (Policy `view`, tombol "Unduh PDF" di detail).
 - Impor kelompok (Admin): `/admin/kelompok/impor` → template (sheet Data + Petunjuk dari data master) → unggah
   .xlsx/.csv (maks 2 MB, 500 baris, tipe dicek finfo, CSV `;` atau `,`) → pratinjau Siap/Peringatan/Gagal
-  (`App\Support\Imports\OrganizationImport` + `RowChecker`; master dicocokkan tanpa peduli huruf/spasi; duplikat
-  nama+kampung di database/file dan nama mirip = peringatan, dicentang per baris) → `ImportOrganizations` dalam
+  (`App\Support\Imports\OrganizationImport` + `RowChecker`; master dicocokkan tanpa peduli huruf/spasi; data ganda
+  memakai `DuplicateCandidates` + `SimilarNames` untuk database dan baris lain di file: mirip/sama di kampung yang
+  sama = Peringatan, dicentang per baris; mirip di kampung lain = catatan saja, baris tetap Siap) → `ImportOrganizations` dalam
   SATU transaksi (status active, is_public false, created_by admin, tanpa akun) → hasil + unduh baris gagal.
   File sementara di disk `local` `imports/{uuid}` milik pengunggah, dibersihkan setelah 1 hari. Contoh file:
   `storage/app/samples/` (buat ulang dengan `make.php` di folder itu).
@@ -349,10 +369,25 @@ draft ──ajukan──▶ submitted ──verifikasi──▶ verified ──b
 
 - Kelompok hanya bisa mengubah laporan berstatus `draft` atau `revision`.
 - Laporan `submitted` terkunci untuk kelompok sampai OPD bertindak.
+- Isi laporan atas nama kelompok (Paket 4, kelompok tanpa HP/akun): OPD pembina dan Admin, tombol "Isi laporan" di
+  tab Laporan detail kelompok (modal pilih bulan) → `POST /{area}/kelompok/{id}/laporan` → form yang sama
+  (`/{area}/laporan/{id}/ubah`, `PATCH .../draf`, `POST .../ajukan`, `Shared\ReportEntryController`,
+  `App\Actions\Reports\CreateReport`). `entered_by` = pengisi; setiap akun OPD/Admin yang menyimpan isian
+  tercatat SEKALI di `report_reviews` (aksi `entered` "Diisi atas nama kelompok"). Detail menampilkan
+  "Diisi oleh <nama> (<OPD>)". Admin/OPD boleh mengubah laporan `draft`/`revision` yang dibuat atas nama kelompok
+  atau yang pernah diajukan; draf yang sedang diisi akun kelompok tetap 404 bagi mereka.
+- Pemisahan tugas (`simker.verification.separate_duties`, default true): akun yang membuat (`entered_by`), mengisi
+  atas nama (`entered`), atau mengajukan (`submitted`) laporan TIDAK boleh memverifikasi / meminta revisi laporan
+  itu (`MonthlyReport::wasHandledBy`, dicek di Policy `verify` → 403). Verifikasi oleh petugas OPD lain yang
+  terhubung atau Admin. Penginput melihat "Perlu diverifikasi oleh Admin atau petugas OPD lain" (detail + antrean).
+  Antrean verifikasi Admin (`/admin/verifikasi`, menu "Verifikasi Laporan"): laporan `submitted` yang tidak bisa
+  diverifikasi akun OPD aktif mana pun (`MonthlyReport::needsAdminVerification`: tanpa OPD pembina, atau semua
+  petugasnya ikut mengisi/mengajukan). Notifikasi pengajuan tidak dikirim ke penginput; bila tidak ada petugas OPD
+  yang berhak, ke Admin.
 - Laporan `verified` tidak bisa diubah (tahap inti). Lampiran laporan berstatus `verified` tidak
   boleh dihapus siapa pun, termasuk Admin.
 - OPD yang boleh memverifikasi: OPD mana pun yang terhubung dengan kelompok tersebut.
-  Admin juga boleh. (Keputusan sementara, menunggu konfirmasi klien.)
+  Admin juga boleh, selalu dengan aturan pemisahan tugas di atas. (Keputusan sementara, menunggu konfirmasi klien.)
 - Permintaan revisi wajib disertai catatan (min 10 karakter); catatan verifikasi opsional.
 - Verifikasi final bagi OPD. Hanya Admin yang bisa "Buka kembali untuk revisi" (verified → revision,
   aksi riwayat `reopened`, alasan wajib min 10 karakter). `verified_at`/`verified_by` dikosongkan;
@@ -360,12 +395,20 @@ draft ──ajukan──▶ submitted ──verifikasi──▶ verified ──b
 - Logika tindakan peninjau ada di `App\Actions\Reports\ReviewReport` (transaksi + `lockForUpdate`):
   hak lihat (404), lalu status, lalu hak tindakan. Bila peninjau lain bertindak lebih dulu, yang kedua
   mendapat pesan "Laporan ini sudah ditinjau oleh …" tanpa baris riwayat ganda.
-- Draf yang belum pernah diajukan (`submitted_at` kosong) tampil di daftar Admin/OPD sebagai
-  "Draf, belum diajukan" tanpa tautan; isinya (termasuk lampiran) 404 bagi Admin/OPD.
+- Draf kelompok yang belum pernah diajukan (`submitted_at` kosong) tampil di daftar Admin/OPD sebagai
+  "Draf, belum diajukan" tanpa tautan; isinya (termasuk lampiran) 404 bagi Admin/OPD. Pengecualian: draf yang
+  dibuat OPD/Admin atas nama kelompok (tautan baris memakai Policy `view`).
 - Antrean verifikasi OPD (`/opd/verifikasi`): laporan `submitted`, urut dari pengajuan TERAKHIR yang
   paling lama (dari `report_reviews`), dengan penanda "Diajukan ulang".
 - "Masalah & Kebutuhan" (`/opd/masalah`, `/admin/masalah`): isian bagian E/F hanya dari laporan
-  `submitted`/`verified` (bukan draf atau revisi), scope `ReportIssue::reviewableBy()`.
+  `submitted`/`verified` (bukan draf atau revisi), scope `ReportIssue::reviewableBy()` + `ReportIssuePolicy`.
+  Filter jenis, kategori, status tindak lanjut, kampung, periode (+ OPD untuk Admin; `lama=30` dari kartu dasbor).
+  Baris membuka detail `/{area}/masalah/{id}`: isi, tautan kelompok & laporan, form "Ubah status tindak lanjut"
+  (status, tanggal tindakan, catatan wajib min 5 karakter; Admin memilih OPD penanggung jawab, OPD selalu
+  OPD-nya sendiri), dan riwayat. Logika di `App\Actions\Issues\FollowUpIssue` (transaksi + `lockForUpdate`).
+  "Unduh Excel" `GET /{area}/masalah/unduh` (filter ikut) → `masalah-kebutuhan-Y-m-d.xlsx` (`Exports\IssueList`).
+  Kelompok melihat status + catatan di detail laporan ("Tindak lanjut (n)") dan kartu "Tindak lanjut masalah &
+  kebutuhan" di dasbornya; tidak bisa mengubah (403).
 - Kelompok bisa memilih "Tidak ada aktivitas bulan ini"; bagian lain menjadi opsional.
 - Wajib saat diajukan (bila ada aktivitas): ringkasan aktivitas dan anggota aktif (0 = terisi).
   Tenaga kerja, keuangan, dokumentasi opsional; keuangan kosong tetap NULL (laba NULL, ada peringatan).
@@ -388,7 +431,10 @@ draft ──ajukan──▶ submitted ──verifikasi──▶ verified ──b
   (wajib lapor + lewat tenggat + belum pernah diajukan). Dipakai `ReportingStats::overdue()`, daftar laporan,
   filter `?laporan=terlambat&periode=Y-m` di daftar kelompok, dan notifikasi tenggat. Badge "Terlambat"
   (`fix`) di daftar laporan; kelompok `closed` tidak ditandai terlambat.
-- Dasbor Admin & OPD: kartu ringkasan "Terlambat melapor {bulan}" (`shared.dashboards.overdue-stat`).
+- Dasbor Admin & OPD: kartu ringkasan "Terlambat melapor {bulan}" (`shared.dashboards.overdue-stat`) dan
+  "Kebutuhan belum ditindaklanjuti" (`shared.dashboards.stale-needs-stat`: kebutuhan berstatus Baru/Ditinjau yang
+  tidak berubah > `simker.follow_up.stale_days` (30) hari, dihitung dari `follow_up_at` atau pengajuan pertama,
+  `ReportIssue::stale`). Admin "Perlu perhatian" juga memuat "laporan yang hanya bisa diverifikasi Admin".
   Setelah tenggat, daftar "Belum mengajukan" berjudul "Terlambat melapor {bulan}" dengan badge "Terlambat".
   Dasbor Kelompok: "Tenggat {tanggal} · N hari lagi". "Diajukan terlambat" (`wasSubmittedLate()`, informasi saja):
   `submitted_at` melewati tenggat periodenya.
@@ -417,6 +463,8 @@ Setiap perubahan status mencatat baris di `report_reviews` dan mengirim notifika
 - diajukan / diajukan ulang → semua user OPD terkait; bila kelompok tanpa OPD pembina, semua Admin
   (`ReportSubmitted`). Setelah laporan ditinjau, notifikasi ini ditandai dibaca bagi semua penerimanya.
 - minta revisi / terverifikasi / dibuka kembali → semua user kelompok tersebut (`ReportReviewed`)
+- status tindak lanjut masalah/kebutuhan berubah → semua user kelompok aktif, sekali per perubahan; catatan tanpa
+  ganti status tidak mengirim notifikasi (`IssueFollowUpUpdated`, tujuan = detail laporan)
 
 ### Notifikasi dalam aplikasi
 - Data notifikasi menyimpan fakta (`kind`, `monthly_report_id`, nama kelompok, periode, catatan); kalimatnya
@@ -450,7 +498,7 @@ Notifikasi · Akun Saya
 **OPD:** Dasbor · Kelompok Binaan · Verifikasi Laporan · Semua Laporan ·
 Masalah & Kebutuhan · Statistik · Notifikasi · Akun Saya
 
-**Admin:** Dasbor Distrik · Semua Kelompok · Semua Laporan · Masalah & Kebutuhan · Statistik · Pengguna ·
+**Admin:** Dasbor Distrik · Semua Kelompok · Semua Laporan · Verifikasi Laporan · Masalah & Kebutuhan · Statistik · Pengguna ·
 Data Master (Kampung, Jenis Kelembagaan, Bidang Usaha, OPD) · Konten Website · Notifikasi
 
 Pakai "Dasbor", bukan "Dashboard", di semua teks antarmuka dan semua ukuran layar.
@@ -767,10 +815,10 @@ Target: versi uji coba ruang lingkup inti dalam 2 minggu.
 12. Uji menyeluruh per peran, perbaikan tampilan HP/tablet, `npm run build`, persiapan deploy.
 
 **Diupayakan setelah inti selesai** (urutan prioritas):
-~~status organisasi di UI~~ (selesai, Paket 1) · pemisahan penginput & pemverifikasi · Berita & Kegiatan ·
-peringatan nama ganda · ~~batas waktu & status terlambat~~ (selesai, Paket 1) ·
+~~status organisasi di UI~~ (selesai, Paket 1) · ~~pemisahan penginput & pemverifikasi~~ (selesai, Paket 4) ·
+Berita & Kegiatan · ~~peringatan nama ganda~~ (selesai, Paket 4) · ~~batas waktu & status terlambat~~ (selesai, Paket 1) ·
 ~~beberapa akun per kelompok~~ (selesai, Paket 1) · verifikasi profil + riwayat perubahan ·
-~~grafik ekonomi~~ · ~~dasbor legalitas~~ (selesai, Paket 3) · tindak lanjut intervensi · email undangan/reset ·
+~~grafik ekonomi~~ · ~~dasbor legalitas~~ (selesai, Paket 3) · ~~tindak lanjut intervensi~~ (selesai, Paket 4) · email undangan/reset ·
 ~~ekspor Excel/PDF & impor spreadsheet~~ (selesai, Paket 2).
 
 **Di luar lingkup:** alur perizinan lengkap, integrasi sistem eksternal, WhatsApp, peta,

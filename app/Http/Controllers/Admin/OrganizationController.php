@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Organizations\OrganizationRequest;
 use App\Http\Requests\Organizations\OrganizationStatusRequest;
 use App\Models\Organization;
+use App\Support\DuplicateCandidates;
 use App\Support\OrganizationOptions;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
@@ -32,18 +33,18 @@ class OrganizationController extends Controller
     public function store(OrganizationRequest $request, SaveOrganization $save): RedirectResponse
     {
         $data = $request->organizationData();
+        $candidates = (new DuplicateCandidates)->for($data['name'], (int) $data['village_id']);
 
-        if (! $request->boolean('confirm_similar')) {
-            $similar = Organization::similarTo($data['name'], $data['village_id']);
-
-            if ($similar->isNotEmpty()) {
-                return back()->withInput()->with('similar', $similar->map->only(['id', 'name'])->all());
-            }
+        // Peringatan kuat (kampung sama) dikonfirmasi sekali; peringatan ringan tampil setelah disimpan.
+        if (! $request->boolean('confirm_similar') && $candidates->contains('strong', true)) {
+            return back()->withInput()->with('duplicates', $candidates->all());
         }
 
         $organization = $save->handle($request->user(), $data);
 
-        return redirect()->route('admin.organizations.show', $organization)->with('status', 'Kelompok ditambahkan.');
+        return redirect()->route('admin.organizations.show', $organization)
+            ->with('status', 'Kelompok ditambahkan.')
+            ->with('duplicates', $candidates->where('strong', false)->values()->all());
     }
 
     public function updateStatus(OrganizationStatusRequest $request, Organization $organization, ChangeOrganizationStatus $change): RedirectResponse

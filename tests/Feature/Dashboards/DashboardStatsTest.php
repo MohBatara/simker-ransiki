@@ -157,7 +157,7 @@ test('jumlah kelompok per status, jenis, dan bidang; daftar perhatian', function
     expect($organizations['total'])->toBe(9)
         ->and($organizations['statuses']->all())->toBe(['active' => 7, 'inactive' => 1, 'closed' => 1])
         ->and($organizations['types']->sum('value'))->toBe(9)
-        ->and($stats->attention())->toBe(['without_opd' => 1, 'waiting' => 1, 'active_without_account' => 6]);
+        ->and($stats->attention())->toBe(['without_opd' => 1, 'admin_queue' => 0, 'waiting' => 1, 'active_without_account' => 6]);
 });
 
 test('pilihan bulan: bulan lalu sebagai default; nilai tidak sah atau di luar rentang kembali ke default', function () {

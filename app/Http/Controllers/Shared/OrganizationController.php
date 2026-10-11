@@ -7,10 +7,13 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Organizations\LicenseRequest;
 use App\Http\Requests\Organizations\OrganizationRequest;
 use App\Models\License;
+use App\Models\MonthlyReport;
 use App\Models\Organization;
 use App\Support\BannerImage;
+use App\Support\DuplicateCandidates;
 use App\Support\Exports\OrganizationList;
 use App\Support\Exports\Spreadsheet;
+use App\Support\Format;
 use App\Support\OrganizationOptions;
 use App\Support\OrganizationOverview;
 use App\Support\OrganizationPanel;
@@ -129,7 +132,8 @@ class OrganizationController extends Controller
     public function reports(Request $request, Organization $organization): View
     {
         return $this->detail($request, $organization, 'laporan', [
-            'reports' => $organization->monthlyReports()->orderByDesc('period')->paginate(12),
+            'reports' => $organization->monthlyReports()->with('enterer:id,role')->orderByDesc('period')->paginate(12),
+            'entryPeriods' => $request->user()->can('create', [MonthlyReport::class, $organization]) ? $this->entryPeriods($organization) : [],
         ]);
     }
 
@@ -159,13 +163,25 @@ class OrganizationController extends Controller
         $identityChanged = array_key_exists('name', $data)
             && ($data['name'] !== $organization->name || (int) $data['village_id'] !== $organization->village_id);
 
-        $save->handle($request->user(), $data, $organization);
+        $candidates = $identityChanged
+            ? (new DuplicateCandidates)->for($data['name'], (int) $data['village_id'], $organization->id)
+            : collect();
 
-        $similar = $identityChanged ? Organization::similarTo($organization->name, $organization->village_id, $organization->id) : collect();
+        if (! $request->boolean('confirm_similar') && $candidates->contains('strong', true)) {
+            return back()->withInput()->with('duplicates', $candidates->all());
+        }
+
+        $save->handle($request->user(), $data, $organization);
 
         return redirect()->route($this->area($request).'.organizations.show', $organization)
             ->with('status', 'Profil kelompok diperbarui.')
-            ->with('similar', $similar->map->only(['id', 'name'])->all());
+            ->with('duplicates', $candidates->where('strong', false)->values()->all());
+    }
+
+    /** Bulan yang bisa dipilih di "Isi laporan": sejak wajib lapor sampai bulan ini, terbaru dulu. */
+    private function entryPeriods(Organization $organization): array
+    {
+        return $organization->reportingPeriods()->mapWithKeys(fn ($period) => [$period->format('Y-m') => Format::month($period)])->all();
     }
 
     private function detail(Request $request, Organization $organization, string $tab, array $data): View

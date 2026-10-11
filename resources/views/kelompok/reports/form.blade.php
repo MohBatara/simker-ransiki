@@ -1,6 +1,7 @@
 {{--
     Form laporan bulanan bertahap (bagian A–H). Isian disimpan otomatis lewat JSON (reportForm di
     resources/js/report-form.js); halaman ini hanya merender isian awal dan kerangka bagian.
+    Dipakai Kelompok dan OPD/Admin yang mengisi atas nama kelompok ($onBehalf). Data dari ReportForm::page().
 --}}
 @use('App\Support\Format')
 @use('App\Support\ReportForm')
@@ -16,7 +17,7 @@
         'products' => $products->map->only(['id', 'name', 'unit'])->values(),
         'previous' => $previous,
         'attachmentCount' => $attachments->count(),
-        'saveUrl' => route('kelompok.reports.draft', $report),
+        'saveUrl' => $urls['save'],
         'submitFormId' => 'report-submit-form',
         'backupKey' => 'simker:laporan:'.auth()->id().':'.$report->id,
         'interval' => config('simker.reports.autosave_seconds'),
@@ -25,12 +26,21 @@
 
 <x-layouts.app
     :title="'Laporan '.Format::month($report->period)"
-    :description="$report->status->label().' · '.($report->isOverdue() ? 'lewat tenggat ' : 'tenggat ').Format::date($deadline).', pukul 23.59 WIT'"
-    :back="route('kelompok.reports.index')"
+    :description="($onBehalf ? $report->organization->name.' · ' : '').$report->status->label().' · '.($report->isOverdue() ? 'lewat tenggat ' : 'tenggat ').Format::date($deadline).', pukul 23.59 WIT'"
+    :back="$urls['back']"
     focus
 >
     <div x-data="reportForm(@js($config))" class="space-y-5">
         @include('shared.reports.revision-note', ['fixHint' => true])
+
+        @if ($onBehalf)
+            <x-alert title="Mengisi atas nama kelompok">
+                Anda mengisi laporan {{ $report->organization->name }}. Riwayat laporan mencatat nama Anda sebagai pengisi.
+                @if (App\Models\MonthlyReport::separatesDuties())
+                    Laporan yang Anda isi atau ajukan perlu diverifikasi oleh Admin atau petugas OPD lain.
+                @endif
+            </x-alert>
+        @endif
 
         <x-alert tone="wait" x-cloak x-show="backup" title="Ada isian yang belum tersimpan di perangkat ini">
             <p>Isian ini disimpan di perangkat pada <span x-text="backupTime"></span>, tetapi belum terkirim ke server. Pulihkan isian tersebut?</p>
@@ -117,7 +127,7 @@
             </x-modal>
         @endif
 
-        <form id="report-submit-form" method="POST" action="{{ route('kelompok.reports.submit', $report) }}" class="hidden">
+        <form id="report-submit-form" method="POST" action="{{ $urls['submit'] }}" class="hidden">
             @csrf
         </form>
     </div>

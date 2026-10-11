@@ -71,30 +71,36 @@ test('status, relasi OPD, buat, dan hapus kelompok hanya admin', function (strin
     expect($allowed)->toBe(['admin']);
 })->with(['administer', 'create', 'delete']);
 
-test('membuat laporan hanya kelompok pemilik yang belum tutup', function () {
+test('membuat laporan: kelompok pemilik, OPD pembina, dan admin (atas nama kelompok), selama belum tutup', function () {
     $scenario = accessScenario();
     $results = collect($scenario->users)->map(fn (User $user) => decide($user, 'create', [MonthlyReport::class, $scenario->organization]))->all();
 
     expect($results)->toBe([
-        'admin' => 403, 'opd' => 403, 'opd lain' => 404, 'kelompok' => 'allow', 'kelompok lain' => 404,
+        'admin' => 'allow', 'opd' => 'allow', 'opd lain' => 404, 'kelompok' => 'allow', 'kelompok lain' => 404,
     ]);
 
     $scenario->organization->update(['status' => 'closed']);
-    expect(decide($scenario->users['kelompok'], 'create', [MonthlyReport::class, $scenario->organization]))->toBe(403);
+    foreach (['kelompok', 'opd', 'admin'] as $role) {
+        expect(decide($scenario->users[$role], 'create', [MonthlyReport::class, $scenario->organization]))->toBe(403);
+    }
 });
 
-test('mengubah laporan hanya kelompok pemilik saat draf atau perlu revisi', function (ReportStatus $status, array $expected) {
+test('mengubah laporan saat draf atau perlu revisi; draf kelompok yang belum diajukan tetap tertutup bagi peninjau', function (ReportStatus $status, ?string $enteredBy, array $expected) {
     $scenario = accessScenario();
-    $report = MonthlyReport::factory()->for($scenario->organization)->status($status)->create();
+    $report = MonthlyReport::factory()->for($scenario->organization)->status($status)->create([
+        'submitted_at' => $status === ReportStatus::Draft ? null : now(),
+        'entered_by' => $enteredBy ? $scenario->users[$enteredBy]->id : null,
+    ]);
 
     $results = collect($scenario->users)->map(fn (User $user) => decide($user, 'update', $report))->all();
 
     expect($results)->toBe($expected);
 })->with([
-    'draf' => [ReportStatus::Draft, ['admin' => 403, 'opd' => 403, 'opd lain' => 404, 'kelompok' => 'allow', 'kelompok lain' => 404]],
-    'perlu revisi' => [ReportStatus::Revision, ['admin' => 403, 'opd' => 403, 'opd lain' => 404, 'kelompok' => 'allow', 'kelompok lain' => 404]],
-    'diajukan' => [ReportStatus::Submitted, ['admin' => 403, 'opd' => 403, 'opd lain' => 404, 'kelompok' => 403, 'kelompok lain' => 404]],
-    'terverifikasi' => [ReportStatus::Verified, ['admin' => 403, 'opd' => 403, 'opd lain' => 404, 'kelompok' => 403, 'kelompok lain' => 404]],
+    'draf kelompok' => [ReportStatus::Draft, 'kelompok', ['admin' => 404, 'opd' => 404, 'opd lain' => 404, 'kelompok' => 'allow', 'kelompok lain' => 404]],
+    'draf diisi OPD' => [ReportStatus::Draft, 'opd', ['admin' => 'allow', 'opd' => 'allow', 'opd lain' => 404, 'kelompok' => 'allow', 'kelompok lain' => 404]],
+    'perlu revisi' => [ReportStatus::Revision, 'kelompok', ['admin' => 'allow', 'opd' => 'allow', 'opd lain' => 404, 'kelompok' => 'allow', 'kelompok lain' => 404]],
+    'diajukan' => [ReportStatus::Submitted, 'kelompok', ['admin' => 403, 'opd' => 403, 'opd lain' => 404, 'kelompok' => 403, 'kelompok lain' => 404]],
+    'terverifikasi' => [ReportStatus::Verified, 'kelompok', ['admin' => 403, 'opd' => 403, 'opd lain' => 404, 'kelompok' => 403, 'kelompok lain' => 404]],
 ]);
 
 test('verifikasi dan minta revisi: admin dan OPD pembina, hanya untuk laporan diajukan', function (string $ability) {

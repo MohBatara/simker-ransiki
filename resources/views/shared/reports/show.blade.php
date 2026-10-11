@@ -14,6 +14,9 @@
     $area ??= null;
     $canVerify = $area && auth()->user()->can('verify', $report);
     $canReopen = $area && auth()->user()->can('reopen', $report);
+    // Pemisahan tugas: peninjau yang ikut mengisi/mengajukan diberi tahu siapa yang perlu memverifikasi.
+    $handledByMe = $area && ! $canVerify && $report->status === App\Enums\ReportStatus::Submitted
+        && App\Models\MonthlyReport::separatesDuties() && $report->wasHandledBy(auth()->user());
     $pdfUrl = route(($area ?? 'kelompok').'.reports.pdf', $report);
 @endphp
 
@@ -39,6 +42,12 @@
 
     <div class="space-y-5">
         @include('shared.reports.revision-note', ['fixHint' => (bool) $editUrl])
+
+        @if ($handledByMe)
+            <x-alert tone="wait" title="Perlu diverifikasi oleh Admin atau petugas OPD lain">
+                Anda ikut mengisi atau mengajukan laporan ini, jadi tidak bisa memverifikasinya sendiri.
+            </x-alert>
+        @endif
 
         <div class="space-y-5 xl:grid xl:grid-cols-[minmax(0,1fr)_320px] xl:items-start xl:gap-5 xl:space-y-0">
             <div class="min-w-0 space-y-5">
@@ -125,10 +134,25 @@
                             @else
                                 <ul class="divide-y divide-line">
                                     @foreach ($rows as $row)
-                                        <li class="py-2 first:pt-0 last:pb-0">
-                                            <p class="font-semibold text-ink">{{ $row->category ? $row->categoryLabel() : 'Tanpa kategori' }}</p>
+                                        <li class="py-3 first:pt-0 last:pb-0">
+                                            <div class="flex flex-wrap items-start justify-between gap-2">
+                                                <p class="font-semibold text-ink">{{ $row->category ? $row->categoryLabel() : 'Tanpa kategori' }}</p>
+                                                {{-- Tindak lanjut baru berjalan setelah laporan diajukan. --}}
+                                                @if ($report->submitted_at)
+                                                    <x-badge :tone="$row->follow_up_status->badgeColor()">{{ $row->follow_up_status->label() }}</x-badge>
+                                                @endif
+                                            </div>
                                             @if (filled($row->description))
                                                 <p class="mt-0.5 whitespace-pre-line text-ink-soft break-words">{{ $row->description }}</p>
+                                            @endif
+                                            @if ($row->followUps->isNotEmpty())
+                                                <details class="mt-2">
+                                                    <summary class="inline-flex min-h-11 cursor-pointer items-center rounded-control font-semibold text-brand md:min-h-0">Tindak lanjut ({{ $row->followUps->count() }})</summary>
+                                                    <div class="mt-2">@include('shared.reports._follow-ups', ['followUps' => $row->followUps])</div>
+                                                </details>
+                                            @endif
+                                            @if ($area && $report->submitted_at && auth()->user()->can('followUp', $row))
+                                                <x-link :href="route($area.'.issues.show', $row)">Ubah status tindak lanjut</x-link>
                                             @endif
                                         </li>
                                     @endforeach
@@ -152,6 +176,12 @@
                             <dt class="text-ink-soft">Status</dt>
                             <dd><x-badge :tone="$report->status->badgeColor()">{{ $report->status->label() }}</x-badge></dd>
                         </div>
+                        @if ($report->isEnteredOnBehalf())
+                            <div class="flex justify-between gap-4 py-2">
+                                <dt class="text-ink-soft">Diisi oleh</dt>
+                                <dd class="text-right">{{ $report->enterer->nameWithAgency() }}</dd>
+                            </div>
+                        @endif
                         <div class="flex justify-between gap-4 py-2">
                             <dt class="text-ink-soft">Tenggat</dt>
                             <dd class="text-right">{{ Format::date($report->deadline()) }}</dd>
@@ -187,7 +217,7 @@
                         </li>
                         @foreach ($report->reviews as $review)
                             <li>
-                                <p class="text-ink"><span class="font-semibold">{{ $review->action->label() }}</span> oleh {{ $review->user?->name ?? 'akun yang sudah dihapus' }}</p>
+                                <p class="text-ink"><span class="font-semibold">{{ $review->action->label() }}</span> oleh {{ $review->user?->nameWithAgency() ?? 'akun yang sudah dihapus' }}</p>
                                 <p class="text-caption text-ink-muted">{{ Format::dateTime($review->created_at) }}</p>
                                 @if (filled($review->note))
                                     <p class="mt-1 whitespace-pre-line rounded-control bg-subtle px-3 py-2 text-ink-soft break-words">{{ $review->note }}</p>

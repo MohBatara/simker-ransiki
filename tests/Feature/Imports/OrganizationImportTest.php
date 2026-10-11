@@ -153,6 +153,22 @@ test('duplikat di file yang sama dan nama mirip di database diberi peringatan', 
         ->and($rows[3]['messages'][0])->toContain('Kelompok Tani Pinang Jaya');
 });
 
+test('logika data ganda sama dengan form: mirip di kampung sama = peringatan, di kampung lain = catatan saja', function () {
+    Organization::factory()->create(['name' => 'KUB Sagu Lestari', 'village_id' => $this->otherVillage->id]);
+
+    $token = importToken(uploadImport($this, [
+        validRow(['name' => 'Koperasi Sagu Lestari']),
+        validRow(['name' => 'Kelompok Kakao Harapan Jaya']),
+        validRow(['name' => 'Kel. Kakao Harapan Jaja']),
+    ]));
+
+    $rows = OrganizationImport::read(Storage::disk('local')->path("imports/{$token}.xlsx"), 'xlsx')->rows;
+
+    expect(array_column($rows, 'status'))->toBe(['ready', 'ready', 'warning'])
+        ->and($rows[0]['messages'])->toBe(['Nama mirip dengan KUB Sagu Lestari di Kampung Contoh 2 (kampung lain).'])
+        ->and($rows[2]['messages'])->toBe(['Mirip dengan baris 3 di file ini, di kampung yang sama.']);
+});
+
 test('impor menyimpan baris siap dan peringatan yang dipilih, dengan bawaan yang benar', function () {
     Organization::factory()->create(['name' => 'KUB Sagu Lama', 'village_id' => $this->village->id]);
 

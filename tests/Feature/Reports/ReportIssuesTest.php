@@ -39,7 +39,7 @@ test('OPD hanya melihat masalah dan kebutuhan dari laporan binaan yang diajukan 
         ->assertOk()
         ->assertSeeInOrder(['Modal kerja terbatas', 'Pelatihan pengemasan'])
         ->assertSee('Bahan baku')
-        ->assertSee("/opd/laporan/{$submitted->id}")
+        ->assertSee("/opd/masalah/{$submitted->issues->first()->id}")
         ->assertDontSee('Isi draf rahasia')
         ->assertDontSee('Isi revisi rahasia')
         ->assertDontSee('Masalah kelompok lain')
@@ -69,7 +69,7 @@ test('admin melihat seluruh distrik dan bisa menyaring per OPD', function () {
     $this->actingAs(User::factory()->admin()->create());
 
     $this->get('/admin/masalah')->assertOk()->assertSee('Modal kerja terbatas')->assertSee('Masalah kelompok lain')
-        ->assertSee("/admin/laporan/{$foreign->id}")
+        ->assertSee("/admin/masalah/{$foreign->issues->first()->id}")
         ->assertSee('aria-label="Masalah &amp; Kebutuhan"', false);
     expect($this->get("/admin/masalah?opd={$this->otherOpd->id}")->viewData('issues')->pluck('description')->all())->toBe(['Masalah kelompok lain']);
 });

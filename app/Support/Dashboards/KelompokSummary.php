@@ -6,6 +6,7 @@ use App\Enums\LegalStatus;
 use App\Enums\ReportStatus;
 use App\Models\MonthlyReport;
 use App\Models\Organization;
+use App\Models\ReportIssue;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Collection;
 
@@ -97,5 +98,22 @@ class KelompokSummary
             ->take($months)
             ->map(fn (CarbonImmutable $period) => ['period' => $period, 'report' => $this->reports->get($period->format('Y-m'))])
             ->values();
+    }
+
+    /**
+     * Masalah & kebutuhan dari laporan yang sudah diajukan, yang paling baru ditindaklanjuti dulu.
+     *
+     * @return Collection<int, ReportIssue>
+     */
+    public function followUps(int $limit = 5): Collection
+    {
+        return ReportIssue::query()
+            ->whereHas('monthlyReport', fn ($query) => $query->where('organization_id', $this->organization->id)->whereNotNull('submitted_at'))
+            ->with(['monthlyReport:id,period,status', 'followUps' => fn ($query) => $query->select(['id', 'report_issue_id', 'note'])])
+            ->orderByRaw('follow_up_at IS NULL')
+            ->orderByDesc('follow_up_at')
+            ->orderByDesc('id')
+            ->limit($limit)
+            ->get();
     }
 }

@@ -17,7 +17,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
 #[Fillable([
-    'organization_id', 'period', 'status', 'no_activity',
+    'organization_id', 'period', 'status', 'no_activity', 'entered_by',
     'activity_summary', 'activity_count', 'achievements',
     'members_active', 'workforce_count', 'members_change',
     'income_sales', 'income_other', 'costs',
@@ -50,6 +50,7 @@ class MonthlyReport extends Model
             'verified_at' => 'datetime',
             'last_submitted_at' => 'datetime',
             'resubmitted' => 'boolean',
+            'handled_by_me' => 'boolean',
         ];
     }
 
@@ -170,14 +171,74 @@ class MonthlyReport extends Model
             ->withExists(['reviews as resubmitted' => fn ($query) => $query->whereIn('action', [ReviewAction::RevisionRequested, ReviewAction::Reopened])]);
     }
 
+    /**
+     * Pemisahan tugas (config simker.verification.separate_duties): akun yang mengisi, mengubah, atau
+     * mengajukan laporan tidak boleh memverifikasinya.
+     */
+    public static function separatesDuties(): bool
+    {
+        return (bool) config('simker.verification.separate_duties');
+    }
+
+    /** Akun ini pernah membuat, mengisi atas nama kelompok, atau mengajukan laporan ini. */
+    public function wasHandledBy(User $user): bool
+    {
+        return $this->entered_by === $user->id
+            || $this->reviews()->where('user_id', $user->id)->whereIn('action', ReviewAction::handling())->exists();
+    }
+
+    /** Dibuat oleh OPD/Admin atas nama kelompok (bukan oleh akun kelompok). */
+    public function isEnteredOnBehalf(): bool
+    {
+        return $this->entered_by !== null && $this->enterer !== null && ! $this->enterer->isKelompok();
+    }
+
+    /** handled_by_me: versi query wasHandledBy() untuk daftar (antrean verifikasi). */
+    public function scopeWithHandledBy(Builder $query, User $user): void
+    {
+        $query->addSelect(['handled_by_me' => fn ($sub) => $sub->selectRaw('CASE WHEN monthly_reports.entered_by = ? OR EXISTS ('
+            .'SELECT 1 FROM report_reviews WHERE report_reviews.monthly_report_id = monthly_reports.id AND report_reviews.user_id = ? AND report_reviews.action IN (?, ?)'
+            .') THEN 1 ELSE 0 END', [$user->id, $user->id, ...array_map(fn (ReviewAction $action) => $action->value, ReviewAction::handling())])]);
+    }
+
+    /**
+     * Laporan diajukan yang hanya bisa diverifikasi Admin: tidak ada akun OPD aktif yang terhubung dan boleh
+     * memverifikasinya (kelompok tanpa OPD pembina, atau semua petugas OPD-nya ikut mengisi/mengajukan).
+     */
+    public function scopeNeedsAdminVerification(Builder $query): void
+    {
+        $separate = static::separatesDuties();
+        $handling = array_map(fn (ReviewAction $action) => $action->value, ReviewAction::handling());
+
+        $query->where('monthly_reports.status', ReportStatus::Submitted)
+            ->whereNotExists(fn ($users) => $users->selectRaw('1')
+                ->from('users')
+                ->join('organization_opd', 'organization_opd.opd_id', '=', 'users.opd_id')
+                ->whereColumn('organization_opd.organization_id', 'monthly_reports.organization_id')
+                ->where('users.role', 'opd')
+                ->where('users.is_active', true)
+                ->when($separate, fn ($users) => $users
+                    ->where(fn ($users) => $users->whereNull('monthly_reports.entered_by')->orWhereColumn('users.id', '!=', 'monthly_reports.entered_by'))
+                    ->whereNotExists(fn ($reviews) => $reviews->selectRaw('1')
+                        ->from('report_reviews')
+                        ->whereColumn('report_reviews.monthly_report_id', 'monthly_reports.id')
+                        ->whereColumn('report_reviews.user_id', 'users.id')
+                        ->whereIn('report_reviews.action', $handling))));
+    }
+
     /** Relasi untuk halaman detail (shared.reports.show). */
     public function loadDetail(): static
     {
-        return $this->load([
-            'organization', 'items', 'issues', 'reviews.user', 'verifier',
+        $this->load([
+            'organization', 'items', 'issues.followUps.user.opd', 'issues.followUps.opd', 'reviews.user.opd', 'verifier', 'enterer.opd',
             'reviews' => fn ($query) => $query->orderBy('created_at')->orderBy('id'),
             'latestRevisionRequest.user.opd',
         ]);
+
+        // Hak tindak lanjut per baris (ReportIssuePolicy) membaca laporan induknya tanpa query tambahan.
+        $this->issues->each->setRelation('monthlyReport', $this);
+
+        return $this;
     }
 
     public function organization(): BelongsTo
@@ -211,6 +272,12 @@ class MonthlyReport extends Model
     public function submitter(): BelongsTo
     {
         return $this->belongsTo(User::class, 'submitted_by');
+    }
+
+    /** Akun yang membuat laporan (kelompok, atau OPD/Admin yang mengisi atas nama kelompok). */
+    public function enterer(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'entered_by');
     }
 
     public function verifier(): BelongsTo

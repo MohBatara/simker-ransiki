@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Kelompok;
 
+use App\Actions\Reports\CreateReport;
 use App\Actions\Reports\SaveReportDraft;
 use App\Actions\Reports\SubmitReport;
 use App\Enums\OrganizationStatus;
@@ -12,12 +13,11 @@ use App\Models\MonthlyReport;
 use App\Models\Organization;
 use App\Support\Format;
 use App\Support\ReportForm;
-use Illuminate\Database\UniqueConstraintViolationException;
+use App\Support\ReportPeriodInput;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
-use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
@@ -55,36 +55,16 @@ class MonthlyReportController extends Controller
     }
 
     /** Membuat draf kosong agar simpan otomatis dan unggah dokumentasi punya ID laporan. */
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request, CreateReport $create): RedirectResponse
     {
         $organization = $this->organization($request);
         Gate::authorize('create', [MonthlyReport::class, $organization]);
 
-        $request->validate(['period' => ['required', 'date_format:Y-m']], [
-            'period.required' => 'Pilih bulan laporan.',
-            'period.date_format' => 'Bulan laporan tidak valid.',
-        ]);
-        $period = Carbon::createFromFormat('Y-m-d', $request->input('period').'-01')->startOfDay();
+        [$report, $created] = $create->handle($request->user(), $organization, ReportPeriodInput::from($request));
 
-        if (! $organization->acceptsReportFor($period)) {
-            throw ValidationException::withMessages(['period' => 'Laporan hanya bisa dibuat untuk bulan sejak kewajiban lapor dimulai sampai bulan ini.']);
-        }
-
-        $existing = $organization->monthlyReports()->whereDate('period', $period)->first();
-
-        if (! $existing) {
-            try {
-                $report = $organization->monthlyReports()->create(['period' => $period]);
-
-                return redirect()->route('kelompok.reports.edit', $report);
-            } catch (UniqueConstraintViolationException) {
-                // Dua klik bersamaan: laporan sudah dibuat oleh permintaan lain.
-                $existing = $organization->monthlyReports()->whereDate('period', $period)->firstOrFail();
-            }
-        }
-
-        return redirect()->to($this->reportUrl($request, $existing))
-            ->with('status', 'Bulan ini sudah ada laporan. Laporan yang ada dibuka.');
+        return $created
+            ? redirect()->route('kelompok.reports.edit', $report)
+            : redirect()->to($this->reportUrl($request, $report))->with('status', 'Bulan ini sudah ada laporan. Laporan yang ada dibuka.');
     }
 
     public function show(Request $request, MonthlyReport $report): View
@@ -103,18 +83,12 @@ class MonthlyReportController extends Controller
 
     public function edit(Request $request, MonthlyReport $report): View
     {
-        $report->load(['organization', 'items', 'issues', 'latestRevisionRequest.user.opd']);
-        $submission = Gate::inspect('submit', $report);
-
-        return view('kelompok.reports.form', [
-            'report' => $report,
-            'state' => ReportForm::state($report),
-            'previous' => ReportForm::previous($report),
-            'products' => $report->organization->products()->orderBy('name')->get(['id', 'name', 'unit']),
-            'attachments' => $report->attachments()->with('uploader')->latest()->get()->each->setRelation('attachable', $report),
-            'canSubmit' => $submission->allowed(),
-            'submitNote' => $submission->allowed() ? null : $submission->message(),
-        ]);
+        return view('kelompok.reports.form', ReportForm::page($report, $request->user(), [
+            'save' => route('kelompok.reports.draft', $report),
+            'submit' => route('kelompok.reports.submit', $report),
+            'back' => route('kelompok.reports.index'),
+            'products' => route('kelompok.products.index'),
+        ]));
     }
 
     /** Simpan otomatis dan tombol "Simpan" (JSON). */

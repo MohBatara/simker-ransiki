@@ -3,7 +3,7 @@ import { formatNumber, parseNumber } from './numbers';
 const BACKUP_PREFIX = 'simker:laporan:';
 
 const BLANK_ITEM = { choice: '', product_id: null, product_name: '', production_qty: '', production_unit: '', sales_qty: '', sales_unit: '', revenue: '' };
-const BLANK_ISSUE = { category: '', description: '' };
+const BLANK_ISSUE = { id: null, category: '', description: '' };
 
 // Kunci error dari server → bagian form.
 const SECTION_OF = [

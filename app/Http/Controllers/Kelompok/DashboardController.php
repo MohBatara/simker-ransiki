@@ -27,6 +27,7 @@ class DashboardController extends Controller
             'revision' => $summary->latestRevision(),
             'checklist' => $summary->profileChecklist(),
             'history' => $summary->history(),
+            'followUps' => $summary->followUps(),
             'incomeTrend' => $stats->incomeTrend(),
             'productionTrend' => $stats->productionTrend(),
             'months' => $stats->months(),

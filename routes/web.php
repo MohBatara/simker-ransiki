@@ -78,9 +78,25 @@ $reportRoutes = function () {
         });
     });
 
+    // Isi laporan atas nama kelompok (OPD pembina dan Admin). Hak dicek MonthlyReportPolicy.
+    Route::controller(Shared\ReportEntryController::class)->name('reports.')->group(function () {
+        Route::post('/kelompok/{organization}/laporan', 'store')->name('store')->whereNumber('organization');
+        Route::whereNumber('report')->prefix('laporan')->group(function () {
+            Route::get('/{report}/ubah', 'edit')->name('edit')->can('update', 'report');
+            Route::patch('/{report}/draf', 'saveDraft')->name('draft')->can('update', 'report')->middleware('throttle:60,1');
+            Route::post('/{report}/ajukan', 'submit')->name('submit')->can('submit', 'report');
+        });
+    });
+
     // Rekap per periode; isinya dibatasi kelompok yang terlihat pengguna (visibleTo).
     Route::get('/laporan/rekap', [Shared\ReportExportController::class, 'recap'])->name('reports.recap');
-    Route::get('/masalah', [Shared\ReportIssueController::class, 'index'])->name('issues.index');
+    // Masalah & kebutuhan + tindak lanjutnya; isi dibatasi ReportIssue::reviewableBy, hak per baris ReportIssuePolicy.
+    Route::controller(Shared\ReportIssueController::class)->prefix('masalah')->name('issues.')->group(function () {
+        Route::get('/', 'index')->name('index');
+        Route::get('/unduh', 'export')->name('export');
+        Route::get('/{issue}', 'show')->name('show')->whereNumber('issue')->can('view', 'issue');
+        Route::post('/{issue}/tindak-lanjut', 'followUp')->name('follow-up')->whereNumber('issue')->can('followUp', 'issue');
+    });
     Route::get('/cari', [Shared\SearchController::class, 'index'])->name('search');
 
     // Statistik ekonomi dan legalitas; angka dibatasi kelompok yang terlihat pengguna (visibleTo).
@@ -137,12 +153,20 @@ Route::middleware('auth')->group(function () use ($organizationRoutes, $reportRo
                             Route::get('/{token}/gagal', 'failed')->name('failed');
                         });
                     });
+                // Kemungkinan data ganda: daftar pasangan nama mirip + "Bukan data ganda". Tanpa gabung otomatis.
+                Route::controller(Admin\DuplicateController::class)->prefix('kelompok/data-ganda')->name('organizations.duplicates.')
+                    ->can('create', Organization::class)->group(function () {
+                        Route::get('/', 'index')->name('index');
+                        Route::post('/bukan-ganda', 'dismiss')->name('dismiss');
+                    });
                 Route::get('/kelompok/{organization}/akun', [Shared\OrganizationController::class, 'users'])
                     ->name('organizations.users')->whereNumber('organization')->can('view', 'organization');
                 $organizationRoutes();
                 $reportRoutes();
                 Route::post('/laporan/{report}/buka-kembali', [Shared\MonthlyReportController::class, 'reopen'])
                     ->name('reports.reopen')->whereNumber('report');
+                // Antrean Admin: laporan yang tidak bisa diverifikasi petugas OPD (tanpa OPD pembina / pemisahan tugas).
+                Route::get('/verifikasi', [Shared\MonthlyReportController::class, 'queue'])->name('verifications.index');
 
                 Route::controller(Admin\UserController::class)->prefix('pengguna')->name('users.')->group(function () {
                     Route::get('/', 'index')->name('index')->can('viewAny', User::class);

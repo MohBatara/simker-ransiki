@@ -133,7 +133,7 @@ test('nama mirip di kampung yang sama perlu dikonfirmasi sebelum disimpan', func
     $this->from('/admin/kelompok/tambah')
         ->post('/admin/kelompok', organizationPayload($this, ['name' => 'Kel. Tani Maju']))
         ->assertRedirect('/admin/kelompok/tambah')
-        ->assertSessionHas('similar');
+        ->assertSessionHas('duplicates', fn ($candidates) => count($candidates) === 1 && $candidates[0]['strong']);
     expect(Organization::count())->toBe(1);
 
     $this->get('/admin/kelompok/tambah')->assertSee('Nama mirip ditemukan')->assertSee('Kelompok Tani Maju');
@@ -143,26 +143,43 @@ test('nama mirip di kampung yang sama perlu dikonfirmasi sebelum disimpan', func
     expect(Organization::count())->toBe(2);
 });
 
-test('nama mirip di kampung lain tidak memicu peringatan', function () {
-    Organization::factory()->create(['name' => 'Kelompok Tani Maju']);
+test('nama mirip di kampung lain langsung disimpan dengan peringatan ringan', function () {
+    $other = Organization::factory()->create(['name' => 'Kelompok Tani Maju']);
 
-    $this->actingAs($this->admin)
+    $response = $this->actingAs($this->admin)
         ->post('/admin/kelompok', organizationPayload($this, ['name' => 'Kelompok Tani Maju']))
-        ->assertSessionMissing('similar');
+        ->assertSessionHas('duplicates', fn ($candidates) => count($candidates) === 1 && ! $candidates[0]['strong'] && $candidates[0]['id'] === $other->id);
 
     expect(Organization::count())->toBe(2);
+    $this->get($response->headers->get('Location'))->assertSee('Ada kelompok dengan nama mirip di kampung lain')->assertSee('Kelompok Tani Maju');
 });
 
-test('mengubah nama menjadi mirip tetap disimpan lalu diberi peringatan', function () {
+test('mengubah nama menjadi mirip di kampung yang sama perlu dikonfirmasi, lalu tetap bisa disimpan', function () {
     Organization::factory()->create(['name' => 'Kelompok Tani Maju', 'village_id' => $this->village->id]);
     $organization = Organization::factory()->create(['name' => 'KUB Lain', 'village_id' => $this->village->id]);
+    $this->actingAs($this->admin);
+
+    $this->from("/admin/kelompok/{$organization->id}/ubah")
+        ->put("/admin/kelompok/{$organization->id}", organizationPayload($this, ['name' => 'Kelompok Tani Maju']))
+        ->assertRedirect("/admin/kelompok/{$organization->id}/ubah")
+        ->assertSessionHas('duplicates', fn ($candidates) => count($candidates) === 1);
+    expect($organization->fresh()->name)->toBe('KUB Lain');
+
+    $this->put("/admin/kelompok/{$organization->id}", organizationPayload($this, ['name' => 'Kelompok Tani Maju', 'confirm_similar' => '1']))
+        ->assertRedirect("/admin/kelompok/{$organization->id}");
+    expect($organization->fresh()->name)->toBe('Kelompok Tani Maju');
+});
+
+test('mengubah profil tanpa mengganti nama atau kampung tidak memeriksa data ganda', function () {
+    Organization::factory()->create(['name' => 'Kelompok Tani Maju', 'village_id' => $this->village->id]);
+    $organization = Organization::factory()->create(['name' => 'Kel. Tani Maju', 'village_id' => $this->village->id]);
 
     $this->actingAs($this->admin)
-        ->put("/admin/kelompok/{$organization->id}", organizationPayload($this, ['name' => 'Kelompok Tani Maju']))
+        ->put("/admin/kelompok/{$organization->id}", organizationPayload($this, ['name' => 'Kel. Tani Maju', 'leader_name' => 'Contoh Ketua']))
         ->assertRedirect("/admin/kelompok/{$organization->id}")
-        ->assertSessionHas('similar', fn ($similar) => count($similar) === 1);
+        ->assertSessionHas('duplicates', []);
 
-    expect($organization->fresh()->name)->toBe('Kelompok Tani Maju');
+    expect($organization->fresh()->leader_name)->toBe('Contoh Ketua');
 });
 
 test('admin melepas semua OPD terkait', function () {

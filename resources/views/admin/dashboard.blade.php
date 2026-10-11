@@ -8,6 +8,7 @@
     $verifiedUrl = route('admin.reports.index', ['status' => 'verified', 'period' => $month]);
     $attentionRows = [
         ['value' => $attention['without_opd'], 'label' => 'kelompok tanpa OPD pembina', 'href' => route('admin.organizations.index', ['opd' => 'none'])],
+        ['value' => $attention['admin_queue'], 'label' => 'laporan yang hanya bisa diverifikasi Admin', 'href' => route('admin.verifications.index')],
         ['value' => $attention['waiting'], 'label' => 'laporan menunggu verifikasi lebih dari '.DistrictStats::WAITING_DAYS.' hari', 'href' => route('admin.reports.index', ['status' => 'submitted', 'menunggu' => DistrictStats::WAITING_DAYS])],
         ['value' => $attention['active_without_account'], 'label' => 'kelompok aktif tanpa akun', 'href' => route('admin.organizations.index', ['status' => 'active', 'akun' => 'tidak-ada'])],
     ];
@@ -26,7 +27,10 @@
 
     <div class="space-y-5">
         <div class="grid gap-5 lg:grid-cols-3 lg:items-start">
-            @include('shared.dashboards.overdue-stat', ['area' => 'admin'])
+            <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-1">
+                @include('shared.dashboards.overdue-stat', ['area' => 'admin'])
+                @include('shared.dashboards.stale-needs-stat', ['area' => 'admin'])
+            </div>
 
             <x-card title="Perlu perhatian" class="lg:col-span-2 lg:col-start-1 lg:row-start-1">
                 <x-list>

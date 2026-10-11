@@ -1,6 +1,7 @@
 <?php
 
 use App\Enums\AttachmentVisibility;
+use App\Enums\FollowUpStatus;
 use App\Enums\IssueKind;
 use App\Enums\LegalStatus;
 use App\Enums\LicenseStatus;
@@ -12,7 +13,7 @@ use App\Enums\Role;
 use App\Enums\SupportCategory;
 
 $enums = [
-    AttachmentVisibility::class, IssueKind::class, LegalStatus::class, LicenseStatus::class,
+    AttachmentVisibility::class, FollowUpStatus::class, IssueKind::class, LegalStatus::class, LicenseStatus::class,
     OrganizationStatus::class, ProblemCategory::class, ReportStatus::class, ReviewAction::class,
     Role::class, SupportCategory::class,
 ];
@@ -29,4 +30,4 @@ test('warna badge hanya memakai tone status yang ada', function (string $enum) {
     foreach ($enum::cases() as $case) {
         expect($case->badgeColor())->toBeIn(['ok', 'wait', 'fix', 'idle']);
     }
-})->with([OrganizationStatus::class, ReportStatus::class, LicenseStatus::class, LegalStatus::class]);
+})->with([OrganizationStatus::class, ReportStatus::class, LicenseStatus::class, LegalStatus::class, FollowUpStatus::class]);

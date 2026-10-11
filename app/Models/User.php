@@ -4,10 +4,10 @@ namespace App\Models;
 
 use App\Enums\Role;
 use Database\Factories\UserFactory;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -90,6 +90,16 @@ class User extends Authenticatable
     public function isKelompok(): bool
     {
         return $this->role === Role::Kelompok;
+    }
+
+    /** Nama + instansi untuk riwayat, mis. "Budi (Dinkopdag)" atau "Sari (Admin distrik)". Butuh relasi opd. */
+    public function nameWithAgency(): string
+    {
+        return match ($this->role) {
+            Role::Admin => $this->name.' (Admin distrik)',
+            Role::Opd => $this->name.($this->opd ? ' ('.($this->opd->short_name ?: $this->opd->name).')' : ' (OPD)'),
+            Role::Kelompok => $this->name,
+        };
     }
 
     /** Akun OPD wajib punya opd_id dan akun kelompok wajib punya organization_id. */

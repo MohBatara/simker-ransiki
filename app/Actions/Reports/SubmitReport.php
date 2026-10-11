@@ -77,20 +77,22 @@ class SubmitReport
     }
 
     /**
-     * Akun aktif yang bisa memverifikasi: OPD pembina, atau semua Admin bila kelompok belum punya
-     * OPD pembina (hanya Admin yang bisa memverifikasinya).
+     * Akun aktif yang bisa memverifikasi: OPD pembina, atau semua Admin bila tidak ada petugas OPD yang boleh
+     * memverifikasinya (kelompok tanpa OPD pembina, atau dengan pemisahan tugas semua petugasnya ikut mengisi).
      */
     private function reviewers(MonthlyReport $report)
     {
         $opdIds = $report->organization->opds()->pluck('opds.id');
+        $eligible = fn ($users) => MonthlyReport::separatesDuties()
+            ? $users->reject(fn (User $user) => $report->wasHandledBy($user))->values()
+            : $users;
 
-        return User::query()
-            ->where('is_active', true)
-            ->when(
-                $opdIds->isEmpty(),
-                fn ($query) => $query->where('role', Role::Admin),
-                fn ($query) => $query->where('role', Role::Opd)->whereIn('opd_id', $opdIds),
-            )
-            ->get();
+        $opdUsers = $opdIds->isEmpty()
+            ? collect()
+            : $eligible(User::query()->where('is_active', true)->where('role', Role::Opd)->whereIn('opd_id', $opdIds)->get());
+
+        return $opdUsers->isNotEmpty()
+            ? $opdUsers
+            : $eligible(User::query()->where('is_active', true)->where('role', Role::Admin)->get());
     }
 }
