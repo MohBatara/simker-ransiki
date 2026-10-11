@@ -605,7 +605,8 @@ Pengecualian dari Larangan untuk area Admin/OPD/Kelompok (menyesuaikan referensi
 ### Daftar dan detail kelompok
 - Daftar (Admin/OPD): 4 kartu ringkasan (total kelompok, kampung, bidang usaha, total anggota + "diisi X
   dari Y kelompok") yang mengikuti filter aktif dengan keterangan "sesuai filter"; kartu filter berlabel
-  dengan Terapkan/Reset (tidak langsung diterapkan); chip filter aktif; tabel + panel detail di kanan
+  dengan Terapkan/Reset (tidak langsung diterapkan), dua baris di tablet/desktop (cari lebar, jenis, kampung /
+  bidang usaha, OPD, status, Terapkan/Reset rata kanan), di HP tanpa kartu: cari sebaris dengan "Filter (n)"; chip filter aktif; tabel + panel detail di kanan
   pada ≥ 1280px. Baris pertama atau `?pilih=id` dirender di server; klik baris memuat
   `/{area}/kelompok/{id}/ringkas` (Policy `view`). Layar lebih kecil membuka halaman detail.
 - Detail: remah → banner (status bila tidak aktif, nama, lokasi, tag, Ubah profil, menu "…" Admin untuk

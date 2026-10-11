@@ -95,3 +95,21 @@ test('jumlah query daftar terbatas (tanpa N+1)', function () {
 
     expect(count(DB::getQueryLog()))->toBeLessThan(30);
 });
+
+test('kartu filter: cari sebaris dengan tombol Filter di HP, dua baris di desktop', function () {
+    $html = $this->actingAs($this->admin)->get('/admin/kelompok?sector='.$this->sectorA->id.'&village='.$this->villageA->id)->assertOk()
+        ->assertDontSee('Cari dan saring')
+        ->assertSee('Filter (2)')
+        ->getContent();
+
+    $search = strpos($html, 'name="q"');
+    $panel = strpos($html, 'id="panel-filter-kelompok"');
+
+    // Kotak cari berada di luar panel yang disembunyikan di HP; urutan baris 2: bidang usaha, OPD, status, tombol.
+    expect($search)->toBeLessThan($panel)
+        ->and(strpos($html, 'name="type"'))->toBeGreaterThan($panel)
+        ->and(strpos($html, 'name="sector"'))->toBeLessThan(strpos($html, 'name="opd"'))
+        ->and(strpos($html, 'name="opd"'))->toBeLessThan(strpos($html, 'name="status"'))
+        ->and(strpos($html, 'name="status"'))->toBeLessThan(strpos($html, 'Terapkan'))
+        ->and($html)->toContain('md:col-start-4 md:justify-end');
+});

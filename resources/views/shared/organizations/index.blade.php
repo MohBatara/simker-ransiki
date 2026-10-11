@@ -57,42 +57,44 @@
         </div>
 
         {{-- Kartu filter: dipilih dulu, lalu Terapkan (hemat muat ulang di koneksi lambat). --}}
-        <x-card x-data="{ open: false }">
-            <div class="flex items-center justify-between gap-3 md:hidden">
-                <p class="font-semibold text-ink">Cari dan saring</p>
-                <x-button variant="secondary" icon="adjustments-horizontal" x-on:click="open = ! open" x-bind:aria-expanded="open" aria-controls="filter-kelompok">
-                    Filter{{ $active ? " ({$active})" : '' }}
-                </x-button>
-            </div>
-            <form id="filter-kelompok" method="GET" action="{{ $url }}" role="search" x-bind:class="{ 'max-md:hidden': ! open }" class="flex flex-wrap items-end gap-4 max-md:mt-4 max-md:hidden">
+        {{-- HP: kotak cari sebaris dengan tombol "Filter (n)", pilihan lain di panel. Desktop: dua baris seimbang. --}}
+        <x-card flush x-data="{ open: false }" class="max-md:border-0 max-md:bg-transparent">
+            <form id="filter-kelompok" method="GET" action="{{ $url }}" role="search" class="grid gap-4 md:grid-cols-4 md:items-end md:p-5">
                 @foreach (collect($filters)->only(['akun', 'laporan', 'periode']) as $name => $value)
                     @if (filled($value))
                         <input type="hidden" name="{{ $name }}" value="{{ $value }}">
                     @endif
                 @endforeach
-                <x-field label="Cari kelompok" for="q" class="w-full xl:w-auto xl:min-w-64 xl:flex-1">
-                    <x-search-input :value="$filters['q'] ?? ''" label="Nama kelompok" :with-label="false" />
-                </x-field>
-                <x-field label="Jenis" for="type" class="w-full sm:w-[calc(50%-0.5rem)] xl:w-40">
-                    <x-select name="type" :options="$options['types']" :selected="$filters['type'] ?? null" placeholder="Semua jenis" />
-                </x-field>
-                <x-field label="Kampung" for="village" class="w-full sm:w-[calc(50%-0.5rem)] xl:w-40">
-                    <x-select name="village" :options="$options['villages']" :selected="$filters['village'] ?? null" placeholder="Semua kampung" />
-                </x-field>
-                <x-field label="Bidang usaha" for="sector" class="w-full sm:w-[calc(50%-0.5rem)] xl:w-40">
-                    <x-select name="sector" :options="$options['sectors']" :selected="$filters['sector'] ?? null" placeholder="Semua bidang" />
-                </x-field>
-                @unless ($isOpd)
-                    <x-field label="OPD pembina" for="opd" class="w-full sm:w-[calc(50%-0.5rem)] xl:w-40">
-                        <x-select name="opd" :options="['none' => 'Belum ada OPD'] + $options['opds']" :selected="$filters['opd'] ?? null" placeholder="Semua OPD" />
+                <div class="flex items-end gap-2 md:col-span-2">
+                    <x-field label="Cari kelompok" for="q" label-class="max-md:sr-only" class="min-w-0 flex-1">
+                        <x-search-input :value="$filters['q'] ?? ''" label="Nama kelompok" :with-label="false" />
                     </x-field>
-                @endunless
-                <x-field label="Status" for="status" class="w-full sm:w-[calc(50%-0.5rem)] xl:w-36">
-                    <x-select name="status" :options="$options['statuses']" :selected="$filters['status'] ?? null" placeholder="Semua status" />
-                </x-field>
-                <div class="flex w-full gap-2 sm:w-auto max-sm:*:flex-1">
-                    <x-button type="submit">Terapkan</x-button>
-                    <x-button variant="secondary" icon="arrow-path" :href="$url">Reset</x-button>
+                    <x-button variant="secondary" icon="adjustments-horizontal" class="shrink-0 md:hidden" x-on:click="open = ! open" x-bind:aria-expanded="open" aria-controls="panel-filter-kelompok">
+                        Filter{{ $active ? " ({$active})" : '' }}
+                    </x-button>
+                </div>
+                <div id="panel-filter-kelompok" x-bind:class="{ 'max-md:hidden': ! open }" class="grid gap-4 max-md:hidden sm:grid-cols-2 md:contents">
+                    <x-field label="Jenis" for="type">
+                        <x-select name="type" :options="$options['types']" :selected="$filters['type'] ?? null" placeholder="Semua jenis" />
+                    </x-field>
+                    <x-field label="Kampung" for="village">
+                        <x-select name="village" :options="$options['villages']" :selected="$filters['village'] ?? null" placeholder="Semua kampung" />
+                    </x-field>
+                    <x-field label="Bidang usaha" for="sector">
+                        <x-select name="sector" :options="$options['sectors']" :selected="$filters['sector'] ?? null" placeholder="Semua bidang" />
+                    </x-field>
+                    @unless ($isOpd)
+                        <x-field label="OPD pembina" for="opd">
+                            <x-select name="opd" :options="['none' => 'Belum ada OPD'] + $options['opds']" :selected="$filters['opd'] ?? null" placeholder="Semua OPD" />
+                        </x-field>
+                    @endunless
+                    <x-field label="Status" for="status">
+                        <x-select name="status" :options="$options['statuses']" :selected="$filters['status'] ?? null" placeholder="Semua status" />
+                    </x-field>
+                    <div class="flex gap-2 max-sm:*:flex-1 sm:col-span-2 md:col-span-1 md:col-start-4 md:justify-end">
+                        <x-button type="submit">Terapkan</x-button>
+                        <x-button variant="secondary" icon="arrow-path" :href="$url">Reset</x-button>
+                    </div>
                 </div>
             </form>
         </x-card>

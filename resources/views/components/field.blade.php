@@ -11,6 +11,8 @@
     // Ekspresi JS untuk label/keterangan yang berubah menurut isian form Alpine.
     'labelText' => null,
     'hintText' => null,
+    // Kelas tambahan label, mis. "max-md:sr-only" untuk kotak cari yang sebaris dengan tombol di HP.
+    'labelClass' => null,
 ])
 
 @php
@@ -20,7 +22,7 @@
 @endphp
 
 <div {{ $attributes->class('space-y-2') }}>
-    <label @if ($id) for="{{ $id }}" @endif @if ($bindFor) x-bind:for="{{ $bindFor }}" @endif class="block text-ui font-semibold text-ink">
+    <label @if ($id) for="{{ $id }}" @endif @if ($bindFor) x-bind:for="{{ $bindFor }}" @endif @class(['block text-ui font-semibold text-ink', $labelClass])>
         @if ($labelText)<span x-text="{{ $labelText }}">{{ $label }}</span>@else{{ $label }}@endif
         @if ($optional)
             <span class="font-normal text-ink-muted">(opsional)</span>
