@@ -95,11 +95,11 @@
                 @if ($rows->isEmpty())
                     <p class="px-4 py-4 text-ink-soft md:px-5">Belum ada kelompok.</p>
                 @else
-                    <x-table bare class="max-md:p-4">
+                    <x-table bare :label="'Legalitas '.mb_strtolower($title)" class="max-md:p-4">
                         <x-slot:head>
-                            <x-table.heading>{{ $first }}</x-table.heading>
+                            <x-table.heading wrap>{{ $first }}</x-table.heading>
                             @foreach ($columns as $label)
-                                <x-table.heading numeric>{{ $label }}</x-table.heading>
+                                <x-table.heading numeric wrap>{{ $label }}</x-table.heading>
                             @endforeach
                         </x-slot:head>
                         @foreach ($rows as $row)

@@ -81,8 +81,11 @@ class StatisticsCharts
                 'data' => $compliance->pluck($key)->all(),
             ])->values()->all(),
             'table' => [
-                'columns' => ['Bulan', ...array_column($series, 0), 'Wajib lapor'],
+                // Judul ringkas agar 7 kolom muat di tablet; nama lengkap ada di legenda dan teks aria.
+                'columns' => ['Bulan', 'Terverifikasi', 'Menunggu', 'Perlu revisi', 'Terlambat', 'Belum', 'Wajib lapor'],
                 'numeric' => [1, 2, 3, 4, 5, 6],
+                // Wajib lapor = jumlah kolom lain; disembunyikan di tablet (kolom penting saja, Bagian 7).
+                'optional' => [6],
                 'rows' => $compliance->map(fn (array $row) => [
                     Format::month($row['period']),
                     ...collect(array_keys($series))->map(fn (string $key) => Format::number($row[$key]))->all(),

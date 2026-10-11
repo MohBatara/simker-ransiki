@@ -44,6 +44,7 @@
     $configs = collect($panels)->map(fn (array $panel) => collect($panel)->only(['type', 'format', 'labels', 'datasets', 'legend', 'yTitle']))->all();
     $id = 'grafik-'.\Illuminate\Support\Str::slug($title);
     $numeric = $table['numeric'] ?? [];
+    $optional = $table['optional'] ?? [];
 @endphp
 
 <div {{ $attributes->class('min-w-0') }} @unless ($empty) x-data="chart(@js($configs))" @endunless>
@@ -84,10 +85,10 @@
             @endif
 
             <div id="{{ $id }}-tabel" x-show="showTable" x-cloak class="mt-4 min-w-0 print:block!">
-                <x-table bare>
+                <x-table bare :label="'Tabel '.mb_strtolower($title)">
                     <x-slot:head>
                         @foreach ($table['columns'] as $index => $column)
-                            <x-table.heading :numeric="in_array($index, $numeric, true)">{{ $column }}</x-table.heading>
+                            <x-table.heading :numeric="in_array($index, $numeric, true)" :optional="in_array($index, $optional, true)" wrap>{{ $column }}</x-table.heading>
                         @endforeach
                     </x-slot:head>
                     @foreach ($table['rows'] as $row)
@@ -99,7 +100,7 @@
                                     {{-- Sel kosong (mis. Keterangan) tidak ditampilkan di kartu HP. --}}
                                     <x-table.cell class="max-md:hidden"></x-table.cell>
                                 @else
-                                    <x-table.cell :label="$table['columns'][$index] ?? null" :numeric="in_array($index, $numeric, true)">{{ $cell }}</x-table.cell>
+                                    <x-table.cell :label="$table['columns'][$index] ?? null" :numeric="in_array($index, $numeric, true)" :optional="in_array($index, $optional, true)">{{ $cell }}</x-table.cell>
                                 @endif
                             @endforeach
                         </x-table.row>

@@ -308,3 +308,11 @@ test('tabel produksi di HP: satuan ikut di baris Jumlah', function () {
         ->assertSee('data-label="Jumlah"', false)
         ->assertSee('15<span class="md:hidden"> kg</span>', false);
 });
+
+test('tabel lebar muat di tablet: judul kolom boleh dua baris, kolom turunan opsional, wadah gulir berlabel', function () {
+    $chart = App\Support\Dashboards\StatisticsCharts::compliance($this->actingAs($this->admin)->get('/admin/statistik')->viewData('compliance'));
+    expect($chart['table']['columns'][6])->toBe('Wajib lapor')->and($chart['table']['optional'])->toBe([6]);
+
+    $this->get('/admin/statistik')->assertSee('role="region" aria-label="Tabel kepatuhan pelaporan" tabindex="0"', false);
+    $this->get('/admin/statistik/legalitas')->assertSee('aria-label="Legalitas per kampung"', false);
+});

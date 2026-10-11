@@ -658,7 +658,9 @@ Terlambat merah tua #8E1F17, Belum diajukan abu-abu #7D827F; garis putih 1px ant
 jumlah bulan terakhir. `sun` tidak dipakai (1,8:1, khusus publik).
 Anti-overflow HP: grid yang berisi grafik/tabel memakai `grid-cols-1` (bukan kolom `auto`) dan `min-w-0`;
 `x-chart` dan `x-card` sudah `min-w-0`; wadah canvas `relative w-full` bertinggi tetap. Jangan menutupi overflow
-dengan `overflow-x: hidden` di body.
+dengan `overflow-x: hidden` di body. Tabel berkolom banyak: judul kolom `x-table.heading wrap` (boleh dua baris),
+kolom turunan (mis. total) `optional` agar muat di tablet; bila tetap lebih lebar, tabel digeser di dalam kartunya
+lewat `x-table label="..."` (region yang bisa difokuskan keyboard).
 
 Halaman tidak boleh menulis ulang gaya tombol/kartu/tautan/baris daftar sendiri. Selalu pakai komponen.
 
@@ -823,6 +825,8 @@ Data contoh harus terlihat realistis namun jelas bukan data resmi:
 ## 11. Checklist sebelum menyatakan fitur selesai
 
 - [ ] Halaman terbuka tanpa error di lebar 375px, 820px, dan 1440px
+- [ ] Cek manual di lebar 360px, 390px, 768px, dan 1280px: tidak ada geser horizontal,
+      grafik dan tabel tetap di dalam kartunya.
 - [ ] Hanya memakai komponen dan token desain yang ada
 - [ ] Policy/scope memblokir akses peran lain (ada feature test)
 - [ ] Validasi form dan pesan error berbahasa Indonesia

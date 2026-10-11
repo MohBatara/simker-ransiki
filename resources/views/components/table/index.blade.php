@@ -3,6 +3,9 @@
     'clickable' => false,
     // Di dalam kartu: tanpa bingkai sendiri agar tidak berbingkai ganda.
     'bare' => false,
+    // Nama tabel untuk pembaca layar. Diisi pada tabel yang bisa lebih lebar dari kartunya: wadah gulir
+    // menjadi region yang bisa difokuskan dan digeser dengan keyboard.
+    'label' => null,
 ])
 
 {{--
@@ -10,7 +13,10 @@
     sel "subtitle" di bawahnya, sel lain menjadi baris label-nilai (label dari atribut "label").
     Kolom "optional" disembunyikan di tablet agar hanya kolom penting yang tampil.
 --}}
-<div {{ $attributes->class(['md:overflow-x-auto', 'md:rounded-card md:border md:border-line md:bg-paper' => ! $bare]) }}>
+<div
+    @if ($label) role="region" aria-label="{{ $label }}" tabindex="0" @endif
+    {{ $attributes->class(['md:overflow-x-auto', 'md:rounded-card md:border md:border-line md:bg-paper' => ! $bare, 'focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-brand' => $label]) }}
+>
     <table class="w-full text-ui max-md:block">
         @isset($head)
             <thead class="max-md:hidden">
