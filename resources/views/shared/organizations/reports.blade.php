@@ -1,7 +1,7 @@
 @use('App\Support\Format')
 
 @if ($reports->isEmpty())
-    <x-empty-state title="Belum ada laporan" description="Laporan bulanan dibuat oleh akun kelompok mulai {{ Format::month($organization->reporting_starts_on) }}." />
+    <x-empty-state title="Belum ada laporan" :description="'Laporan bulanan dibuat oleh akun kelompok mulai '.(Format::month($organization->reporting_starts_on)).'.'" />
 @else
     <x-table clickable>
         <x-slot:head>

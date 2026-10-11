@@ -11,7 +11,7 @@
         @if (! $searching)
             <p class="text-ink-soft">Ketik paling sedikit 2 huruf.</p>
         @elseif ($organizations->isEmpty() && $products->isEmpty())
-            <x-empty-state title="Tidak ada hasil untuk “{{ $query }}”" description="Coba kata lain, misalnya nama ketua, nama kampung, atau nama produk." />
+            <x-empty-state :title="'Tidak ada hasil untuk “'.($query).'”'" description="Coba kata lain, misalnya nama ketua, nama kampung, atau nama produk." />
         @else
             @if ($organizations->isNotEmpty())
                 <x-card :title="'Kelompok ('.$organizations->count().($organizations->count() >= App\Http\Controllers\Shared\SearchController::LIMIT ? '+' : '').')'" flush>

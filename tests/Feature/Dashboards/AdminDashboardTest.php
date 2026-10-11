@@ -88,3 +88,15 @@ test('ketiga dasbor terbuka dengan data contoh, angka admin sama dengan jumlah p
         ->and($progress['verified'])->toBe(MonthlyReport::where('status', 'verified')->whereDate('period', '2026-09-01')
         ->whereIn('organization_id', Organization::obligatedFor(Carbon::parse('2026-09-01'))->select('id'))->count());
 });
+
+test('tautan dasbor admin tidak di-escape ganda', function () {
+    $organization = Organization::factory()->create(['reporting_starts_on' => '2026-07-01']);
+    $organization->opds()->attach(Opd::factory()->create());
+
+    $hrefs = collect(hrefsIn($this->actingAs(User::factory()->admin()->create())->get('/admin')->assertOk()->getContent()));
+
+    expect($hrefs->filter(fn ($href) => str_contains($href, '&amp;'))->all())->toBe([]);
+
+    parse_str((string) parse_url($hrefs->first(fn ($href) => str_contains($href, 'laporan=belum-diajukan')), PHP_URL_QUERY), $query);
+    expect($query)->toMatchArray(['laporan' => 'belum-diajukan', 'periode' => '2026-09']);
+});

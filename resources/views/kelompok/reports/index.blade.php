@@ -16,7 +16,7 @@
     @if ($rows->isEmpty())
         <x-empty-state
             title="Belum ada bulan yang wajib dilaporkan"
-            description="Kewajiban lapor dimulai {{ Format::month($organization->reporting_starts_on) }}. Laporan pertama bisa dibuat mulai bulan itu."
+            :description="'Kewajiban lapor dimulai '.(Format::month($organization->reporting_starts_on)).'. Laporan pertama bisa dibuat mulai bulan itu.'"
         />
     @else
         <x-table clickable>

@@ -55,3 +55,12 @@ function exifOf(string $contents): array
 
     return @exif_read_data($path) ?: [];
 }
+
+/** Semua nilai href di HTML, sudah di-decode seperti yang dibaca browser. */
+function hrefsIn(string $html): array
+{
+    $document = new DOMDocument;
+    @$document->loadHTML('<?xml encoding="utf-8"?>'.$html);
+
+    return collect($document->getElementsByTagName('a'))->map(fn (DOMElement $a) => $a->getAttribute('href'))->all();
+}

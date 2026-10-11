@@ -48,7 +48,7 @@
                     @if ($due['earlierOutstanding'] > 0)
                         <p class="border-t border-line pt-3 text-ink-soft">
                             {{ $due['earlierOutstanding'] }} bulan sebelumnya belum diajukan.
-                            <x-link href="{{ route('kelompok.reports.index') }}">Lihat daftar laporan</x-link>
+                            <x-link :href="route('kelompok.reports.index')">Lihat daftar laporan</x-link>
                         </p>
                     @endif
                 </div>
@@ -98,7 +98,7 @@
                             <span class="min-w-0">
                                 <span class="text-ink">{{ $item['label'] }}</span>
                                 <span class="sr-only">belum lengkap.</span>
-                                <x-link href="{{ route($item['route']) }}" class="ml-1">Lengkapi</x-link>
+                                <x-link :href="route($item['route'])" class="ml-1">Lengkapi</x-link>
                             </span>
                         @endif
                     </li>
@@ -108,7 +108,7 @@
 
         <x-card title="Riwayat laporan" class="lg:col-start-1" flush>
             <x-slot:actions>
-                <x-link href="{{ route('kelompok.reports.index') }}">Semua laporan</x-link>
+                <x-link :href="route('kelompok.reports.index')">Semua laporan</x-link>
             </x-slot:actions>
 
             @if ($history->isEmpty())

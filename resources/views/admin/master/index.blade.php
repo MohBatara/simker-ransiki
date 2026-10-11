@@ -40,7 +40,7 @@
             @if ($search !== '')
                 <x-empty-state title="Tidak ada hasil" :description="'Tidak ada '.$type->noun().' dengan kata “'.$search.'”. Periksa ejaan atau hapus pencarian.'" />
             @else
-                <x-empty-state title="Belum ada {{ $type->noun() }}" description="Tambahkan {{ $type->noun() }} pertama agar bisa dipilih di profil kelompok.">
+                <x-empty-state :title="'Belum ada '.($type->noun())" :description="'Tambahkan '.($type->noun()).' pertama agar bisa dipilih di profil kelompok.'">
                     <x-button icon="plus" x-on:click="create()">Tambah {{ $type->noun() }}</x-button>
                 </x-empty-state>
             @endif

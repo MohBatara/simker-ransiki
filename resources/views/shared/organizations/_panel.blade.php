@@ -75,7 +75,7 @@
                         @endforeach
                     </ul>
                 @endif
-                <x-link href="{{ route($area.'.organizations.products', $organization) }}" class="mt-2">Semua produk</x-link>
+                <x-link :href="route($area.'.organizations.products', $organization)" class="mt-2">Semua produk</x-link>
             </x-tabs.panel>
 
             <x-tabs.panel name="laporan">
@@ -91,7 +91,7 @@
                         @endforeach
                     </x-list>
                 @endif
-                <x-link href="{{ route($area.'.organizations.reports', $organization) }}" class="mt-2">Semua laporan</x-link>
+                <x-link :href="route($area.'.organizations.reports', $organization)" class="mt-2">Semua laporan</x-link>
             </x-tabs.panel>
         </x-tabs>
 

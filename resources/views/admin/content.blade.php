@@ -80,7 +80,7 @@
                     </x-field>
                 </div>
                 <p class="mt-4 text-caption">
-                    <x-link href="{{ route('public.profile') }}" target="_blank" rel="noopener" class="font-normal">Lihat halaman Profil Ransiki</x-link>
+                    <x-link :href="route('public.profile')" target="_blank" rel="noopener" class="font-normal">Lihat halaman Profil Ransiki</x-link>
                 </p>
             </x-card>
 
@@ -103,7 +103,7 @@
                     </x-field>
                 </div>
                 <p class="mt-4 text-caption">
-                    <x-link href="{{ route('public.contact') }}" target="_blank" rel="noopener" class="font-normal">Lihat halaman Kontak</x-link>
+                    <x-link :href="route('public.contact')" target="_blank" rel="noopener" class="font-normal">Lihat halaman Kontak</x-link>
                 </p>
             </x-card>
 

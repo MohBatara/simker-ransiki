@@ -24,7 +24,7 @@
                         <div class="flex flex-wrap gap-x-2">
                             <dt class="text-ink-soft">Paling lama menunggu:</dt>
                             <dd>
-                                <x-link href="{{ route('opd.reports.show', [$oldestWaiting, 'dari' => 'antrean']) }}">
+                                <x-link :href="route('opd.reports.show', [$oldestWaiting, 'dari' => 'antrean'])">
                                     {{ $oldestWaiting->organization->name }}, {{ Format::month($oldestWaiting->period) }}
                                 </x-link>
                                 <span class="text-ink-soft">· {{ Format::waitingSince($oldestWaiting->last_submitted_at) }}</span>
@@ -34,7 +34,7 @@
                     @if ($waitingLong > 0)
                         <div class="flex flex-wrap gap-x-2">
                             <dt class="text-ink-soft">Menunggu lebih dari 7 hari:</dt>
-                            <dd><x-link href="{{ route('opd.reports.index', ['status' => 'submitted', 'menunggu' => 7]) }}" class="tabular-nums">{{ $waitingLong }} laporan</x-link></dd>
+                            <dd><x-link :href="route('opd.reports.index', ['status' => 'submitted', 'menunggu' => 7])" class="tabular-nums">{{ $waitingLong }} laporan</x-link></dd>
                         </div>
                     @endif
                 </dl>
@@ -61,7 +61,7 @@
                             />
                         </section>
                     @endforeach
-                    <x-link href="{{ route('opd.issues.index', ['period' => $period->format('Y-m')]) }}">Lihat semua masalah & kebutuhan</x-link>
+                    <x-link :href="route('opd.issues.index', ['period' => $period->format('Y-m')])">Lihat semua masalah & kebutuhan</x-link>
                 </div>
             </x-card>
         </div>

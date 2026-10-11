@@ -12,7 +12,7 @@
             <p x-show="! data.items.length" class="text-ink-soft">
                 Belum ada produk. Tambahkan produk yang diproduksi atau dijual bulan ini.
                 @if ($products->isEmpty())
-                    Produk yang didaftarkan di menu <x-link href="{{ route('kelompok.products.index') }}" inline>Produk</x-link> bisa langsung dipilih di sini.
+                    Produk yang didaftarkan di menu <x-link :href="route('kelompok.products.index')" inline>Produk</x-link> bisa langsung dipilih di sini.
                 @endif
             </p>
 

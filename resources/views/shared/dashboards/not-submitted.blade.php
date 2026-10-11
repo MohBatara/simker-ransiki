@@ -24,12 +24,12 @@
                 @php $organization = $row['organization']; @endphp
                 <x-list.item class="flex-wrap gap-y-2">
                     <div class="min-w-0 flex-1">
-                        <x-link href="{{ route($area.'.organizations.reports', $organization) }}" muted class="max-w-full text-ink"><span class="truncate">{{ $organization->name }}</span></x-link>
+                        <x-link :href="route($area.'.organizations.reports', $organization)" muted class="max-w-full text-ink"><span class="truncate">{{ $organization->name }}</span></x-link>
                         @if ($organization->leader_name || $organization->phone)
                             <p class="text-caption text-ink-soft">
                                 Ketua{{ $organization->leader_name ? ': '.$organization->leader_name : '' }}
                                 @if ($organization->phone)
-                                    · <x-link href="tel:{{ preg_replace('/[^\d+]/', '', $organization->phone) }}" class="font-normal">{{ $organization->phone }}</x-link>
+                                    · <x-link :href="'tel:'.(preg_replace('/[^\d+]/', '', $organization->phone))" class="font-normal">{{ $organization->phone }}</x-link>
                                 @endif
                             </p>
                         @endif
@@ -49,7 +49,7 @@
             @endforeach
         </x-list>
         @if ($total > $notSubmitted->count())
-            <x-link href="{{ route($area.'.organizations.index', ['laporan' => 'belum-diajukan', 'periode' => $period->format('Y-m')]) }}" class="mt-3">
+            <x-link :href="route($area.'.organizations.index', ['laporan' => 'belum-diajukan', 'periode' => $period->format('Y-m')])" class="mt-3">
                 Lihat semua ({{ $total }})
             </x-link>
         @endif

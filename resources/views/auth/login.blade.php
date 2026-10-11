@@ -14,5 +14,5 @@
     </form>
 
     <p class="mt-6 text-caption text-ink-soft">Lupa kata sandi? Hubungi Admin distrik.</p>
-    <p class="mt-2 text-caption"><x-link href="{{ url('/') }}" muted class="font-normal">Kembali ke beranda</x-link></p>
+    <p class="mt-2 text-caption"><x-link :href="url('/')" muted class="font-normal">Kembali ke beranda</x-link></p>
 </x-layouts.auth>

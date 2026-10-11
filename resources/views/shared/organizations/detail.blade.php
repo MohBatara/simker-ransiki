@@ -77,7 +77,7 @@
         @if ($area === 'admin' && $organization->users_count === 0)
             <x-alert tone="wait">
                 Kelompok ini belum punya akun, jadi belum bisa mengisi laporan.
-                <x-link href="{{ route('admin.users.create', ['kelompok' => $organization->id]) }}" inline>Buat akun</x-link>
+                <x-link :href="route('admin.users.create', ['kelompok' => $organization->id])" inline>Buat akun</x-link>
             </x-alert>
         @endif
 

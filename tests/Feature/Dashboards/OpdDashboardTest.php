@@ -103,3 +103,16 @@ test('filter laporan menunggu lebih dari 7 hari', function () {
 
     expect($this->get('/opd/laporan?status=submitted&menunggu=7')->viewData('reports')->pluck('id')->all())->toBe([$this->report->id]);
 });
+
+test('query string tautan dasbor terbaca benar (tidak di-escape ganda)', function () {
+    $hrefs = hrefsIn($this->get('/opd')->assertOk()->getContent());
+
+    expect($hrefs)->not->toBeEmpty()
+        ->and(collect($hrefs)->filter(fn ($href) => str_contains($href, '&amp;'))->all())->toBe([]);
+
+    $link = collect($hrefs)->first(fn ($href) => str_contains($href, 'laporan=belum-dibuat'));
+    parse_str((string) parse_url($link, PHP_URL_QUERY), $query);
+
+    expect($query)->toBe(['laporan' => 'belum-dibuat', 'periode' => '2026-09'])
+        ->and($this->get($link)->viewData('organizations')->pluck('name')->all())->toBe(['KUB Belum Lapor']);
+});
