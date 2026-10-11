@@ -251,6 +251,59 @@ Alpine.data('copyText', (text) => ({
 Alpine.data('reportForm', reportForm);
 
 /**
+ * Panel detail di samping daftar kelompok (layar ≥ 1280px). Klik baris memuat potongan HTML panel
+ * (route .../ringkas, dicek Policy) tanpa pindah halaman; layar lebih kecil, klik dengan Ctrl/Cmd, atau
+ * permintaan yang gagal tetap membuka halaman detail.
+ */
+Alpine.data('organizationPanel', () => ({
+    loading: false,
+
+    async select(event) {
+        const link = event.target.closest('a');
+        const row = event.target.closest('tr[data-panel-url]');
+
+        if (!link || !row || !window.matchMedia('(min-width: 80rem)').matches) {
+            return;
+        }
+        if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || event.button !== 0) {
+            return;
+        }
+
+        event.preventDefault();
+        this.loading = true;
+
+        try {
+            const response = await fetch(row.dataset.panelUrl, { headers: { Accept: 'text/html', 'X-Requested-With': 'XMLHttpRequest' } });
+            if (!response.ok) {
+                throw new Error(response.status);
+            }
+            this.$refs.panel.innerHTML = await response.text();
+            this.markSelected(row);
+
+            const url = new URL(window.location.href);
+            url.searchParams.set('pilih', row.dataset.id);
+            window.history.replaceState(null, '', url);
+            this.$nextTick(() => document.getElementById('panel-judul')?.focus());
+        } catch {
+            window.location.assign(link.href);
+        } finally {
+            this.loading = false;
+        }
+    },
+
+    markSelected(selected) {
+        for (const row of this.$root.querySelectorAll('tr[data-panel-url]')) {
+            row.toggleAttribute('data-selected', row === selected);
+        }
+    },
+
+    close() {
+        this.$refs.panel.innerHTML = this.$refs.empty.innerHTML;
+        this.markSelected(null);
+    },
+}));
+
+/**
  * Pilihan satuan (komponen x-unit-input). "value" adalah satuan akhir yang dihubungkan ke x-model luar
  * lewat x-modelable; satuan yang tidak ada di daftar ditampilkan sebagai "lainnya" + teks aslinya.
  */

@@ -48,7 +48,8 @@ test('daftar kelompok: kotak cari berikon, filter ringkas, chip yang bisa dihapu
         ->assertSee('type="search"', false)
         ->assertSee('enterkeyhint="search"', false)
         ->assertSee('Filter (1)')
-        ->assertSee('md:h-9', false)
+        ->assertSee('Terapkan')
+        ->assertSee('Reset')
         ->assertSee('aria-label="Hapus filter Jenis: KUB"', false)
         ->assertSee('Hapus semua')
         ->assertSee('1 kelompok · 1 tidak aktif');
@@ -59,8 +60,8 @@ test('daftar kelompok: avatar + nama + jenis · kampung; badge status hanya bila
     $closed = Organization::factory()->create(['name' => 'KUB Tutup Contoh', 'status' => OrganizationStatus::Closed]);
 
     $html = $this->actingAs(User::factory()->admin()->create())->get('/admin/kelompok')->assertOk()
-        ->assertDontSee('Jenis · kampung')
-        ->assertSee($active->institutionType->name.' · '.$active->village->name)
+        ->assertSee($active->institutionType->name)
+        ->assertSee($active->village->name)
         ->getContent();
 
     expect(substr_count($html, '>Aktif</span>'))->toBe(0)

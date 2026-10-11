@@ -51,7 +51,8 @@ test('daftar menampilkan kelompok beserta jenis, kampung, dan status', function 
         ->get('/admin/kelompok')
         ->assertOk()
         ->assertSee('KUB Contoh Kakao')
-        ->assertSee('KUB · Kampung Contoh 1')
+        ->assertSee('KUB')
+        ->assertSee('Kampung Contoh 1')
         ->assertSee('Belum ada OPD pembina')
         ->assertSee('Menampilkan 1–1 dari 1 kelompok');
 });
@@ -74,8 +75,8 @@ test('filter daftar kelompok', function (string $query, array $visible) {
     foreach (['Kelompok Contoh Alfa', 'Kelompok Contoh Beta'] as $name) {
         in_array($name, $visible) ? $response->assertSee($name) : $response->assertDontSee($name);
     }
-    // Kelompok dengan dua bidang usaha tidak muncul ganda.
-    expect(substr_count($response->getContent(), 'Kelompok Contoh Alfa'))->toBeLessThanOrEqual(1);
+    // Kelompok dengan dua bidang usaha tidak muncul ganda di tabel (namanya boleh muncul lagi di panel detail).
+    expect(substr_count($response->getContent(), 'data-id="'.$a->id.'"'))->toBeLessThanOrEqual(1);
 })->with([
     'nama' => ['q=alfa', ['Kelompok Contoh Alfa']],
     'kampung' => ['village={village}', ['Kelompok Contoh Alfa']],

@@ -9,8 +9,10 @@ use App\Http\Requests\Organizations\OrganizationRequest;
 use App\Models\License;
 use App\Models\Organization;
 use App\Support\OrganizationOptions;
+use App\Support\OrganizationPanel;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
 /**
@@ -25,21 +27,46 @@ class OrganizationController extends Controller
 
         $query = Organization::visibleTo($request->user())->filter($filters);
 
-        // Ringkasan hasil ("25 kelompok · 3 tidak aktif") dihitung dari daftar yang sudah tersaring.
+        // Ringkasan dihitung dari daftar yang sudah tersaring, agar sama dengan isi tabel.
         $statusCounts = (clone $query)->toBase()->selectRaw('organizations.status, COUNT(*) as total')->groupBy('organizations.status')->pluck('total', 'status');
+        $totals = (clone $query)->toBase()
+            ->selectRaw('COUNT(*) as organizations, COUNT(DISTINCT organizations.village_id) as villages, SUM(organizations.members_count) as members, COUNT(organizations.members_count) as members_filled')
+            ->first();
+        $sectors = DB::table('organization_sector')->whereIn('organization_id', (clone $query)->select('organizations.id'))->distinct()->count('business_sector_id');
 
         $organizations = $query
-            ->with(['institutionType', 'village', 'sectors', 'opds'])
+            ->with(['institutionType:id,name', 'village:id,name', 'sectors:id,name'])
             ->orderBy('name')
             ->paginate(20)
             ->withQueryString();
+
+        // Panel desktop dirender bersama halaman: ?pilih=id (bila terlihat pengguna) atau baris pertama.
+        $selected = ($request->integer('pilih') ? Organization::visibleTo($request->user())->find($request->integer('pilih')) : null)
+            ?? $organizations->first();
 
         return view('shared.organizations.index', [
             'area' => $this->area($request),
             'organizations' => $organizations,
             'statusCounts' => ['inactive' => (int) ($statusCounts['inactive'] ?? 0), 'closed' => (int) ($statusCounts['closed'] ?? 0)],
+            'totals' => [
+                'organizations' => (int) $totals->organizations,
+                'villages' => (int) $totals->villages,
+                'sectors' => $sectors,
+                'members' => $totals->members_filled ? (int) $totals->members : null,
+                'members_filled' => (int) $totals->members_filled,
+            ],
+            'panel' => $selected ? OrganizationPanel::data($selected) : null,
             'filters' => $filters,
             'options' => OrganizationOptions::all(),
+        ]);
+    }
+
+    /** Potongan HTML panel detail untuk daftar kelompok di desktop (diambil saat baris diklik). */
+    public function summary(Request $request, Organization $organization): View
+    {
+        return view('shared.organizations._panel', [
+            'area' => $this->area($request),
+            'panel' => OrganizationPanel::data($organization),
         ]);
     }
 

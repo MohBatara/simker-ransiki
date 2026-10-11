@@ -40,6 +40,7 @@ $organizationRoutes = function () {
 
         Route::whereNumber('organization')->group(function () {
             Route::get('/{organization}', 'show')->name('show')->can('view', 'organization');
+            Route::get('/{organization}/ringkas', 'summary')->name('summary')->can('view', 'organization');
             Route::get('/{organization}/produk', 'products')->name('products')->can('view', 'organization');
             Route::get('/{organization}/izin', 'licenses')->name('licenses')->can('view', 'organization');
             Route::get('/{organization}/izin/{license}', 'license')->name('licenses.show')->scopeBindings()->can('view', 'license');

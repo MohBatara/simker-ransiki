@@ -36,22 +36,63 @@
         </x-slot:actions>
     @endcan
 
-    <div class="space-y-4">
-        <x-filter-bar
-            :action="$url"
-            search-label="Cari nama kelompok"
-            :search="$filters['q'] ?? ''"
-            :active="$active"
-            :keep="collect($filters)->only(['akun', 'laporan', 'periode'])->all()"
-        >
-            <x-select size="sm" name="type" :options="$options['types']" :selected="$filters['type'] ?? null" placeholder="Semua jenis" x-on:change="$el.form.requestSubmit()" aria-label="Jenis kelembagaan" />
-            <x-select size="sm" name="village" :options="$options['villages']" :selected="$filters['village'] ?? null" placeholder="Semua kampung" x-on:change="$el.form.requestSubmit()" aria-label="Kampung" />
-            <x-select size="sm" name="sector" :options="$options['sectors']" :selected="$filters['sector'] ?? null" placeholder="Semua bidang usaha" x-on:change="$el.form.requestSubmit()" aria-label="Bidang usaha" />
-            @unless ($isOpd)
-                <x-select size="sm" name="opd" :options="['none' => 'Belum ada OPD'] + $options['opds']" :selected="$filters['opd'] ?? null" placeholder="Semua OPD" x-on:change="$el.form.requestSubmit()" aria-label="OPD terkait" />
-            @endunless
-            <x-select size="sm" name="status" :options="$options['statuses']" :selected="$filters['status'] ?? null" placeholder="Semua status" x-on:change="$el.form.requestSubmit()" aria-label="Status kelompok" />
-        </x-filter-bar>
+    @php
+        $filtered = $hasFilters;
+        $scopeHint = $filtered ? 'sesuai filter' : null;
+        $membersHint = $totals['members'] === null
+            ? 'belum ada yang mengisi'
+            : 'dari '.$totals['members_filled'].' dari '.$totals['organizations'].' kelompok yang mengisi';
+    @endphp
+
+    <div class="space-y-5">
+        {{-- Kartu ringkasan: mengikuti filter yang aktif agar sama dengan isi tabel. --}}
+        <div class="grid grid-cols-2 gap-3 md:gap-4 xl:grid-cols-4">
+            <x-stat icon="user-group" label="Total kelompok" :value="App\Support\Format::number($totals['organizations'])" :hint="$scopeHint" href="#daftar-kelompok" />
+            <x-stat icon="map-pin" label="Kampung" :value="App\Support\Format::number($totals['villages'])" :hint="$scopeHint" :href="$isOpd ? null : route('admin.master.items', 'kampung')" />
+            <x-stat icon="squares-2x2" label="Bidang usaha" :value="App\Support\Format::number($totals['sectors'])" :hint="$scopeHint" :href="$isOpd ? null : route('admin.master.items', 'bidang-usaha')" />
+            <x-stat icon="users" label="Total anggota" :value="App\Support\Format::number($totals['members'])" :hint="collect([$membersHint, $scopeHint])->filter()->join(', ')" />
+        </div>
+
+        {{-- Kartu filter: dipilih dulu, lalu Terapkan (hemat muat ulang di koneksi lambat). --}}
+        <x-card x-data="{ open: false }">
+            <div class="flex items-center justify-between gap-3 md:hidden">
+                <p class="font-semibold text-ink">Cari dan saring</p>
+                <x-button variant="secondary" icon="adjustments-horizontal" x-on:click="open = ! open" x-bind:aria-expanded="open" aria-controls="filter-kelompok">
+                    Filter{{ $active ? " ({$active})" : '' }}
+                </x-button>
+            </div>
+            <form id="filter-kelompok" method="GET" action="{{ $url }}" role="search" x-bind:class="{ 'max-md:hidden': ! open }" class="flex flex-wrap items-end gap-4 max-md:mt-4 max-md:hidden">
+                @foreach (collect($filters)->only(['akun', 'laporan', 'periode']) as $name => $value)
+                    @if (filled($value))
+                        <input type="hidden" name="{{ $name }}" value="{{ $value }}">
+                    @endif
+                @endforeach
+                <x-field label="Cari kelompok" for="q" class="w-full xl:w-auto xl:min-w-64 xl:flex-1">
+                    <x-search-input :value="$filters['q'] ?? ''" label="Nama kelompok" :with-label="false" />
+                </x-field>
+                <x-field label="Jenis" for="type" class="w-full sm:w-[calc(50%-0.5rem)] xl:w-40">
+                    <x-select name="type" :options="$options['types']" :selected="$filters['type'] ?? null" placeholder="Semua jenis" />
+                </x-field>
+                <x-field label="Kampung" for="village" class="w-full sm:w-[calc(50%-0.5rem)] xl:w-40">
+                    <x-select name="village" :options="$options['villages']" :selected="$filters['village'] ?? null" placeholder="Semua kampung" />
+                </x-field>
+                <x-field label="Bidang usaha" for="sector" class="w-full sm:w-[calc(50%-0.5rem)] xl:w-40">
+                    <x-select name="sector" :options="$options['sectors']" :selected="$filters['sector'] ?? null" placeholder="Semua bidang" />
+                </x-field>
+                @unless ($isOpd)
+                    <x-field label="OPD pembina" for="opd" class="w-full sm:w-[calc(50%-0.5rem)] xl:w-40">
+                        <x-select name="opd" :options="['none' => 'Belum ada OPD'] + $options['opds']" :selected="$filters['opd'] ?? null" placeholder="Semua OPD" />
+                    </x-field>
+                @endunless
+                <x-field label="Status" for="status" class="w-full sm:w-[calc(50%-0.5rem)] xl:w-36">
+                    <x-select name="status" :options="$options['statuses']" :selected="$filters['status'] ?? null" placeholder="Semua status" />
+                </x-field>
+                <div class="flex w-full gap-2 sm:w-auto max-sm:*:flex-1">
+                    <x-button type="submit">Terapkan</x-button>
+                    <x-button variant="secondary" icon="arrow-path" :href="$url">Reset</x-button>
+                </div>
+            </form>
+        </x-card>
 
         <x-filter-summary :summary="$summary" :chips="$chips" :clear-url="$url" />
 
@@ -70,51 +111,70 @@
                 @endif
             @endif
         @else
-            <x-table clickable>
-                <x-slot:head>
-                    <x-table.heading>Kelompok</x-table.heading>
-                    <x-table.heading optional>Bidang usaha</x-table.heading>
-                    <x-table.heading>OPD</x-table.heading>
-                    <x-table.heading><span class="sr-only">Status</span></x-table.heading>
-                </x-slot:head>
+            {{-- Desktop (≥ 1280px): klik baris memuat panel detail di kanan; layar lebih kecil membuka halaman detail. --}}
+            <div x-data="organizationPanel" class="xl:grid xl:grid-cols-[minmax(0,1fr)_25rem] xl:items-start xl:gap-5">
+                <x-table clickable id="daftar-kelompok" x-on:click="select($event)" class="min-w-0">
+                    <x-slot:head>
+                        <x-table.heading>Kelompok</x-table.heading>
+                        <x-table.heading>Kampung</x-table.heading>
+                        <x-table.heading optional>Bidang usaha</x-table.heading>
+                        <x-table.heading numeric optional>Anggota</x-table.heading>
+                        <x-table.heading><span class="sr-only">Status</span></x-table.heading>
+                    </x-slot:head>
 
-                @foreach ($organizations as $organization)
-                    <x-table.row :href="route($area.'.organizations.show', $organization)">
-                        <x-table.cell primary>
-                            <span class="flex items-center gap-3">
-                                <x-avatar :name="$organization->name" />
-                                <span class="min-w-0">
-                                    <span class="block">{{ $organization->name }}</span>
-                                    <span class="block text-caption font-normal text-ink-muted">{{ $organization->institutionType->name }} · {{ $organization->village->name }}</span>
+                    @foreach ($organizations as $organization)
+                        <x-table.row
+                            :href="route($area.'.organizations.show', $organization)"
+                            :data-panel-url="route($area.'.organizations.summary', $organization)"
+                            :data-id="$organization->id"
+                            :data-selected="$panel && $panel['organization']->is($organization) ? 'true' : null"
+                            class="xl:data-[selected]:bg-brand-tint"
+                        >
+                            <x-table.cell primary>
+                                <span class="flex items-center gap-3">
+                                    <x-avatar :name="$organization->name" />
+                                    <span class="min-w-0">
+                                        <span class="block">{{ $organization->name }}</span>
+                                        <span class="block text-caption font-normal text-ink-muted">{{ $organization->institutionType->name }}</span>
+                                    </span>
                                 </span>
-                            </span>
-                        </x-table.cell>
-                        <x-table.cell label="Bidang usaha" optional>{{ $organization->sectors->pluck('name')->join(', ') }}</x-table.cell>
-                        <x-table.cell label="OPD">
-                            @if ($organization->opds->isEmpty())
-                                <x-badge tone="wait">Belum ada OPD pembina</x-badge>
-                            @else
-                                {{ $organization->opds->pluck('short_name')->join(', ') }}
-                            @endif
-                        </x-table.cell>
-                        {{-- Status hanya ditandai bila bukan Aktif. --}}
-                        <x-table.cell badge>
-                            @if ($organization->status !== App\Enums\OrganizationStatus::Active)
-                                <x-badge :tone="$organization->status->badgeColor()">{{ $organization->status->label() }}</x-badge>
-                            @endif
-                        </x-table.cell>
-                    </x-table.row>
-                @endforeach
+                            </x-table.cell>
+                            <x-table.cell label="Kampung">{{ $organization->village->name }}</x-table.cell>
+                            <x-table.cell label="Bidang usaha" optional>{{ $organization->sectors->pluck('name')->join(', ') }}</x-table.cell>
+                            <x-table.cell label="Anggota" numeric optional>{{ App\Support\Format::number($organization->members_count) }}</x-table.cell>
+                            {{-- Status hanya ditandai bila bukan Aktif. --}}
+                            <x-table.cell badge>
+                                @if ($organization->status !== App\Enums\OrganizationStatus::Active)
+                                    <x-badge :tone="$organization->status->badgeColor()">{{ $organization->status->label() }}</x-badge>
+                                @endif
+                            </x-table.cell>
+                        </x-table.row>
+                    @endforeach
 
-                <x-slot:footer>
-                    <div class="space-y-3">
-                        <p class="text-caption text-ink-muted tabular-nums">
-                            Menampilkan {{ $organizations->firstItem() }}–{{ $organizations->lastItem() }} dari {{ $organizations->total() }} kelompok
-                        </p>
-                        {{ $organizations->links() }}
+                    <x-slot:footer>
+                        <div class="space-y-3">
+                            <p class="text-caption text-ink-muted tabular-nums">
+                                Menampilkan {{ $organizations->firstItem() }}–{{ $organizations->lastItem() }} dari {{ $organizations->total() }} kelompok
+                            </p>
+                            {{ $organizations->links() }}
+                        </div>
+                    </x-slot:footer>
+                </x-table>
+
+                <aside class="hidden xl:sticky xl:top-20 xl:block" aria-live="polite" x-bind:aria-busy="loading">
+                    <div x-ref="panel" x-bind:class="loading && 'opacity-60'" class="transition-opacity">
+                        @if ($panel)
+                            @include('shared.organizations._panel')
+                        @endif
                     </div>
-                </x-slot:footer>
-            </x-table>
+                    <template x-ref="empty">
+                        <div class="rounded-card border border-dashed border-line-strong bg-paper px-5 py-10 text-center">
+                            <p class="font-semibold text-ink">Pilih kelompok untuk melihat ringkasannya.</p>
+                            <p class="mt-1 text-ink-soft">Klik salah satu baris di daftar.</p>
+                        </div>
+                    </template>
+                </aside>
+            </div>
         @endif
     </div>
 </x-layouts.app>
