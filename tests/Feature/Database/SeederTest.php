@@ -36,7 +36,7 @@ test('data contoh sesuai CLAUDE.md bagian 10', function () {
         ->and(Organization::count())->toBe(25)
         ->and(Organization::where('status', OrganizationStatus::Closed)->count())->toBe(1)
         ->and(Organization::where('status', OrganizationStatus::Inactive)->count())->toBeGreaterThan(1)
-        ->and(MonthlyReport::distinct()->count('period'))->toBe(3)
+        ->and(MonthlyReport::distinct()->count('period'))->toBe(9)
         ->and(MonthlyReport::where('no_activity', true)->exists())->toBeTrue()
         ->and(MonthlyReport::where('no_activity', false)->whereNull('profit')->exists())->toBeTrue();
 

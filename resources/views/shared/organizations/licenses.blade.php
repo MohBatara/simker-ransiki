@@ -6,7 +6,7 @@
 @use('App\Support\Format')
 
 @php
-    $fields = ['type', 'number', 'status', 'submitted_on', 'issued_on', 'notes'];
+    $fields = ['type', 'number', 'status', 'submitted_on', 'issued_on', 'expires_on', 'notes'];
     $failed = old('_modal') === 'record-form';
     $initial = $failed ? ['id' => old('_id')] + collect($fields)->mapWithKeys(fn ($field) => [$field => old($field)])->all() : null;
     $toRecord = fn ($license) => [
@@ -16,6 +16,7 @@
         'status' => $license->status->value,
         'submitted_on' => $license->submitted_on?->toDateString(),
         'issued_on' => $license->issued_on?->toDateString(),
+        'expires_on' => $license->expires_on?->toDateString(),
         'notes' => $license->notes,
     ];
 @endphp
@@ -106,6 +107,9 @@
                     </x-field>
                     <x-field label="Tanggal terbit" for="issued_on" optional>
                         <x-input name="issued_on" type="date" x-model="record.issued_on" />
+                    </x-field>
+                    <x-field label="Berlaku sampai" for="expires_on" optional hint="Kosongkan bila tidak ada batas atau belum diketahui.">
+                        <x-input name="expires_on" type="date" x-model="record.expires_on" />
                     </x-field>
                 </div>
                 <x-field label="Catatan" for="notes" optional>

@@ -7,6 +7,7 @@ use App\Models\MonthlyReport;
 use App\Models\Organization;
 use App\Support\BannerImage;
 use App\Support\Dashboards\KelompokSummary;
+use App\Support\Dashboards\Statistics;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
@@ -16,6 +17,8 @@ class DashboardController extends Controller
     {
         $organization = Organization::findOrFail($request->user()->organization_id);
         $summary = new KelompokSummary($organization);
+        // visibleTo untuk akun kelompok = kelompoknya sendiri; 12 bulan sampai bulan wajib lapor.
+        $stats = new Statistics($request->user());
 
         return view('kelompok.dashboard', [
             'organization' => $organization,
@@ -24,6 +27,9 @@ class DashboardController extends Controller
             'revision' => $summary->latestRevision(),
             'checklist' => $summary->profileChecklist(),
             'history' => $summary->history(),
+            'incomeTrend' => $stats->incomeTrend(),
+            'productionTrend' => $stats->productionTrend(),
+            'months' => $stats->months(),
             'banner' => BannerImage::forOrganization($organization),
             'canCreate' => $request->user()->can('create', [MonthlyReport::class, $organization]),
         ]);

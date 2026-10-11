@@ -4,13 +4,15 @@
     'flush' => false,
     // Ikon kecil warna brand di depan judul: KHUSUS halaman detail kelompok (Bagian 7).
     'icon' => null,
+    // Isi kartu mengisi tinggi kartu (kartu sejajar dalam grid); isi bisa memakai mt-auto agar rata bawah.
+    'stretch' => false,
 ])
 
 @php
     $hasHeader = $title || isset($actions);
 @endphp
 
-<section {{ $attributes->class('rounded-card border border-line bg-paper') }}>
+<section {{ $attributes->class(['min-w-0 rounded-card border border-line bg-paper', 'flex flex-col' => $stretch]) }}>
     @if ($hasHeader)
         <header @class([
             'flex flex-wrap items-start justify-between gap-3 px-4 pt-4 md:px-5 md:pt-5',
@@ -36,6 +38,7 @@
     @endif
 
     <div @class([
+        'flex min-w-0 flex-1 flex-col' => $stretch,
         'p-4 md:p-5' => ! $flush && ! $hasHeader,
         'px-4 pb-4 pt-4 md:px-5 md:pb-5' => ! $flush && $hasHeader,
     ])>

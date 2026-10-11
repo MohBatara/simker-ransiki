@@ -37,6 +37,7 @@ dengan file ini, ikuti pengguna lalu sarankan pembaruan file ini.
   Google Fonts CDN).
 - Tes: Pest (atau PHPUnit bawaan bila Pest belum terpasang).
 - Ekspor/impor: `spatie/simple-excel` (Excel/CSV, memakai openspout 4) dan `barryvdh/laravel-dompdf` (PDF).
+- Grafik interaktif: `chart.js` v4 (npm, Paket 3), hanya di halaman Statistik dan dasbor Kelompok.
 - Hosting akhir: Hostinger. Hindari fitur yang butuh proses latar permanen (queue worker,
   websocket). Queue memakai driver `sync`. Scheduler cukup lewat satu cron `schedule:run`.
 
@@ -224,7 +225,9 @@ Jangan mengarang kepanjangan akronim resmi (KDMP, KNMP, dsb.). Simpan apa adanya
   Satu kelompok boleh punya banyak bidang usaha dan banyak OPD.
   Hubungan OPD ditetapkan manual oleh Admin, tidak otomatis dari bidang usaha.
 - `licenses` (perizinan): id, organization_id, type, number, status
-  (enum: none, in_process, issued, needs_fix), submitted_on, issued_on, notes
+  (enum: none, in_process, issued, needs_fix), submitted_on, issued_on,
+  expires_on (date, nullable; label "Berlaku sampai", tidak boleh sebelum issued_on; NULL = tidak diketahui,
+  tidak pernah dianggap habis), notes
 - `products`: id, organization_id, name, description, unit, capacity, is_featured, is_public,
   photo_path (nullable)
 - `attachments` (polimorfik): id, attachable_type, attachable_id, disk, path, original_name,
@@ -280,6 +283,35 @@ Jangan mengarang kepanjangan akronim resmi (KDMP, KNMP, dsb.). Simpan apa adanya
   SATU transaksi (status active, is_public false, created_by admin, tanpa akun) → hasil + unduh baris gagal.
   File sementara di disk `local` `imports/{uuid}` milik pengunggah, dibersihkan setelah 1 hari. Contoh file:
   `storage/app/samples/` (buat ulang dengan `make.php` di folder itu).
+
+### Statistik (Paket 3)
+- Menu "Statistik" (Admin & OPD): `/{area}/statistik` (tab Ekonomi) dan `/{area}/statistik/legalitas` (tab
+  Legalitas), `GET /{area}/statistik/legalitas/unduh` → `rekap-legalitas-Y-m-d.xlsx` (`App\Support\Exports\LegalRecap`).
+- SATU service untuk semua angka: `App\Support\Dashboards\Statistics` (juga grafik dasbor Kelompok). Kelompok =
+  `Organization::visibleTo` + filter `type`, `village`, `sector`, `opd` (khusus Admin; untuk OPD diabaikan di
+  server). Agregasi di database; kelompok dihitung unik (filter lewat subquery/EXISTS, bukan join).
+  `App\Support\Dashboards\StatisticsCharts` menyusun data grafik + tabel untuk komponen `x-chart`.
+- Rentang `?dari=Y-m&sampai=Y-m`: default 12 bulan sampai bulan wajib lapor (dipotong di `reporting_starts_on`
+  paling awal), maks 36 bulan; nilai tidak sah → default.
+- Ekonomi: tren pendapatan penjualan (garis; bulan tanpa isian = null/celah, cakupan "Diisi X dari Y kelompok"
+  wajib lapor), kepatuhan pelaporan per bulan (bertumpuk; logika `ReportingState`: terverifikasi / menunggu /
+  perlu revisi / terlambat / belum diajukan), pendapatan per bidang usaha (catatan wajib: kelompok berbidang
+  ganda dihitung di setiap bidangnya; TIDAK ada total gabungan), produksi per produk + satuan (tabel, urut
+  terbesar), masalah & kebutuhan per kategori (jumlah laporan). Semua hanya dari laporan `verified`, kecuali
+  kepatuhan pelaporan.
+- Legalitas (per kelompok unik): punya izin terbit, izin diproses, izin perlu perbaikan, belum punya izin
+  (= tidak ada izin issued/in_process/needs_fix). Satu kelompok bisa masuk beberapa kartu. Rincian per jenis
+  dan per kampung, daftar tindakan (perlu perbaikan, belum punya izin → tab Izin kelompok), dan "Akan habis
+  dalam 60 hari" (izin `issued` dengan `expires_on` antara hari ini dan +60 hari).
+- Bulan "sementara" di tren pendapatan (Admin, OPD, Kelompok; `Statistics::isProvisional`): belum lewat tenggat +
+  `simker.statistics.provisional_days_after_deadline` (14) hari, ATAU laporan terverifikasi < `provisional_min_coverage`
+  (0,8) dari kelompok wajib lapor bulan itu. Segmen menuju bulan itu putus-putus, titik berlubang, tooltip "Sementara:
+  baru X dari Y kelompok terverifikasi", catatan "Garis putus-putus = data bulan itu belum lengkap." (hanya bila ada
+  bulan sementara yang bernilai), kolom tabel Keterangan "Sementara".
+- Dasbor Kelompok: grafik pendapatan dan produksi 12 bulan (paling banyak 2 produk + satuan terbesar), dua kartu
+  sama tinggi di bawah kartu Riwayat laporan yang selebar grid. Produksi: legenda produk + satuan, judul sumbu Y =
+  satuan; satuan berbeda → grafik kecil terpisah (panel) dalam satu kartu, tidak pernah satu sumbu untuk dua satuan.
+- Tabel produksi di HP: kartu dengan nama tebal lalu "Jumlah: 1.384 ekor" dan "Kelompok: 5" (`x-table.cell inline`).
 
 ### Konten & notifikasi
 - `site_settings`: key, value. Kunci di `SiteSetting::KEYS`: home_intro, profile_body,
@@ -416,9 +448,9 @@ Setiap perubahan status mencatat baris di `report_reviews` dan mengirim notifika
 Notifikasi · Akun Saya
 
 **OPD:** Dasbor · Kelompok Binaan · Verifikasi Laporan · Semua Laporan ·
-Masalah & Kebutuhan · Notifikasi · Akun Saya
+Masalah & Kebutuhan · Statistik · Notifikasi · Akun Saya
 
-**Admin:** Dasbor Distrik · Semua Kelompok · Semua Laporan · Masalah & Kebutuhan · Pengguna ·
+**Admin:** Dasbor Distrik · Semua Kelompok · Semua Laporan · Masalah & Kebutuhan · Statistik · Pengguna ·
 Data Master (Kampung, Jenis Kelembagaan, Bidang Usaha, OPD) · Konten Website · Notifikasi
 
 Pakai "Dasbor", bukan "Dashboard", di semua teks antarmuka dan semua ukuran layar.
@@ -440,6 +472,7 @@ Pakai "Dasbor", bukan "Dashboard", di semua teks antarmuka dan semua ukuran laya
 | Data Master | Master |
 | Konten Website | Konten |
 | Masalah & Kebutuhan | Masalah |
+| Statistik | Statistik |
 
 Nama menu lengkap tetap tampil di sidebar desktop, dan sebagai tooltip saat label ringkas
 di-hover atau difokuskan.
@@ -597,7 +630,8 @@ Di `resources/views/components/`:
 `empty-state`, `modal`, `dropdown`, `page-header`, `alert`, `tabs`, `file-upload`,
 `form-actions` (bar tombol form; `sticky` hanya untuk halaman form), `checkbox-group`, `logo`,
 `number-input` (angka format Indonesia + pratinjau "Terbaca: ..."), `unit-input` (pilihan satuan),
-`stacked-bar` (bilah bertumpuk berwarna status + legenda berangka yang bisa diklik),
+`chart` (kartu grafik Chart.js + "Lihat tabel"; prop `chart` dari `StatisticsCharts`, `panels` untuk beberapa
+grafik kecil, `footnote`), `stacked-bar` (bilah bertumpuk berwarna status + legenda berangka yang bisa diklik),
 `bar-list` (label + bilah tipis warna `brand` + angka, baris bisa diklik),
 `notification-bell` dan `notification-count` (lonceng + angka belum dibaca),
 `link` (tautan teks; berdiri sendiri min 44px di HP, `inline` di dalam kalimat bergaris bawah),
@@ -612,8 +646,19 @@ informasi), `tag` (label pil di banner detail kelompok),
 `layouts.app` (area login), `layouts.public` (website publik), `layouts.auth` (halaman masuk),
 `layouts.guest` (halaman error, ganti kata sandi wajib).
 
-Grafik dibuat dengan CSS/SVG di server (tanpa paket grafik), selalu disertai angka yang terlihat dan
-`aria-label` yang membacakan isinya. Warna status hanya untuk segmen status; grafik lain memakai `brand`.
+Grafik ringkas di dasbor Admin/OPD dibuat dengan CSS/SVG di server. Grafik interaktif (Statistik, dasbor
+Kelompok) memakai komponen `chart` (Chart.js, dimuat lewat `import()` dinamis di `Alpine.data('chart')`,
+`resources/js/charts.js`): judul, sumber ("Dari laporan terverifikasi."), tombol "Lihat tabel" dengan angka yang
+sama (ikut tercetak), `aria-label` yang membacakan isinya, pesan bila belum ada data (bukan grafik kosong).
+Tanpa animasi, gradasi, atau bayangan; grid `line`; Public Sans. Warna status hanya untuk segmen status
+; grafik lain memakai `brand`, seri kedua `ink-soft`.
+Kepatuhan pelaporan (warna khusus grafik ini, di `resources/js/charts.js`, semua ≥ 3:1 terhadap putih), ditumpuk dari
+bawah dengan urutan tetap: Terverifikasi `brand`, Menunggu amber #B07A00, Perlu revisi oranye tua #C2410C,
+Terlambat merah tua #8E1F17, Belum diajukan abu-abu #7D827F; garis putih 1px antarsegmen; legenda di atas berisi
+jumlah bulan terakhir. `sun` tidak dipakai (1,8:1, khusus publik).
+Anti-overflow HP: grid yang berisi grafik/tabel memakai `grid-cols-1` (bukan kolom `auto`) dan `min-w-0`;
+`x-chart` dan `x-card` sudah `min-w-0`; wadah canvas `relative w-full` bertinggi tetap. Jangan menutupi overflow
+dengan `overflow-x: hidden` di body.
 
 Halaman tidak boleh menulis ulang gaya tombol/kartu/tautan/baris daftar sendiri. Selalu pakai komponen.
 
@@ -723,7 +768,7 @@ Target: versi uji coba ruang lingkup inti dalam 2 minggu.
 ~~status organisasi di UI~~ (selesai, Paket 1) · pemisahan penginput & pemverifikasi · Berita & Kegiatan ·
 peringatan nama ganda · ~~batas waktu & status terlambat~~ (selesai, Paket 1) ·
 ~~beberapa akun per kelompok~~ (selesai, Paket 1) · verifikasi profil + riwayat perubahan ·
-grafik ekonomi · dasbor legalitas · tindak lanjut intervensi · email undangan/reset ·
+~~grafik ekonomi~~ · ~~dasbor legalitas~~ (selesai, Paket 3) · tindak lanjut intervensi · email undangan/reset ·
 ~~ekspor Excel/PDF & impor spreadsheet~~ (selesai, Paket 2).
 
 **Di luar lingkup:** alur perizinan lengkap, integrasi sistem eksternal, WhatsApp, peta,
@@ -766,7 +811,8 @@ Data contoh harus terlihat realistis namun jelas bukan data resmi:
 - 25 kelompok dengan kombinasi jenis, bidang usaha (1–3), dan OPD (1–3) yang beragam.
   Beberapa berstatus `inactive` dan satu `closed`.
 - Produk contoh: kakao, kopi, pinang, sagu, ikan asap, keripik, dsb.
-- Laporan bulanan 3 bulan terakhir dengan status beragam (draft, submitted, revision, verified),
+- Riwayat laporan terverifikasi Januari–Juni 2026 (sebagian bulan sengaja kosong) untuk grafik, lalu
+  laporan bulanan 3 bulan terakhir dengan status beragam (draft, submitted, revision, verified),
   sebagian kelompok sengaja belum melapor, sebagian `no_activity`, sebagian angka keuangan kosong.
 - Akun uji (kata sandi `password`, hanya untuk local):
   `admin` · `opd.pertanian` · `opd.dpmptsp` · `opd.dinkopdag` · `opd.perikanan` ·

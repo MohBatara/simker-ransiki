@@ -21,4 +21,14 @@ return [
         'reminder_time' => '08:00',
     ],
 
+    /*
+    | Halaman Statistik dan grafik dasbor Kelompok. Bulan di grafik tren pendapatan dianggap "sementara"
+    | (garis putus-putus) bila belum lewat tenggat + `provisional_days_after_deadline` hari, ATAU laporan
+    | terverifikasinya kurang dari `provisional_min_coverage` (0–1) dari kelompok wajib lapor bulan itu.
+    */
+    'statistics' => [
+        'provisional_days_after_deadline' => 14,
+        'provisional_min_coverage' => 0.8,
+    ],
+
 ];

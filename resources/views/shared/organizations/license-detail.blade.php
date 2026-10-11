@@ -10,6 +10,7 @@
                     'Nomor izin' => $license->number ?? '—',
                     'Tanggal diajukan' => Format::date($license->submitted_on),
                     'Tanggal terbit' => Format::date($license->issued_on),
+                    'Berlaku sampai' => $license->expires_on ? Format::date($license->expires_on) : 'Tidak diketahui',
                     'Catatan' => $license->notes ?? '—',
                 ] as $label => $value)
                     <div class="grid gap-1 py-3 first:pt-0 last:pb-0 sm:grid-cols-[minmax(0,12rem)_1fr] sm:gap-4">

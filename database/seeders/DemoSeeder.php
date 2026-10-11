@@ -36,6 +36,9 @@ class DemoSeeder extends Seeder
 
     private const PERIODS = ['2026-07-01', '2026-08-01', '2026-09-01'];
 
+    /** Riwayat terverifikasi sebelum PERIODS, agar grafik Statistik 12 bulan terlihat berisi. */
+    private const HISTORY_PERIODS = ['2026-01-01', '2026-02-01', '2026-03-01', '2026-04-01', '2026-05-01', '2026-06-01'];
+
     /** short_name => nama OPD (sesuai blueprint klien; akan diganti nama resmi). */
     private const OPDS = [
         'Pertanian' => 'Dinas Pertanian dan Perkebunan',
@@ -207,7 +210,7 @@ class DemoSeeder extends Seeder
             'legal_number' => $legal === LegalStatus::Registered ? sprintf('CONTOH-%04d', $n) : null,
             'legal_notes' => $legal === LegalStatus::InProcess ? 'Contoh catatan: berkas sedang dilengkapi.' : null,
             'status' => $status,
-            'reporting_starts_on' => in_array($n, self::REPORTING_FROM_SEPTEMBER) ? '2026-09-01' : '2026-07-01',
+            'reporting_starts_on' => in_array($n, self::REPORTING_FROM_SEPTEMBER) ? '2026-09-01' : self::HISTORY_PERIODS[0],
             'is_public' => $status === OrganizationStatus::Active && ! in_array($n, self::NOT_PUBLIC),
             'show_contact_publicly' => $n % 4 === 1,
             'created_by' => $admin->id,
@@ -245,6 +248,13 @@ class DemoSeeder extends Seeder
                 'status' => $licenseStatus,
                 'submitted_on' => $licenseStatus === LicenseStatus::None ? null : '2026-06-15',
                 'issued_on' => $licenseStatus === LicenseStatus::Issued ? '2026-08-20' : null,
+                // Contoh tanggal habis berlaku: sebagian dekat (muncul di "Akan habis dalam 60 hari"), satu kosong.
+                'expires_on' => match (true) {
+                    $licenseStatus !== LicenseStatus::Issued => null,
+                    $n % 3 === 1 => now()->addDays(20 + $n)->toDateString(),
+                    $n > 10 => null,
+                    default => '2029-08-20',
+                },
                 'notes' => $licenseStatus === LicenseStatus::NeedsFix ? 'Contoh catatan: dokumen pendukung perlu diperbaiki.' : null,
             ]);
         }
@@ -258,18 +268,21 @@ class DemoSeeder extends Seeder
             return;
         }
 
-        foreach (self::PERIODS as $k => $period) {
+        foreach ([...self::HISTORY_PERIODS, ...self::PERIODS] as $index => $period) {
             if ($organization->reporting_starts_on->gt(Carbon::parse($period))) {
                 continue;
             }
 
-            $status = $this->reportStatus($n, $k);
+            // $k < 0 = bulan riwayat: terverifikasi, sebagian kecil sengaja tidak melapor (celah di grafik).
+            $k = $index - count(self::HISTORY_PERIODS);
+            $step = $k >= 0 ? $k : $index % 4;
+            $status = $k >= 0 ? $this->reportStatus($n, $k) : (($n + $index) % 9 === 0 ? null : ReportStatus::Verified);
             if ($status === null) {
                 continue;
             }
 
             $noActivity = $organization->status === OrganizationStatus::Inactive || ($n === 3 && $k === 1);
-            $sales = $noActivity ? null : 150_000 * $n + 50_000 * $k;
+            $sales = $noActivity ? null : ($k >= 0 ? 150_000 * $n + 50_000 * $k : 120_000 * $n + 40_000 * $step);
 
             // Sebagian angka sengaja dibiarkan NULL (tidak diisi) agar keterangan "dari X kelompok" teruji.
             $report = $organization->monthlyReports()->create([
@@ -277,11 +290,11 @@ class DemoSeeder extends Seeder
                 'status' => $status,
                 'no_activity' => $noActivity,
                 'activity_summary' => $noActivity ? null : 'Contoh ringkasan kegiatan bulan '.Format::month($period).'.',
-                'activity_count' => $noActivity ? 0 : 1 + ($n + $k) % 5,
+                'activity_count' => $noActivity ? 0 : 1 + ($n + $step) % 5,
                 'achievements' => $noActivity || $n % 2 === 0 ? null : 'Contoh capaian: produksi berjalan sesuai rencana.',
-                'members_active' => $noActivity || $organization->members_count === null ? null : max(1, $organization->members_count - $k),
+                'members_active' => $noActivity || $organization->members_count === null ? null : max(1, $organization->members_count - $step),
                 'workforce_count' => $noActivity ? null : $organization->workforce_count,
-                'members_change' => $noActivity ? null : [0, 1, 0, -1][($n + $k) % 4],
+                'members_change' => $noActivity ? null : [0, 1, 0, -1][($n + $step) % 4],
                 'income_sales' => $sales,
                 'income_other' => $noActivity || $n % 3 === 0 ? null : ($n % 2) * 100_000,
                 'costs' => $noActivity || $n % 5 === 4 ? null : (int) round($sales * 0.6, -3),
@@ -289,7 +302,7 @@ class DemoSeeder extends Seeder
 
             if (! $noActivity && $products->isNotEmpty()) {
                 $product = $products->first();
-                $produced = 20 + $n + 5 * $k;
+                $produced = 20 + $n + 5 * $step;
                 $sold = $produced - 5;
                 $report->items()->create([
                     'product_id' => $product->id,

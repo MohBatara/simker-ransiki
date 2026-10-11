@@ -40,6 +40,7 @@ class LicenseRequest extends FormRequest
             'status' => ['required', Rule::enum(LicenseStatus::class)],
             'submitted_on' => ['nullable', 'date', 'before_or_equal:today'],
             'issued_on' => ['nullable', 'date', 'after_or_equal:submitted_on', 'before_or_equal:today'],
+            'expires_on' => ['nullable', 'date', 'after_or_equal:issued_on'],
             'notes' => ['nullable', 'string', 'max:2000'],
         ];
     }
@@ -50,6 +51,7 @@ class LicenseRequest extends FormRequest
             'issued_on.after_or_equal' => 'Tanggal terbit tidak boleh sebelum tanggal diajukan.',
             'submitted_on.before_or_equal' => 'Tanggal diajukan tidak boleh di masa depan.',
             'issued_on.before_or_equal' => 'Tanggal terbit tidak boleh di masa depan.',
+            'expires_on.after_or_equal' => 'Tanggal berlaku sampai tidak boleh sebelum tanggal terbit.',
         ];
     }
 
@@ -61,6 +63,7 @@ class LicenseRequest extends FormRequest
             'status' => 'status izin',
             'submitted_on' => 'tanggal diajukan',
             'issued_on' => 'tanggal terbit',
+            'expires_on' => 'tanggal berlaku sampai',
             'notes' => 'catatan',
         ];
     }

@@ -14,10 +14,10 @@ test('menu tiap peran sesuai CLAUDE.md bagian 6', function (Role $role, array $l
         ['Dasbor', 'Profil Kelompok', 'Produk', 'Legalitas & Izin', 'Laporan Bulanan', 'Notifikasi', 'Akun Saya'],
         ['Dasbor', 'Profil', 'Produk', 'Laporan']],
     'opd' => [Role::Opd,
-        ['Dasbor', 'Kelompok Binaan', 'Verifikasi Laporan', 'Semua Laporan', 'Masalah & Kebutuhan', 'Notifikasi', 'Akun Saya'],
+        ['Dasbor', 'Kelompok Binaan', 'Verifikasi Laporan', 'Semua Laporan', 'Masalah & Kebutuhan', 'Statistik', 'Notifikasi', 'Akun Saya'],
         ['Dasbor', 'Kelompok', 'Verifikasi', 'Masalah']],
     'admin' => [Role::Admin,
-        ['Dasbor Distrik', 'Semua Kelompok', 'Semua Laporan', 'Masalah & Kebutuhan', 'Pengguna', 'Data Master', 'Konten Website', 'Notifikasi'],
+        ['Dasbor Distrik', 'Semua Kelompok', 'Semua Laporan', 'Masalah & Kebutuhan', 'Statistik', 'Pengguna', 'Data Master', 'Konten Website', 'Notifikasi'],
         ['Dasbor', 'Kelompok', 'Laporan', 'Pengguna']],
 ]);
 
@@ -31,7 +31,7 @@ test('label ringkas sesuai tabel CLAUDE.md bagian 6', function () {
         'Dasbor Distrik' => 'Dasbor', 'Profil Kelompok' => 'Profil', 'Legalitas & Izin' => 'Izin',
         'Laporan Bulanan' => 'Laporan', 'Semua Laporan' => 'Laporan', 'Akun Saya' => 'Akun',
         'Kelompok Binaan' => 'Kelompok', 'Semua Kelompok' => 'Kelompok', 'Verifikasi Laporan' => 'Verifikasi',
-        'Data Master' => 'Master', 'Konten Website' => 'Konten', 'Masalah & Kebutuhan' => 'Masalah',
+        'Data Master' => 'Master', 'Konten Website' => 'Konten', 'Masalah & Kebutuhan' => 'Masalah', 'Statistik' => 'Statistik',
     ]);
 });
 

@@ -251,6 +251,28 @@ Alpine.data('copyText', (text) => ({
 Alpine.data('reportForm', reportForm);
 
 /**
+ * Kartu grafik (komponen x-chart). Chart.js dimuat lewat import() dinamis, sehingga hanya diunduh di halaman
+ * yang punya grafik. Instans grafik disimpan di luar data Alpine agar tidak dibungkus proxy reaktif.
+ */
+Alpine.data('chart', (configs) => {
+    let charts = [];
+
+    return {
+        showTable: false,
+
+        // Satu config per canvas[data-panel] (beberapa grafik kecil bisa berada dalam satu kartu).
+        async init() {
+            const { renderChart } = await import('./charts');
+            charts = [...this.$root.querySelectorAll('canvas[data-panel]')].map((canvas) => renderChart(canvas, configs[canvas.dataset.panel]));
+        },
+
+        destroy() {
+            charts.forEach((chart) => chart.destroy());
+        },
+    };
+});
+
+/**
  * Panel detail di samping daftar kelompok (layar ≥ 1280px). Klik baris memuat potongan HTML panel
  * (route .../ringkas, dicek Policy) tanpa pindah halaman; layar lebih kecil, klik dengan Ctrl/Cmd, atau
  * permintaan yang gagal tetap membuka halaman detail.

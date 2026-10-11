@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-#[Fillable(['type', 'number', 'status', 'submitted_on', 'issued_on', 'notes'])]
+#[Fillable(['type', 'number', 'status', 'submitted_on', 'issued_on', 'expires_on', 'notes'])]
 class License extends Model
 {
     use HasAttachments, HasFactory;
@@ -24,6 +24,7 @@ class License extends Model
             'status' => LicenseStatus::class,
             'submitted_on' => 'date',
             'issued_on' => 'date',
+            'expires_on' => 'date',
         ];
     }
 

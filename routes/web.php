@@ -82,6 +82,13 @@ $reportRoutes = function () {
     Route::get('/laporan/rekap', [Shared\ReportExportController::class, 'recap'])->name('reports.recap');
     Route::get('/masalah', [Shared\ReportIssueController::class, 'index'])->name('issues.index');
     Route::get('/cari', [Shared\SearchController::class, 'index'])->name('search');
+
+    // Statistik ekonomi dan legalitas; angka dibatasi kelompok yang terlihat pengguna (visibleTo).
+    Route::controller(Shared\StatisticsController::class)->prefix('statistik')->name('statistics.')->group(function () {
+        Route::get('/', 'economy')->name('economy');
+        Route::get('/legalitas', 'legal')->name('legal');
+        Route::get('/legalitas/unduh', 'legalExport')->name('legal.export');
+    });
 };
 
 Route::middleware('auth')->group(function () use ($organizationRoutes, $reportRoutes) {
