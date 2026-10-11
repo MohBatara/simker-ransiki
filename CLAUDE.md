@@ -763,9 +763,11 @@ Pengecualian dari Larangan untuk area Admin/OPD/Kelompok (menyesuaikan referensi
 
 ### Tabel dan kartu daftar
 - Tidak ada tombol "Buka" per baris. Baris yang punya halaman detail bisa diklik seluruhnya:
-  `<x-table clickable>` + `<x-table.row href="...">`. Link ada di sel `primary` dan diperluas
-  menutupi baris, sehingga tetap satu link yang bisa difokuskan dengan keyboard (cincin fokus
-  mengelilingi baris). Hover memakai latar `subtle`, chevron-right kecil `ink-muted` di kanan.
+  `<x-table clickable>` + `<x-table.row href="...">`. Link ada di sel `primary` (`data-row-link`, lapisan
+  klik hanya sebesar sel itu); klik di bagian lain baris (`tr[data-row-href]`) diteruskan ke link itu oleh
+  `openRowLink` di `resources/js/app.js` (Ctrl/Cmd/klik tengah = tab baru). JANGAN memperluas lapisan klik
+  sampai `<tr>`: Safari tidak menjadikan `<tr>` berposisi relative sebagai acuan, sehingga baris tidak bisa
+  diklik. Tetap satu link yang bisa difokuskan dengan keyboard (cincin fokus mengelilingi baris lewat `has-[]`). Hover memakai latar `subtle`, chevron-right kecil `ink-muted` di kanan.
 - Tombol aksi lain di dalam baris dihindari; bila terpaksa, beri `relative z-10` agar bisa diklik.
 - Pengecualian: daftar tanpa halaman detail (mis. Data Master) memakai sel `actions` berisi
   tombol Ubah/Hapus, dengan tambah/ubah lewat modal (`recordForm` di `resources/js/app.js`).

@@ -273,6 +273,38 @@ Alpine.data('chart', (configs) => {
 });
 
 /**
+ * Baris tabel yang bisa diklik (<x-table.row href>): tautannya ada di sel "primary". Klik di bagian lain baris
+ * diteruskan ke tautan itu. Tidak memakai lapisan yang menutupi <tr>, karena Safari tidak menjadikan <tr>
+ * acuan posisi sehingga lapisannya bisa lepas dan menutupi baris lain. Ctrl/Cmd/klik tengah = tab baru.
+ */
+function openRowLink(event) {
+    const row = event.target.closest('tr[data-row-href]');
+    if (!row || event.defaultPrevented) {
+        return;
+    }
+    if (event.target.closest('a, button, input, select, textarea, label, summary, [role="button"]')) {
+        return;
+    }
+    // Pengguna sedang memilih teks di baris, bukan mengeklik.
+    if (String(window.getSelection?.() ?? '') !== '') {
+        return;
+    }
+
+    const link = row.querySelector('a[data-row-link]');
+    if (!link) {
+        return;
+    }
+    if (event.metaKey || event.ctrlKey || event.button === 1) {
+        window.open(link.href, '_blank', 'noopener');
+        return;
+    }
+    link.click();
+}
+
+document.addEventListener('click', openRowLink);
+document.addEventListener('auxclick', (event) => event.button === 1 && openRowLink(event));
+
+/**
  * Panel detail di samping daftar kelompok (layar ≥ 1280px). Klik baris memuat potongan HTML panel
  * (route .../ringkas, dicek Policy) tanpa pindah halaman; layar lebih kecil, klik dengan Ctrl/Cmd, atau
  * permintaan yang gagal tetap membuka halaman detail.

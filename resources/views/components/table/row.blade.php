@@ -3,12 +3,15 @@
 ])
 
 @props([
-    // Tujuan klik baris. Link ditempatkan di sel "primary" dan diperluas menutupi seluruh baris.
+    // Tujuan klik baris. Link ada di sel "primary"; klik di bagian lain baris diteruskan lewat JS.
     'href' => null,
 ])
 
-<tr {{ $attributes->class([
+{{-- data-row-href: klik di mana pun pada baris membuka tautan sel "primary" (lihat resources/js/app.js). --}}
+<tr @if ($href) data-row-href @endif {{ $attributes->class([
     'relative transition-colors',
+    // Cincin fokus keyboard mengelilingi seluruh baris saat tautannya difokuskan.
+    'cursor-pointer has-[[data-row-link]:focus-visible]:outline-2 has-[[data-row-link]:focus-visible]:-outline-offset-2 has-[[data-row-link]:focus-visible]:outline-brand' => $href,
     'max-md:grid max-md:grid-cols-[minmax(0,1fr)_auto] max-md:gap-x-3 max-md:rounded-card max-md:border max-md:border-line max-md:bg-paper max-md:px-4 max-md:py-3',
     'md:hover:bg-subtle max-md:pr-10 max-md:active:bg-subtle' => $href,
 ]) }}>

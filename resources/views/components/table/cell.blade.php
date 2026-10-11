@@ -31,6 +31,9 @@
         "max-md:col-span-2 max-md:block max-md:px-0 max-md:py-0.5 max-md:text-left max-md:before:text-ink-soft max-md:before:content-[attr(data-label)_':_']" => $showLabel && $inline,
         'tabular-nums md:text-right' => $numeric,
         'max-md:col-start-1 max-md:row-start-1 max-md:self-center max-md:p-0 max-md:font-semibold' => $primary,
+        // Tautan baris diperluas hanya sampai sel ini: Safari tidak menjadikan <tr> berposisi relative sebagai
+        // acuan, jadi lapisan klik bisa lepas dari barisnya. Sisa baris diteruskan lewat JS (resources/js/app.js).
+        'relative' => $primary && $href,
         'max-md:col-start-2 max-md:row-start-1 max-md:self-center max-md:p-0' => $badge,
         'max-md:col-span-2 max-md:col-start-1 max-md:row-start-2 max-md:px-0 max-md:pb-2 max-md:pt-0.5 max-md:text-ink-soft' => $subtitle,
         'whitespace-nowrap md:text-right max-md:col-span-2 max-md:mt-2 max-md:border-t max-md:border-line max-md:px-0 max-md:pb-0 max-md:pt-3' => $actions,
@@ -38,7 +41,7 @@
     ]) }}
 >
     @if ($primary && $href)
-        <a href="{{ $href }}" class="after:absolute after:inset-0 focus-visible:outline-none focus-visible:after:outline-2 focus-visible:after:-outline-offset-2 focus-visible:after:outline-brand max-md:after:rounded-card">{{ $slot }}</a>
+        <a href="{{ $href }}" data-row-link class="after:absolute after:inset-0 focus-visible:outline-none">{{ $slot }}</a>
     @else
         {{ $slot }}
     @endif

@@ -81,7 +81,9 @@ test('baris tabel dengan href menjadi satu link dengan chevron, tanpa tombol buk
         BLADE);
 
     expect(substr_count($html, 'href="/laporan/1"'))->toBe(1)
-        ->and($html)->toContain('after:absolute after:inset-0')
+        // Lapisan klik hanya sebesar sel primary (aman di Safari); sisa baris lewat data-row-href + JS.
+        ->and(substr_count($html, 'data-row-href'))->toBe(1)
+        ->and($html)->toContain('data-row-link')
         ->and(substr_count($html, 'chevron-right') + substr_count($html, 'm8.25 4.5 7.5 7.5-7.5 7.5'))->toBeGreaterThan(0)
         ->and($html)->not->toContain('>Buka<');
 });
