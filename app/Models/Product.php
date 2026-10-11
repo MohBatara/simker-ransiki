@@ -4,9 +4,11 @@ namespace App\Models;
 
 use App\Enums\OrganizationStatus;
 use App\Models\Concerns\HasAttachments;
+use App\Observers\ChangeLogObserver;
 use App\Support\ImageVariants;
 use App\Support\Initials;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -15,6 +17,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\Storage;
 
 #[Fillable(['name', 'description', 'unit', 'capacity', 'is_featured', 'is_public', 'photo_path'])]
+#[ObservedBy(ChangeLogObserver::class)]
 class Product extends Model
 {
     use HasAttachments, HasFactory;

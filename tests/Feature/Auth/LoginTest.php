@@ -5,11 +5,13 @@ use App\Models\MonthlyReport;
 use App\Models\Opd;
 use App\Models\User;
 
-test('halaman login tanpa daftar akun, lupa kata sandi via email, atau ingat saya', function () {
+test('halaman login tanpa daftar akun atau ingat saya; lupa kata sandi lewat email atau Admin', function () {
     $this->get('/login')
         ->assertOk()
         ->assertSee('Username atau email')
-        ->assertSee('Hubungi Admin distrik')
+        ->assertSee('Lupa kata sandi?')
+        ->assertSee('/lupa-kata-sandi')
+        ->assertSee('hubungi Admin distrik')
         ->assertDontSee('Daftar')
         ->assertDontSee('Ingat saya');
 });

@@ -11,11 +11,11 @@
 
 <x-layouts.app
     :title="$editing ? 'Ubah akun' : 'Tambah akun'"
-    :description="$editing ? $user->name : 'Kata sandi sementara dibuat otomatis setelah akun disimpan.'"
+    :description="$editing ? $user->name : 'Pengguna membuat kata sandi sendiri lewat undangan email, atau memakai kata sandi sementara.'"
     :back="$cancelUrl"
     focus
 >
-    <form method="POST" action="{{ $editing ? route('admin.users.update', $user) : route('admin.users.store') }}" x-data="{ role: @js($role) }" class="space-y-5">
+    <form method="POST" action="{{ $editing ? route('admin.users.update', $user) : route('admin.users.store') }}" x-data="{ role: @js($role), email: @js((string) old('email', $user->email)) }" class="space-y-5">
         @csrf
         <x-form-errors />
         @if ($editing)
@@ -41,8 +41,18 @@
                     />
                 </x-field>
                 <x-field label="Email" for="email" hint="Banyak pengurus kelompok tidak punya email; boleh dikosongkan." optional>
-                    <x-input name="email" type="email" :value="$user->email" maxlength="255" autocapitalize="none" />
+                    <x-input name="email" type="email" :value="$user->email" maxlength="255" autocapitalize="none" x-model="email" />
                 </x-field>
+                @unless ($editing)
+                    <x-field label="Cara masuk pertama" for="access" class="md:col-span-2" hint="Undangan: pengguna menerima tautan (berlaku 72 jam, sekali pakai) untuk membuat kata sandi sendiri. Tanpa email, selalu kata sandi sementara.">
+                        <x-select
+                            name="access"
+                            :options="['invite' => 'Kirim undangan lewat email', 'temporary' => 'Kata sandi sementara (ditampilkan sekali)']"
+                            :selected="old('access', 'invite')"
+                            x-bind:disabled="! email.trim()"
+                        />
+                    </x-field>
+                @endunless
                 <x-field label="Nomor telepon" for="phone" hint="Untuk mengirim info masuk lewat WhatsApp." optional>
                     <x-input name="phone" type="tel" inputmode="tel" :value="$user->phone" maxlength="30" />
                 </x-field>

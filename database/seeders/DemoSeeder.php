@@ -7,6 +7,7 @@ use App\Enums\LegalStatus;
 use App\Enums\LicenseStatus;
 use App\Enums\OrganizationStatus;
 use App\Enums\ProblemCategory;
+use App\Enums\ProfileStatus;
 use App\Enums\ReportStatus;
 use App\Enums\ReviewAction;
 use App\Enums\Role;
@@ -16,6 +17,7 @@ use App\Models\InstitutionType;
 use App\Models\MonthlyReport;
 use App\Models\Opd;
 use App\Models\Organization;
+use App\Models\Post;
 use App\Models\ReportReview;
 use App\Models\SiteSetting;
 use App\Models\User;
@@ -139,6 +141,8 @@ class DemoSeeder extends Seeder
             1 => User::create([
                 'name' => 'Ketua Contoh 01',
                 'username' => 'kelompok1',
+                // Email contoh untuk mencoba "Lupa kata sandi?" (email masuk ke Mailpit).
+                'email' => 'kelompok1@contoh.test',
                 'password' => 'password',
                 'must_change_password' => false,
                 'role' => Role::Kelompok,
@@ -166,6 +170,9 @@ class DemoSeeder extends Seeder
             'office_hours' => 'Senin–Jumat, 08.00–15.00 WIT (contoh)',
         ]);
 
+        $this->seedProfileVerification($organizations, $opdUsers);
+        $this->seedPosts($admin, $organizations);
+
         foreach ($organizations as $n => $seeded) {
             $this->seedReports(
                 $n,
@@ -174,6 +181,53 @@ class DemoSeeder extends Seeder
                 $opdUsers[$seeded['opds'][0]],
                 $groupUsers[$n] ?? null,
             );
+        }
+    }
+
+    /**
+     * Sebagian profil sudah diverifikasi OPD pembinanya; kelompok 1 (akun kelompok1) lalu mengubah ketua dan
+     * telepon sehingga masuk antrean "Profil menunggu verifikasi".
+     */
+    private function seedProfileVerification(array $organizations, Collection $opdUsers): void
+    {
+        foreach ($organizations as $n => $seeded) {
+            if ($n % 3 !== 1) {
+                continue;
+            }
+
+            $seeded['organization']->forceFill([
+                'profile_status' => $n === 1 ? ProfileStatus::NeedsReview : ProfileStatus::Verified,
+                'profile_verified_at' => Carbon::parse('2026-09-15 10:00'),
+                'profile_verified_by' => $opdUsers[$seeded['opds'][0]]->id,
+                'profile_changed_fields' => $n === 1 ? ['leader_name', 'phone'] : null,
+                'profile_changed_at' => $n === 1 ? Carbon::parse('2026-10-05 09:30') : null,
+            ])->saveQuietly();
+        }
+    }
+
+    /** Berita contoh: tiga terbit, satu draf, satu terjadwal (tidak tampil publik). */
+    private function seedPosts(User $admin, array $organizations): void
+    {
+        $posts = [
+            ['Contoh berita: panen kakao kelompok binaan', 'kegiatan', '2026-09-20 09:00', 'published', [1, 2]],
+            ['Contoh berita: pelatihan pengemasan produk olahan', 'kegiatan', '2026-09-05 10:00', 'published', [4]],
+            ['Contoh berita: jadwal pelaporan bulanan kelompok', 'berita', '2026-08-28 08:00', 'published', []],
+            ['Contoh berita: draf yang belum diterbitkan', 'berita', null, 'draft', []],
+            ['Contoh berita: pengumuman terjadwal', 'berita', '2027-01-05 08:00', 'published', []],
+        ];
+
+        foreach ($posts as [$title, $category, $publishedAt, $status, $related]) {
+            $post = new Post([
+                'title' => $title,
+                'slug' => Post::uniqueSlug($title),
+                'category' => $category,
+                'summary' => 'Ringkasan contoh. Ganti dengan berita resmi dari kantor distrik.',
+                'body' => "Ini teks **contoh**, bukan berita resmi.\n\n## Subjudul contoh\n\n- Butir pertama\n- Butir kedua\n\nParagraf penutup contoh.",
+                'status' => $status,
+                'published_at' => $publishedAt ? Carbon::parse($publishedAt) : null,
+            ]);
+            $post->forceFill(['created_by' => $admin->id, 'updated_by' => $admin->id])->save();
+            $post->organizations()->sync(collect($related)->map(fn (int $n) => $organizations[$n]['organization']->id)->all());
         }
     }
 

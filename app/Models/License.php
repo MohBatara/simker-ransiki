@@ -4,12 +4,15 @@ namespace App\Models;
 
 use App\Enums\LicenseStatus;
 use App\Models\Concerns\HasAttachments;
+use App\Observers\ChangeLogObserver;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 #[Fillable(['type', 'number', 'status', 'submitted_on', 'issued_on', 'expires_on', 'notes'])]
+#[ObservedBy(ChangeLogObserver::class)]
 class License extends Model
 {
     use HasAttachments, HasFactory;

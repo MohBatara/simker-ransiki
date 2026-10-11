@@ -18,6 +18,7 @@ use App\Support\Format;
 use App\Support\OrganizationOptions;
 use App\Support\OrganizationOverview;
 use App\Support\OrganizationPanel;
+use App\Support\ProfileReview;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -138,6 +139,14 @@ class OrganizationController extends Controller
         ]);
     }
 
+    /** Tab Riwayat: perubahan profil, produk, dan izin, terbaru dulu. */
+    public function history(Request $request, Organization $organization): View
+    {
+        return $this->detail($request, $organization, 'riwayat', [
+            'logs' => $organization->changeLogs()->with('user.opd')->latest('id')->paginate(20),
+        ]);
+    }
+
     public function users(Request $request, Organization $organization): View
     {
         return $this->detail($request, $organization, 'akun', [
@@ -180,6 +189,14 @@ class OrganizationController extends Controller
             ->with('duplicates', $candidates->where('strong', false)->values()->all());
     }
 
+    /** "Tandai profil terverifikasi" (Admin dan OPD pembina). */
+    public function verifyProfile(Request $request, Organization $organization): RedirectResponse
+    {
+        ProfileReview::verify($organization, $request->user());
+
+        return back()->with('status', 'Profil ditandai terverifikasi.');
+    }
+
     /** Bulan yang bisa dipilih di "Isi laporan": sejak wajib lapor sampai bulan ini, terbaru dulu. */
     private function entryPeriods(Organization $organization): array
     {
@@ -188,7 +205,7 @@ class OrganizationController extends Controller
 
     private function detail(Request $request, Organization $organization, string $tab, array $data): View
     {
-        $organization->loadMissing(['institutionType', 'village', 'sectors:id,name', 'opds:id,name,short_name'])
+        $organization->loadMissing(['institutionType', 'village', 'sectors:id,name', 'opds:id,name,short_name', 'profileVerifier.opd'])
             ->loadCount(['monthlyReports', 'users', 'products', 'licenses', 'opds']);
 
         return view('shared.organizations.detail', [

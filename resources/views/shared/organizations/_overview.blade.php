@@ -129,6 +129,28 @@
     <x-card title="Publikasi & pelaporan" icon="globe-alt" class="lg:col-span-5">
         <dl class="space-y-3">
             <div>
+                <dt class="text-caption text-ink-muted">Verifikasi profil</dt>
+                <dd class="mt-0.5 space-y-1.5">
+                    <x-badge :tone="$organization->profile_status->badgeColor()">{{ $organization->profile_status->label() }}</x-badge>
+                    @if ($organization->profile_verified_at)
+                        <p class="text-caption text-ink-soft">
+                            Diverifikasi {{ Format::date($organization->profile_verified_at) }}@if ($organization->profileVerifier) oleh {{ $organization->profileVerifier->nameWithAgency() }}@endif
+                        </p>
+                    @endif
+                    @if ($organization->profile_status === App\Enums\ProfileStatus::NeedsReview)
+                        <p class="text-caption text-ink-soft">Diubah kelompok: {{ implode(', ', App\Support\ProfileReview::changedLabels($organization)) }}</p>
+                    @endif
+                </dd>
+                @if ($area !== 'kelompok' && $organization->profile_status !== App\Enums\ProfileStatus::Verified)
+                    @can('verifyProfile', $organization)
+                        <form method="POST" action="{{ route($area.'.organizations.verify-profile', $organization) }}" class="mt-3">
+                            @csrf
+                            <x-button type="submit" variant="secondary" icon="check-badge" processing="Menyimpan…">Tandai profil terverifikasi</x-button>
+                        </form>
+                    @endcan
+                @endif
+            </div>
+            <div>
                 <dt class="text-caption text-ink-muted">Tampil di direktori publik</dt>
                 <dd class="text-ink">{{ $organization->is_public ? 'Ya' : 'Tidak' }}</dd>
             </div>

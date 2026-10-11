@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Actions\Users\IssueTemporaryPassword;
+use App\Actions\Users\SendInvitation;
 use App\Enums\OrganizationStatus;
 use App\Enums\Role;
 use App\Http\Controllers\Controller;
@@ -14,6 +15,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\View\View;
+use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
 
 class UserController extends Controller
 {
@@ -47,12 +49,21 @@ class UserController extends Controller
         ]);
     }
 
-    public function store(UserRequest $request, IssueTemporaryPassword $issuePassword): RedirectResponse
+    public function store(UserRequest $request, IssueTemporaryPassword $issuePassword, SendInvitation $invite): RedirectResponse
     {
-        // Kata sandi acak sementara; langsung diganti kata sandi sementara yang ditampilkan ke Admin.
+        // Kata sandi acak; diganti kata sandi sementara yang ditampilkan ke Admin, atau dibuat pengguna lewat undangan.
         $user = User::create([...$request->userData(), 'password' => str()->random(40)]);
 
+        if ($request->wantsInvitation()) {
+            return $this->sendInvitation($user, $invite, 'Akun dibuat.');
+        }
+
         return $this->showCredentials($user, $issuePassword->handle($user), 'Akun dibuat.');
+    }
+
+    public function resendInvitation(User $user, SendInvitation $invite): RedirectResponse
+    {
+        return $this->sendInvitation($user, $invite, null);
     }
 
     public function show(User $user): View
@@ -101,6 +112,22 @@ class UserController extends Controller
         $user->update(['is_active' => false]);
 
         return back()->with('status', 'Akun dinonaktifkan.');
+    }
+
+    /** Gagal kirim (mis. SMTP salah) tidak membatalkan akun; Admin bisa kirim ulang atau memakai kata sandi sementara. */
+    private function sendInvitation(User $user, SendInvitation $invite, ?string $prefix): RedirectResponse
+    {
+        $redirect = redirect()->route('admin.users.show', $user);
+
+        try {
+            $invite->handle($user);
+        } catch (TransportExceptionInterface $exception) {
+            report($exception);
+
+            return $redirect->with('error', trim($prefix.' Email undangan gagal dikirim. Periksa pengaturan email, lalu pilih Kirim ulang undangan atau Reset kata sandi.'));
+        }
+
+        return $redirect->with('status', trim($prefix.' Undangan dikirim ke '.$user->email.'.'));
     }
 
     /**

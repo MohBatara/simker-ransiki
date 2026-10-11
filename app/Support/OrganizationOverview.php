@@ -17,7 +17,7 @@ class OrganizationOverview
     /** @param  bool  $withStatusHistory  riwayat status hanya untuk Admin/OPD */
     public static function data(Organization $organization, bool $withStatusHistory = false): array
     {
-        $organization->loadMissing(['institutionType:id,name', 'village:id,name', 'sectors:id,name', 'opds:id,name,short_name', 'updater:id,name'])
+        $organization->loadMissing(['institutionType:id,name', 'village:id,name', 'sectors:id,name', 'opds:id,name,short_name', 'updater:id,name', 'profileVerifier.opd'])
             ->loadCount(['products', 'users']);
 
         $photos = $organization->products()->whereNotNull('photo_path')->latest('updated_at')->limit(self::PHOTOS)->get(['id', 'organization_id', 'name', 'photo_path'])

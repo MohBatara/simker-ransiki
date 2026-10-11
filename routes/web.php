@@ -1,8 +1,10 @@
 <?php
 
 use App\Http\Controllers\Admin;
+use App\Http\Controllers\Auth\InvitationController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\PasswordController;
+use App\Http\Controllers\Auth\PasswordResetController;
 use App\Http\Controllers\Kelompok;
 use App\Http\Controllers\Opd;
 use App\Http\Controllers\Publik;
@@ -17,6 +19,9 @@ Route::get('/kontak', [Publik\PageController::class, 'contact'])->name('public.c
 Route::get('/direktori', [Publik\DirectoryController::class, 'index'])->name('public.directory');
 Route::get('/direktori/{slug}', [Publik\DirectoryController::class, 'show'])->name('public.organization');
 Route::get('/produk', Publik\ProductController::class)->name('public.products');
+Route::get('/berita', [Publik\PostController::class, 'index'])->name('public.posts');
+Route::get('/berita/{slug}', [Publik\PostController::class, 'show'])->name('public.post');
+Route::get('/foto-berita/{post}', [Publik\PostController::class, 'photo'])->name('public.post-photo')->whereNumber('post');
 Route::get('/foto-{slot}', [Publik\SiteImageController::class, 'slot'])->name('public.site-photo')->whereIn('slot', ['sampul', 'tentang']);
 Route::get('/foto-bidang/{sector}', [Publik\SiteImageController::class, 'sector'])->name('public.sector-photo')->whereNumber('sector');
 Route::get('/sitemap.xml', [Publik\SitemapController::class, 'sitemap'])->name('sitemap');
@@ -28,6 +33,20 @@ Route::get('/foto-produk/{product}', [Shared\ProductPhotoController::class, 'sho
 Route::middleware('guest')->group(function () {
     Route::get('/login', [LoginController::class, 'create'])->name('login');
     Route::post('/login', [LoginController::class, 'store']);
+
+    Route::controller(PasswordResetController::class)->group(function () {
+        Route::get('/lupa-kata-sandi', 'create')->name('password.request');
+        Route::post('/lupa-kata-sandi', 'store')->name('password.email')->middleware('throttle:password-reset');
+        Route::get('/atur-ulang-kata-sandi/{token}', 'edit')->name('password.reset');
+        Route::post('/atur-ulang-kata-sandi', 'update')->name('password.update')->middleware('throttle:10,1');
+    });
+
+    // Undangan akun dari email (tautan bertanda tangan, sekali pakai). Tanda tangan dicek di controller
+    // agar tautan kedaluwarsa mendapat halaman penjelasan, bukan 403.
+    Route::controller(InvitationController::class)->prefix('undangan/{user}/{token}')->whereNumber('user')->group(function () {
+        Route::get('/', 'show')->name('invitation.show');
+        Route::post('/', 'store')->name('invitation.store')->middleware('throttle:10,1');
+    });
 });
 
 /**
@@ -46,10 +65,16 @@ $organizationRoutes = function () {
             Route::get('/{organization}/izin', 'licenses')->name('licenses')->can('view', 'organization');
             Route::get('/{organization}/izin/{license}', 'license')->name('licenses.show')->scopeBindings()->can('view', 'license');
             Route::get('/{organization}/laporan', 'reports')->name('reports')->can('view', 'organization');
+            Route::get('/{organization}/riwayat', 'history')->name('history')->can('viewHistory', 'organization');
+            Route::post('/{organization}/verifikasi-profil', 'verifyProfile')->name('verify-profile')->can('verifyProfile', 'organization');
             Route::get('/{organization}/ubah', 'edit')->name('edit')->can('update', 'organization');
             Route::put('/{organization}', 'update')->name('update')->can('update', 'organization');
         });
     });
+
+    // Antrean "Profil menunggu verifikasi": kelompok yang terlihat pengguna (visibleTo) dengan profil berubah.
+    Route::get('/verifikasi-profil', [Shared\ProfileVerificationController::class, 'index'])->name('profile-verifications.index')
+        ->can('viewAny', Organization::class);
 
     // scopeBindings: produk/izin harus milik kelompok di URL, jika tidak 404. Hak dicek di Form Request/Policy.
     Route::prefix('kelompok/{organization}')->name('organizations.')->whereNumber('organization')->scopeBindings()->group(function () {
@@ -178,6 +203,7 @@ Route::middleware('auth')->group(function () use ($organizationRoutes, $reportRo
                         Route::get('/{user}/ubah', 'edit')->name('edit')->can('update', 'user');
                         Route::put('/{user}', 'update')->name('update')->can('update', 'user');
                         Route::post('/{user}/reset-kata-sandi', 'resetPassword')->name('reset-password')->can('resetPassword', 'user');
+                        Route::post('/{user}/undangan', 'resendInvitation')->name('invitation')->can('invite', 'user');
                         Route::patch('/{user}/aktifkan', 'activate')->name('activate')->can('activate', 'user');
                         Route::patch('/{user}/nonaktifkan', 'deactivate')->name('deactivate')->can('deactivate', 'user');
                     });
@@ -190,6 +216,20 @@ Route::middleware('auth')->group(function () use ($organizationRoutes, $reportRo
                     Route::delete('/foto-{slot}', 'destroyPhoto')->name('photo.destroy')->whereIn('slot', ['sampul', 'tentang']);
                     Route::post('/foto-bidang/{sector}', 'storeSectorPhoto')->name('sector-photo.store')->whereNumber('sector')->middleware('throttle:uploads');
                     Route::delete('/foto-bidang/{sector}', 'destroySectorPhoto')->name('sector-photo.destroy')->whereNumber('sector');
+                });
+
+                Route::controller(Admin\PostController::class)->prefix('berita')->name('posts.')->group(function () {
+                    Route::get('/', 'index')->name('index');
+                    Route::get('/tambah', 'create')->name('create');
+                    Route::post('/', 'store')->name('store');
+                    Route::post('/pratinjau', 'preview')->name('preview')->middleware('throttle:60,1');
+                    Route::whereNumber('post')->group(function () {
+                        Route::get('/{post}/ubah', 'edit')->name('edit');
+                        Route::put('/{post}', 'update')->name('update');
+                        Route::delete('/{post}', 'destroy')->name('destroy');
+                        Route::post('/{post}/foto', 'storeCover')->name('cover.store')->middleware('throttle:uploads');
+                        Route::delete('/{post}/foto', 'destroyCover')->name('cover.destroy');
+                    });
                 });
 
                 Route::controller(Admin\MasterDataController::class)->prefix('data-master')->name('master.')->group(function () {

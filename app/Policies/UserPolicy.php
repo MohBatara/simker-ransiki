@@ -32,6 +32,12 @@ class UserPolicy
         return $user->isAdmin();
     }
 
+    /** Kirim (ulang) undangan email: hanya untuk akun yang punya email. */
+    public function invite(User $user, User $model): bool
+    {
+        return $user->isAdmin() && filled($model->email);
+    }
+
     public function activate(User $user, User $model): bool
     {
         return $user->isAdmin();

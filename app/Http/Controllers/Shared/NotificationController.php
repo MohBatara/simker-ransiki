@@ -67,6 +67,14 @@ class NotificationController extends Controller
             return $user->isKelompok() ? route('kelompok.reports.index') : null;
         }
 
+        if (($data['kind'] ?? null) === 'profile_needs_review') {
+            $organization = Organization::find($data['organization_id'] ?? null);
+
+            return $organization && Gate::forUser($user)->allows('viewHistory', $organization)
+                ? route($user->role->area().'.organizations.history', $organization)
+                : null;
+        }
+
         if (($data['kind'] ?? null) === 'report_overdue') {
             if ($user->isKelompok()) {
                 return route('kelompok.reports.index');

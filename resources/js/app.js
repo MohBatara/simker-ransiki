@@ -251,6 +251,39 @@ Alpine.data('copyText', (text) => ({
 Alpine.data('reportForm', reportForm);
 
 /**
+ * Tab Tulis/Pratinjau untuk isian Markdown (Berita & Kegiatan). HTML pratinjau dirender server dengan aturan
+ * yang sama seperti halaman publik (HTML mentah dibuang, tautan berbahaya ditolak).
+ */
+Alpine.data('markdownPreview', (url) => ({
+    html: '',
+    loading: false,
+    failed: false,
+
+    async load() {
+        this.loading = true;
+        this.failed = false;
+
+        try {
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Accept: 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                },
+                body: JSON.stringify({ body: this.$refs.source.value }),
+            });
+            if (!response.ok) throw new Error(response.status);
+            this.html = (await response.json()).html;
+        } catch {
+            this.failed = true;
+        } finally {
+            this.loading = false;
+        }
+    },
+}));
+
+/**
  * Kartu grafik (komponen x-chart). Chart.js dimuat lewat import() dinamis, sehingga hanya diunduh di halaman
  * yang punya grafik. Instans grafik disimpan di luar data Alpine agar tidak dibungkus proxy reaktif.
  */

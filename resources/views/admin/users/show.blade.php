@@ -13,7 +13,7 @@
         'Email' => $user->email ?? '—',
         'Telepon' => $user->phone ?? '—',
         'Login terakhir' => $user->last_login_at ? Format::date($user->last_login_at) : 'Belum pernah',
-        'Wajib ganti kata sandi' => $user->must_change_password ? 'Ya, saat masuk berikutnya' : 'Tidak',
+        'Wajib ganti kata sandi' => $user->hasPendingInvitation() ? 'Belum, menunggu undangan diterima' : ($user->must_change_password ? 'Ya, saat masuk berikutnya' : 'Tidak'),
         'Dibuat' => Format::date($user->created_at),
     ];
 @endphp
@@ -61,7 +61,19 @@
             </dl>
         </x-card>
 
-        <x-card title="Kata sandi" description="Buat kata sandi sementara baru bila pengguna lupa kata sandinya.">
+        @if ($user->hasPendingInvitation())
+            <x-card title="Undangan email" :description="'Undangan dikirim '.Format::dateTime($user->invited_at).' ke '.$user->email.'. Tautan berlaku 72 jam dan hanya sekali pakai.'">
+                @can('invite', $user)
+                    <form method="POST" action="{{ route('admin.users.invitation', $user) }}">
+                        @csrf
+                        <x-button variant="secondary" type="submit" icon="envelope" processing="Mengirim…">Kirim ulang undangan</x-button>
+                    </form>
+                    <p class="mt-2 text-caption text-ink-muted">Tautan lama otomatis tidak berlaku lagi.</p>
+                @endcan
+            </x-card>
+        @endif
+
+        <x-card title="Kata sandi" description="Buat kata sandi sementara baru bila pengguna lupa kata sandinya. Pengguna yang punya email juga bisa memakai Lupa kata sandi? di halaman masuk.">
             <x-button variant="secondary" icon="key" x-data x-on:click="$dispatch('open-modal', 'reset-password')">Reset kata sandi</x-button>
         </x-card>
 

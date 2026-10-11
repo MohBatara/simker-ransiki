@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\Role;
+use App\Notifications\ResetPassword;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
@@ -16,7 +17,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 #[Fillable(['name', 'username', 'email', 'phone', 'password', 'must_change_password', 'role', 'opd_id', 'organization_id', 'is_active', 'last_login_at'])]
-#[Hidden(['password', 'remember_token'])]
+#[Hidden(['password', 'remember_token', 'invitation_token'])]
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
@@ -44,7 +45,19 @@ class User extends Authenticatable
             'is_active' => 'boolean',
             'must_change_password' => 'boolean',
             'last_login_at' => 'datetime',
+            'invited_at' => 'datetime',
         ];
+    }
+
+    /** Undangan email sudah dikirim tetapi belum dipakai untuk membuat kata sandi. */
+    public function hasPendingInvitation(): bool
+    {
+        return $this->invitation_token !== null;
+    }
+
+    public function sendPasswordResetNotification(#[\SensitiveParameter] $token): void
+    {
+        $this->notify(new ResetPassword($token));
     }
 
     /** Username selalu disimpan dalam huruf kecil tanpa spasi di tepi. */

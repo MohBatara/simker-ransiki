@@ -39,7 +39,9 @@ class UserRequest extends FormRequest
         return [
             'name' => ['required', 'string', 'max:255'],
             'username' => ['required', 'string', 'min:3', 'max:50', 'regex:/^[a-z0-9._-]+$/', Rule::unique('users', 'username')->ignore($user)],
-            'email' => ['nullable', 'email', 'max:255', Rule::unique('users', 'email')->ignore($user)],
+            'email' => ['nullable', 'required_if:access,invite', 'email', 'max:255', Rule::unique('users', 'email')->ignore($user)],
+            // Hanya saat menambah akun: undangan email (buat kata sandi sendiri) atau kata sandi sementara.
+            'access' => $user ? ['exclude'] : ['nullable', Rule::in(['invite', 'temporary'])],
             'phone' => ['nullable', 'string', 'max:30', 'regex:/^[0-9+\-\s()]+$/'],
             'role' => $this->editingSelf() ? ['exclude'] : ['required', Rule::enum(Role::class)],
             'opd_id' => ['exclude_unless:role,opd', 'required', 'integer', Rule::exists('opds', 'id')],
@@ -53,6 +55,7 @@ class UserRequest extends FormRequest
             'username.regex' => 'Username hanya boleh berisi huruf, angka, titik, garis bawah, dan tanda hubung.',
             'opd_id.required' => 'Pilih OPD untuk akun OPD.',
             'organization_id.required' => 'Pilih kelompok untuk akun kelompok.',
+            'email.required_if' => 'Isi email untuk mengirim undangan, atau pilih kata sandi sementara.',
         ];
     }
 
@@ -66,6 +69,11 @@ class UserRequest extends FormRequest
         ];
     }
 
+    public function wantsInvitation(): bool
+    {
+        return $this->validated('access') === 'invite' && filled($this->validated('email'));
+    }
+
     /**
      * Data siap simpan: OPD dan kelompok hanya terisi sesuai perannya, selebihnya dikosongkan.
      */
@@ -75,7 +83,7 @@ class UserRequest extends FormRequest
         $role = Role::from($data['role'] ?? $this->route('user')->role->value);
 
         return [
-            ...Arr::except($data, ['opd_id', 'organization_id']),
+            ...Arr::except($data, ['opd_id', 'organization_id', 'access']),
             'opd_id' => $role === Role::Opd ? $data['opd_id'] : null,
             'organization_id' => $role === Role::Kelompok ? $data['organization_id'] : null,
         ];

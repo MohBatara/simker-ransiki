@@ -34,6 +34,22 @@ class OrganizationPolicy
         return $user->isAdmin();
     }
 
+    /** Tab Riwayat: Admin dan OPD pembina. Kelompok tidak melihat riwayat; kelompok lain 404. */
+    public function viewHistory(User $user, Organization $organization): Response
+    {
+        if ($user->isKelompok()) {
+            return Response::deny();
+        }
+
+        return $this->organizationAccess($user, $organization->id);
+    }
+
+    /** Menandai "Profil terverifikasi": Admin dan OPD pembina kelompok itu. */
+    public function verifyProfile(User $user, Organization $organization): Response
+    {
+        return $this->viewHistory($user, $organization);
+    }
+
     public function create(User $user): bool
     {
         return $user->isAdmin();

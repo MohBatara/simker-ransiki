@@ -5,6 +5,8 @@
     // URL absolut gambar pratinjau tautan; kosong = gambar bawaan.
     'image' => null,
     'canonical' => null,
+    // Open Graph og:type: "website", atau "article" untuk halaman berita.
+    'type' => 'website',
     // Beranda: header gelap menempel di atas hero, berubah putih setelah hero terlewati.
     'heroHeader' => false,
 ])
@@ -15,6 +17,7 @@
         ['label' => 'Profil Ransiki', 'href' => route('public.profile'), 'active' => request()->routeIs('public.profile')],
         ['label' => 'Direktori Kelompok', 'href' => route('public.directory'), 'active' => request()->routeIs('public.directory', 'public.organization')],
         ['label' => 'Produk Unggulan', 'href' => route('public.products'), 'active' => request()->routeIs('public.products')],
+        ['label' => 'Berita', 'href' => route('public.posts'), 'active' => request()->routeIs('public.posts', 'public.post')],
         ['label' => 'Kontak', 'href' => route('public.contact'), 'active' => request()->routeIs('public.contact')],
     ];
     $account = auth()->check()
@@ -33,13 +36,14 @@
     @include('partials.head', ['title' => $title])
     <meta name="description" content="{{ $description }}">
     <link rel="canonical" href="{{ $canonical }}">
-    <meta property="og:type" content="website">
+    <meta property="og:type" content="{{ $type }}">
     <meta property="og:site_name" content="{{ config('app.name') }}">
     <meta property="og:locale" content="id_ID">
     <meta property="og:title" content="{{ $pageTitle }}">
     <meta property="og:description" content="{{ $description }}">
     <meta property="og:url" content="{{ $canonical }}">
     <meta property="og:image" content="{{ $image }}">
+    {{ $meta ?? '' }}
     <meta name="twitter:card" content="summary_large_image">
 </head>
 <body class="flex min-h-dvh flex-col bg-canvas font-sans text-ui text-ink antialiased">

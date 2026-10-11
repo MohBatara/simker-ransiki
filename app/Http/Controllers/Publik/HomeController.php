@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Publik;
 
 use App\Http\Controllers\Controller;
+use App\Models\Post;
 use App\Models\Product;
 use App\Models\SiteSetting;
 use App\Support\PublicDirectory;
@@ -22,6 +23,7 @@ class HomeController extends Controller
             'settings' => SiteSetting::values(),
             'cover' => PublicImages::slot('sampul'),
             'about' => PublicImages::slot('tentang'),
+            'posts' => Post::query()->publiclyListed()->latest('published_at')->latest('id')->limit(3)->get(PostController::COLUMNS),
             ...$this->featured(),
         ]);
     }

@@ -89,6 +89,17 @@
                 </div>
             </section>
         @endif
+
+        @if ($posts->isNotEmpty())
+            <section>
+                @include('publik._section-heading', ['title' => 'Berita & kegiatan', 'link' => ['href' => route('public.posts'), 'label' => 'Semua berita']])
+                <div class="mt-5 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                    @foreach ($posts as $post)
+                        @include('publik._post-card')
+                    @endforeach
+                </div>
+            </section>
+        @endif
     </div>
 
     @if ($excerpt = Format::excerpt($settings['profile_body']))

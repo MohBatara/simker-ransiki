@@ -5,6 +5,7 @@
         'produk' => 'Produk ('.$organization->products_count.')',
         'izin' => 'Izin ('.$organization->licenses_count.')',
         'laporan' => 'Laporan ('.$organization->monthly_reports_count.')',
+        'riwayat' => 'Riwayat',
         'akun' => 'Akun ('.$organization->users_count.')',
     ];
     if ($area !== 'admin') {
@@ -15,9 +16,13 @@
         'produk' => route($area.'.organizations.products', $organization),
         'izin' => route($area.'.organizations.licenses', $organization),
         'laporan' => route($area.'.organizations.reports', $organization),
+        'riwayat' => route($area.'.organizations.history', $organization),
         'akun' => $area === 'admin' ? route('admin.organizations.users', $organization) : null,
     ];
-    $icons = ['profil' => 'identification', 'produk' => 'cube', 'izin' => 'document-check', 'laporan' => 'document-text', 'akun' => 'users'];
+    if (auth()->user()->cannot('viewHistory', $organization)) {
+        unset($tabs['riwayat']);
+    }
+    $icons = ['profil' => 'identification', 'produk' => 'cube', 'izin' => 'document-check', 'laporan' => 'document-text', 'riwayat' => 'clock', 'akun' => 'users'];
     $canAddProduct = $tab === 'produk' && auth()->user()->can('create', [App\Models\Product::class, $organization]);
     $canAddLicense = $tab === 'izin' && auth()->user()->can('create', [App\Models\License::class, $organization]);
     $canAddUser = $tab === 'akun' && auth()->user()->can('create', App\Models\User::class);
@@ -127,6 +132,9 @@
                 @break
             @case('laporan')
                 @include('shared.organizations.reports')
+                @break
+            @case('riwayat')
+                @include('shared.organizations.history')
                 @break
             @case('akun')
                 @include('admin.organizations._users')

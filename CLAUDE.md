@@ -38,6 +38,8 @@ dengan file ini, ikuti pengguna lalu sarankan pembaruan file ini.
 - Tes: Pest (atau PHPUnit bawaan bila Pest belum terpasang).
 - Ekspor/impor: `spatie/simple-excel` (Excel/CSV, memakai openspout 4) dan `barryvdh/laravel-dompdf` (PDF).
 - Grafik interaktif: `chart.js` v4 (npm, Paket 3), hanya di halaman Statistik dan dasbor Kelompok.
+- Email: SMTP lewat mailer bawaan Laravel (tanpa paket). Lokal memakai Mailpit (layanan Sail di `compose.yaml`):
+  semua email tertangkap dan bisa dibaca di http://localhost:8025. Tes memakai mailer `array`.
 - Hosting akhir: Hostinger. Hindari fitur yang butuh proses latar permanen (queue worker,
   websocket). Queue memakai driver `sync`. Scheduler cukup lewat satu cron `schedule:run`.
 
@@ -81,7 +83,10 @@ Empat OPD memakai tampilan yang sama; data otomatis tersaring berdasarkan `users
 | Laporan bulanan | lihat, verifikasi, minta revisi; isi atas nama kelompok | lihat, verifikasi, minta revisi; isi atas nama kelompok | lihat, buat, ubah & ajukan saat `draft`/`revision` |
 | Tindak lanjut masalah & kebutuhan | lihat, ubah status + catatan (pilih OPD penanggung jawab) | lihat, ubah status + catatan (atas nama OPD-nya) | lihat saja |
 | Lampiran | mengikuti hak atas induknya | mengikuti hak atas induknya | mengikuti hak atas induknya |
-| Pengguna | kelola, reset kata sandi (tidak bisa menonaktifkan/menghapus diri sendiri) | – | – |
+| Riwayat perubahan (tab "Riwayat") | lihat | lihat | – |
+| Verifikasi profil ("Tandai profil terverifikasi") | ya | ya | – (status tampil baca-saja) |
+| Berita & Kegiatan | kelola | – | – |
+| Pengguna | kelola, reset kata sandi, kirim (ulang) undangan email (tidak bisa menonaktifkan/menghapus diri sendiri) | – | – |
 
 Laporan `verified` tidak bisa diubah siapa pun. Kelompok `closed` tidak bisa membuat laporan baru.
 
@@ -114,8 +119,9 @@ Laporan `verified` tidak bisa diubah siapa pun. Kelompok `closed` tidak bisa mem
 
 ```
 /                       publik
-/direktori, /direktori/{slug}, /produk, /profil, /kontak
+/direktori, /direktori/{slug}, /produk, /profil, /kontak, /berita, /berita/{slug}
 /login (GET, POST), /logout (POST saja)
+/lupa-kata-sandi, /atur-ulang-kata-sandi/{token}, /undangan/{user}/{token}   guest
 /akun/kata-sandi        auth + active (semua peran; juga halaman ganti kata sandi wajib)
 /admin/...              auth + active + password.changed + role:admin
 /opd/...                auth + active + password.changed + role:opd
@@ -136,13 +142,31 @@ dipakai bila berada di area perannya sendiri.
 - Kontak (ketua, telepon, email, alamat) baru diambil dari database bila `show_contact_publicly`.
 - Bagian Legalitas hanya tampil bila status hukum `registered` (ditulis "terdaftar") atau ada izin
   `issued` (jenisnya saja). Status lain tidak pernah tampil di publik.
+- Berita & Kegiatan: satu pintu `Post::publiclyListed()` (status `published` + `published_at` ≤ sekarang WIT);
+  draf dan terjadwal → 404, juga foto sampulnya (`/foto-berita/{id}`, kecuali Admin). Kelompok terkait hanya yang
+  `Organization::publiclyListed()`. Isi Markdown dirender `Format::markdown` (html_input strip,
+  allow_unsafe_links false), juga untuk tombol "Pratinjau" di form Admin. Beranda menampilkan 3 berita terbaru;
+  halaman berita memakai `og:type` article + ringkasan sebagai description + foto sampul sebagai og:image.
+- Badge "Profil diverifikasi OPD" (pil) di direktori dan profil publik bila `profile_status = verified`; tidak
+  pernah memblokir tampil publik.
 - Angka beranda dihitung unik dan di-cache 10 menit (`App\Support\PublicDirectory`). Cache hanya
   boleh berisi array/teks: Laravel menolak membuka objek dari cache (`cache.serializable_classes`).
 
 ### Login dan session
 - Login dengan username ATAU email + kata sandi. Username disimpan dan dicocokkan dalam huruf
   kecil (trim + lowercase), termasuk di seeder dan saat Admin membuat akun.
-- Tidak ada daftar akun sendiri dan tidak ada "lupa kata sandi" via email; reset oleh Admin.
+- Tidak ada daftar akun sendiri. Reset oleh Admin (kata sandi sementara) atau, untuk akun aktif yang punya
+  email, "Lupa kata sandi?" di halaman masuk (password broker Laravel, `Auth\PasswordResetController`, tautan
+  berlaku `auth.passwords.users.expire` = 60 menit). Jawaban SELALU "Jika email terdaftar, tautan telah dikirim"
+  dan email dikirim setelah respons (`dispatch(...)->afterResponse()`), agar keberadaan email tidak bocor.
+  Throttle `password-reset`: 5/menit per IP, 3/jam per email. Akun tanpa email: "Hubungi Admin distrik".
+- Undangan akun (Admin, saat menambah akun berisi email: "Kirim undangan lewat email" atau kata sandi sementara;
+  "Kirim ulang undangan" di detail pengguna): `App\Actions\Users\SendInvitation`, tautan bertanda tangan
+  (`URL::temporarySignedRoute`) berlaku 72 jam. Sekali pakai lewat hash SHA-256 token di `users.invitation_token`
+  (dikosongkan setelah dipakai, saat kirim ulang diganti, saat reset kata sandi dibatalkan). Kedaluwarsa/terpakai/
+  diubah → halaman "Undangan tidak berlaku" dengan alasannya. Setelah membuat kata sandi, pengguna langsung masuk.
+- Template email (`resources/views/emails/*`, HTML + teks): Bahasa Indonesia, logo teks SIM-KER, tanpa gambar,
+  gaya inline. Gagal kirim (SMTP salah) tidak membatalkan akun: pesan error + kirim ulang.
 - Pesan gagal sama untuk username tidak ada dan kata sandi salah. Rate limit: 5 percobaan per
   menit per (username/email + IP), 20 per menit per IP.
 - Hanya setelah kata sandi benar: akun nonaktif ditolak ("Akun ini dinonaktifkan. Hubungi Admin
@@ -228,6 +252,22 @@ Jangan mengarang kepanjangan akronim resmi (KDMP, KNMP, dsb.). Simpan apa adanya
   from_status, to_status, reason, created_at (tidak pernah diubah); tampil di kartu "Publikasi & pelaporan"
   tab Profil (Admin/OPD saja). `closed`: tidak bisa membuat laporan baru, tidak wajib lapor, tidak tampil
   publik, data tetap terlihat Admin/OPD. `inactive`: tetap bisa masuk dan tetap wajib lapor.
+- Verifikasi profil (Paket 5): `profile_status` (enum ProfileStatus: unverified "Belum diverifikasi", verified
+  "Profil terverifikasi", needs_review "Perlu verifikasi ulang"), `profile_verified_at`, `profile_verified_by`,
+  `profile_changed_fields` (json, kolom yang berubah sejak verifikasi), `profile_changed_at`. Admin/OPD pembina
+  menandai terverifikasi dari kartu "Publikasi & pelaporan" (`POST /{area}/kelompok/{id}/verifikasi-profil`, Policy
+  `verifyProfile`). Bila AKUN KELOMPOK mengubah field penting (`App\Support\ProfileReview::FIELDS`: nama, jenis,
+  kampung, ketua, telepon, email, alamat, deskripsi, bidang usaha) pada profil terverifikasi → needs_review +
+  notifikasi `ProfileNeedsReview` ke akun OPD pembina aktif (tanpa OPD → Admin), sekali saat status berubah.
+  Perubahan oleh Admin/OPD atau field lain tidak memicu. Dicek di `SaveOrganization` (satu-satunya jalur ubah
+  profil). Antrean "Profil menunggu verifikasi" `/{area}/verifikasi-profil` (visibleTo, tanpa kelompok `closed`).
+- `change_logs` (riwayat, tidak pernah diubah): id, organization_id, loggable_type (alias morph), loggable_id,
+  subject ("Profil", "Produk: Kakao", "Izin: PIRT"), action (enum ChangeAction: created, updated, deleted), field,
+  old_value, new_value (teks siap tampil: nama kampung, label enum, Ya/Tidak), user_id (NULL = "Sistem"), created_at.
+  Diisi `App\Observers\ChangeLogObserver` (Organization, Product, License) lewat `App\Support\ChangeLogger`; hanya
+  kolom di `ChangeLogger::FIELDS` (kolom teknis, path foto, dan isi file tidak pernah dicatat). Bidang usaha dan OPD
+  pembina (pivot) dicatat `SaveOrganization`. Tab "Riwayat" detail kelompok (`/{area}/kelompok/{id}/riwayat`,
+  Policy `viewHistory`: Admin + OPD pembina; OPD lain 404, kelompok 403).
 - `organization_sector` (pivot): organization_id, business_sector_id
   Primary key gabungan + index tunggal pada `business_sector_id`.
 - `organization_opd` (pivot): organization_id, opd_id
@@ -281,6 +321,15 @@ Jangan mengarang kepanjangan akronim resmi (KDMP, KNMP, dsb.). Simpan apa adanya
 - `report_reviews` (riwayat): id, monthly_report_id, user_id,
   action (enum: submitted, revision_requested, verified, comment), note, created_at
   Tabel ini sekaligus menjadi riwayat audit laporan.
+
+### Berita & Kegiatan (Paket 5)
+- `posts`: id, title, slug (unik; kosong = dari judul), category (enum PostCategory: berita, kegiatan), summary
+  (≤ 300, untuk kartu + meta description), body (Markdown), cover_photo_path (nullable; disk `local`, diproses seperti
+  foto sampul: WebP 480/960/1600 + JPEG), status (enum PostStatus: draft "Draf", published "Terbit"), published_at
+  (terbit tanpa tanggal = sekarang; tanggal ke depan = terjadwal), created_by, updated_by, timestamps.
+- `organization_post` (pivot): post_id, organization_id (kelompok terkait, opsional, banyak).
+- Admin: menu "Berita & Kegiatan" `/admin/berita` (filter kategori + status Draf/Terjadwal/Sudah tampil). Foto
+  sampul diunggah (XHR) setelah berita disimpan pertama kali.
 
 ### Ekspor & impor (Paket 2)
 - Semua ekspor memakai `Organization::visibleTo` / Policy yang sama dengan layar; OPD hanya kelompok binaan,
@@ -468,6 +517,8 @@ Setiap perubahan status mencatat baris di `report_reviews` dan mengirim notifika
 - kemungkinan data ganda (Admin menambah/mengubah kelompok dengan kandidat, atau impor yang memuat kandidat) →
   semua Admin aktif, termasuk yang menyimpan sebagai pengingat (`PossibleDuplicate` lewat `App\Support\DuplicateAlert`;
   impor = satu notifikasi ringkas; tujuan `/admin/kelompok/data-ganda`). Pasangan "Bukan data ganda" tidak memicu.
+- profil terverifikasi diubah kelompok (field penting) → akun OPD pembina aktif, atau Admin bila tanpa OPD
+  (`ProfileNeedsReview`, tujuan = tab Riwayat kelompok)
 - status tindak lanjut masalah/kebutuhan berubah → semua user kelompok aktif, sekali per perubahan; catatan tanpa
   ganti status tidak mengirim notifikasi (`IssueFollowUpUpdated`, tujuan = detail laporan)
 
@@ -495,16 +546,17 @@ Setiap perubahan status mencatat baris di `report_reviews` dan mengirim notifika
 
 ## 6. Menu per peran
 
-**Publik:** Beranda · Profil Ransiki · Direktori Kelompok · Produk Unggulan · Kontak · Masuk
+**Publik:** Beranda · Profil Ransiki · Direktori Kelompok · Produk Unggulan · Berita · Kontak · Masuk
 
 **Kelompok:** Dasbor · Profil Kelompok · Produk · Legalitas & Izin · Laporan Bulanan ·
 Notifikasi · Akun Saya
 
-**OPD:** Dasbor · Kelompok Binaan · Verifikasi Laporan · Semua Laporan ·
+**OPD:** Dasbor · Kelompok Binaan · Verifikasi Laporan · Verifikasi Profil · Semua Laporan ·
 Masalah & Kebutuhan · Statistik · Notifikasi · Akun Saya
 
-**Admin:** Dasbor Distrik · Semua Kelompok · Semua Laporan · Verifikasi Laporan · Masalah & Kebutuhan · Statistik · Pengguna ·
-Data Master (Kampung, Jenis Kelembagaan, Bidang Usaha, OPD) · Konten Website · Notifikasi
+**Admin:** Dasbor Distrik · Semua Kelompok · Semua Laporan · Verifikasi Laporan · Verifikasi Profil · Masalah & Kebutuhan ·
+Statistik · Pengguna · Data Master (Kampung, Jenis Kelembagaan, Bidang Usaha, OPD) · Konten Website · Berita & Kegiatan ·
+Notifikasi
 
 Pakai "Dasbor", bukan "Dashboard", di semua teks antarmuka dan semua ukuran layar.
 
@@ -526,6 +578,8 @@ Pakai "Dasbor", bukan "Dashboard", di semua teks antarmuka dan semua ukuran laya
 | Konten Website | Konten |
 | Masalah & Kebutuhan | Masalah |
 | Statistik | Statistik |
+| Verifikasi Profil | Profil |
+| Berita & Kegiatan | Berita |
 
 Nama menu lengkap tetap tampil di sidebar desktop, dan sebagai tooltip saat label ringkas
 di-hover atau difokuskan.
@@ -823,9 +877,9 @@ Target: versi uji coba ruang lingkup inti dalam 2 minggu.
 
 **Diupayakan setelah inti selesai** (urutan prioritas):
 ~~status organisasi di UI~~ (selesai, Paket 1) · ~~pemisahan penginput & pemverifikasi~~ (selesai, Paket 4) ·
-Berita & Kegiatan · ~~peringatan nama ganda~~ (selesai, Paket 4) · ~~batas waktu & status terlambat~~ (selesai, Paket 1) ·
-~~beberapa akun per kelompok~~ (selesai, Paket 1) · verifikasi profil + riwayat perubahan ·
-~~grafik ekonomi~~ · ~~dasbor legalitas~~ (selesai, Paket 3) · ~~tindak lanjut intervensi~~ (selesai, Paket 4) · email undangan/reset ·
+~~Berita & Kegiatan~~ (selesai, Paket 5) · ~~peringatan nama ganda~~ (selesai, Paket 4) · ~~batas waktu & status terlambat~~ (selesai, Paket 1) ·
+~~beberapa akun per kelompok~~ (selesai, Paket 1) · ~~verifikasi profil + riwayat perubahan~~ (selesai, Paket 5) ·
+~~grafik ekonomi~~ · ~~dasbor legalitas~~ (selesai, Paket 3) · ~~tindak lanjut intervensi~~ (selesai, Paket 4) · ~~email undangan/reset~~ (selesai, Paket 5) ·
 ~~ekspor Excel/PDF & impor spreadsheet~~ (selesai, Paket 2).
 
 **Di luar lingkup:** alur perizinan lengkap, integrasi sistem eksternal, WhatsApp, peta,
@@ -913,4 +967,20 @@ Data contoh harus terlihat realistis namun jelas bukan data resmi:
   `sail artisan simker:pengingat-laporan --tahap=terlambat` (atau `awal`/`akhir`, opsi `--periode=2026-09`); cek jadwal dengan
   `sail artisan schedule:list`.
 - `APP_ENV=production`, `APP_DEBUG=false`, `APP_TIMEZONE=Asia/Jayapura`.
+- Email (undangan akun + lupa kata sandi) lewat SMTP email Hostinger. Buat kotak surat di hPanel (Emails →
+  mis. `noreply@domain-anda`), lalu isi `.env` (JANGAN menyimpan kata sandi asli di repo atau CLAUDE.md):
+  ```
+  MAIL_MAILER=smtp
+  MAIL_SCHEME=smtps
+  MAIL_HOST=smtp.hostinger.com
+  MAIL_PORT=465
+  MAIL_USERNAME=noreply@domain-anda
+  MAIL_PASSWORD=<kata sandi kotak surat>
+  MAIL_FROM_ADDRESS=noreply@domain-anda
+  MAIL_FROM_NAME="SIM-KER Distrik Ransiki"
+  QUEUE_CONNECTION=sync
+  ```
+  Port 587 juga bisa (`MAIL_SCHEME=smtp`, STARTTLS). Alamat pengirim harus sama dengan kotak surat yang login.
+  Setelah mengubah `.env`, jalankan ulang `php artisan config:cache`. Uji dengan "Lupa kata sandi?" ke email sendiri.
+  `APP_URL` wajib benar (https) karena tautan di email dibuat dari situ.
 - Backup database berkala (fitur backup Hostinger + ekspor manual sebelum update besar).

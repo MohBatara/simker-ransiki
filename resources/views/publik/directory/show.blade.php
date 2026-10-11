@@ -18,6 +18,9 @@
                 @if ($organization->status === App\Enums\OrganizationStatus::Inactive)
                     <x-public.pill tone="dark">{{ $organization->status->label() }}</x-public.pill>
                 @endif
+                @if ($organization->profile_status === App\Enums\ProfileStatus::Verified)
+                    <x-public.pill tone="dark">Profil diverifikasi OPD</x-public.pill>
+                @endif
                 @if ($organization->founded_year)
                     <x-public.pill tone="dark">Berdiri {{ $organization->founded_year }}</x-public.pill>
                 @endif

@@ -59,6 +59,9 @@
                         <div class="flex flex-1 flex-col items-start gap-1.5 p-4">
                             <div class="flex flex-wrap gap-2">
                                 <x-public.pill>{{ $organization->institutionType->name }}</x-public.pill>
+                                @if ($organization->profile_status === App\Enums\ProfileStatus::Verified)
+                                    <x-public.pill>Profil diverifikasi OPD</x-public.pill>
+                                @endif
                                 @if ($organization->status === App\Enums\OrganizationStatus::Inactive)
                                     <x-public.pill>{{ $organization->status->label() }}</x-public.pill>
                                 @endif

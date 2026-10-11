@@ -19,6 +19,8 @@ class IssueTemporaryPassword
         $user->forceFill([
             'password' => $password,
             'must_change_password' => true,
+            // Tautan undangan yang belum dipakai ikut batal.
+            'invitation_token' => null,
         ])->save();
 
         // Keluarkan pengguna dari semua perangkat agar kata sandi lama tidak bisa dipakai lagi.

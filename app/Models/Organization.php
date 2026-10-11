@@ -4,12 +4,15 @@ namespace App\Models;
 
 use App\Enums\LegalStatus;
 use App\Enums\OrganizationStatus;
+use App\Enums\ProfileStatus;
 use App\Enums\ReportStatus;
 use App\Enums\Role;
 use App\Models\Concerns\HasAttachments;
+use App\Observers\ChangeLogObserver;
 use Carbon\CarbonImmutable;
 use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -27,6 +30,7 @@ use Illuminate\Support\Str;
     'status', 'reporting_starts_on', 'is_public', 'show_contact_publicly',
     'created_by', 'updated_by',
 ])]
+#[ObservedBy(ChangeLogObserver::class)]
 class Organization extends Model
 {
     use HasAttachments, HasFactory;
@@ -36,6 +40,7 @@ class Organization extends Model
         'legal_status' => 'unknown',
         'is_public' => false,
         'show_contact_publicly' => false,
+        'profile_status' => 'unverified',
     ];
 
     protected function casts(): array
@@ -49,6 +54,10 @@ class Organization extends Model
             'workforce_count' => 'integer',
             'is_public' => 'boolean',
             'show_contact_publicly' => 'boolean',
+            'profile_status' => ProfileStatus::class,
+            'profile_verified_at' => 'datetime',
+            'profile_changed_fields' => 'array',
+            'profile_changed_at' => 'datetime',
         ];
     }
 
@@ -254,6 +263,22 @@ class Organization extends Model
     public function statusChanges(): HasMany
     {
         return $this->hasMany(OrganizationStatusChange::class)->latest('id');
+    }
+
+    /** Riwayat perubahan profil, produk, dan izin kelompok ini. */
+    public function changeLogs(): HasMany
+    {
+        return $this->hasMany(ChangeLog::class);
+    }
+
+    public function profileVerifier(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'profile_verified_by');
+    }
+
+    public function posts(): BelongsToMany
+    {
+        return $this->belongsToMany(Post::class);
     }
 
     public function creator(): BelongsTo
