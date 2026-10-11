@@ -3,12 +3,14 @@
     'active' => null,
     // Isi dengan [key => url] agar tab menjadi tautan (mis. filter daftar di server).
     'links' => null,
+    // [key => ikon Heroicons] untuk tab bertautan (mis. detail kelompok).
+    'icons' => [],
 ])
 
 @php
     $active ??= array_key_first($tabs);
     $navClasses = 'flex gap-6 overflow-x-auto border-b border-line';
-    $tabClasses = '-mb-px whitespace-nowrap border-b-2 py-3 text-ui transition-colors';
+    $tabClasses = '-mb-px inline-flex min-h-11 items-center gap-2 whitespace-nowrap border-b-2 py-3 text-ui transition-colors';
 @endphp
 
 @if ($links)
@@ -22,7 +24,12 @@
                     'border-brand font-semibold text-ink' => $key === $active,
                     'border-transparent text-ink-soft hover:text-ink' => $key !== $active,
                 ])
-            >{{ $label }}</a>
+            >
+                @if ($icons[$key] ?? null)
+                    <x-dynamic-component :component="'heroicon-o-'.$icons[$key]" @class(['size-5 shrink-0', 'text-brand' => $key === $active, 'text-ink-muted' => $key !== $active]) aria-hidden="true" />
+                @endif
+                {{ $label }}
+            </a>
         @endforeach
     </nav>
 @else

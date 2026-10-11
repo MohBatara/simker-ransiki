@@ -5,7 +5,7 @@
         'produk' => 'Produk ('.$organization->products_count.')',
         'izin' => 'Izin ('.$organization->licenses_count.')',
         'laporan' => 'Laporan ('.$organization->monthly_reports_count.')',
-        'akun' => 'Akun Pengguna ('.$organization->users_count.')',
+        'akun' => 'Akun ('.$organization->users_count.')',
     ];
     if ($area !== 'admin') {
         unset($tabs['akun']);
@@ -17,18 +17,23 @@
         'laporan' => route($area.'.organizations.reports', $organization),
         'akun' => $area === 'admin' ? route('admin.organizations.users', $organization) : null,
     ];
+    $icons = ['profil' => 'identification', 'produk' => 'cube', 'izin' => 'document-check', 'laporan' => 'document-text', 'akun' => 'users'];
+    $canAddProduct = $tab === 'produk' && auth()->user()->can('create', [App\Models\Product::class, $organization]);
+    $canAddLicense = $tab === 'izin' && auth()->user()->can('create', [App\Models\License::class, $organization]);
+    $canDelete = $area === 'admin' && auth()->user()->can('delete', $organization);
 @endphp
 
 <x-layouts.app
     :title="$organization->name"
-    :description="$organization->institutionType->name.' · '.$organization->village->name"
+    :description="$organization->village->name.', Distrik Ransiki'"
     :back="route($area.'.organizations.index')"
+    :breadcrumbs="[
+        ['label' => $area === 'opd' ? 'Kelompok Binaan' : 'Semua Kelompok', 'href' => route($area.'.organizations.index')],
+        ['label' => $organization->name],
+    ]"
+    :banner="$banner"
 >
-    @php
-        $canAddProduct = $tab === 'produk' && auth()->user()->can('create', [App\Models\Product::class, $organization]);
-        $canAddLicense = $tab === 'izin' && auth()->user()->can('create', [App\Models\License::class, $organization]);
-    @endphp
-    @if (auth()->user()->can('update', $organization) || $canAddProduct || $canAddLicense)
+    @if (auth()->user()->can('update', $organization) || $canAddProduct || $canAddLicense || $canDelete)
         <x-slot:actions>
             @can('update', $organization)
                 <x-button variant="secondary" icon="pencil-square" :href="route($area.'.organizations.edit', $organization)">Ubah profil</x-button>
@@ -38,6 +43,17 @@
                 <x-button icon="plus" x-data x-on:click="$dispatch('product-create')">Tambah produk</x-button>
             @elseif ($canAddLicense)
                 <x-button icon="plus" x-data x-on:click="$dispatch('license-create')">Tambah izin</x-button>
+            @endif
+            @if ($canDelete)
+                <x-dropdown width="w-56">
+                    <x-slot:trigger>
+                        <x-button variant="secondary" x-bind:aria-expanded="open" aria-haspopup="menu" class="px-3" aria-label="Tindakan lain">
+                            <x-heroicon-o-ellipsis-horizontal class="size-5" />
+                        </x-button>
+                    </x-slot:trigger>
+                    @include('admin.organizations._danger', ['part' => 'menu'])
+                    <p class="px-3 py-2 text-caption text-ink-muted">Kelompok dengan laporan atau akun hanya bisa ditutup, tidak dihapus.</p>
+                </x-dropdown>
             @endif
         </x-slot:actions>
     @endif
@@ -49,10 +65,21 @@
     @endif
 
     <x-slot:meta>
-        @include('shared.organizations._facts')
+        <ul class="flex flex-wrap gap-2" aria-label="Jenis dan bidang usaha">
+            <li><x-tag>{{ $organization->institutionType->name }}</x-tag></li>
+            @foreach ($organization->sectors as $sector)
+                <li><x-tag>{{ $sector->name }}</x-tag></li>
+            @endforeach
+        </ul>
     </x-slot:meta>
 
     <div class="space-y-5">
+        @if ($area === 'admin' && $organization->users_count === 0)
+            <x-alert tone="wait">
+                Kelompok ini belum punya akun, jadi belum bisa mengisi laporan.
+                <x-link href="{{ route('admin.users.create', ['kelompok' => $organization->id]) }}" inline>Buat akun</x-link>
+            </x-alert>
+        @endif
 
         @if (session('similar'))
             <x-alert tone="wait" title="Ada kelompok dengan nama mirip di kampung yang sama">
@@ -64,17 +91,14 @@
             </x-alert>
         @endif
 
-        <x-tabs :tabs="$tabs" :links="$links" :active="$tab" />
+        <x-tabs :tabs="$tabs" :links="$links" :icons="$icons" :active="$tab" />
 
         @switch($tab)
             @case('profil')
-                @include('shared.organizations.profile', ['documents' => [
+                @include('shared.organizations._overview', ['documents' => [
                     'title' => 'Dokumen kelompok',
                     'uploadUrl' => auth()->user()->can('update', $organization) ? route('attachments.store', ['kelompok', $organization]) : null,
                 ]])
-                @if ($area === 'admin')
-                    @include('admin.organizations._danger')
-                @endif
                 @break
             @case('produk')
                 @include('shared.organizations.products', [
@@ -107,4 +131,8 @@
                 @break
         @endswitch
     </div>
+
+    @if ($canDelete)
+        @include('admin.organizations._danger', ['part' => 'modals'])
+    @endif
 </x-layouts.app>

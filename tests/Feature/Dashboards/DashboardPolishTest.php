@@ -56,5 +56,5 @@ test('perlu perhatian: angka 0 redup tanpa tambahan teks; per OPD di dalam kartu
         ->assertSee('text-ink-muted">0</span>', false)
         ->assertSee('Kelompok tanpa OPD pembina</span>', false)
         ->assertDontSee('tidak ada</span>', false)
-        ->assertSee('<h2 class="text-card-title font-semibold text-ink">Pelaporan per OPD</h2>', false);
+        ->assertSee('Pelaporan per OPD');
 });

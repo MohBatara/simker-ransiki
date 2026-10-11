@@ -2,6 +2,8 @@
     'title' => null,
     'description' => null,
     'flush' => false,
+    // Ikon kecil warna brand di depan judul: KHUSUS halaman detail kelompok (Bagian 7).
+    'icon' => null,
 ])
 
 @php
@@ -16,7 +18,12 @@
         ])>
             <div class="min-w-0">
                 @if ($title)
-                    <h2 class="text-card-title font-semibold text-ink">{{ $title }}</h2>
+                    <h2 class="flex items-center gap-2 text-card-title font-semibold text-ink">
+                        @if ($icon)
+                            <x-dynamic-component :component="'heroicon-o-'.$icon" class="size-5 shrink-0 text-brand" aria-hidden="true" />
+                        @endif
+                        {{ $title }}
+                    </h2>
                 @endif
                 @if ($description)
                     <p class="mt-0.5 text-ui text-ink-soft">{{ $description }}</p>

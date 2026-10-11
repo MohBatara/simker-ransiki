@@ -9,7 +9,9 @@ use App\Http\Requests\Organizations\LicenseRequest;
 use App\Http\Requests\Organizations\OrganizationRequest;
 use App\Models\License;
 use App\Models\Organization;
+use App\Support\BannerImage;
 use App\Support\OrganizationOptions;
+use App\Support\OrganizationOverview;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -25,6 +27,8 @@ class ProfileController extends Controller
 
         return view('kelompok.profile', [
             'organization' => $organization,
+            'overview' => OrganizationOverview::data($organization),
+            'banner' => BannerImage::forOrganization($organization),
             'attachments' => $organization->attachments()->with('uploader')->latest()->get()->each->setRelation('attachable', $organization),
         ]);
     }

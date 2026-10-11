@@ -9,7 +9,7 @@
     $remaining = max(0, App\Actions\Files\StoreAttachment::MAX_FILES - $attachments->count());
 @endphp
 
-<x-card :title="$title" :description="$description ?? 'JPG, PNG, atau PDF. Maksimal 10 file.'">
+<x-card :title="$title" :description="$description ?? 'JPG, PNG, atau PDF. Maksimal 10 file.'" :icon="$icon ?? null">
     <div class="space-y-4" x-data="{ deleting: {} }">
         @if ($attachments->isEmpty())
             <p class="text-ink-soft">Belum ada file.</p>

@@ -28,7 +28,7 @@ test('halaman masuk dengan foto sampul: overlay padat 70% dan teks sekunder puti
     expect($html)->toContain('<picture')->toContain('bg-forest/70')->not->toContain('text-forest-soft');
 });
 
-test('detail kelompok: badge status di samping judul dan fakta kunci di header', function () {
+test('detail kelompok: badge status di samping judul, tag, ringkasan, dan peringatan akun', function () {
     $opd = Opd::factory()->create(['short_name' => 'DPC']);
     $organization = Organization::factory()->create(['status' => OrganizationStatus::Inactive]);
     $organization->opds()->attach($opd);
@@ -36,22 +36,19 @@ test('detail kelompok: badge status di samping judul dan fakta kunci di header',
     $report = MonthlyReport::factory()->for($organization)->status(ReportStatus::Verified)->create(['period' => '2026-09-01', 'submitted_at' => now()]);
 
     $html = $this->actingAs(User::factory()->admin()->create())->get("/admin/kelompok/{$organization->id}")->assertOk()
-        ->assertSee('OPD pembina')
+        ->assertSee($organization->institutionType->name)
+        ->assertSee('Ringkasan')
         ->assertSee('DPC')
-        ->assertSee('Laporan terakhir')
-        ->assertSee("/admin/laporan/{$report->id}")
-        ->assertSee('Terverifikasi')
+        ->assertSee("/admin/laporan/{$report->id}?dari=kelompok", false)
         ->assertSee('2 produk')
-        ->assertSee('Belum ada akun')
+        ->assertSee('belum punya akun')
         ->assertSee('/admin/pengguna/tambah?kelompok='.$organization->id, false)
-        ->assertSee('Buat akun')
         ->getContent();
 
-    // Badge berada di baris judul, sebelum keterangan dan fakta kunci.
     expect($html)->toMatch('/<h1[^>]*>.*?<\/h1>\s*<span[^>]*>\s*Tidak aktif\s*<\/span>/s');
 });
 
-test('detail kelompok untuk OPD tidak menampilkan fakta akun', function () {
+test('detail kelompok untuk OPD tidak menampilkan peringatan akun', function () {
     $opd = Opd::factory()->create();
     $organization = Organization::factory()->create();
     $organization->opds()->attach($opd);
@@ -61,12 +58,15 @@ test('detail kelompok untuk OPD tidak menampilkan fakta akun', function () {
         ->assertDontSee('Buat akun');
 });
 
-test('tab profil: kolom utama dan kolom samping yang tidak diregangkan', function () {
+test('profil kelompok memakai susunan detail kelompok tanpa tab', function () {
     $organization = Organization::factory()->create();
 
     $this->actingAs(User::factory()->kelompok($organization)->create())->get('/kelompok/profil')->assertOk()
-        ->assertSee('xl:grid-cols-[minmax(0,1fr)_22rem] xl:items-start', false)
-        ->assertSeeInOrder(['Identitas', 'Informasi Usaha', 'Dokumen kelompok', 'Bidang Usaha &amp; OPD Terkait', 'Legalitas'], false);
+        ->assertSee('lg:grid-cols-12 lg:items-start', false)
+        ->assertSee('Informasi umum')
+        ->assertSee('Lokasi')
+        ->assertSee('Dokumen kelompok')
+        ->assertDontSee('aria-label="Tindakan lain"', false);
 });
 
 test('form laporan: label ringkasan berubah bila tidak ada aktivitas, dan bilah progres bagian', function () {

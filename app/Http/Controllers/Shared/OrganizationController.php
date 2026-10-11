@@ -8,7 +8,9 @@ use App\Http\Requests\Organizations\LicenseRequest;
 use App\Http\Requests\Organizations\OrganizationRequest;
 use App\Models\License;
 use App\Models\Organization;
+use App\Support\BannerImage;
 use App\Support\OrganizationOptions;
+use App\Support\OrganizationOverview;
 use App\Support\OrganizationPanel;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -155,14 +157,14 @@ class OrganizationController extends Controller
 
     private function detail(Request $request, Organization $organization, string $tab, array $data): View
     {
-        $organization->loadMissing(['institutionType', 'village', 'opds:id,name,short_name'])
+        $organization->loadMissing(['institutionType', 'village', 'sectors:id,name', 'opds:id,name,short_name'])
             ->loadCount(['monthlyReports', 'users', 'products', 'licenses', 'opds']);
 
         return view('shared.organizations.detail', [
             'area' => $this->area($request),
             'organization' => $organization,
-            // Fakta kunci di header: laporan terakhir (status + periode).
-            'latestReport' => $organization->monthlyReports()->orderByDesc('period')->first(),
+            'banner' => BannerImage::forOrganization($organization),
+            'overview' => $tab === 'profil' ? OrganizationOverview::data($organization) : null,
             'tab' => $tab,
             ...$data,
         ]);
