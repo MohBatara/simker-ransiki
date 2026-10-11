@@ -10,11 +10,15 @@
 @php
     $active ??= array_key_first($tabs);
     $navClasses = 'flex gap-6 overflow-x-auto border-b border-line';
+    // HP: gradasi tipis di tepi kanan selama masih ada tab yang tersembunyi (penanda bisa digeser).
+    $scroller = '{ more: false, check() { const el = this.$refs.scroller; this.more = el.scrollLeft + el.clientWidth < el.scrollWidth - 1 } }';
+    $fade = '<span x-cloak x-show="more" class="pointer-events-none absolute inset-y-0 right-0 w-8 bg-linear-to-l from-canvas to-transparent md:hidden" aria-hidden="true"></span>';
     $tabClasses = '-mb-px inline-flex min-h-11 items-center gap-2 whitespace-nowrap border-b-2 py-3 text-ui transition-colors';
 @endphp
 
 @if ($links)
-    <nav {{ $attributes->class($navClasses) }}>
+    <div x-data="{!! $scroller !!}" x-init="check()" x-on:resize.window="check()" {{ $attributes->class('relative') }}>
+    <nav x-ref="scroller" x-on:scroll.passive="check()" class="{{ $navClasses }}">
         @foreach ($tabs as $key => $label)
             <a
                 href="{{ $links[$key] }}"
@@ -32,9 +36,12 @@
             </a>
         @endforeach
     </nav>
+    {!! $fade !!}
+    </div>
 @else
-    <div x-data="{ tab: @js($active) }" {{ $attributes }}>
-        <div role="tablist" class="{{ $navClasses }}">
+    <div x-data="{ tab: @js($active), ...{!! $scroller !!} }" x-init="check()" x-on:resize.window="check()" {{ $attributes }}>
+        <div class="relative">
+        <div role="tablist" x-ref="scroller" x-on:scroll.passive="check()" class="{{ $navClasses }}">
             @foreach ($tabs as $key => $label)
                 <button
                     type="button"
@@ -45,6 +52,8 @@
                     class="{{ $tabClasses }}"
                 >{{ $label }}</button>
             @endforeach
+        </div>
+        {!! $fade !!}
         </div>
         <div class="pt-4">{{ $slot }}</div>
     </div>

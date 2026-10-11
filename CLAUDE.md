@@ -409,7 +409,9 @@ Rujukan rasa: aplikasi administrasi yang tenang dan rapi, seperti dokumen pemeri
 dirancang dengan baik, bukan landing page startup.
 
 ### Larangan (penting)
-- Tidak ada gradasi, glow, blur, glassmorphism, atau pola latar dekoratif.
+- Tidak ada gradasi, glow, blur, glassmorphism, atau pola latar dekoratif. Pengecualian: overlay foto
+  (`.overlay-forest`, lihat di bawah) dan gradasi tipis `canvas` → transparan di tepi kanan tab yang bisa
+  digeser di HP (`x-tabs`, hanya saat masih ada tab tersembunyi) sebagai penanda geser.
 - Tidak ada emoji di antarmuka.
 - Tidak ada bayangan tebal. Kartu memakai border 1px, tanpa shadow. Shadow kecil hanya untuk
   dropdown, modal, dan menu yang melayang.

@@ -80,3 +80,10 @@ test('banner detail kelompok di HP: foto hanya di blok judul, tag dan aksi di ba
         // Tag dan tombol Ubah profil berada setelah blok foto, bukan di dalamnya.
         ->and(strpos($header, 'Ubah profil'))->toBeGreaterThan(strpos($header, 'aria-label="Jenis dan bidang usaha"'));
 });
+
+test('tab detail kelompok di HP diberi penanda geser di tepi kanan', function () {
+    $this->actingAs(User::factory()->admin()->create())
+        ->get('/admin/kelompok/'.$this->organization->id)->assertOk()
+        ->assertSee('x-ref="scroller"', false)
+        ->assertSee('bg-linear-to-l from-canvas to-transparent md:hidden', false);
+});
