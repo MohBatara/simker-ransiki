@@ -87,3 +87,17 @@ test('tab detail kelompok di HP diberi penanda geser di tepi kanan', function ()
         ->assertSee('x-ref="scroller"', false)
         ->assertSee('bg-linear-to-l from-canvas to-transparent md:hidden', false);
 });
+
+test('detail kelompok di HP: header atas "Detail kelompok", banner lebih pendek; dasbor tidak berubah', function () {
+    SiteSetting::put(['cover_photo_path' => 'site/sampul.jpg']);
+    $this->organization->update(['name' => 'KUB Judul']);
+    $this->actingAs(User::factory()->admin()->create());
+
+    $this->get('/admin/kelompok/'.$this->organization->id)->assertOk()
+        ->assertSee('truncate text-ui font-semibold text-ink">Detail kelompok</p>', false)
+        ->assertSee('<title>KUB Judul', false)
+        ->assertSee('max-md:min-h-24 max-md:py-4', false)
+        ->assertDontSee('max-md:min-h-32', false);
+
+    $this->get('/admin')->assertOk()->assertSee('max-md:min-h-32 max-md:py-5', false);
+});

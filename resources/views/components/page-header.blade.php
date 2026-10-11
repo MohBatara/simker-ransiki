@@ -11,6 +11,8 @@
     'band' => false,
     // Banner foto (['webp' => [...], 'fallback' => url], lihat App\Support\BannerImage): dasbor dan detail kelompok.
     'image' => null,
+    // Banner foto di HP sekitar 25% lebih pendek (detail kelompok); desktop tidak berubah.
+    'compact' => false,
 ])
 
 {{--
@@ -46,7 +48,9 @@
 ]) }}>
     <div class="min-w-0 md:max-w-[60%]">
         <div @class([
-            'app-band-photo max-md:relative max-md:isolate max-md:flex max-md:min-h-32 max-md:flex-col max-md:justify-end max-md:overflow-hidden max-md:rounded-card max-md:bg-forest max-md:px-4 max-md:py-5' => $mode === 'photo',
+            'app-band-photo max-md:relative max-md:isolate max-md:flex max-md:flex-col max-md:justify-end max-md:overflow-hidden max-md:rounded-card max-md:bg-forest max-md:px-4' => $mode === 'photo',
+            'max-md:min-h-32 max-md:py-5' => $mode === 'photo' && ! $compact,
+            'max-md:min-h-24 max-md:py-4' => $mode === 'photo' && $compact,
         ])>
             @if ($mode === 'photo')
                 <x-public.picture :image="$image" alt="" eager sizes="(min-width: 80rem) 1100px, 100vw" width="1600" height="400" frame="absolute inset-0 -z-20 block size-full" class="size-full object-cover" />

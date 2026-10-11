@@ -32,6 +32,8 @@
         ['label' => $organization->name],
     ]"
     :banner="$banner"
+    compact-banner
+    phone-title="Detail kelompok"
 >
     @if (auth()->user()->can('update', $organization) || $canAddProduct || $canAddLicense || $canDelete)
         <x-slot:actions>

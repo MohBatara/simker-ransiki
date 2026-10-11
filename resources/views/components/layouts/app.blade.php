@@ -8,6 +8,10 @@
     'breadcrumbs' => null,
     // Banner foto (App\Support\BannerImage) untuk dasbor dan detail kelompok; halaman lain pita forest polos.
     'banner' => null,
+    // Banner foto lebih pendek di HP (detail kelompok), agar kartu pertama terlihat tanpa menggulir.
+    'compactBanner' => false,
+    // Judul header atas HP bila berbeda dari judul halaman (mis. "Detail kelompok"; nama sudah di banner).
+    'phoneTitle' => null,
     // Item: ['label', 'href', 'icon' (Heroicons outline), 'short' (label ringkas), 'active', 'primary' (tampil di navigasi bawah HP)]
     // Kosongkan agar diambil otomatis dari peran pengguna yang login (App\Support\Navigation).
     'navigation' => null,
@@ -164,7 +168,7 @@
                         <x-heroicon-o-arrow-left class="size-5" />
                     </a>
                 @endif
-                <p class="min-w-0 flex-1 truncate text-ui font-semibold text-ink">{{ $title }}</p>
+                <p class="min-w-0 flex-1 truncate text-ui font-semibold text-ink">{{ $phoneTitle ?? $title }}</p>
                 @unless ($focus)
                     <div class="-mr-2 flex shrink-0">
                         @if ($searchUrl)
@@ -192,7 +196,7 @@
             'pb-8' => $focus,
         ])>
             <div class="flex items-start gap-3">
-                <x-page-header class="min-w-0 flex-1" :title="$title" :description="$description" :eyebrow="$eyebrow" :back="$back" :breadcrumbs="$breadcrumbs" :band="! $focus" :image="$banner" condensed>
+                <x-page-header class="min-w-0 flex-1" :title="$title" :description="$description" :eyebrow="$eyebrow" :back="$back" :breadcrumbs="$breadcrumbs" :band="! $focus" :image="$banner" :compact="$compactBanner" condensed>
                     @isset($actions)
                         <x-slot:actions>{{ $actions }}</x-slot:actions>
                     @endisset
