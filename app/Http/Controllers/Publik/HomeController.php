@@ -15,41 +15,71 @@ class HomeController extends Controller
 {
     private const FEATURED_LIMIT = 4;
 
+    private const SLIDE_LIMIT = 3;
+
+    private const POST_LIMIT = 5;
+
     public function __invoke(): View
     {
+        $settings = SiteSetting::values();
+        $sectors = PublicDirectory::sectors();
+
         return view('publik.home', [
             'stats' => PublicDirectory::stats(),
-            'sectors' => PublicDirectory::sectors(),
-            'settings' => SiteSetting::values(),
-            'cover' => PublicImages::slot('sampul'),
-            'about' => PublicImages::slot('tentang'),
-            'posts' => Post::query()->publiclyListed()->latest('published_at')->latest('id')->limit(3)->get(PostController::COLUMNS),
-            ...$this->featured(),
+            'sectors' => $sectors,
+            'types' => PublicDirectory::institutionTypes(),
+            'settings' => $settings,
+            'slides' => $this->slides($settings, $sectors),
+            'about' => PublicImages::slot('tentang') ?? PublicImages::slot('sampul'),
+            'posts' => Post::query()->publiclyListed()->latest('published_at')->latest('id')->limit(self::POST_LIMIT)->get(PostController::COLUMNS),
+            'featured' => $this->featured(),
         ]);
     }
 
     /**
-     * Produk unggulan berfoto (maks 4). Bila belum ada yang berfoto, produk unggulan tampil sebagai kartu
-     * ringkas. Produk bernama sama tidak ditaruh berdampingan.
+     * Foto hero (maks 3), hanya foto kurasi Admin: foto sampul, lalu foto bidang usaha dari Konten Website.
      *
-     * @return array{featured: Collection, featuredCompact: bool}
+     * @return list<array{image: array, alt: string, caption: ?string}>
      */
-    private function featured(): array
+    private function slides(array $settings, Collection $sectors): array
+    {
+        // "Panen kakao." + "Nama" → "Panen kakao · Foto: Nama" (titik akhir keterangan dibuang).
+        $coverCaption = collect([
+            $settings['cover_credit'] ? rtrim((string) $settings['cover_caption'], '. ') : $settings['cover_caption'],
+            $settings['cover_credit'] ? 'Foto: '.$settings['cover_credit'] : null,
+        ])->filter()->join(' · ');
+
+        $cover = PublicImages::slot('sampul');
+
+        return collect($cover ? [['image' => $cover, 'alt' => (string) $settings['cover_caption'], 'caption' => $coverCaption ?: null]] : [])
+            ->concat($sectors->filter(fn ($sector) => ($sector->photo['kind'] ?? null) === 'sector')->map(fn ($sector) => [
+                'image' => PublicImages::sector($sector),
+                'alt' => 'Bidang usaha '.mb_strtolower($sector->name),
+                'caption' => 'Bidang usaha '.mb_strtolower($sector->name),
+            ]))
+            ->take(self::SLIDE_LIMIT)
+            ->values()
+            ->all();
+    }
+
+    /**
+     * Produk unggulan (maks 4): yang berfoto lebih dulu, sisanya diisi produk tanpa foto.
+     * Produk bernama sama tidak ditaruh berdampingan.
+     */
+    private function featured(): Collection
     {
         $query = fn () => Product::query()->publiclyListed()
             ->where('products.is_featured', true)
-            ->with(['organization:id,slug,name', 'organization.sectors:id,name'])
+            ->with(['organization:id,slug,name,village_id', 'organization.village:id,name', 'organization.sectors:id,name,photo_path'])
             ->orderBy('products.name')
             ->limit(12);
-        $columns = ['products.id', 'products.organization_id', 'products.name', 'products.unit', 'products.capacity', 'products.photo_path'];
 
-        $withPhoto = $query()->whereNotNull('products.photo_path')->get($columns);
-        $candidates = $withPhoto->isNotEmpty() ? $withPhoto : $query()->get($columns);
+        $withPhoto = $query()->whereNotNull('products.photo_path')->get(ProductController::COLUMNS);
+        $withoutPhoto = $withPhoto->count() < self::FEATURED_LIMIT
+            ? $query()->whereNull('products.photo_path')->get(ProductController::COLUMNS)
+            : collect();
 
-        return [
-            'featured' => self::spreadSameNames($candidates)->take(self::FEATURED_LIMIT)->values(),
-            'featuredCompact' => $withPhoto->isEmpty(),
-        ];
+        return self::spreadSameNames($withPhoto)->concat(self::spreadSameNames($withoutPhoto))->take(self::FEATURED_LIMIT)->values();
     }
 
     /** Susun ulang agar dua produk dengan nama sama tidak berdampingan bila masih ada pilihan lain. */

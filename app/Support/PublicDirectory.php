@@ -3,6 +3,7 @@
 namespace App\Support;
 
 use App\Models\BusinessSector;
+use App\Models\InstitutionType;
 use App\Models\Opd;
 use App\Models\Organization;
 use App\Models\Product;
@@ -27,10 +28,12 @@ class PublicDirectory
 
     public const SECTORS_CACHE_KEY = 'public.sectors';
 
+    public const TYPES_CACHE_KEY = 'public.types';
+
     public const FOOTER_CACHE_KEY = 'public.footer';
 
     /**
-     * @return array{organizations: int, products: int, sectors: int, updated_at: ?Carbon}
+     * @return array{organizations: int, villages: int, products: int, featured: int, sectors: int, updated_at: ?Carbon}
      */
     public static function stats(): array
     {
@@ -45,7 +48,9 @@ class PublicDirectory
 
             return [
                 'organizations' => (clone $organizations)->distinct()->count('organizations.id'),
+                'villages' => (clone $organizations)->distinct()->count('organizations.village_id'),
                 'products' => (clone $products)->distinct()->count('products.id'),
+                'featured' => (clone $products)->where('products.is_featured', true)->distinct()->count('products.id'),
                 'sectors' => self::sectors()->count(),
                 'updated_at' => $updatedAt ? Carbon::parse($updatedAt)->toIso8601String() : null,
             ];
@@ -91,6 +96,25 @@ class PublicDirectory
         });
 
         return collect($sectors)->map(fn (array $sector) => (object) $sector);
+    }
+
+    /**
+     * Jenis kelembagaan yang punya minimal satu kelompok publik, beserta jumlah kelompoknya.
+     *
+     * @return Collection<int, object{id: int, name: string, organizations_count: int}>
+     */
+    public static function institutionTypes(): Collection
+    {
+        $types = Cache::remember(self::TYPES_CACHE_KEY, self::CACHE_SECONDS, fn () => InstitutionType::query()
+            ->join('organizations', 'organizations.institution_type_id', '=', 'institution_types.id')
+            ->whereIn('organizations.id', Organization::query()->publiclyListed()->select('organizations.id'))
+            ->groupBy('institution_types.id', 'institution_types.name')
+            ->orderBy('institution_types.name')
+            ->get(['institution_types.id', 'institution_types.name', DB::raw('COUNT(DISTINCT organizations.id) as organizations_count')])
+            ->map(fn ($type) => ['id' => $type->id, 'name' => $type->name, 'organizations_count' => (int) $type->organizations_count])
+            ->all());
+
+        return collect($types)->map(fn (array $type) => (object) $type);
     }
 
     /** Kontak kantor distrik dan daftar OPD untuk footer. */

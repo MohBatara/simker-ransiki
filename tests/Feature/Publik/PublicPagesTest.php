@@ -53,7 +53,7 @@ test('produk unggulan di beranda hanya yang berfoto, maksimal 4, nama sama tidak
     Product::factory()->for($organization)->create(['name' => 'Tanpa Foto', 'is_public' => true, 'is_featured' => true]);
 
     $html = $this->get('/')->assertOk()->getContent();
-    preg_match('#Produk unggulan.*?</section>#s', $html, $section);
+    preg_match('#id="produk-unggulan".*?</section>#s', $html, $section);
     preg_match_all('#<h3[^>]*><a[^>]*>([^<]+)</a></h3>#', $section[0], $names);
 
     expect($names[1])->toHaveCount(4)
@@ -61,14 +61,18 @@ test('produk unggulan di beranda hanya yang berfoto, maksimal 4, nama sama tidak
         ->and(collect($names[1])->sliding(2)->contains(fn ($pair) => $pair->first() === $pair->last()))->toBeFalse();
 });
 
-test('tanpa produk unggulan berfoto, beranda memakai kartu ringkas tanpa area gambar', function () {
-    $organization = Organization::factory()->public()->create();
-    Product::factory()->for($organization)->create(['name' => 'Kakao kering', 'is_public' => true, 'is_featured' => true]);
+test('produk unggulan tanpa foto memakai foto bidang usaha dari Admin, atau petak inisial', function () {
+    $sector = BusinessSector::factory()->create(['photo_path' => 'site/bidang-1.jpg']);
+    $withSector = Organization::factory()->public()->create();
+    $withSector->sectors()->attach($sector);
+    Product::factory()->for($withSector)->create(['name' => 'Kakao kering', 'is_public' => true, 'is_featured' => true]);
+    Product::factory()->for(Organization::factory()->public()->create())->create(['name' => 'Sagu lempeng', 'is_public' => true, 'is_featured' => true]);
 
     $html = $this->get('/')->assertOk()->getContent();
-    preg_match('#Produk unggulan.*?</section>#s', $html, $section);
+    preg_match('#id="produk-unggulan".*?</section>#s', $html, $section);
 
-    expect($section[0])->toContain('Kakao kering')->toContain('text-card-title')->not->toContain('aspect-');
+    expect($section[0])->toContain('Kakao kering')->toContain("/foto-bidang/{$sector->id}?ukuran=480&amp;format=webp")
+        ->toContain('Sagu lempeng')->toContain('aspect-[16/9]')->toContain('SL');
 });
 
 test('halaman produk memakai area inisial kecil 16:9 untuk produk tanpa foto', function () {
@@ -78,13 +82,55 @@ test('halaman produk memakai area inisial kecil 16:9 untuk produk tanpa foto', f
     $this->get('/produk')->assertOk()->assertSee('aspect-[16/9]', false)->assertSee('KK');
 });
 
-test('hero memakai tautan teks ke produk dan header gelap hanya di beranda', function () {
-    $this->get('/')
-        ->assertSee('atau lihat semua produk')
-        ->assertDontSee('>Lihat produk<', false)
-        ->assertSee('data-dark="true"', false);
+test('hero berisi judul, tombol direktori dan produk; bilah atas memuat kontak kantor dan Masuk', function () {
+    SiteSetting::put(['office_address' => 'Jalan Contoh 1', 'office_phone' => '0800-1234-5678', 'office_email' => 'kantor@contoh.test']);
 
-    $this->get('/direktori')->assertSee('data-dark="false"', false)->assertDontSee('data-dark="true"', false);
+    $html = $this->get('/')->assertOk()->getContent();
+    preg_match('#<section[^>]*data-hero.*?</section>#s', $html, $hero);
+
+    expect($hero[0])->toContain('Kelembagaan Ekonomi <span class="text-sun">Distrik Ransiki</span>')
+        ->toContain('href="'.route('public.directory').'"')
+        ->toContain('href="'.route('public.products').'"')
+        ->and($html)->toContain('Jalan Contoh 1')->toContain('tel:080012345678')->toContain('>Masuk</a>');
+});
+
+test('slider hero: foto sampul lalu foto bidang usaha, maksimal 3, dengan tombol panah dan titik', function () {
+    SiteSetting::put(['cover_photo_path' => 'site/sampul.jpg']);
+    foreach (range(1, 3) as $i) {
+        $sector = BusinessSector::factory()->create(['name' => "Bidang {$i}", 'photo_path' => "site/bidang-{$i}.jpg"]);
+        Organization::factory()->public()->create()->sectors()->attach($sector);
+    }
+
+    $html = $this->get('/')->assertOk()->getContent();
+    preg_match('#<section[^>]*data-hero.*?</section>#s', $html, $hero);
+
+    expect($hero[0])->toContain('heroSlider(3)')
+        ->toContain('Foto sebelumnya')->toContain('Foto berikutnya')->toContain('Foto 3 dari 3')
+        ->and(substr_count($hero[0], '<picture'))->toBe(3)
+        ->and(substr_count($hero[0], 'fetchpriority="high"'))->toBe(1);
+});
+
+test('satu foto hero tanpa kontrol slider', function () {
+    SiteSetting::put(['cover_photo_path' => 'site/sampul.jpg']);
+
+    $this->get('/')->assertOk()->assertDontSee('heroSlider')->assertDontSee('Foto berikutnya');
+});
+
+test('angka Tentang dan jenis kelembagaan hanya dari kelompok publik', function () {
+    $type = InstitutionType::factory()->create(['name' => 'KUB']);
+    [$a, $b] = Village::factory()->count(2)->create();
+    $listed = Organization::factory()->public()->create(['institution_type_id' => $type->id, 'village_id' => $a->id]);
+    Organization::factory()->public()->create(['institution_type_id' => $type->id, 'village_id' => $a->id]);
+    Organization::factory()->create(['is_public' => false, 'institution_type_id' => $type->id, 'village_id' => $b->id]);
+    Organization::factory()->public()->create(['status' => 'closed', 'village_id' => $b->id]);
+    Product::factory()->for($listed)->create(['is_public' => true, 'is_featured' => true]);
+    Product::factory()->for($listed)->create(['is_public' => false, 'is_featured' => true]);
+
+    $stats = PublicDirectory::stats();
+    expect($stats['organizations'])->toBe(2)->and($stats['villages'])->toBe(1)->and($stats['featured'])->toBe(1)
+        ->and(PublicDirectory::institutionTypes()->firstWhere('name', 'KUB')->organizations_count)->toBe(2);
+
+    $this->get('/')->assertSee('Jenis kelembagaan')->assertSee('/direktori?jenis='.$type->id, false);
 });
 
 test('keterangan foto hero di pojok kanan bawah tanpa titik sebelum nama fotografer', function () {

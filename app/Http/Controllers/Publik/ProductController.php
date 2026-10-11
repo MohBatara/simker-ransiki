@@ -10,7 +10,7 @@ use Illuminate\View\View;
 
 class ProductController extends Controller
 {
-    private const COLUMNS = ['products.id', 'products.organization_id', 'products.name', 'products.unit', 'products.capacity', 'products.photo_path'];
+    public const COLUMNS = ['products.id', 'products.organization_id', 'products.name', 'products.unit', 'products.capacity', 'products.photo_path'];
 
     public function __invoke(Request $request): View
     {
@@ -18,7 +18,7 @@ class ProductController extends Controller
 
         $query = fn () => Product::query()->publiclyListed()
             ->when($sector, fn ($query, $id) => $query->whereHas('organization.sectors', fn ($query) => $query->whereKey($id)))
-            ->with(['organization:id,slug,name', 'organization.sectors:id,name']);
+            ->with(['organization:id,slug,name,village_id', 'organization.village:id,name', 'organization.sectors:id,name,photo_path']);
 
         return view('publik.products', [
             'sector' => $sector,

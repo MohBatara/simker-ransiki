@@ -1,6 +1,7 @@
 import Alpine from 'alpinejs';
 import { numberPreview } from './numbers';
 import reportForm, { clearReportBackups } from './report-form';
+import heroSlider from './hero-slider';
 
 const HEIC_MESSAGE = "Format HEIC belum didukung. Ubah pengaturan kamera iPhone ke 'Paling Kompatibel', atau kirim ulang sebagai JPG.";
 
@@ -249,6 +250,7 @@ Alpine.data('copyText', (text) => ({
 }));
 
 Alpine.data('reportForm', reportForm);
+Alpine.data('heroSlider', heroSlider);
 
 /**
  * Tab Tulis/Pratinjau untuk isian Markdown (Berita & Kegiatan). HTML pratinjau dirender server dengan aturan

@@ -6,6 +6,7 @@ use App\Models\Product;
 use App\Models\SiteSetting;
 use App\Models\User;
 use App\Support\ImageVariants;
+use App\Support\PublicDirectory;
 use Illuminate\Support\Facades\Storage;
 use Symfony\Component\Finder\Finder;
 
@@ -39,7 +40,7 @@ function heroSection(string $html): string
 test('hero tanpa foto sampul memakai latar forest polos tanpa gambar', function () {
     $hero = heroSection($this->get('/')->assertOk()->getContent());
 
-    expect($hero)->toContain('bg-forest')->not->toContain('<picture')->not->toContain('overlay-forest');
+    expect($hero)->toContain('bg-forest')->not->toContain('<picture')->not->toContain('overlay-hero');
 });
 
 test('hero dengan foto memakai WebP srcset, prioritas tinggi, dan overlay; gambar lain lazy-load', function () {
@@ -56,7 +57,7 @@ test('hero dengan foto memakai WebP srcset, prioritas tinggi, dan overlay; gamba
     expect($hero)->toContain('<source type="image/webp"')
         ->toContain('/foto-sampul?ukuran=1600&amp;format=webp')
         ->toContain('fetchpriority="high"')
-        ->toContain('overlay-forest');
+        ->toContain('overlay-hero');
 
     preg_match_all('/<img\b[^>]*>/', $html, $images);
     $eager = array_filter($images[0], fn ($img) => str_contains($img, 'fetchpriority="high"'));
@@ -104,12 +105,14 @@ test('kartu bidang usaha: foto bidang, lalu foto produk publik, lalu polos', fun
     $hidden->sectors()->attach($plain);
     $hiddenProduct = Product::factory()->for($hidden)->create(['is_public' => true, 'photo_path' => 'products/9/b.jpg']);
 
-    $html = $this->get('/')->assertOk()->getContent();
+    $photos = PublicDirectory::sectors()->mapWithKeys(fn ($sector) => [$sector->name => $sector->photo]);
 
-    expect($html)->toContain("/foto-bidang/{$withPhoto->id}?ukuran=480&amp;format=webp")
-        ->toContain("/foto-produk/{$publicProduct->id}?ukuran=400&amp;format=webp")
-        ->not->toContain("/foto-produk/{$hiddenProduct->id}")
-        ->toContain('Bidang Polos');
+    expect($photos['Bidang Berfoto']['kind'])->toBe('sector')
+        ->and($photos['Bidang Produk'])->toMatchArray(['kind' => 'product', 'id' => $publicProduct->id])
+        ->and($photos['Bidang Polos'])->toBeNull()
+        ->and($hiddenProduct->id)->not->toBe($photos['Bidang Produk']['id']);
+    // Beranda: strip bidang usaha berikon; foto bidang dari Admin juga dipakai sebagai slide hero.
+    $this->get('/')->assertOk()->assertSee('Bidang Polos')->assertSee("/foto-bidang/{$withPhoto->id}?ukuran=480&amp;format=webp", false);
 });
 
 test('admin mengunggah dan menghapus foto bidang usaha serta foto Tentang', function () {
