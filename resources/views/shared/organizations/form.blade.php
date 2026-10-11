@@ -125,7 +125,7 @@
     </div>
 </x-card>
 
-<x-card title="Publikasi" description="Hanya kelompok berstatus aktif yang tampil di direktori publik.">
+<x-card title="Publikasi" description="Kelompok yang ditutup tidak tampil di direktori publik.">
     <div class="space-y-1">
         @if ($canAdminister)
             <x-checkbox name="is_public" :checked="$organization->is_public" hint="Nama, jenis, kampung, bidang usaha, deskripsi, dan produk publik akan tampil.">Tampilkan di direktori publik</x-checkbox>
@@ -139,9 +139,15 @@
 <x-card title="Pelaporan">
     @if ($canAdminister)
         <div class="grid gap-5 md:grid-cols-2">
-            <x-field label="Status kelompok" for="status" hint="Kelompok yang ditutup tidak dihitung wajib lapor.">
-                <x-select name="status" :options="$options['statuses']" :selected="$organization->status?->value ?? 'active'" required />
-            </x-field>
+            @if ($organization->exists)
+                <x-field label="Status kelompok" hint="Ubah lewat tombol … di halaman detail kelompok, disertai alasan.">
+                    <p>{{ $organization->status->label() }}</p>
+                </x-field>
+            @else
+                <x-field label="Status kelompok" for="status" hint="Kelompok yang ditutup tidak dihitung wajib lapor.">
+                    <x-select name="status" :options="$options['statuses']" :selected="$organization->status?->value ?? 'active'" required />
+                </x-field>
+            @endif
             <fieldset class="space-y-2">
                 <legend class="text-ui font-semibold text-ink">Mulai wajib lapor</legend>
                 <div class="grid grid-cols-2 gap-2">

@@ -7,39 +7,43 @@
     </x-slot:actions>
 
     <div class="space-y-5">
-        {{-- Yang perlu dilakukan lebih dulu --}}
-        <x-card title="Perlu tindakan">
-            @if ($waitingCount === 0)
-                <p class="text-ink-soft">Tidak ada laporan yang menunggu verifikasi.</p>
-            @else
-                <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-                    <a href="{{ route('opd.verifications.index') }}" class="group rounded-control">
-                        <span class="text-page-title font-semibold tabular-nums text-wait">{{ $waitingCount }}</span>
-                        <span class="text-ink group-hover:underline">laporan menunggu verifikasi</span>
-                    </a>
-                    <x-button :href="route('opd.verifications.index')" class="max-md:w-full">Buka antrean</x-button>
-                </div>
-                <dl class="mt-4 space-y-2 border-t border-line pt-3">
-                    @if ($oldestWaiting)
-                        <div class="flex flex-wrap gap-x-2">
-                            <dt class="text-ink-soft">Paling lama menunggu:</dt>
-                            <dd>
-                                <x-link :href="route('opd.reports.show', [$oldestWaiting, 'dari' => 'antrean'])">
-                                    {{ $oldestWaiting->organization->name }}, {{ Format::month($oldestWaiting->period) }}
-                                </x-link>
-                                <span class="text-ink-soft">· {{ Format::waitingSince($oldestWaiting->last_submitted_at) }}</span>
-                            </dd>
-                        </div>
-                    @endif
-                    @if ($waitingLong > 0)
-                        <div class="flex flex-wrap gap-x-2">
-                            <dt class="text-ink-soft">Menunggu lebih dari 7 hari:</dt>
-                            <dd><x-link :href="route('opd.reports.index', ['status' => 'submitted', 'menunggu' => 7])" class="tabular-nums">{{ $waitingLong }} laporan</x-link></dd>
-                        </div>
-                    @endif
-                </dl>
-            @endif
-        </x-card>
+        <div class="grid gap-5 lg:grid-cols-3 lg:items-start">
+            @include('shared.dashboards.overdue-stat', ['area' => 'opd'])
+
+            {{-- Yang perlu dilakukan lebih dulu --}}
+            <x-card title="Perlu tindakan" class="lg:col-span-2 lg:col-start-1 lg:row-start-1">
+                @if ($waitingCount === 0)
+                    <p class="text-ink-soft">Tidak ada laporan yang menunggu verifikasi.</p>
+                @else
+                    <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                        <a href="{{ route('opd.verifications.index') }}" class="group rounded-control">
+                            <span class="text-page-title font-semibold tabular-nums text-wait">{{ $waitingCount }}</span>
+                            <span class="text-ink group-hover:underline">laporan menunggu verifikasi</span>
+                        </a>
+                        <x-button :href="route('opd.verifications.index')" class="max-md:w-full">Buka antrean</x-button>
+                    </div>
+                    <dl class="mt-4 space-y-2 border-t border-line pt-3">
+                        @if ($oldestWaiting)
+                            <div class="flex flex-wrap gap-x-2">
+                                <dt class="text-ink-soft">Paling lama menunggu:</dt>
+                                <dd>
+                                    <x-link :href="route('opd.reports.show', [$oldestWaiting, 'dari' => 'antrean'])">
+                                        {{ $oldestWaiting->organization->name }}, {{ Format::month($oldestWaiting->period) }}
+                                    </x-link>
+                                    <span class="text-ink-soft">· {{ Format::waitingSince($oldestWaiting->last_submitted_at) }}</span>
+                                </dd>
+                            </div>
+                        @endif
+                        @if ($waitingLong > 0)
+                            <div class="flex flex-wrap gap-x-2">
+                                <dt class="text-ink-soft">Menunggu lebih dari 7 hari:</dt>
+                                <dd><x-link :href="route('opd.reports.index', ['status' => 'submitted', 'menunggu' => 7])" class="tabular-nums">{{ $waitingLong }} laporan</x-link></dd>
+                            </div>
+                        @endif
+                    </dl>
+                @endif
+            </x-card>
+        </div>
 
         @include('shared.dashboards.progress', ['area' => 'opd'])
 

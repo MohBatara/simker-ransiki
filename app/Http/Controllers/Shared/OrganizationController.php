@@ -9,6 +9,8 @@ use App\Http\Requests\Organizations\OrganizationRequest;
 use App\Models\License;
 use App\Models\Organization;
 use App\Support\BannerImage;
+use App\Support\Exports\OrganizationList;
+use App\Support\Exports\Spreadsheet;
 use App\Support\OrganizationOptions;
 use App\Support\OrganizationOverview;
 use App\Support\OrganizationPanel;
@@ -16,6 +18,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 /**
  * Daftar dan detail kelompok untuk Admin dan OPD. Isi daftar disaring scope visibleTo; hak per kelompok
@@ -23,9 +26,11 @@ use Illuminate\View\View;
  */
 class OrganizationController extends Controller
 {
+    public const FILTERS = ['q', 'type', 'village', 'sector', 'opd', 'status', 'akun', 'laporan', 'periode'];
+
     public function index(Request $request): View
     {
-        $filters = $request->only(['q', 'type', 'village', 'sector', 'opd', 'status', 'akun', 'laporan', 'periode']);
+        $filters = $request->only(self::FILTERS);
 
         $query = Organization::visibleTo($request->user())->filter($filters);
 
@@ -61,6 +66,14 @@ class OrganizationController extends Controller
             'filters' => $filters,
             'options' => OrganizationOptions::all(),
         ]);
+    }
+
+    /** "Unduh Excel": isi sama dengan daftar di layar (visibleTo + filter aktif), tanpa paginasi. */
+    public function export(Request $request): BinaryFileResponse
+    {
+        $query = Organization::visibleTo($request->user())->filter($request->only(self::FILTERS));
+
+        return Spreadsheet::download('kelompok-'.now()->format('Y-m-d').'.xlsx', [OrganizationList::sheet($query)]);
     }
 
     /** Potongan HTML panel detail untuk daftar kelompok di desktop (diambil saat baris diklik). */
@@ -164,7 +177,7 @@ class OrganizationController extends Controller
             'area' => $this->area($request),
             'organization' => $organization,
             'banner' => BannerImage::forOrganization($organization),
-            'overview' => $tab === 'profil' ? OrganizationOverview::data($organization) : null,
+            'overview' => $tab === 'profil' ? OrganizationOverview::data($organization, withStatusHistory: true) : null,
             'tab' => $tab,
             ...$data,
         ]);

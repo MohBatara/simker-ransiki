@@ -1,6 +1,7 @@
 {{--
     Kelompok wajib lapor yang belum mengajukan laporan periode ini, dengan tombol "Salin pesan pengingat".
-    Variabel: $notSubmitted, $progress, $period, $area.
+    Setelah tenggat lewat, semuanya terlambat: judul dan tautan "Lihat semua" ikut berubah.
+    Variabel: $notSubmitted, $progress, $overdue, $period, $area.
 --}}
 @use('App\Support\Format')
 @use('App\Support\ReminderMessage')
@@ -9,10 +10,11 @@
 @php
     $deadline = App\Models\MonthlyReport::deadlineFor($period);
     $total = $progress['draft'] + $progress['missing'];
+    $late = $overdue['past_deadline'];
 @endphp
 
 <x-card
-    :title="'Belum mengajukan '.Format::month($period)"
+    :title="($late ? 'Terlambat melapor ' : 'Belum mengajukan ').Format::month($period)"
     :description="'Tenggat '.Format::date($deadline).' · '.ReportingPeriod::deadlineDistance($deadline)"
     id="belum-melapor"
 >
@@ -34,11 +36,16 @@
                             </p>
                         @endif
                     </div>
-                    @if ($row['report'])
-                        <x-badge tone="idle">Draf</x-badge>
-                    @else
-                        <span class="text-ink-muted">Belum dibuat</span>
-                    @endif
+                    <span class="inline-flex items-center gap-1.5">
+                        @if ($row['report'])
+                            <x-badge tone="idle">Draf</x-badge>
+                        @else
+                            <span class="text-ink-muted">Belum dibuat</span>
+                        @endif
+                        @if ($row['state'] === App\Enums\ReportingState::Overdue)
+                            <x-badge tone="fix">Terlambat</x-badge>
+                        @endif
+                    </span>
                     <div x-data="copyText(@js(ReminderMessage::for($organization, $period, $row['report'], auth()->user())))" class="max-sm:w-full">
                         <x-button variant="secondary" icon="clipboard-document" x-on:click="copy()" class="max-sm:w-full">
                             <span x-text="copied ? 'Pesan disalin' : 'Salin pesan pengingat'">Salin pesan pengingat</span>
@@ -49,7 +56,7 @@
             @endforeach
         </x-list>
         @if ($total > $notSubmitted->count())
-            <x-link :href="route($area.'.organizations.index', ['laporan' => 'belum-diajukan', 'periode' => $period->format('Y-m')])" class="mt-3">
+            <x-link :href="route($area.'.organizations.index', ['laporan' => $late ? 'terlambat' : 'belum-diajukan', 'periode' => $period->format('Y-m')])" class="mt-3">
                 Lihat semua ({{ $total }})
             </x-link>
         @endif

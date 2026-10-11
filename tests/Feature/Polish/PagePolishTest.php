@@ -45,7 +45,7 @@ test('detail kelompok: badge status di samping judul, tag, ringkasan, dan pering
         ->assertSee('/admin/pengguna/tambah?kelompok='.$organization->id, false)
         ->getContent();
 
-    expect($html)->toMatch('/<h1[^>]*>.*?<\/h1>\s*<span[^>]*>\s*Tidak aktif\s*<\/span>/s');
+    expect($html)->toMatch('/<h1[^>]*>.*?<\/h1>\s*<span[^>]*>\s*Tidak aktif sementara\s*<\/span>/s');
 });
 
 test('detail kelompok untuk OPD tidak menampilkan peringatan akun', function () {

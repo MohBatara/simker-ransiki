@@ -36,6 +36,7 @@ dengan file ini, ikuti pengguna lalu sarankan pembaruan file ini.
 - Font: Public Sans, dipasang lokal melalui npm `@fontsource-variable/public-sans` (tidak memakai
   Google Fonts CDN).
 - Tes: Pest (atau PHPUnit bawaan bila Pest belum terpasang).
+- Ekspor/impor: `spatie/simple-excel` (Excel/CSV, memakai openspout 4) dan `barryvdh/laravel-dompdf` (PDF).
 - Hosting akhir: Hostinger. Hindari fitur yang butuh proses latar permanen (queue worker,
   websocket). Queue memakai driver `sync`. Scheduler cukup lewat satu cron `schedule:run`.
 
@@ -123,9 +124,10 @@ Setelah login, arahkan pengguna ke dasbor sesuai perannya. Halaman tujuan sebelu
 dipakai bila berada di area perannya sendiri.
 
 ### Website publik (data)
-- Satu pintu data publik: scope `Organization::publiclyListed()` (status `active` + `is_public`) dan
-  `Product::publiclyListed()` (produk `is_public` milik kelompok yang terdaftar publik). Dipakai semua
-  halaman publik, angka beranda, sitemap, dan Open Graph. Kelompok lain → 404, juga bila dulu publik.
+- Satu pintu data publik: scope `Organization::publiclyListed()` (status `active` atau `inactive` +
+  `is_public`; `closed` tidak pernah) dan `Product::publiclyListed()` (produk `is_public` milik kelompok
+  yang terdaftar publik). Dipakai semua halaman publik, angka beranda, sitemap, dan Open Graph. Kelompok
+  lain → 404, juga bila dulu publik. Kelompok `inactive` diberi label pil "Tidak aktif sementara".
 - Query publik memilih kolom publik saja (`select`): nama, jenis, kampung, bidang usaha, deskripsi,
   tahun berdiri, kapasitas produksi, pasar. Tidak pernah tampil: jumlah anggota, tenaga kerja, aset,
   fasilitas, peralatan, keuangan, laporan, masalah, lampiran, akun, nomor izin.
@@ -188,7 +190,9 @@ Jangan mengarang kepanjangan akronim resmi (KDMP, KNMP, dsb.). Simpan apa adanya
   is_active, last_login_at, must_change_password (bool, default true)
 - Login memakai username ATAU email. Banyak ketua kelompok tidak punya email.
 - Akun dibuat oleh Admin. Admin dapat mengatur ulang kata sandi.
-- Satu kelompok boleh punya lebih dari satu akun (beberapa user dengan organization_id sama).
+- Satu kelompok boleh punya lebih dari satu akun (beberapa user dengan organization_id sama). Admin
+  menambahnya dari tab Akun detail kelompok (tombol "Tambah akun" di aksi header). Semua notifikasi untuk
+  kelompok dikirim ke semua akun aktifnya.
 
 ### Kelompok
 - `organizations`: id, slug, name, institution_type_id, village_id, address, founded_year,
@@ -196,7 +200,8 @@ Jangan mengarang kepanjangan akronim resmi (KDMP, KNMP, dsb.). Simpan apa adanya
   production_capacity, markets, workforce_count, assets, facilities, equipment,
   legal_status (enum LegalStatus: unknown, none, in_process, registered; default unknown),
   legal_number (teks, nullable), legal_notes (text, nullable),
-  status (enum: active, inactive, closed; default active),
+  status (enum OrganizationStatus: active "Aktif", inactive "Tidak aktif sementara", closed "Ditutup";
+  default active),
   reporting_starts_on (date, awal bulan; kelompok tidak dianggap terlambat sebelum tanggal ini),
   is_public (bool, default false), show_contact_publicly (bool, default false),
   created_by, updated_by, timestamps
@@ -206,6 +211,12 @@ Jangan mengarang kepanjangan akronim resmi (KDMP, KNMP, dsb.). Simpan apa adanya
   Mirip bila sisa nama sama, kemiripan ≥ 90%, atau Levenshtein ≤ 2 untuk sisa nama ≥ 8 huruf.
   Saat tambah: konfirmasi sekali ("tetap simpan"); saat ubah nama/kampung: disimpan lalu diberi peringatan.
 - URL area login memakai ID (`/admin/kelompok/12`); slug hanya untuk halaman publik.
+- Status kelompok diisi di form hanya saat menambah. Setelah itu hanya Admin yang mengubahnya, lewat menu
+  "…" di detail kelompok (`PATCH /admin/kelompok/{id}/status`, `App\Actions\Organizations\ChangeOrganizationStatus`),
+  dengan alasan wajib (min 5 karakter). Riwayat di `organization_status_changes`: organization_id, user_id,
+  from_status, to_status, reason, created_at (tidak pernah diubah); tampil di kartu "Publikasi & pelaporan"
+  tab Profil (Admin/OPD saja). `closed`: tidak bisa membuat laporan baru, tidak wajib lapor, tidak tampil
+  publik, data tetap terlihat Admin/OPD. `inactive`: tetap bisa masuk dan tetap wajib lapor.
 - `organization_sector` (pivot): organization_id, business_sector_id
   Primary key gabungan + index tunggal pada `business_sector_id`.
 - `organization_opd` (pivot): organization_id, opd_id
@@ -248,6 +259,27 @@ Jangan mengarang kepanjangan akronim resmi (KDMP, KNMP, dsb.). Simpan apa adanya
 - `report_reviews` (riwayat): id, monthly_report_id, user_id,
   action (enum: submitted, revision_requested, verified, comment), note, created_at
   Tabel ini sekaligus menjadi riwayat audit laporan.
+
+### Ekspor & impor (Paket 2)
+- Semua ekspor memakai `Organization::visibleTo` / Policy yang sama dengan layar; OPD hanya kelompok binaan,
+  termasuk bila parameter URL dimanipulasi.
+- Excel lewat `App\Support\Exports\Spreadsheet`: NULL = sel kosong (bukan 0), teks diawali `= + - @` diberi
+  apostrof (cegah formula injection). PDF lewat `App\Support\Exports\Pdf` (view `shared/exports/*`): kepala
+  judul + periode + "Dicetak pada … WIT oleh …", kaki nomor halaman + "Angka resmi hanya dari laporan
+  terverifikasi", hitam-putih A4. Nomor halaman ditulis lewat kanvas dompdf (CSS `counter(pages)` tidak jalan).
+- Daftar kelompok: `GET /{area}/kelompok/unduh` (filter daftar ikut) → `kelompok-Y-m-d.xlsx`.
+- Rekap per periode: `GET /{area}/laporan/rekap?periode=Y-m&format=xlsx|pdf` (modal "Unduh rekap" di Semua
+  Laporan; periode tidak sah → bulan wajib lapor) → `rekap-laporan-Y-m.*`, `App\Support\Exports\ReportRecap`:
+  status per kelompok wajib lapor (`ReportingState`), angka hanya dari laporan `verified` dengan "diisi X dari
+  Y kelompok", produksi/penjualan per produk + satuan.
+- PDF satu laporan: `GET /{admin|opd|kelompok}/laporan/{id}/pdf` (Policy `view`, tombol "Unduh PDF" di detail).
+- Impor kelompok (Admin): `/admin/kelompok/impor` → template (sheet Data + Petunjuk dari data master) → unggah
+  .xlsx/.csv (maks 2 MB, 500 baris, tipe dicek finfo, CSV `;` atau `,`) → pratinjau Siap/Peringatan/Gagal
+  (`App\Support\Imports\OrganizationImport` + `RowChecker`; master dicocokkan tanpa peduli huruf/spasi; duplikat
+  nama+kampung di database/file dan nama mirip = peringatan, dicentang per baris) → `ImportOrganizations` dalam
+  SATU transaksi (status active, is_public false, created_by admin, tanpa akun) → hasil + unduh baris gagal.
+  File sementara di disk `local` `imports/{uuid}` milik pengunggah, dibersihkan setelah 1 hari. Contoh file:
+  `storage/app/samples/` (buat ulang dengan `make.php` di folder itu).
 
 ### Konten & notifikasi
 - `site_settings`: key, value. Kunci di `SiteSetting::KEYS`: home_intro, profile_body,
@@ -318,7 +350,15 @@ draft ──ajukan──▶ submitted ──verifikasi──▶ verified ──b
 - `submitted_at`/`submitted_by` menyimpan pengajuan PERTAMA dan tidak diubah saat diajukan ulang
   setelah revisi; setiap pengajuan tercatat di `report_reviews`.
 - Terlambat (`isOverdue()`): lewat tenggat dan `submitted_at` kosong. Laporan yang diajukan tepat waktu
-  lalu diminta revisi tidak terlambat. "Diajukan terlambat" (`wasSubmittedLate()`, informasi saja):
+  lalu diminta revisi tidak terlambat. Status pelaporan per kelompok per periode ada di SATU tempat:
+  enum `App\Enums\ReportingState::for($report, $period)` (Sudah terverifikasi / Menunggu verifikasi /
+  Perlu revisi / Draf / Belum dibuat / Terlambat) dan versi query-nya `Organization::overdueFor($period)`
+  (wajib lapor + lewat tenggat + belum pernah diajukan). Dipakai `ReportingStats::overdue()`, daftar laporan,
+  filter `?laporan=terlambat&periode=Y-m` di daftar kelompok, dan notifikasi tenggat. Badge "Terlambat"
+  (`fix`) di daftar laporan; kelompok `closed` tidak ditandai terlambat.
+- Dasbor Admin & OPD: kartu ringkasan "Terlambat melapor {bulan}" (`shared.dashboards.overdue-stat`).
+  Setelah tenggat, daftar "Belum mengajukan" berjudul "Terlambat melapor {bulan}" dengan badge "Terlambat".
+  Dasbor Kelompok: "Tenggat {tanggal} · N hari lagi". "Diajukan terlambat" (`wasSubmittedLate()`, informasi saja):
   `submitted_at` melewati tenggat periodenya.
 - Status "belum melapor" dihitung untuk kelompok `active` dan `inactive` yang
   `reporting_starts_on` ≤ periode. Kelompok `closed` tidak dihitung.
@@ -355,10 +395,14 @@ Setiap perubahan status mencatat baris di `report_reviews` dan mengirim notifika
   dicek Policy `view` (tidak berhak → kembali ke daftar dengan pesan). Notifikasi orang lain → 404.
 - Lonceng + angka belum dibaca (maks "9+", warna `brand`) di header HP dan bilah atas tablet/desktop;
   angkanya dari view composer layout `app` (satu query, tanpa polling).
-- Pengingat (`php artisan simker:pengingat-laporan`, `ReportReminder`): tanggal `reports.reminder_days`
-  (1 = tahap "awal", 8 = tahap "akhir") pukul `reports.reminder_time` WIT, untuk periode bulan lalu, ke akun
-  kelompok aktif dari kelompok wajib lapor (`obligatedFor`, bukan tutup) yang belum pernah mengajukan
-  (belum dibuat atau draf). Aman dijalankan berulang (tidak dobel per akun, periode, dan tahap).
+- Notifikasi tenggat (`php artisan simker:pengingat-laporan`), dijadwalkan HARIAN pukul `reports.reminder_time`
+  WIT; perintahnya memilih tahap menurut tanggal (tanpa jadwal → tidak mengirim apa pun), untuk periode bulan lalu:
+  * "awal" tanggal `reports.reminder_first_day` (1) dan "akhir" H-`reports.reminder_days_before` (3) tenggat
+    (`ReportReminder`): ke akun kelompok aktif dari kelompok wajib lapor yang belum pernah mengajukan;
+  * "terlambat" H+`reports.overdue_days_after` (1) tenggat (`ReportOverdue`): ke akun kelompok terlambat
+    (`overdueFor`) + akun OPD terkait yang aktif; kelompok tanpa OPD → semua Admin aktif.
+  Aman dijalankan berulang: tidak dobel per akun, kelompok, periode, dan tahap (akun yang baru dibuat tetap
+  menerima sekali). Opsi manual `--tahap=awal|akhir|terlambat --periode=Y-m`.
 - Dasbor OPD dan Admin: daftar "Belum mengajukan" punya tombol "Salin pesan pengingat"
   (`App\Support\ReminderMessage`, pola `copyText`) untuk dikirim sendiri, misalnya lewat WhatsApp.
 
@@ -613,7 +657,7 @@ Pengecualian dari Larangan untuk area Admin/OPD/Kelompok (menyesuaikan referensi
   nama terpotong dengan `title`, jenis di baris kedua). Baris pertama atau `?pilih=id` dirender di server; klik baris memuat
   `/{area}/kelompok/{id}/ringkas` (Policy `view`). Layar lebih kecil membuka halaman detail.
 - Detail: remah → banner (status bila tidak aktif, nama, lokasi, tag, Ubah profil, menu "…" Admin untuk
-  tandai ditutup/hapus) → tab berikon → tab Profil: Ringkasan, Informasi umum, Lokasi (tombol "Buka di
+  ubah status dengan alasan/hapus) → tab berikon → tab Profil: Ringkasan, Informasi umum, Lokasi (tombol "Buka di
   Google Maps" dari pencarian alamat, tanpa peta tertanam), Deskripsi, Foto (foto produk lalu lampiran
   gambar), Publikasi & pelaporan, Dokumen. Tidak menambah kolom baru tanpa persetujuan.
 
@@ -676,10 +720,11 @@ Target: versi uji coba ruang lingkup inti dalam 2 minggu.
 12. Uji menyeluruh per peran, perbaikan tampilan HP/tablet, `npm run build`, persiapan deploy.
 
 **Diupayakan setelah inti selesai** (urutan prioritas):
-status organisasi di UI · pemisahan penginput & pemverifikasi · Berita & Kegiatan ·
-peringatan nama ganda · batas waktu & status terlambat · verifikasi profil + riwayat perubahan ·
+~~status organisasi di UI~~ (selesai, Paket 1) · pemisahan penginput & pemverifikasi · Berita & Kegiatan ·
+peringatan nama ganda · ~~batas waktu & status terlambat~~ (selesai, Paket 1) ·
+~~beberapa akun per kelompok~~ (selesai, Paket 1) · verifikasi profil + riwayat perubahan ·
 grafik ekonomi · dasbor legalitas · tindak lanjut intervensi · email undangan/reset ·
-ekspor Excel/PDF & impor spreadsheet.
+~~ekspor Excel/PDF & impor spreadsheet~~ (selesai, Paket 2).
 
 **Di luar lingkup:** alur perizinan lengkap, integrasi sistem eksternal, WhatsApp, peta,
 marketplace, PWA/aplikasi mobile, dua bahasa.
@@ -750,15 +795,17 @@ Data contoh harus terlihat realistis namun jelas bukan data resmi:
 - Aset dibangun di lokal (`npm run build`) lalu folder `public/build` ikut diunggah;
   Node tidak wajib ada di server.
 - File privat tetap di `storage/app/private`, tidak bisa diakses langsung dari URL.
-- PHP: ekstensi `gd` (dengan dukungan WebP; tanpa itu gambar publik otomatis JPEG saja), `exif`, `fileinfo` wajib aktif. `upload_max_filesize` dan `post_max_size`
+- PHP: ekstensi `gd` (dengan dukungan WebP; tanpa itu gambar publik otomatis JPEG saja), `exif`, `fileinfo` wajib aktif.
+  Untuk ekspor/impor (Paket 2) juga wajib: `zip`, `xmlreader`, `xmlwriter`, `dom`, `libxml`, `filter` (Excel/openspout),
+  `mbstring` (PDF/dompdf). Folder `storage/fonts` harus bisa ditulis (cache huruf dompdf). `upload_max_filesize` dan `post_max_size`
   minimal 12M, `memory_limit` minimal 512M (gambar besar didekode penuh di memori sebelum diperkecil).
 - HTTPS wajib: tombol "Salin info masuk" memakai clipboard browser yang hanya penuh berfungsi di HTTPS.
 - `/sitemap.xml` dan `/robots.txt` dibuat dinamis (tidak ada file `public/robots.txt`). Gambar pratinjau
   tautan bawaan: `public/og-default.png` (1200×630). Pastikan `APP_URL` benar agar URL Open Graph absolut.
-- Cron WAJIB untuk pengingat laporan terjadwal (tanggal 1 dan 8, lihat `routes/console.php`):
+- Cron WAJIB untuk notifikasi tenggat laporan (dicek setiap hari 08.00 WIT, lihat `routes/console.php`):
   `* * * * * php /path/artisan schedule:run >> /dev/null 2>&1` (Cron Jobs di hPanel Hostinger).
   Tanpa cron ini pengingat tidak pernah terkirim. Untuk uji lokal, jalankan perintahnya manual:
-  `sail artisan simker:pengingat-laporan --tahap=awal` (opsi `--periode=2026-09`); cek jadwal dengan
+  `sail artisan simker:pengingat-laporan --tahap=terlambat` (atau `awal`/`akhir`, opsi `--periode=2026-09`); cek jadwal dengan
   `sail artisan schedule:list`.
 - `APP_ENV=production`, `APP_DEBUG=false`, `APP_TIMEZONE=Asia/Jayapura`.
 - Backup database berkala (fitur backup Hostinger + ekspor manual sebelum update besar).

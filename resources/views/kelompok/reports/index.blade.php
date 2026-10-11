@@ -32,7 +32,6 @@
                 @php
                     $report = $row['report'];
                     $href = $report ? ($report->status->isEditable() ? route('kelompok.reports.edit', $report) : route('kelompok.reports.show', $report)) : null;
-                    $overdue = $report ? $report->isOverdue() : $row['pastDeadline'];
                 @endphp
                 <x-table.row :href="$href">
                     <x-table.cell primary>{{ Format::month($row['period']) }}</x-table.cell>
@@ -43,8 +42,8 @@
                             @else
                                 <span class="text-ink-muted">Belum dibuat</span>
                             @endif
-                            @if ($overdue)
-                                <x-badge tone="fix">Lewat tenggat</x-badge>
+                            @if ($row['overdue'])
+                                <x-badge tone="fix">Terlambat</x-badge>
                             @endif
                         </span>
                     </x-table.cell>

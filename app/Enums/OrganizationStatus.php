@@ -14,8 +14,18 @@ enum OrganizationStatus: string
     {
         return match ($this) {
             self::Active => 'Aktif',
-            self::Inactive => 'Tidak aktif',
+            self::Inactive => 'Tidak aktif sementara',
             self::Closed => 'Ditutup',
+        };
+    }
+
+    /** Penjelasan akibat status, untuk modal ubah status. */
+    public function description(): string
+    {
+        return match ($this) {
+            self::Active => 'Wajib lapor dan bisa tampil di direktori publik.',
+            self::Inactive => 'Tetap wajib lapor dan tetap bisa masuk. Bila dipublikasikan, tetap tampil di direktori dengan label.',
+            self::Closed => 'Tidak bisa membuat laporan baru, tidak dihitung wajib lapor, dan tidak tampil di direktori publik. Data lama tetap tersimpan.',
         };
     }
 

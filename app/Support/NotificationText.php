@@ -30,6 +30,9 @@ class NotificationText
                 default => "Laporan {$period} sudah ditinjau.",
             },
             'report_reminder' => self::reminder($data, $period),
+            'report_overdue' => ($data['audience'] ?? null) === 'kelompok'
+                ? "Laporan {$period} terlambat. Tenggatnya ".Format::date(Carbon::parse($data['deadline'])).'. Segera ajukan laporan.'
+                : "{$data['organization_name']} belum mengajukan laporan {$period} sampai tenggat ".Format::date(Carbon::parse($data['deadline'])).'.',
             default => $data['message'] ?? 'Ada pemberitahuan baru.',
         };
 

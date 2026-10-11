@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\ReportingState;
 use App\Enums\ReportStatus;
 use App\Enums\ReviewAction;
 use App\Models\Concerns\HasAttachments;
@@ -100,7 +101,7 @@ class MonthlyReport extends Model
      */
     public function isOverdue(): bool
     {
-        return $this->submitted_at === null && static::isPastDeadline($this->period);
+        return ReportingState::for($this, $this->period) === ReportingState::Overdue;
     }
 
     /** Informasi saja: pengajuan pertama melewati tenggat. */

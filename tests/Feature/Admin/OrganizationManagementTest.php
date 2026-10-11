@@ -1,6 +1,7 @@
 <?php
 
 use App\Enums\OrganizationStatus;
+use App\Http\Requests\Organizations\OrganizationRequest;
 use App\Models\BusinessSector;
 use App\Models\InstitutionType;
 use App\Models\MonthlyReport;
@@ -8,6 +9,7 @@ use App\Models\Opd;
 use App\Models\Organization;
 use App\Models\User;
 use App\Models\Village;
+use Illuminate\Routing\Route;
 
 beforeEach(function () {
     $this->admin = User::factory()->admin()->create();
@@ -180,12 +182,12 @@ test('kolom khusus admin diabaikan bila dikirim lewat form bersama oleh pengguna
     $organization->opds()->attach($this->opd);
     $opdUser = User::factory()->opd($this->opd)->create();
 
-    $request = App\Http\Requests\Organizations\OrganizationRequest::create('/', 'PUT', organizationPayload($this, [
+    $request = OrganizationRequest::create('/', 'PUT', organizationPayload($this, [
         'name' => 'Nama Diganti', 'status' => 'closed', 'is_public' => '1', 'opds' => [], 'leader_name' => 'Ketua Baru',
     ]));
     $request->setContainer(app())->setRedirector(app('redirect'));
     $request->setUserResolver(fn () => $opdUser);
-    $request->setRouteResolver(fn () => tap(new Illuminate\Routing\Route('PUT', '/', []), fn ($route) => $route->bind($request)->setParameter('organization', $organization)));
+    $request->setRouteResolver(fn () => tap(new Route('PUT', '/', []), fn ($route) => $route->bind($request)->setParameter('organization', $organization)));
     $request->validateResolved();
 
     $data = $request->organizationData();
@@ -212,14 +214,14 @@ test('kelompok yang punya laporan tidak bisa dihapus dan ditawari ditutup', func
 
     $this->get("/admin/kelompok/{$organization->id}")
         ->assertSee('punya 1 laporan, jadi tidak bisa dihapus')
-        ->assertSee('Tandai ditutup')
+        ->assertSee('Ubah status')
         ->assertDontSee('Hapus kelompok');
 
     $this->delete("/admin/kelompok/{$organization->id}")
         ->assertSessionHas('error', fn ($message) => str_contains($message, 'tidak bisa dihapus'));
     expect($organization->fresh())->not->toBeNull();
 
-    $this->patch("/admin/kelompok/{$organization->id}/status", ['status' => 'closed'])
+    $this->patch("/admin/kelompok/{$organization->id}/status", ['status' => 'closed', 'reason' => 'Kelompok berhenti beroperasi.'])
         ->assertSessionHas('status', 'Status kelompok diubah menjadi ditutup.');
     expect($organization->fresh()->status)->toBe(OrganizationStatus::Closed);
 });

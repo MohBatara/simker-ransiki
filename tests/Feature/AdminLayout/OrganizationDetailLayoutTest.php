@@ -65,7 +65,7 @@ test('menu "…" Admin: hapus untuk kelompok tanpa laporan/akun, tandai ditutup 
         ->assertSee('name="_method" value="DELETE"', false);
 
     MonthlyReport::factory()->for($this->organization)->status(ReportStatus::Submitted)->create(['submitted_at' => now()]);
-    $this->get("/admin/kelompok/{$this->organization->id}")->assertSee('Tandai ditutup')->assertDontSee('Hapus kelompok');
+    $this->get("/admin/kelompok/{$this->organization->id}")->assertSee('Ubah status')->assertSee('tidak bisa dihapus. Bila sudah berhenti, tandai ditutup.')->assertDontSee('Hapus kelompok');
 
     $opd = Opd::factory()->create();
     $this->organization->opds()->attach($opd);

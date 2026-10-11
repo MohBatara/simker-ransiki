@@ -1,4 +1,4 @@
-{{-- Detail kelompok untuk Admin dan OPD. Tab Akun Pengguna dan tutup/hapus hanya untuk Admin. --}}
+{{-- Detail kelompok untuk Admin dan OPD. Tab Akun Pengguna, ubah status, dan hapus hanya untuk Admin. --}}
 @php
     $tabs = [
         'profil' => 'Profil',
@@ -20,7 +20,8 @@
     $icons = ['profil' => 'identification', 'produk' => 'cube', 'izin' => 'document-check', 'laporan' => 'document-text', 'akun' => 'users'];
     $canAddProduct = $tab === 'produk' && auth()->user()->can('create', [App\Models\Product::class, $organization]);
     $canAddLicense = $tab === 'izin' && auth()->user()->can('create', [App\Models\License::class, $organization]);
-    $canDelete = $area === 'admin' && auth()->user()->can('delete', $organization);
+    $canAddUser = $tab === 'akun' && auth()->user()->can('create', App\Models\User::class);
+    $canManage = $area === 'admin' && auth()->user()->can('administer', $organization);
 @endphp
 
 <x-layouts.app
@@ -35,7 +36,7 @@
     compact-banner
     phone-title="Detail kelompok"
 >
-    @if (auth()->user()->can('update', $organization) || $canAddProduct || $canAddLicense || $canDelete)
+    @if (auth()->user()->can('update', $organization) || $canAddProduct || $canAddLicense || $canAddUser || $canManage)
         <x-slot:actions>
             @can('update', $organization)
                 <x-button variant="secondary" icon="pencil-square" :href="route($area.'.organizations.edit', $organization)">Ubah profil</x-button>
@@ -45,8 +46,10 @@
                 <x-button icon="plus" x-data x-on:click="$dispatch('product-create')">Tambah produk</x-button>
             @elseif ($canAddLicense)
                 <x-button icon="plus" x-data x-on:click="$dispatch('license-create')">Tambah izin</x-button>
+            @elseif ($canAddUser)
+                <x-button icon="plus" :href="route('admin.users.create', ['kelompok' => $organization->id])">Tambah akun</x-button>
             @endif
-            @if ($canDelete)
+            @if ($canManage)
                 <x-dropdown width="w-56">
                     <x-slot:trigger>
                         <x-button variant="secondary" x-bind:aria-expanded="open" aria-haspopup="menu" class="px-3" aria-label="Tindakan lain">
@@ -134,7 +137,7 @@
         @endswitch
     </div>
 
-    @if ($canDelete)
+    @if ($canManage)
         @include('admin.organizations._danger', ['part' => 'modals'])
     @endif
 </x-layouts.app>

@@ -7,6 +7,7 @@ use App\Models\User;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Js;
 
 beforeEach(function () {
     $this->admin = User::factory()->admin()->create(['name' => 'Admin Uji', 'username' => 'admin']);
@@ -76,7 +77,7 @@ test('akun baru mendapat kata sandi sementara yang ditampilkan sekali', function
         ->assertSee($password)
         ->assertSee('Salin info masuk')
         // Teks yang disalin tombol "Salin info masuk".
-        ->assertSee(Illuminate\Support\Js::from('Alamat: '.route('login').', Username: petugas.baru, Kata sandi sementara: '.$password)->toHtml(), false);
+        ->assertSee(Js::from('Alamat: '.route('login').', Username: petugas.baru, Kata sandi sementara: '.$password)->toHtml(), false);
 
     $this->get("/admin/pengguna/{$user->id}")->assertDontSee($password);
 });
@@ -128,7 +129,7 @@ test('form tambah dari detail kelompok sudah memilih kelompok itu', function () 
     $this->actingAs($this->admin);
 
     $this->get("/admin/kelompok/{$this->organization->id}/akun")
-        ->assertSee('Tambah akun untuk kelompok ini')
+        ->assertSee('Tambah akun')
         ->assertSee("/admin/pengguna/tambah?kelompok={$this->organization->id}", false);
 
     $this->get("/admin/pengguna/tambah?kelompok={$this->organization->id}")

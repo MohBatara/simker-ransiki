@@ -14,6 +14,7 @@
     $area ??= null;
     $canVerify = $area && auth()->user()->can('verify', $report);
     $canReopen = $area && auth()->user()->can('reopen', $report);
+    $pdfUrl = route(($area ?? 'kelompok').'.reports.pdf', $report);
 @endphp
 
 <x-layouts.app
@@ -22,20 +23,19 @@
     :back="$back"
     :breadcrumbs="$breadcrumbs ?? null"
 >
-    @if ($editUrl || $canVerify || $canReopen)
-        <x-slot:actions>
-            @if ($editUrl)
-                <x-button :href="$editUrl" icon="pencil-square">{{ $report->status === App\Enums\ReportStatus::Revision ? 'Perbaiki laporan' : 'Lanjutkan mengisi' }}</x-button>
-            @endif
-            @if ($canVerify)
-                <x-button variant="secondary" x-data x-on:click="$dispatch('open-modal', 'report-revision')">Minta revisi</x-button>
-                <x-button x-data x-on:click="$dispatch('open-modal', 'report-verify')">Verifikasi</x-button>
-            @endif
-            @if ($canReopen)
-                <x-button variant="secondary" x-data x-on:click="$dispatch('open-modal', 'report-reopen')">Buka kembali untuk revisi</x-button>
-            @endif
-        </x-slot:actions>
-    @endif
+    <x-slot:actions>
+        @if ($editUrl)
+            <x-button :href="$editUrl" icon="pencil-square">{{ $report->status === App\Enums\ReportStatus::Revision ? 'Perbaiki laporan' : 'Lanjutkan mengisi' }}</x-button>
+        @endif
+        @if ($canVerify)
+            <x-button variant="secondary" x-data x-on:click="$dispatch('open-modal', 'report-revision')">Minta revisi</x-button>
+            <x-button x-data x-on:click="$dispatch('open-modal', 'report-verify')">Verifikasi</x-button>
+        @endif
+        @if ($canReopen)
+            <x-button variant="secondary" x-data x-on:click="$dispatch('open-modal', 'report-reopen')">Buka kembali untuk revisi</x-button>
+        @endif
+        <x-button variant="secondary" icon="arrow-down-tray" :href="$pdfUrl">Unduh PDF</x-button>
+    </x-slot:actions>
 
     <div class="space-y-5">
         @include('shared.reports.revision-note', ['fixHint' => (bool) $editUrl])
@@ -163,7 +163,7 @@
                                 @if ($report->wasSubmittedLate())
                                     <span class="block text-caption text-ink-soft">Diajukan terlambat</span>
                                 @elseif ($report->isOverdue())
-                                    <span class="block"><x-badge tone="fix">Lewat tenggat</x-badge></span>
+                                    <span class="block"><x-badge tone="fix">Terlambat</x-badge></span>
                                 @endif
                             </dd>
                         </div>

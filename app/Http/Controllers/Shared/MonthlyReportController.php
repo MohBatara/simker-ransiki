@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Models\MonthlyReport;
 use App\Models\Opd;
 use App\Models\Organization;
+use App\Support\Exports\ReportRecap;
 use App\Support\Format;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -175,6 +176,7 @@ class MonthlyReportController extends Controller
             'periods' => MonthlyReport::visibleTo($request->user())->distinct()->orderByDesc('period')->pluck('period')
                 ->mapWithKeys(fn ($period) => [$period->format('Y-m') => Format::month($period)])->all(),
             'opds' => $area === 'admin' ? Opd::orderBy('name')->pluck('name', 'id')->all() : [],
+            'recapPeriods' => $mode === 'all' ? ReportRecap::periodOptions($request->user()) : [],
         ]);
     }
 }

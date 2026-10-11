@@ -140,6 +140,22 @@
                 <dt class="text-caption text-ink-muted">Mulai wajib lapor</dt>
                 <dd class="text-ink">{{ Format::month($organization->reporting_starts_on) }}</dd>
             </div>
+            @if ($overview['statusChanges']->isNotEmpty())
+                <div>
+                    <dt class="text-caption text-ink-muted">Riwayat status</dt>
+                    <dd>
+                        <ol class="mt-1 space-y-2">
+                            @foreach ($overview['statusChanges'] as $change)
+                                <li>
+                                    <p class="text-ink">{{ $change->from_status->label() }} → {{ $change->to_status->label() }}</p>
+                                    <p class="text-caption text-ink-soft">{{ Format::date($change->created_at) }}@if ($change->user) · {{ $change->user->name }}@endif</p>
+                                    <p class="text-caption text-ink-soft">{{ $change->reason }}</p>
+                                </li>
+                            @endforeach
+                        </ol>
+                    </dd>
+                </div>
+            @endif
             <div>
                 <dt class="text-caption text-ink-muted">Terakhir diubah</dt>
                 <dd class="text-ink">{{ Format::date($organization->updated_at) }}@if ($organization->updater) oleh {{ $organization->updater->name }}@endif</dd>

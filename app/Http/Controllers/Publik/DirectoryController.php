@@ -41,7 +41,7 @@ class DirectoryController extends Controller
                 'products' => fn ($query) => $query->where('is_public', true)->orderBy('name')->select(['id', 'organization_id', 'name', 'photo_path']),
             ])
             ->orderBy('organizations.name')
-            ->select(['organizations.id', 'organizations.slug', 'organizations.name', 'organizations.institution_type_id', 'organizations.village_id', 'organizations.description'])
+            ->select(['organizations.id', 'organizations.slug', 'organizations.name', 'organizations.institution_type_id', 'organizations.village_id', 'organizations.description', 'organizations.status'])
             ->paginate(20)
             ->withQueryString();
 
@@ -70,7 +70,7 @@ class DirectoryController extends Controller
                 'licenses' => fn ($query) => $query->where('status', LicenseStatus::Issued)->orderBy('type')->select(['id', 'organization_id', 'type']),
             ])
             ->firstOrFail(['id', 'slug', 'name', 'institution_type_id', 'village_id', 'description', 'founded_year',
-                'production_capacity', 'markets', 'legal_status', 'show_contact_publicly', 'updated_at']);
+                'production_capacity', 'markets', 'legal_status', 'show_contact_publicly', 'status', 'updated_at']);
 
         // Kontak baru diambil bila kelompok mengizinkan, jadi tidak pernah ada di memori bila tidak.
         $contact = $organization->show_contact_publicly

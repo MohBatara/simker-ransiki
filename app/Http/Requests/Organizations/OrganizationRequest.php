@@ -7,9 +7,9 @@ use App\Enums\OrganizationStatus;
 use App\Models\Organization;
 use Illuminate\Auth\Access\Response;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\Rule;
 
 /**
@@ -69,7 +69,8 @@ class OrganizationRequest extends FormRequest
             'village_id' => $adminOnly(['required', 'integer', Rule::exists('villages', 'id')]),
             'opds' => $adminOnly(['array']),
             'opds.*' => $adminOnly(['integer', Rule::exists('opds', 'id')]),
-            'status' => $adminOnly(['required', Rule::enum(OrganizationStatus::class)]),
+            // Status awal hanya diisi saat menambah; perubahan berikutnya lewat ChangeOrganizationStatus (ada riwayat).
+            'status' => $this->route('organization') ? ['exclude'] : $adminOnly(['required', Rule::enum(OrganizationStatus::class)]),
             'is_public' => $adminOnly(['boolean']),
             'reporting_month' => $adminOnly(['required', 'integer', 'between:1,12']),
             'reporting_year' => $adminOnly(['required', 'integer', 'between:2020,'.(now()->year + 1)]),

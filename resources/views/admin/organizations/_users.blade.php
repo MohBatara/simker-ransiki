@@ -1,21 +1,10 @@
 @use('App\Support\Format')
 
-@php
-    $createUrl = route('admin.users.create', ['kelompok' => $organization->id]);
-@endphp
-
+{{-- Satu kelompok boleh punya beberapa akun; tombol "Tambah akun" ada di aksi header halaman detail. --}}
 @if ($users->isEmpty())
-    <x-empty-state title="Belum ada akun untuk kelompok ini" description="Buat akun agar pengurus kelompok bisa mengisi profil dan laporan bulanan.">
-        @can('create', App\Models\User::class)
-            <x-button icon="plus" :href="$createUrl">Tambah akun untuk kelompok ini</x-button>
-        @endcan
-    </x-empty-state>
+    <x-empty-state title="Belum ada akun untuk kelompok ini" description="Buat akun agar pengurus kelompok bisa mengisi profil dan laporan bulanan. Satu kelompok boleh punya beberapa akun." />
 @else
-    @can('create', App\Models\User::class)
-        <div class="mb-4 flex justify-end">
-            <x-button icon="plus" :href="$createUrl">Tambah akun untuk kelompok ini</x-button>
-        </div>
-    @endcan
+    <p class="mb-4 text-ink-soft">Semua akun aktif di bawah ini menerima notifikasi laporan kelompok ini.</p>
 
     <x-table clickable>
         <x-slot:head>

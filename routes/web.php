@@ -37,6 +37,7 @@ Route::middleware('guest')->group(function () {
 $organizationRoutes = function () {
     Route::controller(Shared\OrganizationController::class)->prefix('kelompok')->name('organizations.')->group(function () {
         Route::get('/', 'index')->name('index')->can('viewAny', Organization::class);
+        Route::get('/unduh', 'export')->name('export')->can('viewAny', Organization::class);
 
         Route::whereNumber('organization')->group(function () {
             Route::get('/{organization}', 'show')->name('show')->can('view', 'organization');
@@ -71,11 +72,14 @@ $reportRoutes = function () {
 
         Route::whereNumber('report')->group(function () {
             Route::get('/{report}', 'show')->name('show')->can('view', 'report');
+            Route::get('/{report}/pdf', [Shared\ReportExportController::class, 'report'])->name('pdf')->can('view', 'report');
             Route::post('/{report}/verifikasi', 'verify')->name('verify');
             Route::post('/{report}/minta-revisi', 'requestRevision')->name('revision');
         });
     });
 
+    // Rekap per periode; isinya dibatasi kelompok yang terlihat pengguna (visibleTo).
+    Route::get('/laporan/rekap', [Shared\ReportExportController::class, 'recap'])->name('reports.recap');
     Route::get('/masalah', [Shared\ReportIssueController::class, 'index'])->name('issues.index');
     Route::get('/cari', [Shared\SearchController::class, 'index'])->name('search');
 };
@@ -113,6 +117,19 @@ Route::middleware('auth')->group(function () use ($organizationRoutes, $reportRo
                     Route::patch('/{organization}/status', 'updateStatus')->name('status')->whereNumber('organization')->can('administer', 'organization');
                     Route::delete('/{organization}', 'destroy')->name('destroy')->whereNumber('organization')->can('delete', 'organization');
                 });
+                // Impor kelompok dari spreadsheet: unggah → pratinjau → impor → hasil. Token = UUID acak milik pengunggah.
+                Route::controller(Admin\OrganizationImportController::class)->prefix('kelompok/impor')->name('organizations.import.')
+                    ->can('create', Organization::class)->group(function () {
+                        Route::get('/', 'create')->name('create');
+                        Route::get('/template', 'template')->name('template');
+                        Route::post('/', 'store')->name('store')->middleware('throttle:uploads');
+                        Route::whereUuid('token')->group(function () {
+                            Route::get('/{token}', 'preview')->name('preview');
+                            Route::post('/{token}', 'import')->name('run');
+                            Route::get('/{token}/hasil', 'result')->name('result');
+                            Route::get('/{token}/gagal', 'failed')->name('failed');
+                        });
+                    });
                 Route::get('/kelompok/{organization}/akun', [Shared\OrganizationController::class, 'users'])
                     ->name('organizations.users')->whereNumber('organization')->can('view', 'organization');
                 $organizationRoutes();
@@ -186,6 +203,7 @@ Route::middleware('auth')->group(function () use ($organizationRoutes, $reportRo
 
                     Route::whereNumber('report')->group(function () {
                         Route::get('/{report}', 'show')->name('show')->can('view', 'report');
+                        Route::get('/{report}/pdf', [Shared\ReportExportController::class, 'report'])->name('pdf')->can('view', 'report');
                         Route::get('/{report}/ubah', 'edit')->name('edit')->can('update', 'report');
                         Route::patch('/{report}/draf', 'saveDraft')->name('draft')->can('update', 'report')->middleware('throttle:60,1');
                         Route::post('/{report}/ajukan', 'submit')->name('submit')->can('submit', 'report');

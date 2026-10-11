@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Shared;
 
 use App\Http\Controllers\Controller;
 use App\Models\MonthlyReport;
+use App\Models\Organization;
 use App\Models\User;
 use App\Support\NotificationText;
 use Illuminate\Http\RedirectResponse;
@@ -60,6 +61,17 @@ class NotificationController extends Controller
 
         if (($data['kind'] ?? null) === 'report_reminder') {
             return $user->isKelompok() ? route('kelompok.reports.index') : null;
+        }
+
+        if (($data['kind'] ?? null) === 'report_overdue') {
+            if ($user->isKelompok()) {
+                return route('kelompok.reports.index');
+            }
+            $organization = Organization::find($data['organization_id'] ?? null);
+
+            return $organization && Gate::forUser($user)->allows('view', $organization)
+                ? route($user->role->area().'.organizations.reports', $organization)
+                : null;
         }
 
         $report = isset($data['monthly_report_id']) ? MonthlyReport::find($data['monthly_report_id']) : null;

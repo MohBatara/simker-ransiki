@@ -14,7 +14,8 @@ class OrganizationOverview
 {
     public const PHOTOS = 4;
 
-    public static function data(Organization $organization): array
+    /** @param  bool  $withStatusHistory  riwayat status hanya untuk Admin/OPD */
+    public static function data(Organization $organization, bool $withStatusHistory = false): array
     {
         $organization->loadMissing(['institutionType:id,name', 'village:id,name', 'sectors:id,name', 'opds:id,name,short_name', 'updater:id,name'])
             ->loadCount(['products', 'users']);
@@ -31,6 +32,7 @@ class OrganizationOverview
             'latestReport' => $organization->monthlyReports()->orderByDesc('period')->first(['id', 'organization_id', 'period', 'status', 'submitted_at']),
             'photos' => $photos->values(),
             'mapsUrl' => self::mapsUrl($organization),
+            'statusChanges' => $withStatusHistory ? $organization->statusChanges()->with('user:id,name')->limit(5)->get() : collect(),
         ];
     }
 

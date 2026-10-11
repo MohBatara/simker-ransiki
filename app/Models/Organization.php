@@ -93,12 +93,13 @@ class Organization extends Model
     }
 
     /**
-     * Kelompok yang boleh tampil di website publik: aktif dan dipublikasikan. Satu-satunya pintu
-     * data kelompok ke halaman publik, sitemap, dan Open Graph.
+     * Kelompok yang boleh tampil di website publik: dipublikasikan dan belum ditutup (kelompok tidak
+     * aktif sementara tetap tampil, dengan label). Satu-satunya pintu data kelompok ke halaman publik,
+     * sitemap, dan Open Graph.
      */
     public function scopePubliclyListed(Builder $query): void
     {
-        $query->where('organizations.status', OrganizationStatus::Active)->where('organizations.is_public', true);
+        $query->whereIn('organizations.status', [OrganizationStatus::Active, OrganizationStatus::Inactive])->where('organizations.is_public', true);
     }
 
     /**
@@ -117,8 +118,11 @@ class Organization extends Model
             $query->doesntHave('users');
         }
 
-        // Tujuan klik dari dasbor: kelompok wajib lapor yang belum membuat / belum mengajukan laporan.
+        // Tujuan klik dari dasbor: kelompok wajib lapor yang belum membuat / belum mengajukan / terlambat.
         $period = $filters['periode'] ?? null;
+        if (($filters['laporan'] ?? null) === 'terlambat' && is_string($period) && preg_match('/^\d{4}-(0[1-9]|1[0-2])$/', $period)) {
+            $query->overdueFor(CarbonImmutable::createFromFormat('!Y-m', $period));
+        }
         if (in_array($filters['laporan'] ?? null, ['belum-dibuat', 'belum-diajukan'], true) && is_string($period) && preg_match('/^\d{4}-(0[1-9]|1[0-2])$/', $period)) {
             $date = CarbonImmutable::createFromFormat('!Y-m', $period);
             $submittedOnly = $filters['laporan'] === 'belum-diajukan';
@@ -158,6 +162,25 @@ class Organization extends Model
     {
         $query->whereIn('organizations.status', [OrganizationStatus::Active, OrganizationStatus::Inactive])
             ->whereDate('organizations.reporting_starts_on', '<=', $period->format('Y-m-01'));
+    }
+
+    /**
+     * Kelompok wajib lapor yang terlambat untuk suatu periode: tenggat sudah lewat dan laporannya belum
+     * pernah diajukan (belum dibuat atau masih draf). Sejalan dengan App\Enums\ReportingState::for().
+     */
+    public function scopeOverdueFor(Builder $query, CarbonInterface $period): void
+    {
+        $query->obligatedFor($period);
+
+        if (! MonthlyReport::isPastDeadline($period)) {
+            $query->whereRaw('1 = 0');
+
+            return;
+        }
+
+        $query->whereDoesntHave('monthlyReports', fn ($query) => $query
+            ->whereDate('period', $period->format('Y-m-01'))
+            ->whereNotNull('submitted_at'));
     }
 
     /**
@@ -241,6 +264,12 @@ class Organization extends Model
     public function monthlyReports(): HasMany
     {
         return $this->hasMany(MonthlyReport::class);
+    }
+
+    /** Riwayat perubahan status, terbaru dulu. */
+    public function statusChanges(): HasMany
+    {
+        return $this->hasMany(OrganizationStatusChange::class)->latest('id');
     }
 
     public function creator(): BelongsTo

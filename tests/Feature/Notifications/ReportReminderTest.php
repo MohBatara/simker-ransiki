@@ -58,7 +58,8 @@ test('dijalankan dua kali tidak membuat pengingat ganda; tahap akhir tetap terki
     $this->artisan('simker:pengingat-laporan')->expectsOutput('Tidak ada kelompok yang perlu diingatkan.')->assertSuccessful();
     expect($user->notifications()->count())->toBe(1);
 
-    Carbon::setTestNow(Carbon::parse('2026-10-08 08:00:00', 'Asia/Jayapura'));
+    // H-3 tenggat (10 Oktober) = 7 Oktober.
+    Carbon::setTestNow(Carbon::parse('2026-10-07 08:00:00', 'Asia/Jayapura'));
     $this->artisan('simker:pengingat-laporan')->assertSuccessful();
     $this->artisan('simker:pengingat-laporan --tahap=akhir')->assertSuccessful();
 
@@ -89,18 +90,27 @@ test('membuka pengingat mengarah ke daftar laporan kelompok', function () {
     $this->actingAs($user)->get('/notifikasi/'.$user->notifications()->sole()->id)->assertRedirect('/kelompok/laporan');
 });
 
+test('hari tanpa jadwal tidak mengirim apa pun', function () {
+    [, $user] = ($this->make)('Belum dibuat');
+
+    Carbon::setTestNow(Carbon::parse('2026-10-08 08:00:00', 'Asia/Jayapura'));
+    $this->artisan('simker:pengingat-laporan')->expectsOutput('Hari ini tidak ada jadwal notifikasi tenggat.')->assertSuccessful();
+
+    expect($user->notifications()->count())->toBe(0);
+});
+
 test('pilihan tidak sah ditolak', function () {
     $this->artisan('simker:pengingat-laporan --tahap=tengah')->assertFailed();
     $this->artisan('simker:pengingat-laporan --periode=bulan-lalu')->assertFailed();
 });
 
-test('dijadwalkan tanggal 1 dan 8 pukul 08.00 WIT', function () {
+test('dijadwalkan setiap hari pukul 08.00 WIT', function () {
     $events = collect(app(Schedule::class)->events())
         ->filter(fn ($event) => str_contains($event->command, 'simker:pengingat-laporan'))
-        ->map(fn ($event) => [$event->expression, $event->timezone, str_contains($event->command, '--tahap=awal') ? 'awal' : 'akhir'])
+        ->map(fn ($event) => [$event->expression, $event->timezone])
         ->values()->all();
 
-    expect($events)->toBe([['0 8 1 * *', 'Asia/Jayapura', 'awal'], ['0 8 8 * *', 'Asia/Jayapura', 'akhir']]);
+    expect($events)->toBe([['0 8 * * *', 'Asia/Jayapura']]);
 });
 
 test('tombol salin pesan pengingat di dasbor OPD dan Admin', function () {

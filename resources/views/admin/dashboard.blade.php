@@ -25,16 +25,20 @@
     </x-slot:actions>
 
     <div class="space-y-5">
-        <x-card title="Perlu perhatian">
-            <x-list>
-                @foreach ($attentionRows as $row)
-                    <x-list.item :href="$row['href']">
-                            <span @class(['w-12 shrink-0 text-right text-card-title font-semibold tabular-nums', 'text-ink' => $row['value'] > 0, 'text-ink-muted' => $row['value'] === 0])>{{ Format::number($row['value']) }}</span>
-                            <span class="flex-1 text-ink">{{ ucfirst($row['label']) }}</span>
-                    </x-list.item>
-                @endforeach
-            </x-list>
-        </x-card>
+        <div class="grid gap-5 lg:grid-cols-3 lg:items-start">
+            @include('shared.dashboards.overdue-stat', ['area' => 'admin'])
+
+            <x-card title="Perlu perhatian" class="lg:col-span-2 lg:col-start-1 lg:row-start-1">
+                <x-list>
+                    @foreach ($attentionRows as $row)
+                        <x-list.item :href="$row['href']">
+                                <span @class(['w-12 shrink-0 text-right text-card-title font-semibold tabular-nums', 'text-ink' => $row['value'] > 0, 'text-ink-muted' => $row['value'] === 0])>{{ Format::number($row['value']) }}</span>
+                                <span class="flex-1 text-ink">{{ ucfirst($row['label']) }}</span>
+                        </x-list.item>
+                    @endforeach
+                </x-list>
+            </x-card>
+        </div>
 
         @include('shared.dashboards.progress', ['area' => 'admin'])
 

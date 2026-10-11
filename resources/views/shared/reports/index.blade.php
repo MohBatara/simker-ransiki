@@ -30,6 +30,12 @@
 @endphp
 
 <x-layouts.app :title="$title" :description="$description">
+    @unless ($queue)
+        <x-slot:actions>
+            <x-button variant="secondary" icon="arrow-down-tray" x-data x-on:click="$dispatch('open-modal', 'report-recap')">Unduh rekap</x-button>
+        </x-slot:actions>
+    @endunless
+
     <div class="space-y-4">
         <x-filter-bar
             :action="$url"
@@ -86,7 +92,12 @@
                         <x-table.cell badge>
                             {{-- Di antrean semuanya "Diajukan"; yang ditandai hanya pengajuan ulang. --}}
                             @if (! $queue)
-                                <x-badge :tone="$report->status->badgeColor()">{{ $report->status->reviewerLabel() }}</x-badge>
+                                <span class="inline-flex flex-wrap items-center justify-end gap-1.5 md:justify-start">
+                                    <x-badge :tone="$report->status->badgeColor()">{{ $report->status->reviewerLabel() }}</x-badge>
+                                    @if ($report->isOverdue())
+                                        <x-badge tone="fix">Terlambat</x-badge>
+                                    @endif
+                                </span>
                             @elseif ($report->resubmitted)
                                 <x-badge tone="wait">Diajukan ulang</x-badge>
                             @endif
@@ -112,4 +123,20 @@
             </x-table>
         @endif
     </div>
+
+    @unless ($queue)
+        {{-- Rekap satu bulan: status laporan tiap kelompok + angka dari laporan terverifikasi. --}}
+        <x-modal name="report-recap" title="Unduh rekap laporan">
+            <form id="form-rekap" method="GET" action="{{ route($area.'.reports.recap') }}" class="space-y-4">
+                <p>Status laporan setiap kelompok wajib lapor, lalu ringkasan angka dari laporan terverifikasi saja.</p>
+                <x-field label="Bulan" for="recap-periode">
+                    <x-select id="recap-periode" name="periode" :options="$recapPeriods" :selected="array_key_exists($filters['period'] ?? '', $recapPeriods) ? $filters['period'] : array_key_first($recapPeriods)" />
+                </x-field>
+            </form>
+            <x-slot:footer>
+                <x-button variant="secondary" type="submit" form="form-rekap" name="format" value="pdf">Unduh PDF</x-button>
+                <x-button type="submit" form="form-rekap" name="format" value="xlsx">Unduh Excel</x-button>
+            </x-slot:footer>
+        </x-modal>
+    @endunless
 </x-layouts.app>

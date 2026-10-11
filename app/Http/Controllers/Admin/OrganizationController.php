@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Actions\Organizations\ChangeOrganizationStatus;
 use App\Actions\Organizations\SaveOrganization;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Organizations\OrganizationRequest;
@@ -45,9 +46,9 @@ class OrganizationController extends Controller
         return redirect()->route('admin.organizations.show', $organization)->with('status', 'Kelompok ditambahkan.');
     }
 
-    public function updateStatus(OrganizationStatusRequest $request, Organization $organization): RedirectResponse
+    public function updateStatus(OrganizationStatusRequest $request, Organization $organization, ChangeOrganizationStatus $change): RedirectResponse
     {
-        $organization->forceFill(['status' => $request->validated('status'), 'updated_by' => $request->user()->id])->save();
+        $organization = $change->handle($request->user(), $organization, $request->status(), $request->validated('reason'));
 
         return back()->with('status', 'Status kelompok diubah menjadi '.lcfirst($organization->status->label()).'.');
     }

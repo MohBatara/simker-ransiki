@@ -48,7 +48,8 @@ test('perlu tindakan, progres, belum mengajukan, masalah, dan tren hanya untuk b
         ->assertSee('Menunggu lebih dari 7 hari')
         ->assertSee('Pelaporan September 2026')
         ->assertSee('1 dari 2')
-        ->assertSee('Belum mengajukan September 2026')
+        // Tenggat sudah lewat: daftar "Belum mengajukan" menjadi daftar terlambat.
+        ->assertSee('Terlambat melapor September 2026')
         ->assertSee('Tenggat 10 Oktober 2026 · lewat 10 hari')
         ->assertSee('KUB Belum Lapor')
         ->assertSee('/opd/masalah?kind=problem&amp;category=modal&amp;period=2026-09', false)

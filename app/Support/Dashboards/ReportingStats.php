@@ -4,6 +4,7 @@ namespace App\Support\Dashboards;
 
 use App\Enums\IssueKind;
 use App\Enums\ProblemCategory;
+use App\Enums\ReportingState;
 use App\Enums\ReportStatus;
 use App\Enums\SupportCategory;
 use App\Models\MonthlyReport;
@@ -60,9 +61,24 @@ class ReportingStats
     }
 
     /**
-     * Kelompok wajib lapor yang belum mengajukan laporan periode ini (belum ada laporan, atau masih draf).
+     * Kelompok terlambat periode ini (lewat tenggat, belum pernah diajukan), lihat Organization::overdueFor.
      *
-     * @return Collection<int, array{organization: Organization, report: ?MonthlyReport}>
+     * @return array{total: int, deadline: CarbonImmutable, past_deadline: bool}
+     */
+    public function overdue(): array
+    {
+        return [
+            'total' => Organization::visibleTo($this->user)->overdueFor($this->period)->count(),
+            'deadline' => MonthlyReport::deadlineFor($this->period),
+            'past_deadline' => MonthlyReport::isPastDeadline($this->period),
+        ];
+    }
+
+    /**
+     * Kelompok wajib lapor yang belum mengajukan laporan periode ini (belum ada laporan, atau masih draf).
+     * Setelah tenggat, semuanya berstatus terlambat.
+     *
+     * @return Collection<int, array{organization: Organization, report: ?MonthlyReport, state: ReportingState}>
      */
     public function notSubmitted(int $limit = 10): Collection
     {
@@ -75,7 +91,11 @@ class ReportingStats
             ->orderBy('name')
             ->limit($limit)
             ->get(['id', 'name', 'leader_name', 'phone'])
-            ->map(fn (Organization $organization) => ['organization' => $organization, 'report' => $organization->monthlyReports->first()]);
+            ->map(fn (Organization $organization) => [
+                'organization' => $organization,
+                'report' => $report = $organization->monthlyReports->first(),
+                'state' => ReportingState::for($report, $this->period),
+            ]);
     }
 
     /**

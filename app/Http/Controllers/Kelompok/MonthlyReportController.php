@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Kelompok;
 
 use App\Actions\Reports\SaveReportDraft;
 use App\Actions\Reports\SubmitReport;
+use App\Enums\OrganizationStatus;
+use App\Enums\ReportingState;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Reports\ReportDraftRequest;
 use App\Models\MonthlyReport;
@@ -30,11 +32,14 @@ class MonthlyReportController extends Controller
         $organization = $this->organization($request);
         $reports = $organization->monthlyReports()->get()->keyBy(fn (MonthlyReport $report) => $report->period->format('Y-m'));
 
+        // Kelompok tutup tidak lagi wajib lapor, jadi tidak ditandai terlambat.
+        $closed = $organization->status === OrganizationStatus::Closed;
+
         $rows = $organization->reportingPeriods()->map(fn ($period) => [
             'period' => $period,
-            'report' => $reports->get($period->format('Y-m')),
+            'report' => $report = $reports->get($period->format('Y-m')),
             'deadline' => MonthlyReport::deadlineFor($period),
-            'pastDeadline' => MonthlyReport::isPastDeadline($period),
+            'overdue' => ! $closed && ReportingState::for($report, $period) === ReportingState::Overdue,
         ]);
 
         $page = LengthAwarePaginator::resolveCurrentPage();

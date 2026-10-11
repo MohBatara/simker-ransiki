@@ -57,7 +57,12 @@
                             @endif
                         </a>
                         <div class="flex flex-1 flex-col items-start gap-1.5 p-4">
-                            <x-public.pill>{{ $organization->institutionType->name }}</x-public.pill>
+                            <div class="flex flex-wrap gap-2">
+                                <x-public.pill>{{ $organization->institutionType->name }}</x-public.pill>
+                                @if ($organization->status === App\Enums\OrganizationStatus::Inactive)
+                                    <x-public.pill>{{ $organization->status->label() }}</x-public.pill>
+                                @endif
+                            </div>
                             <h2 class="text-card-title font-semibold">
                                 <a href="{{ $url }}" class="rounded-control text-ink hover:text-brand">{{ $organization->name }}</a>
                             </h2>

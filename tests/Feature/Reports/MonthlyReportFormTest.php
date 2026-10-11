@@ -55,7 +55,7 @@ test('daftar laporan menampilkan setiap bulan sejak wajib lapor, dengan status d
         ->assertSee('Belum dibuat')
         ->assertSee('Diajukan terlambat')
         ->assertSee('10 November 2026')
-        ->assertSee('Lewat tenggat')
+        ->assertSee('Terlambat')
         ->assertSee('Buat laporan')
         ->assertDontSee('Juni 2026');
 });

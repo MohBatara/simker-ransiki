@@ -15,7 +15,7 @@
         'opd' => ['OPD', ['none' => 'Belum ada OPD'] + $options['opds']],
         'status' => ['Status', $options['statuses']],
         'akun' => [null, ['tidak-ada' => 'Belum punya akun']],
-        'laporan' => [null, $month ? ['belum-dibuat' => "Belum membuat laporan {$month}", 'belum-diajukan' => "Belum mengajukan laporan {$month}"] : [], ['periode']],
+        'laporan' => [null, $month ? ['belum-dibuat' => "Belum membuat laporan {$month}", 'belum-diajukan' => "Belum mengajukan laporan {$month}", 'terlambat' => "Terlambat melapor {$month}"] : [], ['periode']],
     ]);
     $hasFilters = $chips !== [];
     $summary = collect([
@@ -30,11 +30,14 @@
     :title="$isOpd ? 'Kelompok Binaan' : 'Semua Kelompok'"
     :description="$isOpd ? 'Kelompok yang dibina OPD Anda.' : 'Kelompok dan kelembagaan ekonomi di Distrik Ransiki.'"
 >
-    @can('create', App\Models\Organization::class)
-        <x-slot:actions>
+    <x-slot:actions>
+        {{-- Mengikuti filter yang sedang aktif. --}}
+        <x-button variant="secondary" icon="arrow-down-tray" :href="route($area.'.organizations.export', array_filter($filters, 'filled'))">Unduh Excel</x-button>
+        @can('create', App\Models\Organization::class)
+            <x-button variant="secondary" icon="arrow-up-tray" :href="route('admin.organizations.import.create')">Impor</x-button>
             <x-button icon="plus" :href="route('admin.organizations.create')">Tambah kelompok</x-button>
-        </x-slot:actions>
-    @endcan
+        @endcan
+    </x-slot:actions>
 
     @php
         $filtered = $hasFilters;

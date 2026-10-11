@@ -1,0 +1,9 @@
+﻿"Nama kelompok (wajib)";"Jenis kelembagaan (wajib)";"Kampung (wajib)";"Bidang usaha (wajib)";"OPD terkait";"Mulai wajib lapor";"Nama ketua";Telepon;Email;Alamat;"Tahun berdiri";"Jumlah anggota";"Jumlah tenaga kerja";Deskripsi
+"KUB Kakao Contoh Baru";KUB;"Kampung Contoh 2";"Perkebunan; Pengolahan Hasil";Pertanian;2026-09;"Ketua Contoh A";"0812 0000 0001";;"Jalan Contoh 1";2020;15;4;"Mengolah biji kakao fermentasi (contoh)."
+"Kelompok Nelayan Contoh Baru";"Kelompok Perikanan";"Kampung Contoh 5";Perikanan;"Perikanan; Dinkopdag";;"Ketua Contoh B";;;;;;;"Jumlah anggota belum diketahui, jadi dibiarkan kosong."
+"UMKM Keripik Contoh Baru";umkm;"  kampung   contoh 3 ";UMKM;dinkopdag;2026-10;;;contoh@example.com;;2022;6;2;
+"KUB Contoh 01";KUB;"Kampung Contoh 1";Perkebunan;;;;;;;;;;"Sudah ada di data contoh: peringatan."
+"UMKM Keripik Contoh Baru";UMKM;"Kampung Contoh 3";UMKM;;;;;;;;;;"Duplikat baris 4 di file ini: peringatan."
+"Kelompok Sagu Contoh";Lainnya;"Kampung Contoh 9";"Pengolahan Hasil";;;;;;;;;;"Kampung tidak ada di data master: gagal."
+"Kelompok Pinang Contoh";KUB;"Kampung Contoh 6";;;;;;;;;;;"Bidang usaha kosong: gagal."
+"BUMDes Contoh Baru";BUMDes;"Kampung Contoh 7";Perdagangan;DPMPTSP;;;;;;2018;0;;"Jumlah anggota 0 tetap tersimpan sebagai 0."

@@ -28,7 +28,6 @@ beforeEach(function () {
     Attachment::factory()->create(['attachable_id' => $this->listed->id, 'original_name' => 'lampiran-rahasia.pdf']);
 
     foreach ([
-        'Kelompok Tidak Aktif' => ['status' => 'inactive', 'is_public' => true],
         'Kelompok Ditutup' => ['status' => 'closed', 'is_public' => true],
         'Kelompok Tersembunyi' => ['status' => 'active', 'is_public' => false],
     ] as $name => $attributes) {
@@ -40,13 +39,31 @@ beforeEach(function () {
 
 dataset('halaman publik', ['/', '/profil', '/direktori', '/produk', '/kontak', '/sitemap.xml', '/direktori/kub-contoh-terbuka']);
 
-test('kelompok tidak aktif, ditutup, atau tidak publik tidak pernah tampil', function (string $url) {
+test('kelompok ditutup atau tidak publik tidak pernah tampil', function (string $url) {
     $response = $this->get($url)->assertOk();
 
-    foreach (['Kelompok Tidak Aktif', 'Kelompok Ditutup', 'Kelompok Tersembunyi', 'kelompok-tidak-aktif', 'kelompok-ditutup', 'kelompok-tersembunyi'] as $hidden) {
+    foreach (['Kelompok Ditutup', 'Kelompok Tersembunyi', 'kelompok-ditutup', 'kelompok-tersembunyi'] as $hidden) {
         $response->assertDontSee($hidden);
     }
 })->with('halaman publik');
+
+test('kelompok tidak aktif sementara yang publik tetap tampil dengan label', function () {
+    $idle = Organization::factory()->create(['name' => 'Kelompok Istirahat', 'status' => 'inactive', 'is_public' => true]);
+
+    $this->get('/direktori')->assertOk()->assertSee('Kelompok Istirahat')->assertSee('Tidak aktif sementara');
+    $this->get('/direktori/'.$idle->slug)->assertOk()->assertSee('Tidak aktif sementara');
+    $this->get('/sitemap.xml')->assertSee($idle->slug);
+
+    $idle->update(['is_public' => false]);
+    $this->get('/direktori/'.$idle->slug)->assertNotFound();
+});
+
+test('kelompok publik yang ditutup tidak lagi tampil (404)', function () {
+    $this->listed->update(['status' => 'closed']);
+
+    $this->get('/direktori/kub-contoh-terbuka')->assertNotFound();
+    $this->get('/direktori')->assertDontSee('KUB Contoh Terbuka');
+});
 
 test('data privat tidak pernah tampil di halaman publik', function (string $url) {
     $response = $this->get($url)->assertOk();

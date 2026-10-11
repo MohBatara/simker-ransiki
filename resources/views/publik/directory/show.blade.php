@@ -15,6 +15,9 @@
             <div class="mb-4 flex flex-wrap gap-2">
                 <x-public.pill tone="dark">{{ $organization->institutionType->name }}</x-public.pill>
                 <x-public.pill tone="dark">{{ $organization->village->name }}</x-public.pill>
+                @if ($organization->status === App\Enums\OrganizationStatus::Inactive)
+                    <x-public.pill tone="dark">{{ $organization->status->label() }}</x-public.pill>
+                @endif
                 @if ($organization->founded_year)
                     <x-public.pill tone="dark">Berdiri {{ $organization->founded_year }}</x-public.pill>
                 @endif

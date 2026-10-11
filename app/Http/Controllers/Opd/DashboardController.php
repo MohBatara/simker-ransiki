@@ -35,6 +35,7 @@ class DashboardController extends Controller
             'oldestWaiting' => (clone $waiting)->withSubmissionInfo()->with('organization:id,name')->orderBy('last_submitted_at')->first(),
             'progress' => $stats->progress(),
             'notSubmitted' => $stats->notSubmitted(),
+            'overdue' => $stats->overdue(),
             'topIssues' => $stats->topIssues(),
             'trend' => $stats->verifiedTrend(),
         ]);
