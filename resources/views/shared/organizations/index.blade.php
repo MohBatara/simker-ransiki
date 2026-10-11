@@ -122,7 +122,8 @@
                     <x-slot:head>
                         <x-table.heading>Kelompok</x-table.heading>
                         <x-table.heading>Kampung</x-table.heading>
-                        <x-table.heading optional>Bidang usaha</x-table.heading>
+                        {{-- ≥ 1280px panel detail selalu tampil: kolom Bidang usaha disembunyikan, nama dan kampung satu baris. --}}
+                        <x-table.heading optional class="xl:hidden">Bidang usaha</x-table.heading>
                         <x-table.heading numeric optional>Anggota</x-table.heading>
                         <x-table.heading><span class="sr-only">Status</span></x-table.heading>
                     </x-slot:head>
@@ -135,17 +136,17 @@
                             :data-selected="$panel && $panel['organization']->is($organization) ? 'true' : null"
                             class="xl:data-[selected]:bg-brand-tint"
                         >
-                            <x-table.cell primary>
+                            <x-table.cell primary class="xl:w-full xl:max-w-0">
                                 <span class="flex items-center gap-3">
                                     <x-avatar :name="$organization->name" />
                                     <span class="min-w-0">
-                                        <span class="block">{{ $organization->name }}</span>
-                                        <span class="block text-caption font-normal text-ink-muted">{{ $organization->institutionType->name }}</span>
+                                        <span class="block xl:truncate" title="{{ $organization->name }}">{{ $organization->name }}</span>
+                                        <span class="block text-caption font-normal text-ink-muted xl:truncate">{{ $organization->institutionType->name }}</span>
                                     </span>
                                 </span>
                             </x-table.cell>
-                            <x-table.cell label="Kampung">{{ $organization->village->name }}</x-table.cell>
-                            <x-table.cell label="Bidang usaha" optional>{{ $organization->sectors->pluck('name')->join(', ') }}</x-table.cell>
+                            <x-table.cell label="Kampung" class="xl:whitespace-nowrap">{{ $organization->village->name }}</x-table.cell>
+                            <x-table.cell label="Bidang usaha" optional class="xl:hidden">{{ $organization->sectors->pluck('name')->join(', ') }}</x-table.cell>
                             <x-table.cell label="Anggota" numeric optional>{{ App\Support\Format::number($organization->members_count) }}</x-table.cell>
                             {{-- Status hanya ditandai bila bukan Aktif. --}}
                             <x-table.cell badge>

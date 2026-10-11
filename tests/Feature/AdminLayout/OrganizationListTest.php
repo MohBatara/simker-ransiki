@@ -113,3 +113,10 @@ test('kartu filter: cari sebaris dengan tombol Filter di HP, dua baris di deskto
         ->and(strpos($html, 'name="status"'))->toBeLessThan(strpos($html, 'Terapkan'))
         ->and($html)->toContain('md:col-start-4 md:justify-end');
 });
+
+test('dengan panel detail (≥ 1280px): kolom bidang usaha disembunyikan, nama satu baris dengan title', function () {
+    $this->actingAs($this->admin)->get('/admin/kelompok')->assertOk()
+        ->assertSee('<th scope="col" class="h-10 whitespace-nowrap align-middle text-caption font-semibold text-ink-soft px-4 text-left md:max-xl:hidden xl:hidden">Bidang usaha</th>', false)
+        ->assertSee('class="block xl:truncate" title="Alfa Contoh"', false)
+        ->assertSee('xl:whitespace-nowrap', false);
+});
