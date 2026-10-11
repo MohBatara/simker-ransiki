@@ -589,6 +589,8 @@ Pengecualian dari Larangan untuk area Admin/OPD/Kelompok (menyesuaikan referensi
 - Header halaman biasa: pita `forest` polos mulai tablet (di HP tetap putih); halaman form (mode form)
   tetap putih. Banner foto + `.overlay-forest` HANYA di dasbor, detail kelompok, dan Profil Kelompok,
   di semua ukuran. Semua lewat `x-page-header` (prop `band` dari layout, `image` = prop `banner`).
+- Di HP (< 768px) banner foto hanya berisi judul + keterangan (lokasi) dengan overlay padat 70%; tag (`meta`)
+  dan aksi (Ubah profil, menu "…", pilihan bulan) turun ke baris di bawah banner dengan warna biasa.
 - Sumber foto banner (`App\Support\BannerImage`, hanya varian terkompres): dasbor = foto sampul;
   kelompok = HANYA foto kurasi Admin: foto bidang usaha (Konten Website) → foto sampul → pita polos.
   Foto produk/lampiran tidak pernah menjadi latar banner (tetap tampil di kartu Foto dan panel detail).

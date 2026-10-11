@@ -51,7 +51,7 @@ test('dasbor memakai banner foto sampul bila ada, dengan varian WebP', function 
 
     $this->actingAs(User::factory()->opd(Opd::factory()->create())->create())->get('/opd')
         ->assertOk()
-        ->assertSee('app-band-photo min-h-40', false)
+        ->assertSee('app-band-photo max-md:relative', false)
         ->assertSee('overlay-forest', false)
         ->assertSee('fetchpriority="high"', false)
         ->assertSee('format=webp', false);
@@ -60,6 +60,23 @@ test('dasbor memakai banner foto sampul bila ada, dengan varian WebP', function 
 test('dasbor tanpa foto sampul memakai pita polos', function () {
     $this->actingAs(User::factory()->admin()->create())->get('/admin')
         ->assertOk()
-        ->assertDontSee('app-band-photo min-h-40', false)
+        ->assertDontSee('app-band-photo max-md:relative', false)
         ->assertSee('app-band md:overflow-hidden', false);
+});
+
+test('banner detail kelompok di HP: foto hanya di blok judul, tag dan aksi di bawahnya', function () {
+    SiteSetting::put(['cover_photo_path' => 'site/sampul.jpg']);
+    $this->organization->update(['name' => 'KUB Banner']);
+
+    $html = $this->actingAs(User::factory()->admin()->create())
+        ->get('/admin/kelompok/'.$this->organization->id)->assertOk()->getContent();
+
+    $header = substr($html, strpos($html, 'app-band md:relative'));
+    $photoBlock = substr($header, 0, strpos($header, 'aria-label="Jenis dan bidang usaha"'));
+
+    expect($photoBlock)->toContain('app-band-photo max-md:relative')
+        ->toContain('overlay-forest')
+        ->toContain('KUB Banner')
+        // Tag dan tombol Ubah profil berada setelah blok foto, bukan di dalamnya.
+        ->and(strpos($header, 'Ubah profil'))->toBeGreaterThan(strpos($header, 'aria-label="Jenis dan bidang usaha"'));
 });

@@ -32,39 +32,48 @@
     $hideOnPhone = $condensed && $mode !== 'photo';
 @endphp
 
+{{--
+    Mode foto: mulai tablet seluruh header berada di atas foto (.app-band). Di HP foto hanya di blok judul
+    (.app-band-photo: judul + keterangan); meta (tag) dan aksi turun ke baris di bawah banner berwarna biasa.
+--}}
 <div {{ $attributes->class([
-    'relative isolate flex flex-col gap-4 md:flex-row md:justify-between',
+    'flex flex-col gap-4 md:flex-row md:justify-between',
+    'relative isolate' => $mode !== 'photo',
     'md:items-end' => $mode !== 'photo',
     'max-md:hidden' => $hideOnPhone && ! $description && ! isset($actions) && ! isset($badge) && ! isset($meta),
     'app-band md:overflow-hidden md:rounded-card md:bg-forest md:px-6 md:py-6 xl:px-8' => $mode === 'band',
-    'app-band-photo min-h-40 overflow-hidden rounded-card bg-forest px-4 py-5 md:min-h-52 md:items-start md:px-6 md:py-8 xl:px-8' => $mode === 'photo',
+    'app-band md:relative md:isolate md:min-h-52 md:items-start md:overflow-hidden md:rounded-card md:bg-forest md:px-6 md:py-8 xl:px-8' => $mode === 'photo',
 ]) }}>
-    @if ($mode === 'photo')
-        <x-public.picture :image="$image" alt="" eager sizes="(min-width: 80rem) 1100px, 100vw" width="1600" height="400" frame="absolute inset-0 -z-20 block size-full" class="size-full object-cover" />
-        <div class="overlay-forest absolute inset-0 -z-10" aria-hidden="true"></div>
-    @endif
-
     <div class="min-w-0 md:max-w-[60%]">
-        @if ($breadcrumbs)
-            <x-breadcrumbs :items="$breadcrumbs" class="mb-2" />
-        @elseif ($back)
-            <a href="{{ $back }}" @class(['mb-2 inline-flex items-center gap-1 rounded-control text-caption hover:underline', $soft, 'max-md:hidden' => $condensed])>
-                <x-heroicon-o-arrow-left class="size-4" />
-                Kembali
-            </a>
-        @endif
-        @if ($eyebrow)
-            <p @class(['text-caption', $soft, 'max-md:hidden' => $hideOnPhone])>{{ $eyebrow }}</p>
-        @endif
-        <div class="flex flex-wrap items-center gap-x-3 gap-y-1">
-            <h1 @class(['text-page-title font-semibold', $strong, 'max-md:sr-only' => $hideOnPhone])>{{ $title }}</h1>
-            @isset($badge)
-                {{ $badge }}
-            @endisset
+        <div @class([
+            'app-band-photo max-md:relative max-md:isolate max-md:flex max-md:min-h-32 max-md:flex-col max-md:justify-end max-md:overflow-hidden max-md:rounded-card max-md:bg-forest max-md:px-4 max-md:py-5' => $mode === 'photo',
+        ])>
+            @if ($mode === 'photo')
+                <x-public.picture :image="$image" alt="" eager sizes="(min-width: 80rem) 1100px, 100vw" width="1600" height="400" frame="absolute inset-0 -z-20 block size-full" class="size-full object-cover" />
+                <div class="overlay-forest absolute inset-0 -z-10" aria-hidden="true"></div>
+            @endif
+
+            @if ($breadcrumbs)
+                <x-breadcrumbs :items="$breadcrumbs" class="mb-2" />
+            @elseif ($back)
+                <a href="{{ $back }}" @class(['mb-2 inline-flex items-center gap-1 rounded-control text-caption hover:underline', $soft, 'max-md:hidden' => $condensed])>
+                    <x-heroicon-o-arrow-left class="size-4" />
+                    Kembali
+                </a>
+            @endif
+            @if ($eyebrow)
+                <p @class(['text-caption', $soft, 'max-md:hidden' => $hideOnPhone])>{{ $eyebrow }}</p>
+            @endif
+            <div class="flex flex-wrap items-center gap-x-3 gap-y-1">
+                <h1 @class(['text-page-title font-semibold', $strong, 'max-md:sr-only' => $hideOnPhone])>{{ $title }}</h1>
+                @isset($badge)
+                    {{ $badge }}
+                @endisset
+            </div>
+            @if ($description)
+                <p @class(['mt-1 text-ui', $soft])>{{ $description }}</p>
+            @endif
         </div>
-        @if ($description)
-            <p @class(['mt-1 text-ui', $soft])>{{ $description }}</p>
-        @endif
         @isset($meta)
             <div class="mt-3">{{ $meta }}</div>
         @endisset
