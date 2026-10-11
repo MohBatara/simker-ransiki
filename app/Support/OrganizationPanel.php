@@ -29,7 +29,8 @@ class OrganizationPanel
             'reports' => $organization->monthlyReports()
                 ->orderByDesc('period')
                 ->limit(self::REPORTS)
-                ->get(['id', 'organization_id', 'period', 'status', 'submitted_at']),
+                ->with('enterer:id,role')
+                ->get(['id', 'organization_id', 'period', 'status', 'submitted_at', 'entered_by']),
         ];
     }
 }

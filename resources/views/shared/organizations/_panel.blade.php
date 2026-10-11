@@ -84,7 +84,7 @@
                 @else
                     <x-list>
                         @foreach ($panel['reports'] as $report)
-                            <x-list.item :href="$report->submitted_at ? route($area.'.reports.show', [$report, 'dari' => 'kelompok']) : null">
+                            <x-list.item :href="auth()->user()->can('view', $report) ? route($area.'.reports.show', [$report, 'dari' => 'kelompok']) : null">
                                 <span class="min-w-0 flex-1 text-ink">{{ Format::month($report->period) }}</span>
                                 <x-badge :tone="$report->status->badgeColor()">{{ $report->status->reviewerLabel() }}</x-badge>
                             </x-list.item>
