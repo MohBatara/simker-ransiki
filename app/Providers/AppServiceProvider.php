@@ -14,6 +14,7 @@ use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
@@ -40,6 +41,11 @@ class AppServiceProvider extends ServiceProvider
             'monthly_report' => MonthlyReport::class,
             'user' => User::class,
         ]);
+
+        // Tautan (termasuk di email undangan/reset) selalu https di produksi, juga di belakang proxy.
+        if ($this->app->isProduction() && config('simker.security.force_https')) {
+            URL::forceScheme('https');
+        }
 
         // Lazy loading memicu N+1; di luar produksi langsung jadi error agar cepat ketahuan.
         Model::preventLazyLoading(! $this->app->isProduction());

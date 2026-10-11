@@ -11,7 +11,7 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        $this->call(MasterDataSeeder::class);
+        $this->call(ProductionSeeder::class);
 
         // Data contoh dan akun uji (kata sandi "password") tidak boleh ada di server.
         if (app()->isLocal()) {

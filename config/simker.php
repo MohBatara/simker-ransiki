@@ -54,4 +54,24 @@ return [
         'stale_days' => 30,
     ],
 
+    /*
+    | Produksi: alihkan HTTP ke HTTPS dan kirim HSTS (App\Http\Middleware\SecureResponse). Matikan hanya
+    | sementara bila sertifikat SSL belum aktif.
+    */
+    'security' => [
+        'force_https' => (bool) env('SIMKER_FORCE_HTTPS', true),
+    ],
+
+    /*
+    | Cadangan database (simker:backup-db, dijadwalkan harian pukul `time` WIT). File .sql.gz di disk `local`
+    | folder `path`; hanya `keep` file terbaru yang disimpan. `mysqldump` = perintah/path mysqldump di server.
+    */
+    'backup' => [
+        'path' => 'backups',
+        'keep' => (int) env('SIMKER_BACKUP_KEEP', 14),
+        'time' => '02:00',
+        'mysqldump' => env('SIMKER_MYSQLDUMP', 'mysqldump'),
+        'timeout' => 600,
+    ],
+
 ];

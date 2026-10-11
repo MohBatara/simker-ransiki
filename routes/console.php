@@ -11,3 +11,9 @@ Schedule::command('simker:pengingat-laporan')
     ->dailyAt(config('simker.reports.reminder_time'))
     ->timezone(config('simker.reports.timezone'))
     ->withoutOverlapping();
+
+// Cadangan database harian (simker:backup-db), 14 file terakhir di storage/app/private/backups.
+Schedule::command('simker:backup-db')
+    ->dailyAt(config('simker.backup.time'))
+    ->timezone(config('simker.reports.timezone'))
+    ->withoutOverlapping();

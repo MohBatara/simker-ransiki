@@ -26,6 +26,7 @@ use App\Support\Format;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
+use RuntimeException;
 
 /**
  * Data contoh untuk pengembangan (CLAUDE.md Bagian 10). Semua nama dan nomor jelas bukan data resmi.
@@ -97,10 +98,10 @@ class DemoSeeder extends Seeder
 
     public function run(): void
     {
+        // Akun uji berkata sandi "password": menolak dengan error (bukan diam-diam dilewati) agar
+        // db:seed --class=DemoSeeder di server gagal dengan jelas.
         if (! app()->environment(['local', 'testing'])) {
-            $this->command?->warn('DemoSeeder hanya untuk environment local.');
-
-            return;
+            throw new RuntimeException('DemoSeeder hanya untuk environment local. Di server gunakan db:seed --class=ProductionSeeder.');
         }
 
         $this->call(MasterDataSeeder::class);

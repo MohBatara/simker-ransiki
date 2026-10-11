@@ -873,7 +873,8 @@ Target: versi uji coba ruang lingkup inti dalam 2 minggu.
 9. Verifikasi OPD (daftar menunggu, detail, minta revisi, verifikasi, catatan).
 10. Dasbor Kelompok, OPD, Admin.
 11. Notifikasi dalam aplikasi (ikon lonceng + halaman notifikasi).
-12. Uji menyeluruh per peran, perbaikan tampilan HP/tablet, `npm run build`, persiapan deploy.
+12. Uji menyeluruh per peran, perbaikan tampilan HP/tablet, `npm run build`, persiapan deploy
+    (12A persiapan produksi selesai: seeder produksi, create-admin, backup, header keamanan, `docs/DEPLOY.md`).
 
 **Diupayakan setelah inti selesai** (urutan prioritas):
 ~~status organisasi di UI~~ (selesai, Paket 1) · ~~pemisahan penginput & pemverifikasi~~ (selesai, Paket 4) ·
@@ -946,6 +947,24 @@ Data contoh harus terlihat realistis namun jelas bukan data resmi:
 ---
 
 ## 12. Deploy ke Hostinger (catatan)
+
+Panduan langkah demi langkah: `docs/DEPLOY.md` (perbarui bila langkah deploy berubah).
+
+- Data awal server: `db:seed --class=ProductionSeeder --force` (data master saja; `OPDS`/`VILLAGES` di seeder
+  kosong sampai daftar resmi diterima), lalu `php artisan simker:create-admin` (interaktif, kata sandi tersembunyi,
+  tanpa wajib ganti). `DatabaseSeeder` = ProductionSeeder (+ DemoSeeder hanya di local). `DemoSeeder` melempar
+  `RuntimeException` di luar local/testing.
+- Keamanan respons: middleware global `App\Http\Middleware\SecureResponse` (X-Frame-Options SAMEORIGIN, nosniff,
+  Referrer-Policy, Permissions-Policy; header yang sudah diisi controller tidak ditimpa). Di produksi: HTTP → HTTPS
+  (301, atau 308 untuk POST) + HSTS + `URL::forceScheme('https')`, bisa dimatikan sementara `SIMKER_FORCE_HTTPS=false`.
+  Di belakang CDN isi `TRUSTED_PROXIES=*` (`config/trustedproxy.php`). Cookie session `secure` bawaan true di produksi.
+- Cadangan: `simker:backup-db` (mysqldump → gzip, `storage/app/private/backups/simker-*.sql.gz`, simpan
+  `simker.backup.keep` = 14), harian 02.00 WIT. Kata sandi DB lewat file opsi sementara (600), bukan argumen.
+- Favicon: `public/favicon.svg` (sumber), `favicon.ico` (16/32/48) dan `apple-touch-icon.png` (180, tanpa sudut
+  membulat) dirender dari SVG itu; tautannya di `partials/head`. Buat ulang bila logo resmi tersedia.
+- Anggaran query halaman daftar/dasbor/publik dijaga `tests/Feature/Production/QueryBudgetTest.php` (< 40 query
+  dengan data contoh).
+- Jangan mengunggah `public/hot` ke server (halaman akan mencari server Vite lokal).
 
 - Butuh paket dengan akses SSH dan Composer (Business ke atas) atau VPS. PHP 8.3+.
 - Arahkan document root ke folder `public` (atau simlink `public_html` → `public`).
