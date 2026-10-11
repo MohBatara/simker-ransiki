@@ -1,10 +1,10 @@
 @use('App\Support\Format')
 
 <x-layouts.public title="Kontak" description="Kontak Kantor Distrik Ransiki dan daftar OPD terkait.">
-    <x-public.band title="Kontak" lead="Kantor Distrik Ransiki dan OPD yang membina kelompok usaha." />
+    <x-public.band title="Kontak" :crumbs="['Kontak' => null]" lead="Kantor Distrik Ransiki dan OPD yang membina kelompok usaha." />
 
     <div class="mx-auto grid max-w-public gap-6 px-4 py-10 md:px-6 lg:grid-cols-2">
-        <section class="rounded-card border border-line bg-paper p-4 md:p-5">
+        <section class="rounded-public border border-line bg-paper shadow-card p-4 md:p-5">
             @include('publik._section-heading', ['title' => 'Kantor Distrik Ransiki'])
             @php
                 $rows = array_filter([
@@ -43,12 +43,12 @@
             @endif
         </section>
 
-        <section class="rounded-card border border-line bg-paper p-4 md:p-5">
+        <section class="rounded-public border border-line bg-paper shadow-card p-4 md:p-5">
             @include('publik._section-heading', ['title' => 'OPD terkait'])
             <ul class="mt-4 divide-y divide-line">
                 @foreach ($opds as $opd)
                     <li class="py-3">
-                        <p class="text-body font-semibold text-ink">{{ $opd->name }}</p>
+                        <h3 class="font-serif text-card-title font-semibold text-ink">{{ $opd->name }}</h3>
                         @if ($opd->description)
                             <p class="mt-1 text-ui text-ink-soft">{{ $opd->description }}</p>
                         @endif

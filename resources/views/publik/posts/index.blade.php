@@ -1,5 +1,5 @@
 <x-layouts.public title="Berita & kegiatan" description="Berita dan kegiatan kelompok usaha dan kelembagaan ekonomi Distrik Ransiki.">
-    <x-public.band title="Berita & kegiatan" lead="Kabar terbaru dari kelompok usaha dan Pemerintah Distrik Ransiki." />
+    <x-public.band title="Berita & kegiatan" :crumbs="['Berita' => null]" lead="Kabar terbaru dari kelompok usaha dan Pemerintah Distrik Ransiki." />
 
     <div class="mx-auto max-w-public px-4 py-8 md:px-6 md:py-10">
         <nav aria-label="Kategori" class="flex flex-wrap gap-2">

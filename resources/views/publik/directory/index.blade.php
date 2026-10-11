@@ -1,4 +1,5 @@
 @use('App\Support\Format')
+@use('App\Support\PublicIcons')
 
 @php
     $activeFilters = collect($filters)->except('q')->filter()->count();
@@ -6,7 +7,7 @@
 @endphp
 
 <x-layouts.public title="Direktori kelompok" description="Cari kelompok dan kelembagaan ekonomi Distrik Ransiki berdasarkan nama, produk, jenis, bidang usaha, atau kampung.">
-    <x-public.band title="Direktori kelompok" :lead="Format::number($organizations->total()).' kelompok'.($hasFilters ? ' cocok dengan pencarian' : ' terdaftar')">
+    <x-public.band title="Direktori kelompok" :crumbs="['Direktori' => null]" :lead="Format::number($organizations->total()).' kelompok'.($hasFilters ? ' cocok dengan pencarian' : ' terdaftar')">
         <form method="GET" action="{{ route('public.directory') }}" role="search" id="cari-direktori" class="mt-6 flex max-w-2xl gap-2">
             <label for="q" class="sr-only">Cari nama kelompok atau produk</label>
             <x-input name="q" :value="$filters['q']" placeholder="Cari nama kelompok atau produk" class="min-w-0 flex-1 md:h-12!" />
@@ -47,7 +48,8 @@
                         $photo = $organization->products->firstWhere('photo_path', '!=', null);
                         $initials = collect(preg_split('/\s+/', $organization->name))->filter(fn ($word) => ! preg_match('/^\d+$/', $word))->take(2)->map(fn ($word) => mb_strtoupper(mb_substr($word, 0, 1)))->implode('');
                     @endphp
-                    <article class="flex flex-col overflow-hidden rounded-card border border-line bg-paper">
+                    <article class="flex flex-col overflow-hidden rounded-public border border-line bg-paper shadow-card">
+                        <div class="relative">
                         <a href="{{ $url }}" class="block aspect-[16/10] bg-subtle" tabindex="-1" aria-hidden="true">
                             @if ($photo)
                                 <x-public.picture :image="$photo->photoSources()" alt="" sizes="(min-width: 64rem) 22rem, (min-width: 40rem) 50vw, 100vw" width="400" height="250" frame="block size-full" class="size-full object-cover" />
@@ -56,7 +58,9 @@
                                 <span class="flex size-full items-center justify-center text-display font-semibold text-ink-muted">{{ $initials }}</span>
                             @endif
                         </a>
-                        <div class="flex flex-1 flex-col items-start gap-1.5 p-4">
+                        <x-public.icon-badge :icon="PublicIcons::institutionType($organization->institutionType->name)" class="absolute -bottom-6 left-4" />
+                        </div>
+                        <div class="flex flex-1 flex-col items-start gap-1.5 px-4 pt-8 pb-4">
                             <div class="flex flex-wrap gap-2">
                                 <x-public.pill>{{ $organization->institutionType->name }}</x-public.pill>
                                 @if ($organization->profile_status === App\Enums\ProfileStatus::Verified)
@@ -66,7 +70,7 @@
                                     <x-public.pill>{{ $organization->status->label() }}</x-public.pill>
                                 @endif
                             </div>
-                            <h2 class="text-card-title font-semibold">
+                            <h2 class="font-serif text-card-title font-semibold">
                                 <a href="{{ $url }}" class="rounded-control text-ink hover:text-brand">{{ $organization->name }}</a>
                             </h2>
                             <p class="text-caption text-ink-muted">{{ $organization->village->name }} · {{ $organization->sectors->pluck('name')->join(', ') }}</p>

@@ -1,7 +1,7 @@
 @use('App\Support\Format')
 
 <x-layouts.public title="Profil Distrik Ransiki" :description="Format::excerpt($settings['profile_body'], 160) ?? 'Profil dan potensi ekonomi Distrik Ransiki.'">
-    <x-public.band title="Profil Distrik Ransiki" :image="$cover">
+    <x-public.band title="Profil Distrik Ransiki" :image="$cover" :crumbs="['Profil Ransiki' => null]">
         @if ($updatedAt)
             <p class="mt-3 text-caption text-paper">Terakhir diperbarui {{ Format::date($updatedAt) }}</p>
         @endif
@@ -16,13 +16,13 @@
             @endif
 
             @if ($settings['economic_potential'])
-                <h2 class="mt-12 text-page-title font-semibold text-ink">Potensi ekonomi</h2>
+                <h2 class="mt-12 font-serif text-display-sm font-semibold text-ink">Potensi ekonomi</h2>
                 <div class="prose-public mt-4">{!! Format::markdown($settings['economic_potential']) !!}</div>
             @endif
         </article>
 
-        <aside class="on-dark h-fit rounded-card bg-forest p-4 text-paper md:p-5" aria-label="Sekilas">
-            <h2 class="text-ui font-semibold">Sekilas</h2>
+        <aside class="on-dark h-fit rounded-public bg-forest p-4 text-paper shadow-card md:p-5" aria-label="Sekilas">
+            <h2 class="font-serif text-card-title font-semibold">Sekilas</h2>
             @include('publik._stats', ['tone' => 'dark', 'class' => 'mt-3 grid-cols-3! lg:grid-cols-1! gap-3'])
             @if ($sectors->isNotEmpty())
                 <ul class="mt-5 space-y-1.5 border-t border-forest-line pt-4 text-ui">

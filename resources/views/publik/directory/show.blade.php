@@ -5,13 +5,8 @@
     :description="$organization->description ? Str::limit($organization->description, 160) : $organization->institutionType->name.' di '.$organization->village->name.', Distrik Ransiki.'"
     :image="$ogImage"
 >
-    <x-public.band :title="$organization->name">
+    <x-public.band :title="$organization->name" :crumbs="['Direktori' => route('public.directory'), $organization->name => null]">
         <x-slot:top>
-            <nav aria-label="Remah roti" class="mb-4 text-caption text-forest-soft">
-                <a href="{{ route('public.directory') }}" class="rounded-control hover:text-paper">Direktori</a>
-                <span aria-hidden="true"> / </span>
-                <span>{{ $organization->name }}</span>
-            </nav>
             <div class="mb-4 flex flex-wrap gap-2">
                 <x-public.pill tone="dark">{{ $organization->institutionType->name }}</x-public.pill>
                 <x-public.pill tone="dark">{{ $organization->village->name }}</x-public.pill>
@@ -46,7 +41,7 @@
                     @else
                         <div class="mt-5 grid gap-5 sm:grid-cols-2">
                             @foreach ($organization->products as $product)
-                                <article class="overflow-hidden rounded-card border border-line bg-paper">
+                                <article class="overflow-hidden rounded-public border border-line bg-paper shadow-card">
                                     @if ($sources = $product->photoSources())
                                         {{-- Foto utuh (object-contain), tidak dipotong. --}}
                                         <x-public.picture :image="$sources" :alt="$product->name" sizes="(min-width: 64rem) 20rem, (min-width: 40rem) 50vw, 100vw" width="400" height="300" frame="block bg-subtle" class="aspect-[4/3] w-full object-contain" />
@@ -54,7 +49,7 @@
                                         <div class="flex aspect-[4/3] items-center justify-center bg-subtle text-display font-semibold text-ink-muted" aria-hidden="true">{{ $product->initials() }}</div>
                                     @endif
                                     <div class="p-4">
-                                        <h3 class="font-semibold text-ink">{{ $product->name }}</h3>
+                                        <h3 class="font-serif text-card-title font-semibold text-ink">{{ $product->name }}</h3>
                                         @if ($product->capacity || $product->unit)
                                             <p class="text-caption text-ink-muted">{{ $product->capacity ?? 'Satuan: '.$product->unit }}</p>
                                         @endif
@@ -85,8 +80,8 @@
         </div>
 
         <aside class="order-2 h-fit space-y-5 lg:row-span-2">
-            <section class="rounded-card border border-line bg-paper p-4 md:p-5" aria-labelledby="kontak">
-                <h2 id="kontak" class="text-ui font-semibold text-ink">Kontak</h2>
+            <section class="rounded-public border border-line bg-paper shadow-card p-4 md:p-5" aria-labelledby="kontak">
+                <h2 id="kontak" class="font-serif text-card-title font-semibold text-ink">Kontak</h2>
                 @if ($contact)
                     <dl class="mt-3 space-y-2 text-ui">
                         @if ($contact->leader_name)
@@ -115,8 +110,8 @@
             </section>
 
             @if ($showLegal)
-                <section class="rounded-card border border-line bg-paper p-4 md:p-5" aria-labelledby="legalitas">
-                    <h2 id="legalitas" class="text-ui font-semibold text-ink">Legalitas</h2>
+                <section class="rounded-public border border-line bg-paper shadow-card p-4 md:p-5" aria-labelledby="legalitas">
+                    <h2 id="legalitas" class="font-serif text-card-title font-semibold text-ink">Legalitas</h2>
                     <ul class="mt-3 space-y-1.5 text-ui text-ink">
                         @if ($organization->legal_status === App\Enums\LegalStatus::Registered)
                             <li>Status hukum: terdaftar</li>

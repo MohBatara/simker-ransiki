@@ -14,13 +14,8 @@
     <x-slot:meta>
         <meta property="article:published_time" content="{{ $post->published_at->toAtomString() }}">
     </x-slot:meta>
-    <x-public.band :title="$post->title">
+    <x-public.band :title="$post->title" :crumbs="['Berita' => route('public.posts'), $post->category->label() => null]">
         <x-slot:top>
-            <nav aria-label="Remah roti" class="mb-4 text-caption text-forest-soft">
-                <a href="{{ route('public.posts') }}" class="rounded-control hover:text-paper">Berita</a>
-                <span aria-hidden="true"> / </span>
-                <span>{{ $post->category->label() }}</span>
-            </nav>
             <div class="mb-4 flex flex-wrap gap-2">
                 <x-public.pill tone="dark">{{ $post->category->label() }}</x-public.pill>
             </div>
@@ -31,7 +26,7 @@
     <div class="mx-auto grid max-w-public gap-10 px-4 py-10 md:px-6 lg:grid-cols-[minmax(0,1fr)_18rem] lg:gap-14">
         <article class="min-w-0 space-y-8">
             @if ($sources)
-                <x-public.picture :image="$sources" :alt="$post->title" sizes="(min-width: 64rem) 42rem, 100vw" width="960" height="540" frame="block overflow-hidden rounded-card bg-subtle max-w-[42rem]" class="w-full object-cover" />
+                <x-public.picture :image="$sources" :alt="$post->title" sizes="(min-width: 64rem) 42rem, 100vw" width="960" height="540" frame="block overflow-hidden rounded-public bg-subtle max-w-[42rem]" class="w-full object-cover" />
             @endif
             @if ($post->summary)
                 <p class="max-w-[42rem] text-body font-semibold text-ink">{{ $post->summary }}</p>
@@ -41,8 +36,8 @@
 
         <aside class="h-fit space-y-5">
             @if ($post->organizations->isNotEmpty())
-                <section class="rounded-card border border-line bg-paper p-4 md:p-5" aria-labelledby="kelompok-terkait">
-                    <h2 id="kelompok-terkait" class="text-ui font-semibold text-ink">Kelompok terkait</h2>
+                <section class="rounded-public border border-line bg-paper shadow-card p-4 md:p-5" aria-labelledby="kelompok-terkait">
+                    <h2 id="kelompok-terkait" class="font-serif text-card-title font-semibold text-ink">Kelompok terkait</h2>
                     <ul class="mt-3 space-y-2 text-ui">
                         @foreach ($post->organizations as $organization)
                             <li>

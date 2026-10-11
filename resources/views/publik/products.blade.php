@@ -1,5 +1,5 @@
 <x-layouts.public title="Produk unggulan" description="Produk hasil kelompok usaha dan kelembagaan ekonomi Distrik Ransiki.">
-    <x-public.band title="Produk unggulan" lead="Hasil usaha kelompok di Distrik Ransiki. Pilih produk untuk melihat profil dan kontak kelompoknya." />
+    <x-public.band title="Produk unggulan" :crumbs="['Produk unggulan' => null]" lead="Hasil usaha kelompok di Distrik Ransiki. Pilih produk untuk melihat profil dan kontak kelompoknya." />
 
     <div class="mx-auto max-w-public px-4 py-8 md:px-6 md:py-10">
     <form method="GET" action="{{ route('public.products') }}" class="max-w-xs">
