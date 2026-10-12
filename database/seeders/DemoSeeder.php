@@ -71,6 +71,11 @@ class DemoSeeder extends Seeder
         $this->now = now();
         $this->call(MasterDataSeeder::class);
 
+        // Deskripsi contoh hanya di data demo; ProductionSeeder membiarkannya kosong sampai diisi Admin.
+        foreach (DemoData::INSTITUTION_TYPE_TEXT as $code => $description) {
+            InstitutionType::where('code', $code)->update(['description' => $description]);
+        }
+
         $opds = collect(DemoData::OPDS)->map(
             fn (string $name, string $shortName) => Opd::create(['name' => $name, 'short_name' => $shortName])
         );

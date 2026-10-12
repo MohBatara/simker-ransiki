@@ -310,6 +310,22 @@ final class DemoData
         ],
     ];
 
+    /**
+     * Deskripsi contoh jenis kelembagaan (kartu beranda), per kode MasterDataSeeder::INSTITUTION_TYPES. Maks 120 karakter,
+     * tanpa tanda pisah. Akronim resmi (BUMDes, KUB, KDMP, KNMP, UMKM) tidak dijabarkan; hanya fungsi umumnya.
+     */
+    public const INSTITUTION_TYPE_TEXT = [
+        'bumdes' => 'Unit usaha yang dikelola pemerintah kampung untuk melayani kebutuhan warga dan menambah pendapatan kampung.',
+        'kub' => 'Kumpulan warga yang menjalankan satu usaha dengan modal, tenaga, dan hasil yang dibagi antaranggota.',
+        'kdmp' => 'Lembaga ekonomi di tingkat kampung yang melayani kebutuhan usaha anggotanya.',
+        'knmp' => 'Lembaga ekonomi yang menghimpun anggota untuk memperkuat dan memasarkan hasil usaha mereka.',
+        'kelompok_pertanian' => 'Petani yang bekerja sama mengolah lahan, berbagi alat, dan memasarkan hasil panen.',
+        'kelompok_perkebunan' => 'Pekebun kakao, kopi, pinang, atau tanaman lain yang merawat kebun dan menjual hasilnya bersama.',
+        'kelompok_perikanan' => 'Nelayan dan pembudidaya ikan yang bekerja sama menangkap, mengolah, dan menjual hasil perikanan.',
+        'umkm' => 'Usaha kecil milik warga, seperti olahan pangan, kerajinan, dan dagang kebutuhan harian.',
+        'lainnya' => 'Bentuk kelembagaan ekonomi lain yang belum termasuk jenis mana pun dalam daftar ini.',
+    ];
+
     /** Bidang usaha => [templat deskripsi kelompok, ringkasan kegiatan bulanan, capaian]. {produk} dan {kampung} diganti. */
     public const SECTOR_TEXT = [
         'Perkebunan' => [

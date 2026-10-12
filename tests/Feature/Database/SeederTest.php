@@ -91,3 +91,15 @@ test('tidak ada laporan untuk kelompok tutup atau sebelum wajib lapor', function
 
     expect($closedReports)->toBe(0)->and($tooEarly)->toBe(0);
 });
+
+test('deskripsi jenis kelembagaan hanya diisi data demo: maks 120 karakter, tanpa tanda pisah', function () {
+    $this->seed();
+    expect(InstitutionType::whereNotNull('description')->count())->toBe(0);
+
+    $this->seed(DemoSeeder::class);
+    $descriptions = InstitutionType::pluck('description', 'code');
+
+    expect($descriptions)->toHaveCount(count(Database\Seeders\MasterDataSeeder::INSTITUTION_TYPES))
+        ->each(fn ($text) => $text->not->toBeNull()->and(mb_strlen($text->value))->toBeLessThanOrEqual(120))
+        ->and($descriptions->join(' '))->not->toMatch('/[\x{2013}\x{2014}]|\b(\w+)-\1\b/u');
+});
