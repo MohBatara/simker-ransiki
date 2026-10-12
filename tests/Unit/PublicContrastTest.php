@@ -107,3 +107,19 @@ test('kartu bento jenis kelembagaan: pasangan teks memenuhi 4,5:1', function (ar
     '+N ink di lingkaran putih (cream)' => [hexRgb('#1C1F1E'), [255, 255, 255]],
     'teks putih kartu utama di atas foto + lapisan forest 70%' => [[255, 255, 255], overlayOnWhite(0.70)],
 ]);
+
+/** Warna kartu yang tertutup foto kartu kecil sebanyak $alpha di tepi kanan teks (foto putih atau hitam, terburuk). */
+function photoOn(string $card, float $alpha, int $photo): array
+{
+    return array_map(fn (int $c) => $alpha * $photo + (1 - $alpha) * $c, hexRgb($card));
+}
+
+test('kartu kecil berfoto: teks tetap 4,5:1 di tepi kanannya (foto menutupi paling banyak 10%)', function (array $text, array $background) {
+    // Foto 45% kanan, mask 0 → penuh di 60% lebarnya, opasitas 85%; teks berakhir di 58% isi kartu: foto ≤ 8,3%.
+    expect(contrast($text, $background))->toBeGreaterThanOrEqual(4.5);
+})->with([
+    'putih 85% di clay + 10% foto putih' => [whiteAt(0.85, '#6B4430'), photoOn('#6B4430', 0.10, 255)],
+    'putih 85% di forest + 10% foto putih' => [whiteAt(0.85, '#0F2E22'), photoOn('#0F2E22', 0.10, 255)],
+    'ink-soft di cream + 10% foto hitam' => [hexRgb('#4A504D'), photoOn('#F3EBDD', 0.10, 0)],
+    'ink di cream + 10% foto hitam' => [hexRgb('#1C1F1E'), photoOn('#F3EBDD', 0.10, 0)],
+]);

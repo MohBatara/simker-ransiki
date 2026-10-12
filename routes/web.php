@@ -25,6 +25,7 @@ Route::get('/berita/{slug}', [Publik\PostController::class, 'show'])->name('publ
 Route::get('/foto-berita/{post}', [Publik\PostController::class, 'photo'])->name('public.post-photo')->whereNumber('post');
 Route::get('/foto-{slot}', [Publik\SiteImageController::class, 'slot'])->name('public.site-photo')->whereIn('slot', ['sampul', 'tentang']);
 Route::get('/foto-bidang/{sector}', [Publik\SiteImageController::class, 'sector'])->name('public.sector-photo')->whereNumber('sector');
+Route::get('/foto-jenis/{institutionType}', [Publik\SiteImageController::class, 'institutionType'])->name('public.type-photo')->whereNumber('institutionType');
 Route::get('/foto-hero/bawaan', [Publik\SiteImageController::class, 'heroDefault'])->name('public.hero-default');
 Route::get('/foto-hero/{slide}', [Publik\SiteImageController::class, 'hero'])->name('public.hero-photo')->whereNumber('slide');
 Route::get('/sitemap.xml', [Publik\SitemapController::class, 'sitemap'])->name('sitemap');
@@ -243,6 +244,12 @@ Route::middleware('auth')->group(function () use ($organizationRoutes, $reportRo
                         Route::post('/{post}/foto', 'storeCover')->name('cover.store')->middleware('throttle:uploads');
                         Route::delete('/{post}/foto', 'destroyCover')->name('cover.destroy');
                     });
+                });
+
+                Route::controller(Admin\InstitutionTypePhotoController::class)->prefix('data-master/jenis-kelembagaan/{institutionType}/foto')->name('master.type-photo.')->whereNumber('institutionType')->group(function () {
+                    Route::get('/', 'edit')->name('edit');
+                    Route::post('/', 'store')->name('store')->middleware('throttle:uploads');
+                    Route::delete('/', 'destroy')->name('destroy');
                 });
 
                 Route::controller(Admin\MasterDataController::class)->prefix('data-master')->name('master.')->group(function () {

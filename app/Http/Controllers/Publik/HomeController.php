@@ -65,8 +65,8 @@ class HomeController extends Controller
 
     /**
      * Kartu "Jenis kelembagaan" (bento): jumlah kelompok publik terkini, maksimal 3 avatar kelompok publik (foto produk
-     * publik pertama, atau inisial), urut dari jenis terbanyak. Kartu pertama (utama) mendapat foto bidang usaha yang
-     * paling banyak dipakai kelompok jenis itu, hanya dari foto bidang Konten Website.
+     * publik pertama, atau inisial), urut dari jenis terbanyak. Foto kartu: foto jenis dari Data Master; kartu pertama
+     * (utama) tanpa foto jenis memakai foto bidang usaha yang paling banyak dipakai kelompok jenis itu (Konten Website).
      *
      * @return Collection<int, object>
      */
@@ -103,20 +103,22 @@ class HomeController extends Controller
 
                         return [
                             'name' => $organization->name,
-                            // Inisial tanpa awalan jenis: "Kelompok Tani Kakao Harapan" → "TK", bukan "KT".
-                            'initials' => Initials::of(preg_replace('/^(kelompok|kub|bumdes|kdmp|knmp|umkm)\s+/i', '', $organization->name)),
+                            'initials' => Initials::organization($organization->name),
                             'photo' => $sources,
                         ];
                     })->values()->all(),
                     'more' => max(0, $group->count() - self::AVATAR_LIMIT),
-                    'photo' => null,
+                    // Kartu kecil: foto jenis dari Data Master (opsional). Kartu utama diisi di bawah.
+                    'photo' => PublicImages::institutionTypePhoto($type),
                 ];
             })
             ->filter(fn (object $card) => $card->organizations_count > 0)
             ->sortBy([['organizations_count', 'desc'], ['name', 'asc']])
             ->values();
 
-        if ($featured = $cards->first()) {
+        $featured = $cards->first();
+
+        if ($featured && ! $featured->photo) {
             $sector = BusinessSector::query()
                 ->whereNotNull('business_sectors.photo_path')
                 ->join('organization_sector', 'organization_sector.business_sector_id', '=', 'business_sectors.id')

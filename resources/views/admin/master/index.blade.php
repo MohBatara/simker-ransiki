@@ -71,6 +71,9 @@
                                     <x-button variant="ghost" x-on:click="remove({{ Js::from(['id' => $item->id, 'name' => $item->name]) }})">Hapus</x-button>
                                 @endif
                                 <x-button variant="secondary" x-on:click="edit({{ Js::from($item->only(['id', ...array_keys($fields)])) }})">Ubah</x-button>
+                                @if ($type === \App\Enums\MasterDataType::InstitutionType)
+                                    <x-button variant="secondary" :href="route('admin.master.type-photo.edit', $item)" :icon="$item->photo_path ? 'photo' : null">Foto</x-button>
+                                @endif
                             </div>
                         </x-table.cell>
                     </x-table.row>

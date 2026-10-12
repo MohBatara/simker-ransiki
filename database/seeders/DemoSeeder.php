@@ -169,9 +169,9 @@ class DemoSeeder extends Seeder
         return database_path('seeders/photos/'.$file);
     }
 
-    private function storeWidePhoto(string $file, string $path, array $budgets = []): string
+    private function storeWidePhoto(string $file, string $path, array $budgets = [], array $widths = ImageVariants::WIDE): string
     {
-        ImageVariants::store('local', $this->photo($file), $path, ImageVariants::WIDE, $budgets);
+        ImageVariants::store('local', $this->photo($file), $path, $widths, $budgets);
 
         return $path;
     }
@@ -209,6 +209,12 @@ class DemoSeeder extends Seeder
         foreach (BusinessSector::whereIn('name', array_keys($files))->get() as $sector) {
             $path = $this->storeWidePhoto($files[$sector->name], "site/bidang-{$sector->id}-demo.jpg");
             $sector->forceFill(['photo_path' => $path])->save();
+        }
+
+        // Foto jenis kelembagaan untuk tiga jenis saja, agar kartu berfoto dan tanpa foto bisa dibandingkan.
+        foreach (DemoData::INSTITUTION_TYPE_PHOTOS as $code => $file) {
+            $type = InstitutionType::where('code', $code)->firstOrFail();
+            $type->forceFill(['photo_path' => $this->storeWidePhoto($file, "site/jenis-{$type->id}-demo.jpg", widths: ImageVariants::HERO)])->save();
         }
     }
 

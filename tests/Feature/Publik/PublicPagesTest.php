@@ -448,3 +448,56 @@ test('keterangan dan kredit foto publik tanpa catatan internal (data demo)', fun
         $this->get($url)->assertOk()->assertDontSee('Foto sementara')->assertDontSee('foto resmi distrik')->assertDontSee('Dokumentasi sementara');
     }
 });
+
+test('kartu kecil berfoto: foto 45% kanan memudar, tanpa ikon tekstur; tanpa foto tetap berikon; deskripsi tidak dipotong', function () {
+    Storage::fake('local');
+    $big = InstitutionType::factory()->create(['name' => 'UMKM']);
+    $withPhoto = InstitutionType::factory()->create(['name' => 'KUB', 'photo_path' => 'site/jenis-kub.jpg', 'description' => 'Deskripsi lengkap yang tidak boleh dipotong sama sekali di kartu.']);
+    $plain = InstitutionType::factory()->create(['name' => 'BUMDes']);
+    Organization::factory()->public()->count(3)->create(['institution_type_id' => $big->id]);
+    Organization::factory()->public()->count(2)->create(['institution_type_id' => $withPhoto->id]);
+    Organization::factory()->public()->create(['institution_type_id' => $plain->id]);
+
+    preg_match('#aria-labelledby="jenis-kelembagaan".*?</section>#s', $this->get('/')->getContent(), $section);
+    preg_match_all('#<li class="[^"]*">.*?</li>#s', $section[0], $cards);
+    [$featured, $photoCard, $plainCard] = $cards[0];
+
+    expect($photoCard)->toContain('mask-fade-left')->toContain("/foto-jenis/{$withPhoto->id}?ukuran=640")->toContain('pr-[42%]')
+        ->not->toContain('opacity-[0.08]')
+        ->toContain('Deskripsi lengkap yang tidak boleh dipotong sama sekali di kartu.')
+        ->and($plainCard)->toContain('opacity-[0.08]')->not->toContain('mask-fade-left')
+        ->and($section[0])->not->toContain('line-clamp')->not->toContain('...');
+});
+
+test('kartu utama: foto jenis lebih dulu dari foto bidang, isi di bawah dengan lapisan memudar, tautan tampil', function () {
+    $type = InstitutionType::factory()->create(['name' => 'Kelompok Perikanan']);
+    $sector = BusinessSector::factory()->create(['photo_path' => 'site/bidang-ikan.jpg']);
+    foreach (range(1, 2) as $i) {
+        Organization::factory()->public()->create(['institution_type_id' => $type->id])->sectors()->attach($sector);
+    }
+
+    preg_match('#aria-labelledby="jenis-kelembagaan".*?</section>#s', $this->get('/')->getContent(), $section);
+    expect($section[0])->toContain("/foto-bidang/{$sector->id}")->toContain('overlay-bento-fade')->toContain('relative flex flex-col mt-auto')
+        ->toContain('Lihat kelompok');
+
+    $type->forceFill(['photo_path' => 'site/jenis-ikan.jpg'])->save();
+    Illuminate\Support\Facades\Cache::forget(PublicDirectory::TYPES_CACHE_KEY);
+    preg_match('#aria-labelledby="jenis-kelembagaan".*?</section>#s', $this->get('/')->getContent(), $section);
+    expect($section[0])->toContain("/foto-jenis/{$type->id}")->not->toContain("/foto-bidang/{$sector->id}");
+});
+
+test('tumpukan avatar: tumpuk 10px, kiri di atas, cincin warna kartu, +N bergaya sama', function () {
+    $type = InstitutionType::factory()->create(['name' => 'KUB']);
+    foreach (['KUB Alfa Bahari', 'KUB Beta Bahari', 'KUB Gamma Bahari', 'KUB Delta Bahari'] as $name) {
+        Organization::factory()->public()->create(['name' => $name, 'institution_type_id' => $type->id]);
+    }
+
+    preg_match('#aria-labelledby="jenis-kelembagaan".*?</section>#s', $this->get('/')->getContent(), $section);
+    preg_match_all('#<span class="(relative[^"]*ring-2[^"]*)"[^>]*>\s*([^<]*?)\s*</span>#', $section[0], $avatars);
+
+    expect($avatars[2])->toBe(['AB', 'BB', 'DB', '+1'])
+        ->and($avatars[1][0])->toContain('z-30')->not->toContain('-ml-2.5')
+        ->and($avatars[1][1])->toContain('z-20')->toContain('-ml-2.5')->toContain('pl-3')
+        ->and($avatars[1][3])->toContain('z-0')->toContain('size-8')->toContain('-ml-2.5')
+        ->and(collect($avatars[1])->every(fn ($classes) => str_contains($classes, 'ring-forest')))->toBeTrue();
+});

@@ -71,7 +71,7 @@ enum MasterDataType: string
             self::InstitutionType => [
                 'name' => ['label' => 'Nama jenis kelembagaan', 'max' => 255, 'unique' => true, 'hint' => 'Tulis apa adanya, mis. KDMP. Jangan menebak kepanjangan akronim.'],
                 'code' => ['label' => 'Kode', 'max' => 30, 'unique' => true, 'column' => true, 'pattern' => '/^[a-z0-9_]+$/', 'hint' => 'Huruf kecil, angka, dan garis bawah, mis. kelompok_tani.'],
-                'description' => ['label' => 'Deskripsi singkat', 'max' => 200, 'optional' => true, 'textarea' => true, 'hint' => 'Satu kalimat untuk kartu di beranda. Boleh kosong.'],
+                'description' => ['label' => 'Deskripsi singkat', 'max' => 90, 'optional' => true, 'textarea' => true, 'hint' => 'Satu kalimat untuk kartu di beranda, paling banyak 90 karakter. Boleh kosong.'],
             ],
             self::BusinessSector => [
                 'name' => ['label' => 'Nama bidang usaha', 'max' => 255, 'unique' => true],

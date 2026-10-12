@@ -311,19 +311,28 @@ final class DemoData
     ];
 
     /**
-     * Deskripsi contoh jenis kelembagaan (kartu beranda), per kode MasterDataSeeder::INSTITUTION_TYPES. Maks 120 karakter,
+     * Deskripsi contoh jenis kelembagaan (kartu beranda), per kode MasterDataSeeder::INSTITUTION_TYPES. Maks 50 karakter
+     * agar utuh dalam 2 baris di kartu kecil tersempit (form Admin membatasi 90),
      * tanpa tanda pisah. Akronim resmi (BUMDes, KUB, KDMP, KNMP, UMKM) tidak dijabarkan; hanya fungsi umumnya.
      */
     public const INSTITUTION_TYPE_TEXT = [
-        'bumdes' => 'Unit usaha yang dikelola pemerintah kampung untuk melayani kebutuhan warga dan menambah pendapatan kampung.',
-        'kub' => 'Kumpulan warga yang menjalankan satu usaha dengan modal, tenaga, dan hasil yang dibagi antaranggota.',
-        'kdmp' => 'Lembaga ekonomi di tingkat kampung yang melayani kebutuhan usaha anggotanya.',
-        'knmp' => 'Lembaga ekonomi yang menghimpun anggota untuk memperkuat dan memasarkan hasil usaha mereka.',
-        'kelompok_pertanian' => 'Petani yang bekerja sama mengolah lahan, berbagi alat, dan memasarkan hasil panen.',
-        'kelompok_perkebunan' => 'Pekebun kakao, kopi, pinang, atau tanaman lain yang merawat kebun dan menjual hasilnya bersama.',
-        'kelompok_perikanan' => 'Nelayan dan pembudidaya ikan yang bekerja sama menangkap, mengolah, dan menjual hasil perikanan.',
-        'umkm' => 'Usaha kecil milik warga, seperti olahan pangan, kerajinan, dan dagang kebutuhan harian.',
-        'lainnya' => 'Bentuk kelembagaan ekonomi lain yang belum termasuk jenis mana pun dalam daftar ini.',
+        'bumdes' => 'Usaha yang dikelola pemerintah kampung.',
+        // Jenis berfoto (INSTITUTION_TYPE_PHOTOS) maks 30 karakter: teksnya hanya ~55% lebar kartu.
+        'kub' => 'Warga berbagi modal dan hasil.',
+        'kdmp' => 'Lembaga ekonomi yang melayani usaha anggota.',
+        'knmp' => 'Lembaga ekonomi untuk memasarkan hasil anggota.',
+        'kelompok_pertanian' => 'Petani yang mengolah lahan dan panen bersama.',
+        'kelompok_perkebunan' => 'Pekebun kakao, kopi, pinang.',
+        'kelompok_perikanan' => 'Nelayan dan petambak ikan.',
+        'umkm' => 'Usaha kecil warga di bidang pangan dan kerajinan.',
+        'lainnya' => 'Bentuk kelembagaan ekonomi di luar daftar ini.',
+    ];
+
+    /** Foto contoh kartu jenis kelembagaan (database/seeders/photos), sengaja hanya untuk tiga jenis. */
+    public const INSTITUTION_TYPE_PHOTOS = [
+        'kub' => 'pengemasan.jpg',
+        'kelompok_perkebunan' => 'kakao.jpg',
+        'kelompok_perikanan' => 'perikanan.jpg',
     ];
 
     /** Bidang usaha => [templat deskripsi kelompok, ringkasan kegiatan bulanan, capaian]. {produk} dan {kampung} diganti. */

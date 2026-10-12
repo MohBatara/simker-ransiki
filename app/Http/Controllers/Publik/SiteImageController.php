@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Publik;
 use App\Http\Controllers\Controller;
 use App\Models\BusinessSector;
 use App\Models\HeroSlide;
+use App\Models\InstitutionType;
 use App\Models\SiteSetting;
 use App\Support\ImageVariants;
 use Illuminate\Http\Request;
@@ -37,6 +38,11 @@ class SiteImageController extends Controller
         abort_unless($slide->is_active || $request->user()?->isAdmin(), 404);
 
         return $this->respond($request, $slide->photo_path, ImageVariants::HERO);
+    }
+
+    public function institutionType(Request $request, InstitutionType $institutionType): StreamedResponse
+    {
+        return $this->respond($request, $institutionType->photo_path, ImageVariants::HERO);
     }
 
     /** Foto hero bawaan dari repo (resources/aset) selama belum ada slide aktif. */

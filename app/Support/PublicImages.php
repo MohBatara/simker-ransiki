@@ -42,6 +42,14 @@ class PublicImages
         return self::wide(fn (array $query) => route('public.hero-photo', ['slide' => $slide->id, ...$query]), $slide->photo_path, ImageVariants::HERO);
     }
 
+    /** Foto kartu jenis kelembagaan (model atau objek dari PublicDirectory::institutionTypes()), atau null. */
+    public static function institutionTypePhoto(object $type): ?array
+    {
+        return filled($type->photo_path ?? null)
+            ? self::wide(fn (array $query) => route('public.type-photo', ['institutionType' => $type->id, ...$query]), $type->photo_path, ImageVariants::HERO)
+            : null;
+    }
+
     /** Foto bawaan di resources/aset, selama Admin belum mengaktifkan slide. */
     public static function heroDefault(): array
     {

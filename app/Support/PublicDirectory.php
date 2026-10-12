@@ -28,7 +28,7 @@ class PublicDirectory
 
     public const SECTORS_CACHE_KEY = 'public.sectors';
 
-    public const TYPES_CACHE_KEY = 'public.types.v2';
+    public const TYPES_CACHE_KEY = 'public.types.v3';
 
     public const FOOTER_CACHE_KEY = 'public.footer';
 
@@ -101,17 +101,17 @@ class PublicDirectory
     /**
      * Jenis kelembagaan yang punya minimal satu kelompok publik, beserta jumlah kelompoknya.
      *
-     * @return Collection<int, object{id: int, name: string, description: ?string, organizations_count: int}>
+     * @return Collection<int, object{id: int, name: string, description: ?string, photo_path: ?string, organizations_count: int}>
      */
     public static function institutionTypes(): Collection
     {
         $types = Cache::remember(self::TYPES_CACHE_KEY, self::CACHE_SECONDS, fn () => InstitutionType::query()
             ->join('organizations', 'organizations.institution_type_id', '=', 'institution_types.id')
             ->whereIn('organizations.id', Organization::query()->publiclyListed()->select('organizations.id'))
-            ->groupBy('institution_types.id', 'institution_types.name', 'institution_types.description')
+            ->groupBy('institution_types.id', 'institution_types.name', 'institution_types.description', 'institution_types.photo_path')
             ->orderBy('institution_types.name')
-            ->get(['institution_types.id', 'institution_types.name', 'institution_types.description', DB::raw('COUNT(DISTINCT organizations.id) as organizations_count')])
-            ->map(fn ($type) => ['id' => $type->id, 'name' => $type->name, 'description' => $type->description, 'organizations_count' => (int) $type->organizations_count])
+            ->get(['institution_types.id', 'institution_types.name', 'institution_types.description', 'institution_types.photo_path', DB::raw('COUNT(DISTINCT organizations.id) as organizations_count')])
+            ->map(fn ($type) => ['id' => $type->id, 'name' => $type->name, 'description' => $type->description, 'photo_path' => $type->photo_path, 'organizations_count' => (int) $type->organizations_count])
             ->all());
 
         return collect($types)->map(fn (array $type) => (object) $type);

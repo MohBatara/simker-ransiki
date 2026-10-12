@@ -92,7 +92,7 @@ test('tidak ada laporan untuk kelompok tutup atau sebelum wajib lapor', function
     expect($closedReports)->toBe(0)->and($tooEarly)->toBe(0);
 });
 
-test('deskripsi jenis kelembagaan hanya diisi data demo: maks 120 karakter, tanpa tanda pisah', function () {
+test('deskripsi dan foto jenis kelembagaan hanya diisi data demo: maks 50 karakter, foto untuk 3 jenis', function () {
     $this->seed();
     expect(InstitutionType::whereNotNull('description')->count())->toBe(0);
 
@@ -100,6 +100,11 @@ test('deskripsi jenis kelembagaan hanya diisi data demo: maks 120 karakter, tanp
     $descriptions = InstitutionType::pluck('description', 'code');
 
     expect($descriptions)->toHaveCount(count(Database\Seeders\MasterDataSeeder::INSTITUTION_TYPES))
-        ->each(fn ($text) => $text->not->toBeNull()->and(mb_strlen($text->value))->toBeLessThanOrEqual(120))
-        ->and($descriptions->join(' '))->not->toMatch('/[\x{2013}\x{2014}]|\b(\w+)-\1\b/u');
+        ->each(fn ($text) => $text->not->toBeNull()->and(mb_strlen($text->value))->toBeLessThanOrEqual(50))
+        ->and($descriptions->join(' '))->not->toMatch('/[\x{2013}\x{2014}]|\b(\w+)-\1\b/u')
+        ->and(collect(Database\Seeders\DemoData::INSTITUTION_TYPE_PHOTOS)->keys()->every(fn ($code) => mb_strlen($descriptions[$code]) <= 30))->toBeTrue()
+        // Foto demo hanya dibuat di local (DemoSeeder::photosEnabled); di sini cukup daftar dan filenya.
+        ->and(Database\Seeders\DemoData::INSTITUTION_TYPE_PHOTOS)->toHaveCount(3)
+        ->and(array_diff_key(Database\Seeders\DemoData::INSTITUTION_TYPE_PHOTOS, Database\Seeders\MasterDataSeeder::INSTITUTION_TYPES))->toBe([])
+        ->and(collect(Database\Seeders\DemoData::INSTITUTION_TYPE_PHOTOS)->every(fn ($file) => is_file(database_path("seeders/photos/{$file}"))))->toBeTrue();
 });

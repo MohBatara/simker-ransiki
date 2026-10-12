@@ -193,7 +193,8 @@
         Jenis kelembagaan (bento): kartu utama 2×2 untuk jenis terbanyak, kartu kecil bergiliran forest, clay, cream.
         Grid selalu penuh untuk 2 sampai 9 jenis; kartu kecil terakhir melebar mengisi sisa baris (App\Support\BentoGrid).
         Kontras: putih di forest 14,6 dan clay 8,4 (putih 85%: 11,0 dan 6,6); ink di cream 14,0 (ink-soft 7,0);
-        kartu utama putih di atas foto + lapisan forest ≥ 70% (terburuk 5,6).
+        kartu utama putih di atas foto + lapisan forest ≥ 70% di area teks (terburuk 5,6); kartu kecil berfoto: teks
+        berakhir sebelum foto lebih dari 10% menutupi warna kartu (diukur di PublicContrastTest).
     --}}
     @if ($types->isNotEmpty())
         @php
@@ -214,7 +215,7 @@
                         @php
                             $isFeatured = $loop->first;
                             $tone = $isFeatured ? $tones['forest'] : $tones[array_keys($tones)[($loop->index - 1) % 3]];
-                            $hasPhoto = $isFeatured && $type->photo;
+                            $photo = $type->photo;
                         @endphp
                         <li @class([
                             'min-w-0',
@@ -225,53 +226,73 @@
                                 href="{{ route('public.directory', ['jenis' => $type->id]) }}"
                                 @class([
                                     'group relative isolate flex h-full flex-col overflow-hidden rounded-tile shadow-soft transition-transform duration-150 hover:-translate-y-0.5 focus-visible:-translate-y-0.5 motion-reduce:transition-none motion-reduce:hover:translate-y-0 motion-reduce:focus-visible:translate-y-0',
-                                    'min-h-[24rem] p-6 md:p-8' => $isFeatured,
+                                    'min-h-[26rem] p-6 md:min-h-[32rem] md:p-8' => $isFeatured,
                                     'min-h-60 p-6' => ! $isFeatured,
                                     $tone['surface'],
                                 ])
                             >
-                                @if ($hasPhoto)
-                                    <x-public.picture :image="$type->photo" alt="" sizes="(min-width: 64rem) 34rem, 100vw" width="960" height="720" frame="absolute inset-0 -z-20 block size-full" class="size-full object-cover" />
-                                    <div class="overlay-bento absolute inset-0 -z-10" aria-hidden="true"></div>
-                                @endif
-                                {{-- Ikon jenis besar sebagai tekstur, sedikit terpotong tepi kartu. --}}
-                                <x-public.icon
-                                    :name="PublicIcons::institutionType($type->name)"
-                                    @class([
-                                        'pointer-events-none absolute -z-10 opacity-[0.08] transition duration-150 group-hover:scale-105 group-hover:opacity-[0.12] group-focus-visible:scale-105 group-focus-visible:opacity-[0.12] motion-reduce:transition-none motion-reduce:group-hover:scale-100',
-                                        '-right-8 -bottom-8 size-56' => $isFeatured,
-                                        '-right-6 -bottom-6 size-36' => ! $isFeatured,
-                                    ])
-                                />
-
-                                <span @class(['block font-serif font-semibold tabular-nums', 'text-numeral' => $isFeatured, 'text-hero leading-none' => ! $isFeatured])>{{ Format::number($type->organizations_count) }}</span>
-                                <span @class(['mt-1 text-caption', $isFeatured ? 'text-paper' : $tone['soft']])>kelompok</span>
-
-                                <span @class(['mt-5 font-serif font-semibold', 'text-display-sm md:text-display' => $isFeatured, 'text-card-title' => ! $isFeatured])>{{ $type->name }}</span>
-                                @if ($type->description ?? null)
-                                    <span @class(['mt-2 text-ui', 'max-w-[30rem] text-paper' => $isFeatured, 'line-clamp-2 '.$tone['soft'] => ! $isFeatured])>{{ $type->description }}</span>
+                                @if ($photo && $isFeatured)
+                                    <x-public.picture :image="$photo" alt="" sizes="(min-width: 64rem) 34rem, 100vw" width="960" height="720" frame="absolute inset-0 -z-20 block size-full" class="size-full object-cover" />
+                                @elseif ($photo)
+                                    {{-- 45% kanan, memudar mulus ke warna kartu (mask), opasitas 85%; teks tetap di atas warna polos. --}}
+                                    <div class="mask-fade-left absolute inset-y-0 right-0 -z-10 w-[45%] opacity-85" aria-hidden="true">
+                                        <x-public.picture :image="$photo" alt="" sizes="(min-width: 64rem) 7rem, (min-width: 48rem) 22vw, 45vw" width="640" height="480" frame="block size-full" class="size-full object-cover" />
+                                    </div>
+                                @else
+                                    {{-- Ikon jenis besar sebagai tekstur, sedikit terpotong tepi kartu; tidak dipakai bila kartu berfoto. --}}
+                                    <x-public.icon
+                                        :name="PublicIcons::institutionType($type->name)"
+                                        @class([
+                                            'pointer-events-none absolute -z-10 opacity-[0.08] transition duration-150 group-hover:scale-105 group-hover:opacity-[0.12] group-focus-visible:scale-105 group-focus-visible:opacity-[0.12] motion-reduce:transition-none motion-reduce:group-hover:scale-100',
+                                            '-right-8 -bottom-8 size-56' => $isFeatured,
+                                            '-right-6 -bottom-6 size-36' => ! $isFeatured,
+                                        ])
+                                    />
                                 @endif
 
-                                {{-- Avatar kelompok publik (foto produk publik pertama atau inisial), maks 3, lalu +N. --}}
-                                <span class="mt-5 flex items-center" aria-hidden="true">
-                                    @foreach ($type->avatars as $avatar)
-                                        <span @class(['-ml-0.5 flex size-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-brand-tint text-caption font-semibold text-brand ring-2 first:ml-0', $tone['ring']]) title="{{ $avatar['name'] }}">
-                                            @if ($avatar['photo'])
-                                                <x-public.picture :image="$avatar['photo']" alt="" sizes="32px" width="32" height="32" frame="block size-full" class="size-full object-cover" />
-                                            @else
-                                                {{ $avatar['initials'] }}
-                                            @endif
-                                        </span>
-                                    @endforeach
-                                    @if ($type->more)
-                                        <span @class(['-ml-0.5 flex h-8 min-w-8 items-center justify-center rounded-full px-2 text-caption font-semibold tabular-nums ring-2', $tone['ring'], $tone['more']])>+{{ $type->more }}</span>
+                                {{-- Kartu utama: isi di bawah; lapisan gelap menempel pada blok isi (≥ 70% di bawah teks) lalu memudar ke atas. --}}
+                                <div @class(['relative flex flex-col', 'mt-auto' => $isFeatured, 'h-full' => ! $isFeatured, 'pr-[42%]' => $photo && ! $isFeatured])>
+                                    @if ($photo && $isFeatured)
+                                        <div class="overlay-bento-fade absolute -inset-x-6 -bottom-6 -top-28 -z-10 md:-inset-x-8 md:-bottom-8 md:-top-36 lg:-top-24" aria-hidden="true"></div>
                                     @endif
-                                </span>
+                                    <span @class(['block font-serif font-semibold tabular-nums', 'text-numeral' => $isFeatured, 'text-hero leading-none' => ! $isFeatured])>{{ Format::number($type->organizations_count) }}</span>
+                                    <span @class(['mt-1 text-caption', $isFeatured ? 'text-paper' : $tone['soft']])>kelompok</span>
 
-                                <span class="mt-auto inline-flex items-center gap-2 pt-6 text-ui font-semibold underline-offset-4 group-hover:underline group-focus-visible:underline">
-                                    Lihat kelompok
-                                    <x-heroicon-o-arrow-right class="size-4 transition-transform duration-150 group-hover:translate-x-1 group-focus-visible:translate-x-1 motion-reduce:transition-none" aria-hidden="true" />
-                                </span>
+                                    <span @class(['mt-5 font-serif font-semibold', 'text-display-sm md:text-display' => $isFeatured, 'text-card-title' => ! $isFeatured])>{{ $type->name }}</span>
+                                    @if ($type->description ?? null)
+                                        <span @class(['mt-2 text-ui', 'max-w-[30rem] text-paper' => $isFeatured, $tone['soft'] => ! $isFeatured])>{{ $type->description }}</span>
+                                    @endif
+
+                                    {{--
+                                        Avatar kelompok publik (foto produk publik pertama atau inisial), maks 3, lalu +N. Tumpuk 10px,
+                                        yang kiri di atas; cincin 2px warna kartu memisahkan lingkaran, inisial digeser ke bagian yang terlihat.
+                                    --}}
+                                    <span class="mt-5 flex items-center" aria-hidden="true">
+                                        @foreach ($type->avatars as $avatar)
+                                            <span @class([
+                                                'relative flex size-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-brand-tint text-caption font-semibold text-brand ring-2',
+                                                $tone['ring'],
+                                                ['z-30', 'z-20', 'z-10'][$loop->index],
+                                                '-ml-2.5' => ! $loop->first,
+                                                'pl-3 tracking-tight' => ! $loop->first && ! $avatar['photo'],
+                                            ]) title="{{ $avatar['name'] }}">
+                                                @if ($avatar['photo'])
+                                                    <x-public.picture :image="$avatar['photo']" alt="" sizes="32px" width="32" height="32" frame="block size-full" class="size-full object-cover" />
+                                                @else
+                                                    {{ $avatar['initials'] }}
+                                                @endif
+                                            </span>
+                                        @endforeach
+                                        @if ($type->more)
+                                            <span @class(['relative z-0 -ml-2.5 flex size-8 shrink-0 items-center justify-center rounded-full pl-3 text-caption font-semibold tracking-tight tabular-nums ring-2', $tone['ring'], $tone['more']])>+{{ $type->more }}</span>
+                                        @endif
+                                    </span>
+
+                                    <span @class(['inline-flex items-center gap-2 whitespace-nowrap text-ui font-semibold underline-offset-4 group-hover:underline group-focus-visible:underline', 'mt-6' => $isFeatured, 'mt-auto pt-6' => ! $isFeatured])>
+                                        Lihat kelompok
+                                        <x-heroicon-o-arrow-right class="size-4 transition-transform duration-150 group-hover:translate-x-1 group-focus-visible:translate-x-1 motion-reduce:transition-none" aria-hidden="true" />
+                                    </span>
+                                </div>
                             </a>
                         </li>
                     @endforeach
