@@ -390,8 +390,9 @@ Jangan mengarang kepanjangan akronim resmi (KDMP, KNMP, dsb.). Simpan apa adanya
 - `hero_slides` (foto hero beranda, Konten Website > tab Beranda, maks `HeroSlide::MAX` = 3, Policy `HeroSlidePolicy`
   hanya Admin): photo_path (JPEG 1920 tanpa EXIF; varian WebP 640/1280/1920 = `ImageVariants::HERO`; file asli tidak
   disimpan), caption (≤ 100), alt_text (wajib), focus (enum HeroFocus atas/tengah/bawah → object-position), position,
-  is_active, created_by, updated_by. Unggah: JPG/PNG/WebP, maks 8 MB, lebar minimal 1600 px, form biasa (bukan XHR,
-  tidak diperkecil di browser) dengan pratinjau. Isian tiap form slide berawalan sendiri (`baru[...]`,
+  is_active, created_by, updated_by. Unggah: JPG/PNG/WebP, maks 8 MB, lebar < 1280 px ditolak, 1280–1599 px diterima dengan peringatan kuning
+  (`session('warning')`, "Foto mungkin kurang tajam di layar lebar"), form biasa (bukan XHR, tidak diperkecil di
+  browser) dengan pratinjau. Validasi gagal: ringkasan error di atas tombol simpan form itu (`data-form-errors`). Isian tiap form slide berawalan sendiri (`baru[...]`,
   `slide_{id}[...]`). Foto: `GET /foto-hero/{id}` (slide nonaktif hanya Admin). Tanpa slide aktif: satu foto bawaan
   `resources/aset/hero-bawaan*` (`/foto-hero/bawaan`, foto sementara; ganti dengan foto asli Ransiki), tidak pernah
   foto produk kelompok.

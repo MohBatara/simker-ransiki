@@ -19,7 +19,11 @@ class HeroSlideRequest extends FormRequest
 {
     public const MAX_KILOBYTES = 8192;
 
-    public const MIN_WIDTH = 1600;
+    /** Di bawah ini ditolak. */
+    public const MIN_WIDTH = 1280;
+
+    /** Di bawah ini diterima dengan peringatan (hero tampil sampai 1920 px). */
+    public const SHARP_WIDTH = 1600;
 
     public static function prefixFor(?HeroSlide $slide): string
     {
@@ -63,6 +67,16 @@ class HeroSlideRequest extends FormRequest
         return $this->file($this->prefix().'.photo');
     }
 
+    /** Peringatan untuk foto yang diterima tetapi kurang lebar (1280–1599 px); null bila cukup. */
+    public function sharpnessWarning(): ?string
+    {
+        $width = $this->photo() ? (@getimagesize($this->photo()->getRealPath())[0] ?? null) : null;
+
+        return $width && $width < self::SHARP_WIDTH
+            ? "Foto mungkin kurang tajam di layar lebar (lebarnya {$width} px). Bila ada, ganti dengan foto selebar minimal 1.600 px."
+            : null;
+    }
+
     private function dimensions(string $attribute, UploadedFile $file, Closure $fail): void
     {
         $size = @getimagesize($file->getRealPath());
@@ -72,7 +86,7 @@ class HeroSlideRequest extends FormRequest
         } elseif (max($size[0], $size[1]) > AllowedUpload::MAX_DIMENSION) {
             $fail('Foto terlalu besar: sisi terpanjang paling besar 8.000 px. Perkecil foto lalu coba lagi.');
         } elseif ($size[0] < self::MIN_WIDTH) {
-            $fail("Foto terlalu kecil: lebarnya {$size[0]} px, minimal 1.600 px. Pakai foto asli dari kamera, bukan hasil kiriman WhatsApp.");
+            $fail("Foto terlalu kecil: lebarnya {$size[0]} px, minimal 1.280 px. Pakai foto asli dari kamera, bukan hasil kiriman WhatsApp.");
         }
     }
 

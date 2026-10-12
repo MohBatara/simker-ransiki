@@ -26,7 +26,7 @@ class HeroSlideController extends Controller
             'updated_by' => $request->user()->id,
         ])->save();
 
-        return to_route('admin.content.edit')->with('status', 'Slide ditambahkan.');
+        return to_route('admin.content.edit')->with(['status' => 'Slide ditambahkan.', 'warning' => $request->sharpnessWarning()]);
     }
 
     public function update(HeroSlideRequest $request, HeroSlide $slide): RedirectResponse
@@ -44,7 +44,7 @@ class HeroSlideController extends Controller
             ImageVariants::delete(SiteImageController::DISK, $old, ImageVariants::HERO);
         }
 
-        return to_route('admin.content.edit')->with('status', 'Slide disimpan.');
+        return to_route('admin.content.edit')->with(['status' => 'Slide disimpan.', 'warning' => $request->sharpnessWarning()]);
     }
 
     /** Tukar urutan dengan slide di atas ("naik") atau di bawahnya ("turun"). */

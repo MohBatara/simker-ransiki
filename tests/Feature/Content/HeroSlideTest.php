@@ -44,11 +44,11 @@ test('admin menambah slide: varian WebP 640/1280/1920 + JPEG tanpa EXIF, file as
     expect(exifOf(Storage::disk('local')->get($slide->photo_path)))->not->toHaveKey('GPSLatitudeRef');
 });
 
-test('validasi: foto wajib, lebar minimal 1600 px, tipe, ukuran, teks alternatif wajib', function () {
+test('validasi: foto wajib, lebar minimal 1280 px, tipe, ukuran, teks alternatif wajib', function () {
     $this->actingAs($this->admin);
 
-    $this->post('/admin/konten/slide', slideInput(['photo' => realUpload('kecil.jpg', imageBytes(1200, 800))]))
-        ->assertSessionHasErrors(['baru.photo' => 'Foto terlalu kecil: lebarnya 1200 px, minimal 1.600 px. Pakai foto asli dari kamera, bukan hasil kiriman WhatsApp.']);
+    $this->post('/admin/konten/slide', slideInput(['photo' => realUpload('kecil.jpg', imageBytes(1279, 800))]))
+        ->assertSessionHasErrors(['baru.photo' => 'Foto terlalu kecil: lebarnya 1279 px, minimal 1.280 px. Pakai foto asli dari kamera, bukan hasil kiriman WhatsApp.']);
     $this->post('/admin/konten/slide', slideInput(['photo' => realUpload('dok.pdf', "%PDF-1.4\n%contoh")]))
         ->assertSessionHasErrors('baru.photo');
     $this->post('/admin/konten/slide', slideInput(['photo' => Illuminate\Http\UploadedFile::fake()->create('besar.jpg', 9000, 'image/jpeg')]))
@@ -163,4 +163,57 @@ test('tab Beranda menampilkan slide, form tambah, dan judul; tab Halaman & konta
 
     HeroSlide::factory()->count(2)->create();
     $this->get('/admin/konten')->assertDontSee('slide lagi.')->assertSee('Sudah 3 slide.');
+});
+
+test('foto 1280–1599 px diterima dengan peringatan kuning; 1600 px ke atas tanpa peringatan', function () {
+    $this->actingAs($this->admin);
+
+    $this->post('/admin/konten/slide', slideInput(['photo' => realUpload('pantai.png', imageBytes(1532, 1026, 'png'))]))
+        ->assertSessionHasNoErrors()
+        ->assertSessionHas('status', 'Slide ditambahkan.')
+        ->assertSessionHas('warning', 'Foto mungkin kurang tajam di layar lebar (lebarnya 1532 px). Bila ada, ganti dengan foto selebar minimal 1.600 px.');
+    $this->get('/admin/konten')->assertSee('Foto mungkin kurang tajam di layar lebar')->assertSee('bg-wait-bg', false);
+
+    $this->post('/admin/konten/slide', slideInput(['photo' => realUpload('batas.jpg', imageBytes(1280, 720))]))->assertSessionHas('warning');
+    $this->post('/admin/konten/slide', slideInput(['photo' => realUpload('tajam.jpg', imageBytes(1600, 900))]))
+        ->assertSessionHasNoErrors()->assertSessionMissing('warning');
+
+    expect(HeroSlide::count())->toBe(3);
+});
+
+test('validasi gagal: ringkasan error tampil di atas tombol simpan form itu dan isian lain tetap terisi', function () {
+    $this->actingAs($this->admin)->from('/admin/konten')
+        ->post('/admin/konten/slide', slideInput(['photo' => realUpload('kecil.jpg', imageBytes(1000, 600)), 'caption' => 'Keterangan yang diketik', 'focus' => 'bottom']))
+        ->assertRedirect('/admin/konten');
+
+    $html = $this->get('/admin/konten')->assertOk()->getContent();
+    $summary = strpos($html, 'Slide belum disimpan. Ada 1 isian yang perlu diperbaiki');
+    $button = strpos($html, 'Tambah slide</', $summary ?: 0);
+
+    expect($summary)->not->toBeFalse()
+        ->and($button)->toBeGreaterThan($summary)
+        ->and($html)->toContain('data-form-errors')
+        ->toContain('Foto terlalu kecil: lebarnya 1000 px, minimal 1.280 px.')
+        ->toContain('Pilih ulang fotonya')
+        ->toContain('value="Nelayan menarik jaring di perahu kayu"')
+        ->toContain('value="Keterangan yang diketik"')
+        ->toMatch('/<option value="bottom"[^>]*selected/');
+});
+
+test('slide baru dan judul baru langsung tampil di beranda (tidak tertahan cache)', function () {
+    $this->get('/')->assertOk()->assertSee('/foto-hero/bawaan', false);
+
+    $this->actingAs($this->admin)->post('/admin/konten/slide', slideInput());
+    $this->put('/admin/konten', ['hero_title' => 'Judul Baru', 'hero_title_accent' => 'Ransiki']);
+    $slide = HeroSlide::sole();
+
+    $html = $this->get('/')->getContent();
+    expect($html)->toContain("/foto-hero/{$slide->id}?ukuran=1920&amp;format=webp")->toContain('Judul Baru')->not->toContain('/foto-hero/bawaan');
+
+    // Setiap URL di srcset bisa dibuka tanpa login dan berupa WebP; cadangan JPEG juga.
+    $this->post('/logout');
+    foreach (App\Support\ImageVariants::HERO as $width) {
+        $this->get("/foto-hero/{$slide->id}?ukuran={$width}&format=webp")->assertOk()->assertHeader('Content-Type', 'image/webp');
+    }
+    $this->get("/foto-hero/{$slide->id}")->assertOk()->assertHeader('Content-Type', 'image/jpeg');
 });

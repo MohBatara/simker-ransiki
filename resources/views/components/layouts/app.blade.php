@@ -213,6 +213,9 @@
             @if (session('status'))
                 <x-alert tone="ok" class="mt-5" dismissible>{{ session('status') }}</x-alert>
             @endif
+            @if (session('warning'))
+                <x-alert tone="wait" class="mt-5" dismissible>{{ session('warning') }}</x-alert>
+            @endif
             @if (session('error'))
                 <x-alert tone="fix" class="mt-5" dismissible>{{ session('error') }}</x-alert>
             @endif
