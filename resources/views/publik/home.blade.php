@@ -190,59 +190,90 @@
     </section>
 
     {{--
-        Jenis kelembagaan: kartu berwarna palet tanah bergiliran; satu kartu foto (foto kurasi Admin) di posisi ke-4.
-        Kontras: putih di forest 14,6, clay 8,4, sage 5,7 (putih 85% di sage 4,6); ink di sand 9,4, cream 14,0.
+        Jenis kelembagaan (bento): kartu utama 2×2 untuk jenis terbanyak, kartu kecil bergiliran forest, clay, cream.
+        Grid selalu penuh untuk 2 sampai 9 jenis; kartu kecil terakhir melebar mengisi sisa baris (App\Support\BentoGrid).
+        Kontras: putih di forest 14,6 dan clay 8,4 (putih 85%: 11,0 dan 6,6); ink di cream 14,0 (ink-soft 7,0);
+        kartu utama putih di atas foto + lapisan forest ≥ 70% (terburuk 5,6).
     --}}
     @if ($types->isNotEmpty())
         @php
             $tones = [
-                'forest' => ['bg-forest text-paper', 'text-paper/85', 'bg-paper/15 text-paper'],
-                'clay' => ['bg-clay text-paper', 'text-paper/85', 'bg-paper/15 text-paper'],
-                'sand' => ['bg-sand text-ink', 'text-ink-soft', 'bg-paper text-brand'],
-                'sage' => ['bg-sage text-paper', 'text-paper/85', 'bg-paper/15 text-paper'],
-                'cream' => ['bg-cream text-ink', 'text-ink-soft', 'bg-paper text-brand'],
+                'forest' => ['surface' => 'bg-forest text-paper', 'soft' => 'text-paper/85', 'ring' => 'ring-forest', 'more' => 'bg-paper/15 text-paper'],
+                'clay' => ['surface' => 'bg-clay text-paper', 'soft' => 'text-paper/85', 'ring' => 'ring-clay', 'more' => 'bg-paper/15 text-paper'],
+                'cream' => ['surface' => 'bg-cream text-ink', 'soft' => 'text-ink-soft', 'ring' => 'ring-cream', 'more' => 'bg-paper text-ink'],
             ];
-            $tiles = $types->values()->map(fn ($type, $i) => ['type' => $type, 'tone' => array_keys($tones)[$i % count($tones)]]);
-            if ($typePhoto) {
-                $tiles->splice(min(3, $tiles->count()), 0, [['photo' => $typePhoto]]);
-            }
+            $small = $types->count() - 1;
         @endphp
         <section class="border-y border-line bg-paper" aria-labelledby="jenis-kelembagaan">
             <div class="mx-auto max-w-public px-4 py-(--section-y) md:px-6">
                 @include('publik._section-heading', ['title' => 'Jenis kelembagaan', 'id' => 'jenis-kelembagaan', 'link' => ['href' => route('public.directory'), 'label' => 'Buka direktori']])
                 <p class="mt-3 max-w-[34rem] text-body text-ink-soft">Kelompok usaha di Distrik Ransiki menurut bentuk kelembagaannya. Pilih salah satu untuk melihat daftar kelompoknya.</p>
 
-                <ul class="mt-8 grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-5 lg:grid-cols-3">
-                    @foreach ($tiles as $tile)
-                        @isset($tile['photo'])
-                            <li class="relative isolate min-h-60 overflow-hidden rounded-tile bg-subtle shadow-soft">
-                                <x-public.picture :image="$tile['photo']['image']" alt="" sizes="(min-width: 64rem) 22rem, (min-width: 48rem) 50vw, 100vw" width="960" height="720" frame="absolute inset-0 -z-10 block size-full" class="size-full object-cover" />
-                                <div class="absolute inset-0 -z-10 bg-forest/20" aria-hidden="true"></div>
-                                {{-- Keterangan di pita forest 85%: putih tetap 9:1 walau fotonya terang. --}}
-                                <p class="absolute bottom-4 left-4 right-4 w-fit rounded-control bg-forest/85 px-3 py-2 text-ui text-paper">{{ $tile['photo']['caption'] }}</p>
-                            </li>
-                        @else
-                            @php [$surface, $soft, $circle] = $tones[$tile['tone']]; $type = $tile['type']; @endphp
-                            <li>
-                                <a
-                                    href="{{ route('public.directory', ['jenis' => $type->id]) }}"
-                                    class="group flex h-full min-h-60 flex-col rounded-tile p-6 shadow-soft transition-transform duration-150 hover:-translate-y-0.5 focus-visible:-translate-y-0.5 motion-reduce:transition-none motion-reduce:hover:translate-y-0 {{ $surface }}"
-                                >
-                                    <span class="flex size-12 items-center justify-center rounded-full {{ $circle }}" aria-hidden="true">
-                                        <x-public.icon :name="PublicIcons::institutionType($type->name)" class="size-6" />
-                                    </span>
-                                    <span class="mt-5 font-serif text-card-title font-semibold">{{ $type->name }}</span>
-                                    <span class="mt-1 text-caption tabular-nums {{ $soft }}">{{ Format::number($type->organizations_count) }} kelompok</span>
-                                    @if ($type->description ?? null)
-                                        <span class="mt-3 text-ui {{ $soft }}">{{ $type->description }}</span>
+                <ul x-data="reveal(60)" class="mt-8 grid grid-cols-1 gap-4 md:auto-rows-[minmax(15rem,auto)] md:grid-cols-2 md:gap-5 lg:grid-cols-4">
+                    @foreach ($types as $type)
+                        @php
+                            $isFeatured = $loop->first;
+                            $tone = $isFeatured ? $tones['forest'] : $tones[array_keys($tones)[($loop->index - 1) % 3]];
+                            $hasPhoto = $isFeatured && $type->photo;
+                        @endphp
+                        <li @class([
+                            'min-w-0',
+                            'md:col-span-2 md:row-span-2' => $isFeatured,
+                            App\Support\BentoGrid::smallClasses($loop->index - 1, $small) => ! $isFeatured,
+                        ])>
+                            <a
+                                href="{{ route('public.directory', ['jenis' => $type->id]) }}"
+                                @class([
+                                    'group relative isolate flex h-full flex-col overflow-hidden rounded-tile shadow-soft transition-transform duration-150 hover:-translate-y-0.5 focus-visible:-translate-y-0.5 motion-reduce:transition-none motion-reduce:hover:translate-y-0 motion-reduce:focus-visible:translate-y-0',
+                                    'min-h-[24rem] p-6 md:p-8' => $isFeatured,
+                                    'min-h-60 p-6' => ! $isFeatured,
+                                    $tone['surface'],
+                                ])
+                            >
+                                @if ($hasPhoto)
+                                    <x-public.picture :image="$type->photo" alt="" sizes="(min-width: 64rem) 34rem, 100vw" width="960" height="720" frame="absolute inset-0 -z-20 block size-full" class="size-full object-cover" />
+                                    <div class="overlay-bento absolute inset-0 -z-10" aria-hidden="true"></div>
+                                @endif
+                                {{-- Ikon jenis besar sebagai tekstur, sedikit terpotong tepi kartu. --}}
+                                <x-public.icon
+                                    :name="PublicIcons::institutionType($type->name)"
+                                    @class([
+                                        'pointer-events-none absolute -z-10 opacity-[0.08] transition duration-150 group-hover:scale-105 group-hover:opacity-[0.12] group-focus-visible:scale-105 group-focus-visible:opacity-[0.12] motion-reduce:transition-none motion-reduce:group-hover:scale-100',
+                                        '-right-8 -bottom-8 size-56' => $isFeatured,
+                                        '-right-6 -bottom-6 size-36' => ! $isFeatured,
+                                    ])
+                                />
+
+                                <span @class(['block font-serif font-semibold tabular-nums', 'text-numeral' => $isFeatured, 'text-hero leading-none' => ! $isFeatured])>{{ Format::number($type->organizations_count) }}</span>
+                                <span @class(['mt-1 text-caption', $isFeatured ? 'text-paper' : $tone['soft']])>kelompok</span>
+
+                                <span @class(['mt-5 font-serif font-semibold', 'text-display-sm md:text-display' => $isFeatured, 'text-card-title' => ! $isFeatured])>{{ $type->name }}</span>
+                                @if ($type->description ?? null)
+                                    <span @class(['mt-2 text-ui', 'max-w-[30rem] text-paper' => $isFeatured, 'line-clamp-2 '.$tone['soft'] => ! $isFeatured])>{{ $type->description }}</span>
+                                @endif
+
+                                {{-- Avatar kelompok publik (foto produk publik pertama atau inisial), maks 3, lalu +N. --}}
+                                <span class="mt-5 flex items-center" aria-hidden="true">
+                                    @foreach ($type->avatars as $avatar)
+                                        <span @class(['-ml-0.5 flex size-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-brand-tint text-caption font-semibold text-brand ring-2 first:ml-0', $tone['ring']]) title="{{ $avatar['name'] }}">
+                                            @if ($avatar['photo'])
+                                                <x-public.picture :image="$avatar['photo']" alt="" sizes="32px" width="32" height="32" frame="block size-full" class="size-full object-cover" />
+                                            @else
+                                                {{ $avatar['initials'] }}
+                                            @endif
+                                        </span>
+                                    @endforeach
+                                    @if ($type->more)
+                                        <span @class(['-ml-0.5 flex h-8 min-w-8 items-center justify-center rounded-full px-2 text-caption font-semibold tabular-nums ring-2', $tone['ring'], $tone['more']])>+{{ $type->more }}</span>
                                     @endif
-                                    <span class="mt-auto inline-flex items-center gap-2 pt-6 text-ui font-semibold underline-offset-4 group-hover:underline group-focus-visible:underline">
-                                        Lihat kelompok
-                                        <x-heroicon-o-arrow-right class="size-4 transition-transform group-hover:translate-x-1 motion-reduce:transition-none" aria-hidden="true" />
-                                    </span>
-                                </a>
-                            </li>
-                        @endisset
+                                </span>
+
+                                <span class="mt-auto inline-flex items-center gap-2 pt-6 text-ui font-semibold underline-offset-4 group-hover:underline group-focus-visible:underline">
+                                    Lihat kelompok
+                                    <x-heroicon-o-arrow-right class="size-4 transition-transform duration-150 group-hover:translate-x-1 group-focus-visible:translate-x-1 motion-reduce:transition-none" aria-hidden="true" />
+                                </span>
+                            </a>
+                        </li>
                     @endforeach
                 </ul>
                 <x-public.button variant="outline-brand" :href="route('public.directory')" arrow class="mt-6 w-full sm:hidden">Buka direktori</x-public.button>

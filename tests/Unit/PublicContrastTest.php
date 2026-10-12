@@ -91,3 +91,19 @@ test('palet tanah: pasangan yang dilarang memang tidak lolos', function (array $
     // Alasan kartu sage memakai putih 85%, bukan 80%.
     'putih 80% di atas sage' => [whiteAt(0.80, '#4E6F4A'), '#4E6F4A'],
 ]);
+
+/** Warna latar putih $alpha di atas $background (lingkaran "+N" bg-paper/15). */
+function tintOn(float $alpha, string $background): array
+{
+    return whiteAt($alpha, $background);
+}
+
+test('kartu bento jenis kelembagaan: pasangan teks memenuhi 4,5:1', function (array $text, array $background) {
+    expect(contrast($text, $background))->toBeGreaterThanOrEqual(4.5);
+})->with([
+    'inisial avatar brand di brand-tint' => [hexRgb('#1F5A47'), hexRgb('#E7F0EC')],
+    '+N putih di lingkaran putih 15% (forest)' => [[255, 255, 255], tintOn(0.15, '#0F2E22')],
+    '+N putih di lingkaran putih 15% (clay)' => [[255, 255, 255], tintOn(0.15, '#6B4430')],
+    '+N ink di lingkaran putih (cream)' => [hexRgb('#1C1F1E'), [255, 255, 255]],
+    'teks putih kartu utama di atas foto + lapisan forest 70%' => [[255, 255, 255], overlayOnWhite(0.70)],
+]);

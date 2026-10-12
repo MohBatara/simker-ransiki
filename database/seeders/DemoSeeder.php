@@ -193,8 +193,9 @@ class DemoSeeder extends Seeder
         SiteSetting::put([
             'cover_photo_path' => $this->storeWidePhoto('sampul.jpg', 'site/sampul-demo.jpg', ImageVariants::HERO_BUDGET),
             'about_photo_path' => $this->storeWidePhoto('panen-kakao.jpg', 'site/tentang-demo.jpg'),
-            'cover_caption' => 'Kebun kakao di pesisir. Foto sementara sampai foto resmi distrik tersedia.',
-            'cover_credit' => 'Dokumentasi sementara',
+            // Hanya keterangan isi foto; catatan internal (mis. "foto sementara") tidak pernah tampil di publik.
+            'cover_caption' => 'Kebun kakao di pesisir.',
+            'cover_credit' => null,
         ]);
 
         $files = [

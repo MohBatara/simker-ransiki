@@ -40,6 +40,8 @@
     --text-hero-sm--line-height: 2.75rem;
     --text-hero: 3rem; /* 48px judul hero publik */
     --text-hero--line-height: 3.5rem;
+    --text-numeral: 4.5rem; /* 72px angka kartu utama "Jenis kelembagaan" (percobaan palet tanah) */
+    --text-numeral--line-height: 1;
 
     --color-*: initial;
     --color-ink: #1c1f1e;
@@ -191,6 +193,27 @@
     @media (width >= 48rem) {
         .home-top[data-strip] {
             --strip-h: 6.5rem;
+        }
+    }
+}
+
+/*
+ * Kartu utama "Jenis kelembagaan": foto bidang usaha + lapisan forest dari bawah, tidak pernah di bawah 70%
+ * (teks putih terburuk 5,6:1 di atas bagian foto yang putih). Gradasi hanya sebagai overlay foto (Bagian 7).
+ */
+@layer components {
+    .overlay-bento {
+        background-image: linear-gradient(to top, rgb(15 46 34 / 0.88) 0%, rgb(15 46 34 / 0.7) 55%, rgb(15 46 34 / 0.7) 100%);
+    }
+
+    /* Muncul bertahap (Alpine reveal): hanya bila gerak tidak dikurangi; tanpa JS kartu langsung tampil. */
+    @media (prefers-reduced-motion: no-preference) {
+        [data-reveal] {
+            transition: opacity 400ms ease-out, transform 400ms ease-out;
+        }
+        [data-reveal='hidden'] {
+            opacity: 0;
+            transform: translateY(12px);
         }
     }
 }

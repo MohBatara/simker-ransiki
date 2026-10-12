@@ -2,12 +2,15 @@
 
 namespace App\Http\Controllers\Publik;
 
-use App\Http\Controllers\Controller;
 use App\Enums\HeroFocus;
+use App\Http\Controllers\Controller;
+use App\Models\BusinessSector;
 use App\Models\HeroSlide;
+use App\Models\Organization;
 use App\Models\Post;
 use App\Models\Product;
 use App\Models\SiteSetting;
+use App\Support\Initials;
 use App\Support\PublicDirectory;
 use App\Support\PublicImages;
 use Illuminate\Support\Collection;
@@ -21,14 +24,15 @@ class HomeController extends Controller
 
     private const POST_LIMIT = 5;
 
+    private const AVATAR_LIMIT = 3;
+
     public function __invoke(): View
     {
         return view('publik.home', [
             'stats' => PublicDirectory::stats(),
-            'sectors' => $sectors = PublicDirectory::sectors(),
-            'types' => PublicDirectory::institutionTypes(),
-            'settings' => $settings = SiteSetting::values(),
-            'typePhoto' => $this->typePhoto($settings, $sectors),
+            'sectors' => PublicDirectory::sectors(),
+            'types' => $this->typeCards(PublicDirectory::institutionTypes()),
+            'settings' => SiteSetting::values(),
             'slides' => $this->slides(),
             'about' => PublicImages::slot('tentang') ?? PublicImages::slot('sampul'),
             'posts' => Post::query()->publiclyListed()->latest('published_at')->latest('id')->limit(self::POST_LIMIT)->get(PostController::COLUMNS),
@@ -60,20 +64,71 @@ class HomeController extends Controller
     }
 
     /**
-     * Foto untuk satu kartu di bagian Jenis kelembagaan: foto sampul dari Konten Website, atau foto bidang usaha
-     * yang diunggah Admin. Tidak pernah foto produk kelompok.
+     * Kartu "Jenis kelembagaan" (bento): jumlah kelompok publik terkini, maksimal 3 avatar kelompok publik (foto produk
+     * publik pertama, atau inisial), urut dari jenis terbanyak. Kartu pertama (utama) mendapat foto bidang usaha yang
+     * paling banyak dipakai kelompok jenis itu, hanya dari foto bidang Konten Website.
      *
-     * @return array{image: array, caption: string}|null
+     * @return Collection<int, object>
      */
-    private function typePhoto(array $settings, Collection $sectors): ?array
+    private function typeCards(Collection $types): Collection
     {
-        if ($cover = PublicImages::slot('sampul')) {
-            return ['image' => $cover, 'caption' => rtrim((string) ($settings['cover_caption'] ?? 'Distrik Ransiki'), '. ')];
+        if ($types->isEmpty()) {
+            return $types;
         }
 
-        $sector = $sectors->first(fn ($sector) => ($sector->photo['kind'] ?? null) === 'sector');
+        $organizations = Organization::query()->publiclyListed()
+            ->whereIn('organizations.institution_type_id', $types->pluck('id'))
+            ->orderBy('organizations.name')
+            ->get(['organizations.id', 'organizations.name', 'organizations.institution_type_id'])
+            ->groupBy('institution_type_id');
 
-        return $sector ? ['image' => PublicImages::sector($sector), 'caption' => 'Bidang usaha '.mb_strtolower($sector->name)] : null;
+        $shown = $organizations->flatMap(fn (Collection $group) => $group->take(self::AVATAR_LIMIT));
+        $photos = Product::query()->publiclyListed()
+            ->whereIn('products.organization_id', $shown->pluck('id'))
+            ->whereNotNull('products.photo_path')
+            ->orderBy('products.id')
+            ->get(['products.id', 'products.organization_id', 'products.photo_path'])
+            ->unique('organization_id')
+            ->keyBy('organization_id');
+
+        $cards = $types
+            ->map(function (object $type) use ($organizations, $photos) {
+                $group = $organizations->get($type->id, collect());
+
+                return (object) [
+                    ...(array) $type,
+                    'organizations_count' => $group->count(),
+                    'avatars' => $group->take(self::AVATAR_LIMIT)->map(function (Organization $organization) use ($photos) {
+                        $sources = $photos->get($organization->id)?->photoSources();
+
+                        return [
+                            'name' => $organization->name,
+                            // Inisial tanpa awalan jenis: "Kelompok Tani Kakao Harapan" → "TK", bukan "KT".
+                            'initials' => Initials::of(preg_replace('/^(kelompok|kub|bumdes|kdmp|knmp|umkm)\s+/i', '', $organization->name)),
+                            'photo' => $sources,
+                        ];
+                    })->values()->all(),
+                    'more' => max(0, $group->count() - self::AVATAR_LIMIT),
+                    'photo' => null,
+                ];
+            })
+            ->filter(fn (object $card) => $card->organizations_count > 0)
+            ->sortBy([['organizations_count', 'desc'], ['name', 'asc']])
+            ->values();
+
+        if ($featured = $cards->first()) {
+            $sector = BusinessSector::query()
+                ->whereNotNull('business_sectors.photo_path')
+                ->join('organization_sector', 'organization_sector.business_sector_id', '=', 'business_sectors.id')
+                ->whereIn('organization_sector.organization_id', $organizations->get($featured->id)->pluck('id'))
+                ->groupBy('business_sectors.id', 'business_sectors.name', 'business_sectors.photo_path')
+                ->orderByRaw('COUNT(*) DESC')
+                ->orderBy('business_sectors.name')
+                ->first(['business_sectors.id', 'business_sectors.name', 'business_sectors.photo_path']);
+            $featured->photo = $sector ? PublicImages::sectorPhoto($sector) : null;
+        }
+
+        return $cards;
     }
 
     /**
