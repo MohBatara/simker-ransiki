@@ -80,6 +80,8 @@
     --shadow-float: 0 4px 16px rgb(28 31 30 / 0.08), 0 1px 3px rgb(28 31 30 / 0.06);
     /* Bayangan halus kartu website publik (bukan area aplikasi). */
     --shadow-card: 0 1px 2px rgb(28 31 30 / 0.04), 0 6px 18px rgb(28 31 30 / 0.06);
+    /* Strip bidang usaha yang melayang di batas hero: bayangan bawah sedikit lebih tegas. */
+    --shadow-strip: 0 1px 3px rgb(28 31 30 / 0.06), 0 14px 28px -8px rgb(28 31 30 / 0.18);
     --inset-shadow-*: initial;
     --drop-shadow-*: initial;
     --blur-*: initial;
@@ -149,6 +151,24 @@
         .overlay-hero {
             background-color: transparent;
             background-image: linear-gradient(to right, rgb(15 46 34 / 0.9) 0%, rgb(15 46 34 / 0.85) 55%, rgb(15 46 34 / 0.3) 100%);
+        }
+    }
+}
+
+/*
+ * Beranda: strip bidang usaha melayang di batas bawah hero, separuh di atas foto dan separuh di bawahnya.
+ * --strip-h = tinggi strip (dikunci di elemen strip); hero dan bagian Tentang memberi ruang setengahnya.
+ */
+@layer components {
+    .home-top {
+        --strip-h: 0px;
+    }
+    .home-top[data-strip] {
+        --strip-h: 6rem;
+    }
+    @media (width >= 48rem) {
+        .home-top[data-strip] {
+            --strip-h: 6.5rem;
         }
     }
 }

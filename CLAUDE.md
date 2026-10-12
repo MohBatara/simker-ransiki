@@ -737,7 +737,9 @@ karangan, tombol "Mulai sekarang", teks promosi generik.
 Susunan: header putih (logo teks, menu, ikon cari direktori, lalu tombol `sun` "Masuk"/"Dasbor" mulai tablet; di HP
 tombol itu ada di menu; menu aktif bergaris bawah `brand`; tanpa bilah atas, kontak kantor ada di footer dan Kontak)
 → (beranda) hero (judul + aksen + kalimat penjelas dari Konten Website) → strip
-putih melayang 5 bidang usaha terbanyak (ikon + jumlah, geser horizontal di HP) → "Tentang" (foto, ringkasan profil,
+putih melayang 5 bidang usaha terbanyak (ikon + jumlah, geser horizontal di HP; tingginya `--strip-h` per breakpoint
+di `.home-top` (app.css), `absolute bottom-0 translate-y-1/2` sehingga garis bawah hero tepat di tengahnya; ruang
+bawah hero dan jarak atas Tentang = `calc(var(--strip-h)/2 + …)`, bayangan `shadow-strip`) → "Tentang" (foto, ringkasan profil,
 4 angka publik: kelompok terdaftar, kampung, produk unggulan, bidang usaha + "Data diperbarui") → jenis kelembagaan
 (`PublicDirectory::institutionTypes()`) → produk unggulan (berfoto dulu; tanpa foto → foto bidang dari Admin → petak
 inisial) → berita & kegiatan (maks 5, disembunyikan bila kosong) → banner ajakan `forest` "Kelompok Anda belum

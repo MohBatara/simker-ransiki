@@ -8,6 +8,9 @@
 @endphp
 
 <x-layouts.public :description="$settings['home_intro'] ?? 'Direktori kelompok dan kelembagaan ekonomi Distrik Ransiki: profil kelompok, produk, dan kontak.'">
+    {{-- Hero + strip + Tentang berbagi --strip-h (resources/css/app.css, .home-top). --}}
+    <div class="home-top" @if ($topSectors->isNotEmpty()) data-strip @endif>
+    <div class="relative">
     {{-- Hero: slide dari Admin (maks 3) + overlay; tanpa slide aktif, satu foto bawaan. --}}
     <section
         class="on-dark relative isolate overflow-hidden bg-forest text-paper"
@@ -37,7 +40,8 @@
         @endforeach
         <div class="overlay-hero absolute inset-0 -z-10" aria-hidden="true"></div>
 
-        <div @class(['mx-auto flex min-h-[30rem] max-w-public flex-col justify-center px-4 pt-14 md:min-h-[36rem] md:px-6', 'pb-24 md:pb-36' => $topSectors->isNotEmpty(), 'pb-14' => $topSectors->isEmpty()])>
+        {{-- Ruang bawah = setengah strip (yang menimpa foto) + ruang untuk titik slider/keterangan + jarak normal. --}}
+        <div class="mx-auto flex min-h-[30rem] max-w-public flex-col justify-center px-4 pt-14 pb-[calc(var(--strip-h)/2+4.5rem)] md:min-h-[36rem] md:px-6 md:pb-[calc(var(--strip-h)/2+5rem)]">
             {{-- Teks hanya di setengah kiri: di sana overlay paling tebal (sun 5,0:1, putih 9,1:1 terburuk). --}}
             <div class="max-w-xl md:max-w-[50%]">
                 <span class="block h-0.5 w-10 bg-sun" aria-hidden="true"></span>
@@ -62,7 +66,7 @@
         @endif
 
         @if (count($slides) > 1 || collect($slides)->contains(fn ($slide) => $slide['caption']))
-            <div @class(['pointer-events-none absolute inset-x-0', 'bottom-16 md:bottom-24' => $topSectors->isNotEmpty(), 'bottom-2' => $topSectors->isEmpty()])>
+            <div class="pointer-events-none absolute inset-x-0 bottom-[calc(var(--strip-h)/2+0.75rem)]">
                 <div class="mx-auto flex max-w-public flex-wrap items-center justify-end gap-3 px-4 md:px-6">
                     @if (count($slides) > 1)
                         <div class="pointer-events-auto mr-auto -ml-3 flex">
@@ -88,17 +92,21 @@
         @endif
     </section>
 
-    {{-- Strip bidang usaha menimpa bagian bawah hero. Di HP digeser horizontal. --}}
+    {{--
+        Strip bidang usaha: di luar <section> hero (yang overflow-hidden), absolute di batas bawahnya lalu
+        translate-y-1/2, sehingga garis bawah foto tepat di tengah tinggi strip. Di HP digeser horizontal.
+    --}}
     @if ($topSectors->isNotEmpty())
-        <div class="relative z-10 mx-auto -mt-12 max-w-public px-4 md:-mt-20 md:px-6">
-            <nav aria-label="Bidang usaha" class="overflow-hidden rounded-public border border-line bg-paper shadow-card">
-                <ul class="flex snap-x divide-x divide-line overflow-x-auto lg:overflow-visible">
+        <div class="absolute inset-x-0 bottom-0 z-10 translate-y-1/2">
+            <div class="mx-auto max-w-public px-4 md:px-6">
+            <nav aria-label="Bidang usaha" class="h-(--strip-h) overflow-hidden rounded-public border border-line bg-paper shadow-strip">
+                <ul class="flex h-full snap-x divide-x divide-line overflow-x-auto lg:overflow-visible">
                     @foreach ($topSectors as $sector)
-                        <li class="w-44 shrink-0 snap-start lg:w-auto lg:flex-1">
-                            <a href="{{ route('public.directory', ['bidang' => $sector->id]) }}" class="group flex h-full items-start gap-3 p-4 transition-colors hover:bg-subtle md:p-5">
+                        <li class="w-44 shrink-0 snap-start lg:w-auto lg:min-w-0 lg:flex-1">
+                            <a href="{{ route('public.directory', ['bidang' => $sector->id]) }}" class="group flex h-full items-center gap-3 px-4 transition-colors hover:bg-subtle md:px-5">
                                 <x-public.icon :name="PublicIcons::sector($sector->name)" class="size-8 shrink-0 text-brand" />
                                 <span class="min-w-0">
-                                    <span class="block font-semibold text-ink group-hover:text-brand">{{ $sector->name }}</span>
+                                    <span class="line-clamp-2 font-semibold text-ink group-hover:text-brand">{{ $sector->name }}</span>
                                     <span class="block text-caption text-ink-soft tabular-nums">{{ Format::number($sector->organizations_count) }} kelompok</span>
                                 </span>
                             </a>
@@ -106,11 +114,13 @@
                     @endforeach
                 </ul>
             </nav>
+            </div>
         </div>
     @endif
+    </div>
 
-    {{-- Tentang: angka hanya dari data publik (PublicDirectory::stats). --}}
-    <section class="mx-auto grid max-w-public gap-10 px-4 py-14 md:px-6 md:grid-cols-2 md:items-center md:py-20 lg:gap-14" aria-labelledby="tentang">
+    {{-- Tentang: angka hanya dari data publik (PublicDirectory::stats). Jarak atas = setengah strip + jarak normal. --}}
+    <section class="mx-auto grid max-w-public gap-10 px-4 pt-[calc(var(--strip-h)/2+3.5rem)] pb-14 md:grid-cols-2 md:items-center md:px-6 md:pt-[calc(var(--strip-h)/2+5rem)] md:pb-20 lg:gap-14" aria-labelledby="tentang">
         @if ($about)
             <x-public.picture :image="$about" alt="Distrik Ransiki" sizes="(min-width: 64rem) 32rem, (min-width: 48rem) 50vw, 100vw" width="960" height="720" frame="block overflow-hidden rounded-public shadow-card" class="aspect-[4/3] w-full object-cover" />
         @endif
@@ -133,6 +143,7 @@
             <x-public.button variant="brand" :href="route('public.profile')" arrow class="mt-7">Selengkapnya</x-public.button>
         </div>
     </section>
+    </div>
 
     @if ($types->isNotEmpty())
         <section class="border-y border-line bg-paper" aria-labelledby="jenis-kelembagaan">
