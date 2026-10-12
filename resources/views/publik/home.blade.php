@@ -159,22 +159,90 @@
     </section>
     </div>
 
+    {{-- Cara kerja SIM-KER: panel forest (teks dari Konten Website, bawaan SiteSetting::DEFAULTS). --}}
+    @php
+        $steps = [
+            [1, 'user-plus', ''],
+            [2, 'pencil-square', 'border-t md:border-t-0 md:border-l'],
+            [3, 'calendar-days', 'border-t md:pl-0 lg:border-t-0 lg:border-l lg:pl-6'],
+            [4, 'check-badge', 'border-t md:border-l lg:border-t-0'],
+        ];
+    @endphp
+    <section class="mx-auto max-w-public px-4 pb-(--section-y) md:px-6" aria-labelledby="cara-kerja">
+        <div class="on-dark relative isolate overflow-hidden rounded-panel bg-forest px-6 py-10 text-paper md:px-10 md:py-14 lg:px-14">
+            {{-- Motif daun sederhana, 6%, hanya hiasan. --}}
+            <svg viewBox="0 0 24 24" fill="currentColor" class="pointer-events-none absolute -top-16 -right-16 -z-10 size-80 rotate-12 text-paper opacity-[0.06]" aria-hidden="true">
+                <path d="M21 3C11 3 4 8 4 16c0 1.6.4 3.1 1 4.4C6.5 13 11 8.5 17 6.5 12 9.5 8.3 13.6 6.6 20.9 7.9 21.6 9.4 22 11 22c7 0 10-7 10-19Z" />
+            </svg>
+            <h2 id="cara-kerja" class="font-serif text-display-sm font-semibold md:text-display">{{ $text('how_title') }}</h2>
+            <ol class="mt-10 grid md:grid-cols-2 lg:grid-cols-4">
+                @foreach ($steps as [$n, $icon, $cell])
+                    <li @class(['border-paper/15 py-6 first:pt-0 last:pb-0 md:px-6 md:first:pl-0 md:[&:nth-child(-n+2)]:pt-0 md:[&:nth-child(n+3)]:pb-0 lg:py-0 lg:last:pr-0', $cell])>
+                        <span class="flex size-12 items-center justify-center rounded-full border border-paper/40" aria-hidden="true">
+                            <x-dynamic-component :component="'heroicon-o-'.$icon" class="size-6 text-paper" />
+                        </span>
+                        <h3 class="mt-5 font-serif text-card-title font-semibold"><span class="sr-only">Langkah {{ $n }}: </span>{{ $text("how_{$n}_title") }}</h3>
+                        <p class="mt-2 text-ui text-paper/80">{{ $text("how_{$n}_text") }}</p>
+                    </li>
+                @endforeach
+            </ol>
+        </div>
+    </section>
+
+    {{--
+        Jenis kelembagaan: kartu berwarna palet tanah bergiliran; satu kartu foto (foto kurasi Admin) di posisi ke-4.
+        Kontras: putih di forest 14,6, clay 8,4, sage 5,7 (putih 85% di sage 4,6); ink di sand 9,4, cream 14,0.
+    --}}
     @if ($types->isNotEmpty())
+        @php
+            $tones = [
+                'forest' => ['bg-forest text-paper', 'text-paper/85', 'bg-paper/15 text-paper'],
+                'clay' => ['bg-clay text-paper', 'text-paper/85', 'bg-paper/15 text-paper'],
+                'sand' => ['bg-sand text-ink', 'text-ink-soft', 'bg-paper text-brand'],
+                'sage' => ['bg-sage text-paper', 'text-paper/85', 'bg-paper/15 text-paper'],
+                'cream' => ['bg-cream text-ink', 'text-ink-soft', 'bg-paper text-brand'],
+            ];
+            $tiles = $types->values()->map(fn ($type, $i) => ['type' => $type, 'tone' => array_keys($tones)[$i % count($tones)]]);
+            if ($typePhoto) {
+                $tiles->splice(min(3, $tiles->count()), 0, [['photo' => $typePhoto]]);
+            }
+        @endphp
         <section class="border-y border-line bg-paper" aria-labelledby="jenis-kelembagaan">
             <div class="mx-auto max-w-public px-4 py-(--section-y) md:px-6">
-                @include('publik._section-heading', ['eyebrow' => 'Kelembagaan', 'title' => 'Jenis kelembagaan', 'id' => 'jenis-kelembagaan', 'link' => ['href' => route('public.directory'), 'label' => 'Buka direktori']])
-                <ul class="mt-8 grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-4 lg:grid-cols-4">
-                    @foreach ($types as $type)
-                        <li>
-                            <a href="{{ route('public.directory', ['jenis' => $type->id]) }}" class="group flex h-full flex-col items-start gap-3 rounded-public border border-line bg-paper p-4 shadow-card transition-colors hover:border-brand md:p-5">
-                                <x-public.icon-badge variant="plain" :icon="PublicIcons::institutionType($type->name)" />
-                                <span class="font-serif text-card-title font-semibold text-ink group-hover:text-brand">{{ $type->name }}</span>
-                                <span class="mt-auto flex w-full items-center justify-between gap-2 text-ui text-ink-soft">
-                                    <span class="tabular-nums">{{ Format::number($type->organizations_count) }} kelompok</span>
-                                    <x-heroicon-o-arrow-right class="size-4 shrink-0 text-brand transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
-                                </span>
-                            </a>
-                        </li>
+                @include('publik._section-heading', ['title' => 'Jenis kelembagaan', 'id' => 'jenis-kelembagaan', 'link' => ['href' => route('public.directory'), 'label' => 'Buka direktori']])
+                <p class="mt-3 max-w-[34rem] text-body text-ink-soft">Kelompok usaha di Distrik Ransiki menurut bentuk kelembagaannya. Pilih salah satu untuk melihat daftar kelompoknya.</p>
+
+                <ul class="mt-8 grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-5 lg:grid-cols-3">
+                    @foreach ($tiles as $tile)
+                        @isset($tile['photo'])
+                            <li class="relative isolate min-h-60 overflow-hidden rounded-tile bg-subtle shadow-soft">
+                                <x-public.picture :image="$tile['photo']['image']" alt="" sizes="(min-width: 64rem) 22rem, (min-width: 48rem) 50vw, 100vw" width="960" height="720" frame="absolute inset-0 -z-10 block size-full" class="size-full object-cover" />
+                                <div class="absolute inset-0 -z-10 bg-forest/20" aria-hidden="true"></div>
+                                {{-- Keterangan di pita forest 85%: putih tetap 9:1 walau fotonya terang. --}}
+                                <p class="absolute bottom-4 left-4 right-4 w-fit rounded-control bg-forest/85 px-3 py-2 text-ui text-paper">{{ $tile['photo']['caption'] }}</p>
+                            </li>
+                        @else
+                            @php [$surface, $soft, $circle] = $tones[$tile['tone']]; $type = $tile['type']; @endphp
+                            <li>
+                                <a
+                                    href="{{ route('public.directory', ['jenis' => $type->id]) }}"
+                                    class="group flex h-full min-h-60 flex-col rounded-tile p-6 shadow-soft transition-transform duration-150 hover:-translate-y-0.5 focus-visible:-translate-y-0.5 motion-reduce:transition-none motion-reduce:hover:translate-y-0 {{ $surface }}"
+                                >
+                                    <span class="flex size-12 items-center justify-center rounded-full {{ $circle }}" aria-hidden="true">
+                                        <x-public.icon :name="PublicIcons::institutionType($type->name)" class="size-6" />
+                                    </span>
+                                    <span class="mt-5 font-serif text-card-title font-semibold">{{ $type->name }}</span>
+                                    <span class="mt-1 text-caption tabular-nums {{ $soft }}">{{ Format::number($type->organizations_count) }} kelompok</span>
+                                    @if ($type->description ?? null)
+                                        <span class="mt-3 text-ui {{ $soft }}">{{ $type->description }}</span>
+                                    @endif
+                                    <span class="mt-auto inline-flex items-center gap-2 pt-6 text-ui font-semibold underline-offset-4 group-hover:underline group-focus-visible:underline">
+                                        Lihat kelompok
+                                        <x-heroicon-o-arrow-right class="size-4 transition-transform group-hover:translate-x-1 motion-reduce:transition-none" aria-hidden="true" />
+                                    </span>
+                                </a>
+                            </li>
+                        @endisset
                     @endforeach
                 </ul>
                 <x-public.button variant="outline-brand" :href="route('public.directory')" arrow class="mt-6 w-full sm:hidden">Buka direktori</x-public.button>

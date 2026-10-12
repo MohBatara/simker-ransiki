@@ -20,6 +20,11 @@ class SiteContentRequest extends FormRequest
             'hero_title_accent' => ['nullable', 'string', 'max:60'],
             'home_intro' => ['nullable', 'string', 'max:300'],
             'about_title' => ['nullable', 'string', 'max:80'],
+            'how_title' => ['nullable', 'string', 'max:80'],
+            ...collect(range(1, 4))->flatMap(fn (int $i) => [
+                "how_{$i}_title" => ['nullable', 'string', 'max:60'],
+                "how_{$i}_text" => ['nullable', 'string', 'max:160'],
+            ])->all(),
             'profile_body' => ['nullable', 'string', 'max:20000'],
             'economic_potential' => ['nullable', 'string', 'max:20000'],
             'office_address' => ['nullable', 'string', 'max:500'],

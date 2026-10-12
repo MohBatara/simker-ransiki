@@ -25,9 +25,10 @@ class HomeController extends Controller
     {
         return view('publik.home', [
             'stats' => PublicDirectory::stats(),
-            'sectors' => PublicDirectory::sectors(),
+            'sectors' => $sectors = PublicDirectory::sectors(),
             'types' => PublicDirectory::institutionTypes(),
-            'settings' => SiteSetting::values(),
+            'settings' => $settings = SiteSetting::values(),
+            'typePhoto' => $this->typePhoto($settings, $sectors),
             'slides' => $this->slides(),
             'about' => PublicImages::slot('tentang') ?? PublicImages::slot('sampul'),
             'posts' => Post::query()->publiclyListed()->latest('published_at')->latest('id')->limit(self::POST_LIMIT)->get(PostController::COLUMNS),
@@ -56,6 +57,23 @@ class HomeController extends Controller
             'caption' => null,
             'focus' => HeroFocus::Center->objectPosition(),
         ]];
+    }
+
+    /**
+     * Foto untuk satu kartu di bagian Jenis kelembagaan: foto sampul dari Konten Website, atau foto bidang usaha
+     * yang diunggah Admin. Tidak pernah foto produk kelompok.
+     *
+     * @return array{image: array, caption: string}|null
+     */
+    private function typePhoto(array $settings, Collection $sectors): ?array
+    {
+        if ($cover = PublicImages::slot('sampul')) {
+            return ['image' => $cover, 'caption' => rtrim((string) ($settings['cover_caption'] ?? 'Distrik Ransiki'), '. ')];
+        }
+
+        $sector = $sectors->first(fn ($sector) => ($sector->photo['kind'] ?? null) === 'sector');
+
+        return $sector ? ['image' => PublicImages::sector($sector), 'caption' => 'Bidang usaha '.mb_strtolower($sector->name)] : null;
     }
 
     /**

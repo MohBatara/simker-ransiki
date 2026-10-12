@@ -114,8 +114,9 @@ test('kartu bidang usaha: foto bidang, lalu foto produk publik, lalu polos', fun
         ->and($photos['Bidang Produk'])->toMatchArray(['kind' => 'product', 'id' => $publicProduct->id])
         ->and($photos['Bidang Polos'])->toBeNull()
         ->and($hiddenProduct->id)->not->toBe($photos['Bidang Produk']['id']);
-    // Beranda: strip bidang usaha berikon, tanpa foto bidang (hero hanya dari slide Admin atau foto bawaan).
-    $this->get('/')->assertOk()->assertSee('Bidang Polos')->assertDontSee('/foto-bidang/', false);
+    // Beranda: strip bidang usaha berikon; hero tanpa foto bidang (hanya slide Admin atau foto bawaan).
+    $html = $this->get('/')->assertOk()->assertSee('Bidang Polos')->getContent();
+    expect(heroSection($html))->not->toContain('/foto-bidang/');
 });
 
 test('admin mengunggah dan menghapus foto bidang usaha serta foto Tentang', function () {

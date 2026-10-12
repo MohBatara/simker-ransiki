@@ -60,3 +60,34 @@ test('overlay hero beranda menjaga aksen sun di judul terbaca di kondisi terburu
         // Overlay 70% (overlay-forest) tidak cukup untuk teks sun.
         ->and(contrast(hexRgb('#E9B949'), overlayOnWhite(0.70)))->toBeLessThan(4.5);
 });
+
+/** Warna hasil teks putih dengan opasitas $alpha di atas latar $background. */
+function whiteAt(float $alpha, string $background): array
+{
+    return array_map(fn (int $c) => $alpha * 255 + (1 - $alpha) * $c, hexRgb($background));
+}
+
+test('palet tanah (beranda): pasangan teks dan latar memenuhi 4,5:1', function (array $text, string $background) {
+    expect(contrast($text, hexRgb($background)))->toBeGreaterThanOrEqual(4.5);
+})->with([
+    'putih di atas clay' => [[255, 255, 255], '#6B4430'],
+    'putih di atas sage' => [[255, 255, 255], '#4E6F4A'],
+    'putih 85% di atas forest' => [whiteAt(0.85, '#0F2E22'), '#0F2E22'],
+    'putih 85% di atas clay' => [whiteAt(0.85, '#6B4430'), '#6B4430'],
+    'putih 85% di atas sage' => [whiteAt(0.85, '#4E6F4A'), '#4E6F4A'],
+    'putih 80% di atas forest (Cara kerja)' => [whiteAt(0.80, '#0F2E22'), '#0F2E22'],
+    'ink di atas sand' => [hexRgb('#1C1F1E'), '#D8BF98'],
+    'ink-soft di atas sand' => [hexRgb('#4A504D'), '#D8BF98'],
+    'ink di atas cream' => [hexRgb('#1C1F1E'), '#F3EBDD'],
+    'ink-soft di atas cream' => [hexRgb('#4A504D'), '#F3EBDD'],
+    'brand (ikon) di lingkaran putih' => [hexRgb('#1F5A47'), '#FFFFFF'],
+]);
+
+test('palet tanah: pasangan yang dilarang memang tidak lolos', function (array $text, string $background) {
+    expect(contrast($text, hexRgb($background)))->toBeLessThan(4.5);
+})->with([
+    'putih di atas sand' => [[255, 255, 255], '#D8BF98'],
+    'putih di atas cream' => [[255, 255, 255], '#F3EBDD'],
+    // Alasan kartu sage memakai putih 85%, bukan 80%.
+    'putih 80% di atas sage' => [whiteAt(0.80, '#4E6F4A'), '#4E6F4A'],
+]);

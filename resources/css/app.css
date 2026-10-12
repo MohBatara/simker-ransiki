@@ -71,11 +71,20 @@
     --color-forest-line: #2a4a3d;
     --color-sun: #e9b949;
 
+    /* Palet tanah (percobaan, branch coba/palet-tanah), khusus beranda publik. Teks putih hanya di atas clay dan
+       sage (8,4:1 dan 5,7:1; putih 85% di sage 4,6:1); di atas sand dan cream teks ink (9,4:1 dan 14,0:1). */
+    --color-clay: #6b4430;
+    --color-sand: #d8bf98;
+    --color-cream: #f3ebdd;
+    --color-sage: #4e6f4a;
+
     --radius-*: initial;
     --radius-control: 6px; /* input, tombol, badge */
     --radius-card: 10px; /* kartu, modal, menu melayang */
     --radius-public: 8px; /* kartu website publik */
     --radius-photo: 12px; /* foto besar website publik (bagian Tentang) */
+    --radius-tile: 16px; /* kartu jenis kelembagaan di beranda */
+    --radius-panel: 24px; /* panel lebar "Cara kerja SIM-KER" */
 
     --shadow-*: initial;
     --shadow-float: 0 4px 16px rgb(28 31 30 / 0.08), 0 1px 3px rgb(28 31 30 / 0.06);

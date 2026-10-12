@@ -360,3 +360,64 @@ test('halaman publik tanpa tanda pisah dan tanpa hiasan garis emas; emas hanya u
 
     expect(SiteSetting::DEFAULTS)->each(fn ($value) => $value->not->toMatch('/[\x{2013}\x{2014}]|\b(\w+)-\1\b/u'));
 });
+
+test('panel Cara kerja SIM-KER memakai teks bawaan dan bisa diubah Admin', function () {
+    $this->get('/')->assertSeeInOrder(['Mengenal Distrik Ransiki', 'Cara kerja SIM-KER', 'Didaftarkan distrik', 'Melengkapi profil', 'Melapor tiap bulan', 'Diverifikasi OPD'])
+        ->assertSee('Dinas terkait memeriksa laporan sebelum menjadi data resmi.');
+
+    $this->actingAs(User::factory()->admin()->create())
+        ->put('/admin/konten', ['how_title' => 'Alur data', 'how_2_title' => 'Isi profil', 'how_2_text' => 'Kalimat contoh langkah dua.'])
+        ->assertSessionHasNoErrors();
+    $this->get('/admin/konten')->assertSee('Cara kerja SIM-KER')->assertSee('value="Isi profil"', false);
+
+    $this->get('/')->assertSee('Alur data')->assertSee('Isi profil')->assertSee('Kalimat contoh langkah dua.')->assertSee('Melapor tiap bulan');
+});
+
+test('kartu jenis kelembagaan: hanya jenis berkelompok publik, deskripsi opsional, seluruh kartu menaut ke direktori', function () {
+    $kub = InstitutionType::factory()->create(['name' => 'KUB', 'description' => 'Kelompok usaha bersama di kampung.']);
+    $bumdes = InstitutionType::factory()->create(['name' => 'BUMDes', 'description' => null]);
+    $hidden = InstitutionType::factory()->create(['name' => 'Jenis Tersembunyi', 'description' => 'Tidak boleh tampil.']);
+    Organization::factory()->public()->create(['institution_type_id' => $kub->id]);
+    Organization::factory()->public()->create(['institution_type_id' => $bumdes->id]);
+    Organization::factory()->create(['is_public' => false, 'institution_type_id' => $hidden->id]);
+
+    $html = $this->get('/')->assertOk()->getContent();
+    preg_match('#aria-labelledby="jenis-kelembagaan".*?</section>#s', $html, $section);
+
+    expect($section[0])->toContain('Kelompok usaha bersama di kampung.')
+        ->toContain('href="'.route('public.directory', ['jenis' => $kub->id]).'"')
+        ->toContain('href="'.route('public.directory', ['jenis' => $bumdes->id]).'"')
+        ->toContain('Lihat kelompok')->toContain('bg-forest text-paper')->toContain('bg-clay text-paper')
+        ->not->toContain('Jenis Tersembunyi')->not->toContain('Tidak boleh tampil.');
+});
+
+test('kartu foto jenis kelembagaan memakai foto kurasi Admin, bukan foto produk', function () {
+    $types = InstitutionType::factory()->count(4)->create();
+    $sector = BusinessSector::factory()->create(['name' => 'Perikanan', 'photo_path' => 'site/bidang-1.jpg']);
+    foreach ($types as $type) {
+        $organization = Organization::factory()->public()->create(['institution_type_id' => $type->id]);
+        $organization->sectors()->attach($sector);
+        Product::factory()->for($organization)->create(['is_public' => true, 'photo_path' => 'products/1/a.jpg']);
+    }
+
+    preg_match('#aria-labelledby="jenis-kelembagaan".*?</section>#s', $this->get('/')->getContent(), $section);
+    expect($section[0])->toContain("/foto-bidang/{$sector->id}")->toContain('Bidang usaha perikanan')->not->toContain('/foto-produk/');
+
+    SiteSetting::put(['cover_photo_path' => 'site/sampul.jpg', 'cover_caption' => 'Panen kakao di Kampung Contoh 1.']);
+    preg_match('#aria-labelledby="jenis-kelembagaan".*?</section>#s', $this->get('/')->getContent(), $section);
+    expect($section[0])->toContain('/foto-sampul?')->toContain('Panen kakao di Kampung Contoh 1');
+});
+
+test('admin mengisi deskripsi jenis kelembagaan di Data Master dan langsung tampil di beranda', function () {
+    $type = InstitutionType::factory()->create(['name' => 'KDMP']);
+    Organization::factory()->public()->create(['institution_type_id' => $type->id]);
+    $this->get('/'); // mengisi cache jenis kelembagaan
+
+    $this->actingAs(User::factory()->admin()->create())
+        ->put("/admin/data-master/jenis-kelembagaan/{$type->id}", ['name' => 'KDMP', 'code' => $type->code, 'description' => 'Deskripsi contoh untuk kartu.'])
+        ->assertSessionHas('status');
+
+    expect($type->fresh()->description)->toBe('Deskripsi contoh untuk kartu.');
+    $this->get('/')->assertSee('Deskripsi contoh untuk kartu.');
+    $this->get('/admin/data-master/jenis-kelembagaan')->assertSee('Deskripsi singkat');
+});

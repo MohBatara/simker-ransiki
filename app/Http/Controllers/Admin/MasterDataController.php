@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Enums\MasterDataType;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\MasterDataRequest;
+use App\Support\PublicDirectory;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -36,6 +37,7 @@ class MasterDataController extends Controller
     public function store(MasterDataRequest $request, MasterDataType $type): RedirectResponse
     {
         $type->modelClass()::create($request->validated());
+        $this->forgetPublicCache($type);
 
         return back()->with('status', ucfirst($type->noun()).' ditambahkan.');
     }
@@ -43,8 +45,17 @@ class MasterDataController extends Controller
     public function update(MasterDataRequest $request, MasterDataType $type, int $id): RedirectResponse
     {
         $type->modelClass()::findOrFail($id)->update($request->validated());
+        $this->forgetPublicCache($type);
 
         return back()->with('status', ucfirst($type->noun()).' diperbarui.');
+    }
+
+    /** Kartu jenis kelembagaan di beranda di-cache 10 menit; nama/deskripsi baru langsung tampil. */
+    private function forgetPublicCache(MasterDataType $type): void
+    {
+        if ($type === MasterDataType::InstitutionType) {
+            cache()->forget(PublicDirectory::TYPES_CACHE_KEY);
+        }
     }
 
     public function destroy(MasterDataType $type, int $id): RedirectResponse

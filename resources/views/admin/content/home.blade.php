@@ -94,6 +94,32 @@
             </x-card>
         </form>
 
+        <form method="POST" action="{{ route('admin.content.update') }}">
+            @csrf
+            @method('PUT')
+            <x-card title="Cara kerja SIM-KER" description="Panel empat langkah di bawah bagian Tentang. Kosongkan untuk memakai teks bawaan.">
+                <div class="space-y-5">
+                    <x-field label="Judul panel" for="how_title" hint="Bawaan: {{ SiteSetting::DEFAULTS['how_title'] }}" optional>
+                        <x-input name="how_title" :value="$settings['how_title']" :placeholder="SiteSetting::DEFAULTS['how_title']" maxlength="80" />
+                    </x-field>
+                    <div class="grid gap-5 md:grid-cols-2">
+                        @foreach (range(1, 4) as $i)
+                            <fieldset class="space-y-3 rounded-card border border-line p-4">
+                                <legend class="px-1 text-ui font-semibold text-ink">Langkah {{ $i }}</legend>
+                                <x-field label="Judul" :for="'how_'.$i.'_title'" optional>
+                                    <x-input :name="'how_'.$i.'_title'" :value="$settings['how_'.$i.'_title']" :placeholder="SiteSetting::DEFAULTS['how_'.$i.'_title']" maxlength="60" />
+                                </x-field>
+                                <x-field label="Penjelasan" :for="'how_'.$i.'_text'" hint="Satu kalimat, maksimal 160 karakter." optional>
+                                    <x-textarea :name="'how_'.$i.'_text'" rows="2" maxlength="160" :value="$settings['how_'.$i.'_text']" :placeholder="SiteSetting::DEFAULTS['how_'.$i.'_text']" />
+                                </x-field>
+                            </fieldset>
+                        @endforeach
+                    </div>
+                    <x-button type="submit" processing="Menyimpan…">Simpan cara kerja</x-button>
+                </div>
+            </x-card>
+        </form>
+
         @php $about = $settings['about_photo_path']; @endphp
         <x-card title="Foto bagian Tentang Distrik Ransiki" description="Opsional. Tampil di samping ringkasan profil di beranda. Bila kosong, dipakai foto sampul (tab Halaman & kontak).">
             <div class="space-y-4">

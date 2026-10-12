@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-#[Fillable(['name', 'code'])]
+#[Fillable(['name', 'code', 'description'])]
 class InstitutionType extends Model
 {
     use HasFactory;
