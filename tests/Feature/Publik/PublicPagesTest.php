@@ -40,8 +40,11 @@ test('beranda menampilkan angka, tanggal data, dan bidang usaha', function () {
 
     $this->get('/')
         ->assertOk()
-        ->assertSee('kelompok terdaftar')
-        ->assertSee('Data diperbarui 9 Oktober 2026')
+        ->assertSee('Mengenal Distrik Ransiki')
+        ->assertSeeInOrder(['Kelompok', 'Kampung', 'Produk unggulan', 'Bidang usaha'])
+        ->assertSee('Data per 9 Oktober 2026')
+        ->assertSee('Baca profil lengkap')
+        ->assertDontSee('Selengkapnya')
         ->assertSee('Perkebunan')
         ->assertSee('1 kelompok');
 });
@@ -326,4 +329,34 @@ test('ikon Lucide dirender sebaris dengan garis setebal Heroicons', function () 
     $html = $this->get('/')->assertOk()->getContent();
 
     expect($html)->toContain('stroke-width="1.5"')->toContain('M6.5 12c.94-3.46 4.94-6 8.5-6');
+});
+
+test('judul bagian Tentang bisa diubah Admin, kosong kembali ke bawaan', function () {
+    $this->actingAs(User::factory()->admin()->create())->put('/admin/konten', ['about_title' => 'Sekilas Ransiki'])->assertSessionHasNoErrors();
+    $this->get('/')->assertSee('Sekilas Ransiki')->assertDontSee('Mengenal Distrik Ransiki');
+
+    $this->put('/admin/konten', ['about_title' => '']);
+    $this->get('/')->assertSee('Mengenal Distrik Ransiki');
+});
+
+test('halaman publik tanpa tanda pisah dan tanpa hiasan garis emas; emas hanya untuk tombol utama dan aksen judul hero', function () {
+    $organization = Organization::factory()->public()->create(['name' => 'KUB Contoh Rapi']);
+    $organization->sectors()->attach(BusinessSector::factory()->create(['name' => 'Perikanan']));
+    Product::factory()->for($organization)->create(['is_public' => true, 'is_featured' => true]);
+
+    foreach (['/', '/direktori', '/direktori/kub-contoh-rapi', '/produk', '/berita', '/profil', '/kontak'] as $url) {
+        $html = $this->get($url)->assertOk()->getContent();
+        $visible = preg_replace('#<(script|style)\b.*?</\1>|<!--.*?-->|<[^>]+>#s', ' ', $html);
+
+        expect($visible)->not->toMatch('/[\x{2013}\x{2014}]/u')
+            ->and($html)->not->toContain('h-0.5 w-10 bg-sun')->not->toContain('h-0.5 w-6 bg-sun');
+
+        preg_match_all('/class="([^"]*\b(?:bg|text|border)-sun\b[^"]*)"/', $html, $uses);
+        foreach ($uses[1] as $classes) {
+            // Tombol utama (x-public.button sun) atau aksen judul hero (span text-sun).
+            expect($classes === 'text-sun' || str_contains($classes, 'bg-sun text-ink'))->toBeTrue("Emas dipakai di luar tombol/aksen: {$classes}");
+        }
+    }
+
+    expect(SiteSetting::DEFAULTS)->each(fn ($value) => $value->not->toMatch('/[\x{2013}\x{2014}]|\b(\w+)-\1\b/u'));
 });

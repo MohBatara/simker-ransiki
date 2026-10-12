@@ -28,13 +28,13 @@
                 <ul class="mt-5 space-y-1.5 border-t border-forest-line pt-4 text-ui">
                     @foreach ($sectors as $sector)
                         <li class="flex justify-between gap-3">
-                            <a href="{{ route('public.directory', ['bidang' => $sector->id]) }}" class="rounded-control text-paper hover:text-sun">{{ $sector->name }}</a>
-                            <span class="text-sun tabular-nums">{{ Format::number($sector->organizations_count) }}</span>
+                            <a href="{{ route('public.directory', ['bidang' => $sector->id]) }}" class="rounded-control text-paper underline-offset-4 hover:underline">{{ $sector->name }}</a>
+                            <span class="text-forest-soft tabular-nums">{{ Format::number($sector->organizations_count) }}</span>
                         </li>
                     @endforeach
                 </ul>
             @endif
-            <a href="{{ route('public.directory') }}" class="mt-5 inline-flex items-center gap-2 rounded-control text-ui font-semibold text-sun hover:underline">Buka direktori kelompok <x-heroicon-o-arrow-right class="size-4" /></a>
+            <a href="{{ route('public.directory') }}" class="mt-5 inline-flex items-center gap-2 rounded-control text-ui font-semibold text-paper underline-offset-4 hover:underline">Buka direktori kelompok <x-heroicon-o-arrow-right class="size-4" /></a>
         </aside>
     </div>
 </x-layouts.public>

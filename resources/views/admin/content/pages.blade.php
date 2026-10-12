@@ -93,7 +93,7 @@
                     <x-field label="Email" for="office_email" optional>
                         <x-input name="office_email" type="email" :value="$settings['office_email']" maxlength="255" />
                     </x-field>
-                    <x-field label="Jam layanan" for="office_hours" hint="Mis. Senin–Jumat, 08.00–15.00 WIT." optional>
+                    <x-field label="Jam layanan" for="office_hours" hint="Mis. Senin sampai Jumat, pukul 08.00 sampai 15.00 WIT." optional>
                         <x-input name="office_hours" :value="$settings['office_hours']" maxlength="200" />
                     </x-field>
                 </div>

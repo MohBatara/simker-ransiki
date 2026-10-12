@@ -17,6 +17,7 @@ class SiteSetting extends Model
         'hero_title' => 'Judul beranda',
         'hero_title_accent' => 'Bagian judul berwarna',
         'home_intro' => 'Pengantar beranda',
+        'about_title' => 'Judul bagian Tentang',
         'profile_body' => 'Profil Ransiki',
         'economic_potential' => 'Potensi ekonomi',
         'office_address' => 'Alamat kantor',
@@ -34,7 +35,8 @@ class SiteSetting extends Model
     public const DEFAULTS = [
         'hero_title' => 'Kelembagaan Ekonomi',
         'hero_title_accent' => 'Distrik Ransiki',
-        'home_intro' => 'Profil kelompok usaha, produk unggulan, dan kontak kelembagaan ekonomi di kampung-kampung Distrik Ransiki.',
+        'home_intro' => 'Profil kelompok usaha, produk unggulan, dan kontak kelembagaan ekonomi dari berbagai kampung di Distrik Ransiki.',
+        'about_title' => 'Mengenal Distrik Ransiki',
     ];
 
     /** Slot foto lebar di URL (/foto-sampul, /foto-tentang) => kunci pengaturan. */

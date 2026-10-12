@@ -8,7 +8,8 @@
 @endphp
 
 <x-layouts.public :description="$settings['home_intro'] ?? 'Direktori kelompok dan kelembagaan ekonomi Distrik Ransiki: profil kelompok, produk, dan kontak.'">
-    {{-- Hero + strip + Tentang berbagi --strip-h (resources/css/app.css, .home-top). --}}
+    {{-- .home-page: satu jarak bagian (--section-y). Hero + strip + Tentang berbagi --strip-h (.home-top). --}}
+    <div class="home-page">
     <div class="home-top" @if ($topSectors->isNotEmpty()) data-strip @endif>
     <div class="relative">
     {{-- Hero: slide dari Admin (maks 3) + overlay; tanpa slide aktif, satu foto bawaan. --}}
@@ -44,8 +45,7 @@
         <div class="mx-auto flex min-h-[30rem] max-w-public flex-col justify-center px-4 pt-14 pb-[calc(var(--strip-h)/2+4.5rem)] md:min-h-[36rem] md:px-6 md:pb-[calc(var(--strip-h)/2+5rem)]">
             {{-- Teks hanya di setengah kiri: di sana overlay paling tebal (sun 5,0:1, putih 9,1:1 terburuk). --}}
             <div class="max-w-xl md:max-w-[50%]">
-                <span class="block h-0.5 w-10 bg-sun" aria-hidden="true"></span>
-                <h1 class="mt-5 font-serif text-hero-sm font-semibold md:text-hero">{{ $text('hero_title') }} <span class="text-sun">{{ $text('hero_title_accent') }}</span></h1>
+                <h1 class="font-serif text-hero-sm font-semibold md:text-hero">{{ $text('hero_title') }} <span class="text-sun">{{ $text('hero_title_accent') }}</span></h1>
                 <p class="mt-4 text-body text-paper">{{ $text('home_intro') }}</p>
                 <div class="mt-7 flex flex-wrap gap-3">
                     <x-public.button :href="route('public.directory')" arrow>Jelajahi direktori</x-public.button>
@@ -73,7 +73,7 @@
                             @foreach ($slides as $slide)
                                 <button type="button" x-on:click="go({{ $loop->index }})" x-bind:aria-current="active === {{ $loop->index }}" class="group/dot flex size-11 items-center justify-center rounded-full">
                                     <span class="sr-only">Foto {{ $loop->iteration }} dari {{ $loop->count }}</span>
-                                    <span @class(['block h-2.5 rounded-full transition-all motion-reduce:transition-none', 'w-6 bg-sun' => $loop->first, 'w-2.5 bg-paper/70' => ! $loop->first]) x-bind:class="{ 'w-6 bg-sun': active === {{ $loop->index }}, 'w-2.5 bg-paper/70': active !== {{ $loop->index }} }" aria-hidden="true"></span>
+                                    <span @class(['block h-2.5 rounded-full transition-all motion-reduce:transition-none', 'w-6 bg-paper' => $loop->first, 'w-2.5 bg-paper/60' => ! $loop->first]) x-bind:class="{ 'w-6 bg-paper': active === {{ $loop->index }}, 'w-2.5 bg-paper/60': active !== {{ $loop->index }} }" aria-hidden="true"></span>
                                 </button>
                             @endforeach
                         </div>
@@ -119,35 +119,49 @@
     @endif
     </div>
 
-    {{-- Tentang: angka hanya dari data publik (PublicDirectory::stats). Jarak atas = setengah strip + jarak normal. --}}
-    <section class="mx-auto grid max-w-public gap-10 px-4 pt-[calc(var(--strip-h)/2+3.5rem)] pb-14 md:grid-cols-2 md:items-center md:px-6 md:pt-[calc(var(--strip-h)/2+5rem)] md:pb-20 lg:gap-14" aria-labelledby="tentang">
-        @if ($about)
-            <x-public.picture :image="$about" alt="Distrik Ransiki" sizes="(min-width: 64rem) 32rem, (min-width: 48rem) 50vw, 100vw" width="960" height="720" frame="block overflow-hidden rounded-public shadow-card" class="aspect-[4/3] w-full object-cover" />
-        @endif
-        <div @class(['max-w-[42rem]' => ! $about])>
-            @include('publik._section-heading', ['eyebrow' => 'Tentang', 'title' => 'Distrik Ransiki', 'id' => 'tentang'])
-            <p class="mt-4 text-body text-ink-soft">{{ Format::excerpt($settings['profile_body']) ?? 'Profil distrik sedang disiapkan.' }}</p>
-
-            <dl class="mt-8 grid grid-cols-2 gap-x-6 gap-y-5 max-md:sm:grid-cols-4 lg:grid-cols-4">
-                @foreach ([['organizations', 'kelompok terdaftar'], ['villages', 'kampung'], ['featured', 'produk unggulan'], ['sectors', 'bidang usaha']] as [$key, $label])
-                    <div class="flex flex-col-reverse justify-end border-l-2 border-sun pl-3">
-                        <dt class="text-caption text-ink-soft">{{ $label }}</dt>
-                        <dd class="font-serif text-display-sm font-semibold text-brand tabular-nums">{{ Format::number($stats[$key]) }}</dd>
-                    </div>
-                @endforeach
-            </dl>
-            @if ($stats['updated_at'])
-                <p class="mt-4 text-caption text-ink-muted">Data diperbarui {{ Format::date($stats['updated_at']) }}</p>
+    {{-- Tentang: angka hanya dari data publik (PublicDirectory::stats). Jarak atas = setengah strip + jarak bagian. --}}
+    @php
+        // Grid angka: 2×2 sampai < 1024px, satu baris 4 kolom mulai lg; garis pemisah tipis warna line.
+        $statCells = [
+            ['organizations', 'Kelompok', ''],
+            ['villages', 'Kampung', 'border-l pl-4 md:pl-5'],
+            ['featured', 'Produk unggulan', 'border-t lg:border-t-0 lg:border-l lg:pl-5'],
+            ['sectors', 'Bidang usaha', 'border-t border-l pl-4 md:pl-5 lg:border-t-0'],
+        ];
+    @endphp
+    <section class="mx-auto max-w-public px-4 pt-[calc(var(--strip-h)/2+var(--section-y))] pb-(--section-y) md:px-6" aria-labelledby="tentang">
+        <div class="grid gap-8 md:grid-cols-12 md:items-center md:gap-10 lg:gap-16">
+            @if ($about)
+                <x-public.picture :image="$about" alt="Distrik Ransiki" sizes="(min-width: 64rem) 27rem, (min-width: 48rem) 40vw, 100vw" width="960" height="1200" frame="block overflow-hidden rounded-photo bg-subtle shadow-soft md:col-span-5" class="aspect-[4/3] w-full object-cover md:aspect-[4/5]" />
             @endif
+            <div @class(['md:col-span-7' => $about, 'md:col-span-12 max-w-[42rem]' => ! $about])>
+                <h2 id="tentang" class="font-serif text-display-sm font-semibold text-ink md:text-display">{{ $text('about_title') }}</h2>
+                <p class="mt-5 max-w-[30rem] text-body leading-7 text-ink-soft">{{ Format::excerpt($settings['profile_body']) ?? 'Profil distrik sedang disiapkan.' }}</p>
 
-            <x-public.button variant="brand" :href="route('public.profile')" arrow class="mt-7">Selengkapnya</x-public.button>
+                <dl class="mt-10 grid grid-cols-2 border-t border-line lg:grid-cols-4">
+                    @foreach ($statCells as [$key, $label, $cell])
+                        <div class="flex min-w-0 flex-col-reverse justify-end border-line py-5 pr-4 {{ $cell }}">
+                            <dt class="mt-1 whitespace-nowrap text-caption text-ink-muted">{{ $label }}</dt>
+                            <dd class="font-serif text-display-sm font-semibold text-brand tabular-nums md:text-display">{{ Format::number($stats[$key]) }}</dd>
+                        </div>
+                    @endforeach
+                </dl>
+                @if ($stats['updated_at'])
+                    <p class="mt-3 text-caption text-ink-muted">Data per {{ Format::date($stats['updated_at']) }}</p>
+                @endif
+
+                <a href="{{ route('public.profile') }}" class="group mt-8 inline-flex min-h-11 items-center gap-2 rounded-control font-semibold text-brand underline-offset-4 hover:underline focus-visible:underline md:min-h-0">
+                    Baca profil lengkap
+                    <x-heroicon-o-arrow-right class="size-4 transition-transform group-hover:translate-x-1 motion-reduce:transition-none" aria-hidden="true" />
+                </a>
+            </div>
         </div>
     </section>
     </div>
 
     @if ($types->isNotEmpty())
         <section class="border-y border-line bg-paper" aria-labelledby="jenis-kelembagaan">
-            <div class="mx-auto max-w-public px-4 py-14 md:px-6 md:py-16">
+            <div class="mx-auto max-w-public px-4 py-(--section-y) md:px-6">
                 @include('publik._section-heading', ['eyebrow' => 'Kelembagaan', 'title' => 'Jenis kelembagaan', 'id' => 'jenis-kelembagaan', 'link' => ['href' => route('public.directory'), 'label' => 'Buka direktori']])
                 <ul class="mt-8 grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-4 lg:grid-cols-4">
                     @foreach ($types as $type)
@@ -169,7 +183,7 @@
     @endif
 
     @if ($featured->isNotEmpty())
-        <section class="mx-auto max-w-public px-4 py-14 md:px-6 md:py-16" aria-labelledby="produk-unggulan">
+        <section class="mx-auto max-w-public px-4 py-(--section-y) md:px-6" aria-labelledby="produk-unggulan">
             @include('publik._section-heading', ['eyebrow' => 'Produk', 'title' => 'Produk unggulan', 'id' => 'produk-unggulan', 'link' => ['href' => route('public.products'), 'label' => 'Lihat semua produk']])
             <div class="mt-8 grid grid-cols-2 gap-4 lg:grid-cols-4 lg:gap-5">
                 @foreach ($featured as $product)
@@ -182,7 +196,7 @@
 
     @if ($posts->isNotEmpty())
         <section @class(['border-y border-line bg-paper' => $featured->isNotEmpty()]) aria-labelledby="berita-kegiatan">
-            <div class="mx-auto max-w-public px-4 py-14 md:px-6 md:py-16">
+            <div class="mx-auto max-w-public px-4 py-(--section-y) md:px-6">
                 @include('publik._section-heading', ['eyebrow' => 'Kabar distrik', 'title' => 'Berita & kegiatan', 'id' => 'berita-kegiatan', 'link' => ['href' => route('public.posts'), 'label' => 'Lihat semua berita']])
                 {{-- HP: digeser horizontal; tablet 3 kolom; desktop satu baris. --}}
                 <ul @class([
@@ -201,11 +215,12 @@
         </section>
     @endif
 
-    <section class="mx-auto max-w-public px-4 py-14 md:px-6 md:py-16" aria-labelledby="ajakan">
+    <section class="mx-auto max-w-public px-4 py-(--section-y) md:px-6" aria-labelledby="ajakan">
         <div class="on-dark flex flex-col gap-6 rounded-public bg-forest px-5 py-8 text-paper md:flex-row md:items-center md:px-10">
-            <h2 id="ajakan" class="font-serif text-display-sm font-semibold md:max-w-xs">Kelompok Anda <span class="text-sun">belum terdaftar?</span></h2>
+            <h2 id="ajakan" class="font-serif text-display-sm font-semibold md:max-w-xs">Kelompok Anda belum terdaftar?</h2>
             <p class="flex-1 text-body text-forest-soft md:border-l md:border-forest-line md:pl-8">Hubungi Kantor Distrik Ransiki agar kelompok usaha Anda didata dan profilnya tampil di direktori.</p>
             <x-public.button :href="route('public.contact')" arrow class="self-start md:self-center">Hubungi kami</x-public.button>
         </div>
     </section>
+    </div>
 </x-layouts.public>

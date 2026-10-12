@@ -70,7 +70,7 @@
         <form method="POST" action="{{ route('admin.content.update') }}">
             @csrf
             @method('PUT')
-            <x-card title="Judul dan pengantar" description="Kosongkan untuk memakai teks bawaan.">
+            <x-card title="Judul dan teks beranda" description="Kosongkan untuk memakai teks bawaan.">
                 <div class="space-y-5">
                     <div class="grid gap-5 md:grid-cols-2">
                         <x-field label="Judul" for="hero_title" hint="Bawaan: {{ SiteSetting::DEFAULTS['hero_title'] }}" optional>
@@ -82,6 +82,9 @@
                     </div>
                     <x-field label="Kalimat penjelas" for="home_intro" hint="Satu atau dua kalimat di bawah judul. Maksimal 300 karakter." optional>
                         <x-textarea name="home_intro" rows="3" maxlength="300" :value="$settings['home_intro']" :placeholder="SiteSetting::DEFAULTS['home_intro']" />
+                    </x-field>
+                    <x-field label="Judul bagian Tentang" for="about_title" hint="Bawaan: {{ SiteSetting::DEFAULTS['about_title'] }}" optional>
+                        <x-input name="about_title" :value="$settings['about_title']" :placeholder="SiteSetting::DEFAULTS['about_title']" maxlength="80" />
                     </x-field>
                     <div class="flex flex-wrap items-center gap-4">
                         <x-button type="submit" processing="Menyimpan…">Simpan judul</x-button>

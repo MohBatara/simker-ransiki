@@ -75,11 +75,14 @@
     --radius-control: 6px; /* input, tombol, badge */
     --radius-card: 10px; /* kartu, modal, menu melayang */
     --radius-public: 8px; /* kartu website publik */
+    --radius-photo: 12px; /* foto besar website publik (bagian Tentang) */
 
     --shadow-*: initial;
     --shadow-float: 0 4px 16px rgb(28 31 30 / 0.08), 0 1px 3px rgb(28 31 30 / 0.06);
     /* Bayangan halus kartu website publik (bukan area aplikasi). */
     --shadow-card: 0 1px 2px rgb(28 31 30 / 0.04), 0 6px 18px rgb(28 31 30 / 0.06);
+    /* Foto besar website publik: hampir tanpa bayangan. */
+    --shadow-soft: 0 1px 2px rgb(28 31 30 / 0.05), 0 2px 8px rgb(28 31 30 / 0.04);
     /* Strip bidang usaha yang melayang di batas hero: bayangan bawah sedikit lebih tegas. */
     --shadow-strip: 0 1px 3px rgb(28 31 30 / 0.06), 0 14px 28px -8px rgb(28 31 30 / 0.18);
     --inset-shadow-*: initial;
@@ -160,6 +163,16 @@
  * --strip-h = tinggi strip (dikunci di elemen strip); hero dan bagian Tentang memberi ruang setengahnya.
  */
 @layer components {
+    /* Satu jarak vertikal untuk semua bagian beranda. */
+    .home-page {
+        --section-y: 4rem;
+    }
+    @media (width >= 48rem) {
+        .home-page {
+            --section-y: 5rem;
+        }
+    }
+
     .home-top {
         --strip-h: 0px;
     }

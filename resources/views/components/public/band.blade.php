@@ -31,7 +31,6 @@
             </nav>
         @endif
         {{ $top ?? '' }}
-        <span class="mb-4 block h-0.5 w-10 bg-sun" aria-hidden="true"></span>
         <h1 class="max-w-3xl font-serif text-display-sm font-semibold md:text-display">{{ $title }}</h1>
         @if ($lead)
             <p class="mt-3 max-w-[42rem] text-body text-forest-soft">{{ $lead }}</p>

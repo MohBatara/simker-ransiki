@@ -192,7 +192,7 @@
                     ] as [$icon, $label, $value, $href])
                         @if ($value)
                             <div class="flex gap-3">
-                                <dt><x-dynamic-component :component="'heroicon-o-'.$icon" class="mt-0.5 size-5 text-sun" aria-hidden="true" /><span class="sr-only">{{ $label }}</span></dt>
+                                <dt><x-dynamic-component :component="'heroicon-o-'.$icon" class="mt-0.5 size-5 text-forest-soft" aria-hidden="true" /><span class="sr-only">{{ $label }}</span></dt>
                                 <dd class="min-w-0 whitespace-pre-line break-words">@if ($href)<a href="{{ $href }}" class="rounded-control text-paper hover:underline">{{ $value }}</a>@else{{ $value }}@endif</dd>
                             </div>
                         @endif

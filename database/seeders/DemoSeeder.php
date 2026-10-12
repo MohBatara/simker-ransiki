@@ -135,7 +135,7 @@ class DemoSeeder extends Seeder
             'office_phone' => '0812-0000-0002',
             'office_whatsapp' => '0812-0000-0003',
             'office_email' => 'distrik@example.test',
-            'office_hours' => 'Senin–Jumat, 08.00–15.00 WIT',
+            'office_hours' => 'Senin sampai Jumat, pukul 08.00 sampai 15.00 WIT',
         ]);
 
         if ($this->photosEnabled()) {

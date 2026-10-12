@@ -5,10 +5,7 @@
 <div class="flex flex-wrap items-end justify-between gap-4">
     <div>
         @isset($eyebrow)
-            {{-- Teks sun tidak terbaca di latar terang (1,8:1): label brand, aksen sun hanya garis. --}}
-            <p class="mb-2 flex items-center gap-2 text-caption font-semibold uppercase tracking-wider text-brand">
-                <span class="h-0.5 w-6 bg-sun" aria-hidden="true"></span>{{ $eyebrow }}
-            </p>
+            <p class="mb-2 text-caption font-semibold uppercase tracking-wider text-brand">{{ $eyebrow }}</p>
         @endisset
         <h2 @isset($id) id="{{ $id }}" @endisset class="font-serif text-display-sm font-semibold text-ink">{{ $title }}</h2>
     </div>

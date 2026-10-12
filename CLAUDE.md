@@ -396,7 +396,7 @@ Jangan mengarang kepanjangan akronim resmi (KDMP, KNMP, dsb.). Simpan apa adanya
   `slide_{id}[...]`). Foto: `GET /foto-hero/{id}` (slide nonaktif hanya Admin). Tanpa slide aktif: satu foto bawaan
   `resources/aset/hero-bawaan*` (`/foto-hero/bawaan`, foto sementara; ganti dengan foto asli Ransiki), tidak pernah
   foto produk kelompok.
-- `site_settings`: key, value. Kunci di `SiteSetting::KEYS`: hero_title, hero_title_accent, home_intro (bawaan di
+- `site_settings`: key, value. Kunci di `SiteSetting::KEYS`: hero_title, hero_title_accent, home_intro, about_title (bawaan di
   `SiteSetting::DEFAULTS` bila kosong), profile_body,
   economic_potential (Markdown terbatas, dirender `Format::markdown` tanpa HTML mentah), office_address,
   office_phone, office_whatsapp, office_email, office_hours, cover_photo_path, cover_caption,
@@ -697,7 +697,7 @@ pemisah tetap `line`/`line-strong`. Periksa kontras sebelum mengubah atau menamb
 - Foto produk belum ada → petak inisial (2 huruf) berlatar `subtle`, huruf `ink-muted`. Di beranda,
   produk unggulan berfoto didahulukan. Foto sampul (opsional, dari Konten Website) tampil lebar di
   bawah pembuka beranda dengan keterangan dan nama fotografer.
-- Tampilkan "Data diperbarui [tanggal]" di beranda dan profil kelompok.
+- Tampilkan "Data diperbarui [tanggal]" di profil kelompok; di beranda "Data per [tanggal]" di bawah angka Tentang.
 - Footer publik: identitas + "Dikelola oleh Pemerintah Distrik Ransiki" + tempat logo (`x-logo`),
   tautan cepat, informasi, kontak kantor distrik (daftar OPD ada di halaman Kontak).
 - Semua layout punya tautan "Lewati ke konten" ke `#konten`. Area login dan halaman masuk `noindex`.
@@ -723,7 +723,11 @@ Pengecualian dari Larangan di atas, khusus publik:
   (`rounded-public`), border `line` + bayangan halus `shadow-card` (keduanya khusus publik). Lencana ikon bulat
   (`x-public.icon-badge`) di tepi foto kartu produk/direktori; ikon dari `App\Support\PublicIcons`.
 - Judul h1–h3 publik memakai `font-serif`. Label kecil di atas judul bagian (`publik._section-heading`
-  `eyebrow`) berwarna `brand` + garis pendek `sun` (teks `sun` di latar terang tetap dilarang).
+  `eyebrow`) berwarna `brand`, tanpa garis hiasan. Tidak ada garis emas pendek (di hero, pita, atau label).
+- Emas (`sun`) di publik HANYA untuk tombol utama (`x-public.button` sun) dan aksen kata di judul hero, plus cincin
+  fokus `on-dark` (fungsi aksesibilitas). Ikon footer, titik slider, pil gelap, dan angka memakai warna netral (dijaga tes).
+- Teks tampilan publik dan nilai bawaan `SiteSetting::DEFAULTS` tanpa tanda pisah (– —) dan tanpa kata ulang bertanda
+  hubung; tulis dengan koma, titik, atau "sampai" (dijaga tes).
 - Judul hero `text-hero` 48px (desktop) / `text-hero-sm` 36px (HP). Hero beranda memakai `.overlay-hero` yang lebih
   tebal (HP 85%; desktop 90% → 85% di 55% → 30%) agar aksen `sun` di judul ≥ 4,5:1 (dijaga `PublicContrastTest`).
   Maks 3 foto dari `hero_slides` aktif (urut posisi; tanpa slide aktif: foto bawaan), slider Alpine `heroSlider`
@@ -739,8 +743,12 @@ tombol itu ada di menu; menu aktif bergaris bawah `brand`; tanpa bilah atas, kon
 → (beranda) hero (judul + aksen + kalimat penjelas dari Konten Website) → strip
 putih melayang 5 bidang usaha terbanyak (ikon + jumlah, geser horizontal di HP; tingginya `--strip-h` per breakpoint
 di `.home-top` (app.css), `absolute bottom-0 translate-y-1/2` sehingga garis bawah hero tepat di tengahnya; ruang
-bawah hero dan jarak atas Tentang = `calc(var(--strip-h)/2 + …)`, bayangan `shadow-strip`) → "Tentang" (foto, ringkasan profil,
-4 angka publik: kelompok terdaftar, kampung, produk unggulan, bidang usaha + "Data diperbarui") → jenis kelembagaan
+bawah hero dan jarak atas Tentang = `calc(var(--strip-h)/2 + var(--section-y))`, bayangan `shadow-strip`). Semua bagian
+beranda memakai satu jarak vertikal `--section-y` (`.home-page`: 4rem HP, 5rem mulai 768px) → "Tentang" (grid 5:7, foto 4:5 `rounded-photo`
+12px + `shadow-soft`, konten di tengah vertikal; HP foto 4:3 di atas; judul `about_title` bawaan "Mengenal Distrik
+Ransiki", tanpa label kecil; paragraf `ink-soft` maks 30rem ≈ 60 karakter; angka serif `brand` dengan label satu baris
+Kelompok/Kampung/Produk unggulan/Bidang usaha, garis atas + pemisah tegak `line`, 2×2 sampai < 1024px; "Data per …";
+tautan teks "Baca profil lengkap" + panah) → jenis kelembagaan
 (`PublicDirectory::institutionTypes()`) → produk unggulan (berfoto dulu; tanpa foto → foto bidang dari Admin → petak
 inisial) → berita & kegiatan (maks 5, disembunyikan bila kosong) → banner ajakan `forest` "Kelompok Anda belum
 terdaftar?" → footer `forest` (identitas, Tautan cepat, Informasi, kontak kantor; tanpa newsletter/media sosial).
