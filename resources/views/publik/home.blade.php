@@ -102,8 +102,8 @@
     @if ($topSectors->isNotEmpty())
         <div class="absolute inset-x-0 bottom-0 z-10 translate-y-1/2">
             <div class="mx-auto max-w-public px-4 md:px-6">
-            <nav aria-label="Bidang usaha" x-data data-intro-late class="h-(--strip-h) overflow-hidden rounded-public border border-line bg-paper shadow-strip">
-                <ul x-reveal.stagger="fade-up" class="flex h-full snap-x divide-x divide-line overflow-x-auto lg:overflow-visible">
+            <nav aria-label="Bidang usaha" x-data="scrollDots({ focus: false })" data-intro-late class="h-(--strip-h) overflow-hidden rounded-public border border-line bg-paper shadow-strip">
+                <ul x-ref="track" x-reveal.stagger.intro="fade-up" data-reveal-row class="flex h-full snap-x divide-x divide-line overflow-x-auto lg:overflow-visible">
                     @foreach ($topSectors as $sector)
                         <li class="w-44 shrink-0 snap-start lg:w-auto lg:min-w-0 lg:flex-1">
                             <a href="{{ route('public.directory', ['bidang' => $sector->id]) }}" class="group flex h-full items-center gap-3 px-4 transition-colors hover:bg-subtle md:px-5">
@@ -150,10 +150,13 @@
         </div>
 
         <div x-data="scrollDots" class="mt-section-head">
-            {{-- < 1024px: deretan geser selebar layar (−mx-4), kartu 85vw (HP) atau setengah (tablet); desktop 3 kolom. --}}
-            <ul x-ref="track" x-on:scroll.passive="update()" x-reveal.stagger="fade-up" class="scrollbar-none relative -mx-4 flex snap-x snap-mandatory scroll-px-4 gap-4 overflow-x-auto px-4 pb-1 md:-mx-6 md:scroll-px-6 md:px-6 lg:mx-0 lg:grid lg:grid-cols-3 lg:gap-6 lg:overflow-visible lg:px-0 lg:pb-0">
+            {{--
+                < 1024px: deretan geser selebar layar. HP kartu 88vw − 28px (sekitar 82%), kartu berikutnya mengintip sekitar 12%,
+                padding kanan 12vw + 12px agar kartu terakhir juga bisa di posisi snap. Tablet kartu 42vw. Desktop 3 kolom.
+            --}}
+            <ul x-ref="track" x-reveal.stagger="fade-up" data-reveal-row class="scrollbar-none relative -mx-4 flex snap-x snap-mandatory scroll-px-4 gap-3 overflow-x-auto pr-[calc(12vw+12px)] pb-1 pl-4 md:-mx-6 md:scroll-px-6 md:gap-4 md:px-6 lg:mx-0 lg:grid lg:grid-cols-3 lg:gap-6 lg:overflow-visible lg:px-0 lg:pb-0">
                 @foreach ($aboutCards as $card)
-                    <li class="relative w-[85vw] shrink-0 snap-start md:w-[calc(50%-0.5rem)] lg:w-auto">
+                    <li class="relative w-[calc(88vw-28px)] shrink-0 snap-start md:w-[42vw] lg:w-auto">
                         <a href="{{ $card['url'] }}" class="group relative block rounded-[20px]">
                             <div class="card-bite relative isolate flex aspect-[4/5] flex-col justify-end overflow-hidden rounded-[20px] bg-forest">
                                 <x-public.picture :image="$card['photo']" alt="" sizes="(min-width: 64rem) 22rem, (min-width: 48rem) 50vw, 85vw" width="960" height="1200" frame="absolute inset-0 -z-20 block size-full" class="size-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.04] group-focus-visible:scale-[1.04] motion-reduce:transition-none motion-reduce:group-hover:scale-100" />
@@ -173,10 +176,7 @@
             </ul>
             <div class="mt-4 flex justify-center lg:hidden">
                 @foreach ($aboutCards as $card)
-                    <button type="button" x-on:click="go({{ $loop->index }})" x-bind:aria-current="active === {{ $loop->index }}" class="flex size-11 items-center justify-center rounded-full">
-                        <span class="sr-only">Kartu {{ $loop->iteration }} dari {{ $loop->count }}</span>
-                        <span @class(['block h-2 rounded-full transition-all motion-reduce:transition-none', 'w-6 bg-brand' => $loop->first, 'w-2 bg-line-input' => ! $loop->first]) x-bind:class="{ 'w-6 bg-brand': active === {{ $loop->index }}, 'w-2 bg-line-input': active !== {{ $loop->index }} }" aria-hidden="true"></span>
-                    </button>
+                    @include('publik._row-dot')
                 @endforeach
             </div>
         </div>
@@ -291,16 +291,16 @@
     @endif
 
     @if ($featured->isNotEmpty())
-        {{-- Produk unggulan: HP digeser (scroll-snap, kartu 80% layar, titik penanda), tablet 2 kolom, desktop 4 kolom. --}}
+        {{-- Produk unggulan: HP digeser (scroll-snap, kartu sekitar 82% layar, titik penanda), tablet 2 kolom, desktop 4 kolom. --}}
         <section class="mx-auto max-w-public px-4 py-section md:px-6" aria-labelledby="produk-unggulan">
             <div class="flex flex-wrap items-end justify-between gap-4">
                 <h2 id="produk-unggulan" class="font-serif text-display-sm font-semibold text-ink">Produk unggulan</h2>
                 <x-public.pill-link :href="route('public.products')" class="max-md:hidden">Lihat semua produk</x-public.pill-link>
             </div>
             <div x-data="scrollDots" class="mt-section-head">
-                <ul x-ref="track" x-on:scroll.passive="update()" x-reveal.stagger="fade-up" class="scrollbar-none relative -mx-4 flex snap-x snap-mandatory scroll-px-4 gap-4 overflow-x-auto px-4 pb-1 md:mx-0 md:grid md:grid-cols-2 md:gap-5 md:overflow-visible md:px-0 md:pb-0 lg:grid-cols-4">
+                <ul x-ref="track" x-reveal.stagger="fade-up" data-reveal-row class="scrollbar-none relative -mx-4 flex snap-x snap-mandatory scroll-px-4 gap-3 overflow-x-auto pr-[calc(12vw+12px)] pb-1 pl-4 md:mx-0 md:grid md:grid-cols-2 md:gap-5 md:overflow-visible md:px-0 md:pb-0 lg:grid-cols-4">
                     @foreach ($featured as $product)
-                        <li class="w-[80vw] shrink-0 snap-start md:w-auto">
+                        <li class="w-[calc(88vw-28px)] shrink-0 snap-start md:w-auto">
                             @include('publik._product-card')
                         </li>
                     @endforeach
@@ -308,10 +308,7 @@
                 @if ($featured->count() > 1)
                     <div class="mt-4 flex justify-center md:hidden">
                         @foreach ($featured as $product)
-                            <button type="button" x-on:click="go({{ $loop->index }})" x-bind:aria-current="active === {{ $loop->index }}" class="flex size-11 items-center justify-center rounded-full">
-                                <span class="sr-only">Produk {{ $loop->iteration }} dari {{ $loop->count }}</span>
-                                <span @class(['block h-2 rounded-full transition-all motion-reduce:transition-none', 'w-6 bg-brand' => $loop->first, 'w-2 bg-line-input' => ! $loop->first]) x-bind:class="{ 'w-6 bg-brand': active === {{ $loop->index }}, 'w-2 bg-line-input': active !== {{ $loop->index }} }" aria-hidden="true"></span>
-                            </button>
+                            @include('publik._row-dot')
                         @endforeach
                     </div>
                 @endif

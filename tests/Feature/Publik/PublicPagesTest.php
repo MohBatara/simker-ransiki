@@ -507,8 +507,8 @@ test('bagian Produk unggulan di Beranda: tanpa label kecil, tombol pil, geser di
     preg_match('#aria-labelledby="produk-unggulan".*?</section>#s', $this->get('/')->getContent(), $section);
 
     expect($section[0])->not->toContain('uppercase tracking-wider text-brand')
-        ->toContain('x-data="scrollDots"')->toContain('w-[80vw]')->toContain('md:grid-cols-2')->toContain('lg:grid-cols-4')
-        ->toContain('Produk 3 dari 3')
+        ->toContain('x-data="scrollDots"')->toContain('w-[calc(88vw-28px)]')->toContain('md:grid-cols-2')->toContain('lg:grid-cols-4')
+        ->toContain('Kartu 3 dari 3')
         ->and(substr_count($section[0], 'Lihat semua produk'))->toBe(2)
         ->and($section[0])->toContain('rounded-full bg-forest');
 });

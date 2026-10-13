@@ -337,6 +337,12 @@
         --reveal-ease: cubic-bezier(0.16, 1, 0.3, 1);
         --reveal-stagger: 150ms; /* maks 6 item dijeda */
         --count-duration: 1400ms;
+        /* Deretan geser < 1024px (x-reveal data-reveal-row, scrollDots): kartu masuk dari kanan, isyarat geser sekali. */
+        --reveal-row-distance: 56px;
+        --reveal-row-duration: 1000ms;
+        --reveal-row-stagger: 120ms;
+        --row-hint-distance: 28px;
+        --row-hint-duration: 900ms;
         --intro-duration: 900ms; /* intro hero saat halaman dibuka */
     }
     @media (width >= 48rem) {
@@ -376,6 +382,12 @@
         [data-reveal='zoom-in'][data-reveal-state='hidden'] {
             transform: scale(var(--reveal-scale));
         }
+        [data-reveal='slide-in-row'] {
+            transition-duration: var(--reveal-row-duration);
+        }
+        [data-reveal='slide-in-row'][data-reveal-state='hidden'] {
+            transform: translate3d(var(--reveal-row-distance), 0, 0);
+        }
 
         /* Intro hero: hanya bila <html class="motion"> (skrip kecil di head); tanpa JS tidak ada animasi. */
         @keyframes intro-up {
@@ -393,8 +405,11 @@
         .motion [data-intro] > :nth-child(3) {
             animation-delay: 240ms;
         }
-        .motion [data-intro-late] {
-            animation: intro-up var(--intro-duration) var(--reveal-ease) 360ms both;
+        /* < 1024px strip tidak ikut naik: kartunya masuk dari kanan (x-reveal.intro + data-reveal-row). */
+        @media (width >= 64rem) {
+            .motion [data-intro-late] {
+                animation: intro-up var(--intro-duration) var(--reveal-ease) 360ms both;
+            }
         }
     }
 }

@@ -5,6 +5,9 @@
  *
  * x-reveal="fade-up | fade-left | fade-right | zoom-in"      satu elemen (data-reveal-delay="ms" opsional)
  * x-reveal.stagger="fade-up"                                 anak elemen bergiliran (data-reveal-delay = jeda per item)
+ *   + data-reveal-row                                        deretan geser: < 1024px, selama deretan bisa digeser, varian
+ *                                                            "slide-in-row" (kartu masuk dari kanan) menggantikan varian tadi
+ *   + .intro                                                 terlihat saat dibuka: tetap dimainkan setelah intro hero
  * x-count.<tunda ms>                                         angka menghitung naik setiap kali masuk dari bawah
  * x-parallax="<px>"                                          geser vertikal halus selama elemen di layar (≥ 768px)
  * $store.scroll.pastHeader / pastFold                        posisi gulir (header ringkas, tombol kembali ke atas)
@@ -14,6 +17,9 @@
  */
 const reduce = window.matchMedia('(prefers-reduced-motion: reduce)');
 const desktop = window.matchMedia('(min-width: 48rem)');
+const narrow = window.matchMedia('(max-width: 63.98rem)');
+const INTRO_DELAY = 360; // sama dengan jeda .motion [data-intro-late] di app.css
+const scrollsX = (el) => ['auto', 'scroll'].includes(getComputedStyle(el).overflowX);
 const STAGGER_MAX = 6;
 // Konstanta dibaca dari variabel --reveal-* / --count-* di app.css (satu tempat untuk menyetel).
 const token = (name, fallback) => Number.parseFloat(getComputedStyle(document.documentElement).getPropertyValue(name)) || fallback;
@@ -64,25 +70,65 @@ function reveal(el, { expression, modifiers }) {
     const step = Number(el.dataset.revealDelay ?? (stagger ? staggerStep() : 0));
     const targets = stagger ? [...el.children] : [el];
 
-    targets.forEach((target, i) => {
-        target.dataset.reveal = variant;
-        target.style.setProperty('--reveal-delay', `${stagger ? Math.min(i, STAGGER_MAX - 1) * step : step}ms`);
+    // Varian dipilih ulang saat lebar layar melewati batas (deretan geser menjadi grid atau sebaliknya).
+    const apply = () => {
+        const row = 'revealRow' in el.dataset && narrow.matches && scrollsX(el);
+        const gap = row ? token('--reveal-row-stagger', 120) : step;
+        targets.forEach((target, i) => {
+            target.dataset.reveal = row ? 'slide-in-row' : variant;
+            target.style.setProperty('--reveal-delay', `${stagger ? Math.min(i, STAGGER_MAX - 1) * gap : gap}ms`);
+        });
+
+        return row;
+    };
+    const row = apply();
+    narrow.addEventListener('change', apply);
+    desktop.addEventListener('change', apply);
+
+    targets.forEach((target) => {
         // will-change hanya selama animasi.
         target.addEventListener('transitionend', (event) => {
             if (event.target === target) delete target.dataset.revealAnimating;
         });
     });
 
-    const set = (state) => targets.forEach((target) => {
-        if (target.dataset.revealState !== state) {
-            target.dataset.revealAnimating = '';
-            target.dataset.revealState = state;
-            target.dispatchEvent(new CustomEvent(`reveal:${state}`));
+    // Browser mengikuti titik snap kartu yang sedang bergeser (deretan ikut menggulir sendiri), jadi snap deretan
+    // dimatikan selama kartu tersembunyi atau masuk, lalu dipulihkan setelah kartu terakhir selesai.
+    let snapTimer = null;
+    const snap = (state) => {
+        if (!('revealRow' in el.dataset)) return;
+        clearTimeout(snapTimer);
+        el.style.scrollSnapType = 'none';
+        if (state === 'shown') {
+            const last = Math.max(0, ...targets.map((target) => Number.parseFloat(target.style.getPropertyValue('--reveal-delay')) || 0));
+            const duration = token(targets[0].dataset.reveal === 'slide-in-row' ? '--reveal-row-duration' : '--reveal-duration', 1000);
+            snapTimer = setTimeout(() => (el.style.scrollSnapType = ''), last + duration);
         }
-    });
+    };
 
-    targets.forEach((target) => (target.dataset.revealState = seenOnLoad(el) ? 'shown' : 'hidden'));
-    watch(el, { enter: () => set('shown'), leaveBelow: () => set('hidden') });
+    const set = (state) => {
+        if (targets.every((target) => target.dataset.revealState === state)) return;
+        snap(state);
+        targets.forEach((target) => {
+            if (target.dataset.revealState !== state) {
+                target.dataset.revealAnimating = '';
+                target.dataset.revealState = state;
+                target.dispatchEvent(new CustomEvent(`reveal:${state}`, { bubbles: true }));
+            }
+        });
+    };
+
+    let introPending = row && modifiers.includes('intro') && seenOnLoad(el);
+    const initial = seenOnLoad(el) && !introPending ? 'shown' : 'hidden';
+    targets.forEach((target) => (target.dataset.revealState = initial));
+    if (initial === 'hidden') snap('hidden');
+    if (introPending) {
+        setTimeout(() => {
+            introPending = false;
+            set('shown');
+        }, INTRO_DELAY);
+    }
+    watch(el, { enter: () => introPending || set('shown'), leaveBelow: () => set('hidden') });
 }
 
 function count(el, { modifiers }) {
@@ -133,8 +179,8 @@ function count(el, { modifiers }) {
     // Di dalam elemen ber-x-reveal: mulai bersamaan dengan munculnya elemen itu (ikut jeda stagger-nya).
     const host = el.closest('[data-reveal]');
     if (host) {
-        host.addEventListener('reveal:shown', () => run(Number.parseFloat(host.style.getPropertyValue('--reveal-delay')) || 0));
-        host.addEventListener('reveal:hidden', reset);
+        host.addEventListener('reveal:shown', (event) => event.target === host && run(Number.parseFloat(host.style.getPropertyValue('--reveal-delay')) || 0));
+        host.addEventListener('reveal:hidden', (event) => event.target === host && reset());
         if (host.dataset.revealState === 'shown') {
             run(loadDelay);
         } else {
