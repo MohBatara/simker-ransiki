@@ -15,19 +15,28 @@
 const reduce = window.matchMedia('(prefers-reduced-motion: reduce)');
 const desktop = window.matchMedia('(min-width: 48rem)');
 const STAGGER_MAX = 6;
-const staggerStep = () => Number.parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--reveal-stagger')) || 120;
+// Konstanta dibaca dari variabel --reveal-* / --count-* di app.css (satu tempat untuk menyetel).
+const token = (name, fallback) => Number.parseFloat(getComputedStyle(document.documentElement).getPropertyValue(name)) || fallback;
+const staggerStep = () => token('--reveal-stagger', 150);
 
 // Elemen yang sudah terlihat (atau sudah lewat di atas layar) saat dibuka tidak disembunyikan.
 const seenOnLoad = (el) => el.getBoundingClientRect().top < window.innerHeight;
 
 const supported = 'IntersectionObserver' in window;
-// Masuk: 10% dari bawah layar. Keluar: tepi layar sebenarnya, agar elemen yang masih terlihat tidak ikut di-reset.
+// Masuk: setelah elemen melewati --reveal-trigger dari bawah layar dan minimal --reveal-threshold-nya terlihat. Elemen
+// yang lebih tinggi dari area pemicu tidak pernah mencapai rasio itu, jadi diukur terhadap tinggi area pemicu.
+// Keluar: tepi layar sebenarnya (observer kedua), agar elemen tidak berkedip di batas pemicu.
+const enterThreshold = supported ? token('--reveal-threshold', 0.15) : 0;
 const enterObserver = supported
     ? new IntersectionObserver((entries) => {
         for (const entry of entries) {
-            if (entry.isIntersecting) entry.target._motion?.enter();
+            const needed = enterThreshold * Math.min(entry.boundingClientRect.height, entry.rootBounds?.height ?? Infinity);
+            if (entry.isIntersecting && entry.intersectionRect.height >= needed - 1) entry.target._motion?.enter();
         }
-    }, { threshold: 0, rootMargin: '0px 0px -10% 0px' })
+    }, {
+        threshold: [0, enterThreshold / 3, (enterThreshold * 2) / 3, enterThreshold],
+        rootMargin: `0px 0px -${token('--reveal-trigger', 25)}% 0px`,
+    })
     : null;
 const exitObserver = supported
     ? new IntersectionObserver((entries) => {
@@ -68,6 +77,7 @@ function reveal(el, { expression, modifiers }) {
         if (target.dataset.revealState !== state) {
             target.dataset.revealAnimating = '';
             target.dataset.revealState = state;
+            target.dispatchEvent(new CustomEvent(`reveal:${state}`));
         }
     });
 
@@ -93,20 +103,21 @@ function count(el, { modifiers }) {
     el.style.minWidth = `${el.getBoundingClientRect().width}px`;
 
     const format = new Intl.NumberFormat('id-ID');
-    const delay = Number(modifiers.find((m) => !Number.isNaN(Number(m))) ?? 0);
+    const duration = token('--count-duration', 1400);
+    const loadDelay = Number(modifiers.find((m) => !Number.isNaN(Number(m))) ?? 0);
     let timer = null;
     let frameId = null;
     const stop = () => {
         clearTimeout(timer);
         cancelAnimationFrame(frameId);
     };
-    const run = () => {
+    const run = (delay) => {
         stop();
         el.textContent = format.format(0);
         timer = setTimeout(() => {
             const start = performance.now();
             const frame = (now) => {
-                const t = Math.min(1, (now - start) / 800);
+                const t = Math.min(1, (now - start) / duration);
                 el.textContent = t < 1 ? format.format(Math.round(target * (1 - (1 - t) ** 3))) : finalText;
                 if (t < 1) frameId = requestAnimationFrame(frame);
             };
@@ -114,16 +125,28 @@ function count(el, { modifiers }) {
         }, delay);
     };
 
+    const reset = () => {
+        stop();
+        el.textContent = format.format(0);
+    };
+
+    // Di dalam elemen ber-x-reveal: mulai bersamaan dengan munculnya elemen itu (ikut jeda stagger-nya).
+    const host = el.closest('[data-reveal]');
+    if (host) {
+        host.addEventListener('reveal:shown', () => run(Number.parseFloat(host.style.getPropertyValue('--reveal-delay')) || 0));
+        host.addEventListener('reveal:hidden', reset);
+        if (host.dataset.revealState === 'shown') {
+            run(loadDelay);
+        } else {
+            el.textContent = format.format(0);
+        }
+        return;
+    }
+
     if (!seenOnLoad(el)) {
         el.textContent = format.format(0);
     }
-    watch(el, {
-        enter: run,
-        leaveBelow: () => {
-            stop();
-            el.textContent = format.format(0);
-        },
-    });
+    watch(el, { enter: () => run(loadDelay), leaveBelow: reset });
 }
 
 function parallax(el, { expression }) {

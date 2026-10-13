@@ -328,16 +328,21 @@
  */
 @layer base {
     :root {
-        --reveal-distance: 48px; /* desktop; HP 60% (lihat --reveal-shift) */
-        --reveal-shift: calc(var(--reveal-distance) * 0.6);
+        --reveal-trigger: 25%; /* animasi mulai setelah elemen masuk sejauh ini dari bawah layar */
+        --reveal-threshold: 0.15; /* dan minimal 15% elemen terlihat */
+        --reveal-distance: 48px;
+        --reveal-shift: 30px; /* HP; desktop = --reveal-distance */
         --reveal-scale: 0.92;
-        --reveal-duration: 900ms;
+        --reveal-duration: 1000ms; /* HP; desktop 1200ms */
         --reveal-ease: cubic-bezier(0.16, 1, 0.3, 1);
-        --reveal-stagger: 120ms; /* dibaca motion.js; maks 6 item dijeda */
+        --reveal-stagger: 150ms; /* maks 6 item dijeda */
+        --count-duration: 1400ms;
+        --intro-duration: 900ms; /* intro hero saat halaman dibuka */
     }
     @media (width >= 48rem) {
         :root {
             --reveal-shift: var(--reveal-distance);
+            --reveal-duration: 1200ms;
         }
     }
 }
@@ -380,7 +385,7 @@
             }
         }
         .motion [data-intro] > * {
-            animation: intro-up var(--reveal-duration) var(--reveal-ease) both;
+            animation: intro-up var(--intro-duration) var(--reveal-ease) both;
         }
         .motion [data-intro] > :nth-child(2) {
             animation-delay: 120ms;
@@ -389,7 +394,7 @@
             animation-delay: 240ms;
         }
         .motion [data-intro-late] {
-            animation: intro-up var(--reveal-duration) var(--reveal-ease) 360ms both;
+            animation: intro-up var(--intro-duration) var(--reveal-ease) 360ms both;
         }
     }
 }
