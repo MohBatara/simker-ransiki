@@ -15,10 +15,11 @@
         </form>
     </x-public.band>
 
-    <div class="mx-auto max-w-public px-4 py-8 md:px-6 md:py-10">
+    <div class="mx-auto max-w-public px-4 py-section md:px-6">
         {{-- Filter langsung diterapkan saat pilihan berubah; ikut mengirim kata pencarian dari pita judul. --}}
         <div x-data="{ open: @js($activeFilters > 0) }" class="space-y-3">
-            <div class="flex flex-wrap items-center gap-2">
+            {{-- Tanpa pencarian/filter aktif, baris ini kosong di desktop: disembunyikan agar tidak menambah jarak. --}}
+            <div @class(['flex flex-wrap items-center gap-2', 'md:hidden' => ! $hasFilters])>
                 <x-button variant="secondary" class="md:hidden" x-on:click="open = ! open" x-bind:aria-expanded="open" aria-controls="filter-direktori">
                     Filter{{ $activeFilters ? " ({$activeFilters})" : '' }}
                 </x-button>
@@ -34,14 +35,14 @@
         </div>
 
         @if ($organizations->isEmpty())
-            <div class="mt-8">
+            <div class="mt-section-head">
                 <x-empty-state
                     :title="$hasFilters ? 'Tidak ada kelompok yang cocok' : 'Belum ada kelompok yang dipublikasikan'"
                     :description="$hasFilters ? 'Ubah kata pencarian atau hapus filter.' : 'Daftar kelompok akan tampil di sini setelah dipublikasikan oleh Admin distrik.'"
                 />
             </div>
         @else
-            <div class="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            <div class="mt-section-head grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
                 @foreach ($organizations as $organization)
                     @php
                         $url = route('public.organization', $organization->slug);
@@ -85,7 +86,9 @@
                 @endforeach
             </div>
 
-            <div class="mt-8">{{ $organizations->links() }}</div>
+            @if ($organizations->hasPages())
+                <div class="mt-8">{{ $organizations->links() }}</div>
+            @endif
         @endif
     </div>
 </x-layouts.public>

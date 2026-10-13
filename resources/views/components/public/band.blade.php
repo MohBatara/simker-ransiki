@@ -13,7 +13,7 @@
         <x-public.picture :image="$image" alt="" eager width="1600" height="686" frame="absolute inset-0 -z-20 block size-full" class="size-full object-cover" />
         <div class="overlay-forest absolute inset-0 -z-10" aria-hidden="true"></div>
     @endif
-    <div class="mx-auto max-w-public px-4 py-10 md:px-6 md:py-14">
+    <div class="mx-auto max-w-public px-4 py-section md:px-6">
         @if ($crumbs)
             <nav aria-label="Remah roti" class="mb-4 text-caption text-forest-soft">
                 <ol class="flex flex-wrap items-center gap-x-1.5 gap-y-1">

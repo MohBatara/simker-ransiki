@@ -27,9 +27,9 @@
         @endif
     </x-public.band>
 
-    <div class="mx-auto grid max-w-public gap-10 px-4 py-10 md:px-6 lg:grid-cols-[minmax(0,1fr)_18rem] lg:gap-14">
+    <div class="mx-auto grid max-w-public gap-10 px-4 py-section md:px-6 lg:grid-cols-[minmax(0,1fr)_18rem] lg:gap-14">
         <div class="contents lg:block">
-            <div class="order-3 space-y-12">
+            <div class="order-3 [&>*+*]:mt-section">
                 @if ($organization->description)
                     <p class="max-w-[42rem] whitespace-pre-line text-body text-ink">{{ $organization->description }}</p>
                 @endif
@@ -37,9 +37,9 @@
                 <section id="produk" class="scroll-mt-6">
                     @include('publik._section-heading', ['title' => 'Produk'])
                     @if ($organization->products->isEmpty())
-                        <p class="mt-4 text-body text-ink-soft">Belum ada produk yang dipublikasikan.</p>
+                        <p class="mt-section-head text-body text-ink-soft">Belum ada produk yang dipublikasikan.</p>
                     @else
-                        <div class="mt-5 grid gap-5 sm:grid-cols-2">
+                        <div class="mt-section-head grid gap-5 sm:grid-cols-2">
                             @foreach ($organization->products as $product)
                                 <article class="overflow-hidden rounded-public border border-line bg-paper shadow-card">
                                     @if ($sources = $product->photoSources())
@@ -66,9 +66,9 @@
                 @if ($organization->production_capacity || $organization->markets)
                     <section>
                         @include('publik._section-heading', ['title' => 'Informasi usaha'])
-                        <dl class="mt-4 divide-y divide-line text-body">
+                        <dl class="mt-section-head divide-y divide-line text-body">
                             @foreach (array_filter(['Kapasitas produksi' => $organization->production_capacity, 'Pasar' => $organization->markets]) as $label => $value)
-                                <div class="grid gap-1 py-3 sm:grid-cols-[12rem_1fr] sm:gap-4">
+                                <div class="grid gap-1 py-3 last:pb-0 sm:grid-cols-[12rem_1fr] sm:gap-4">
                                     <dt class="text-ink-soft">{{ $label }}</dt>
                                     <dd class="whitespace-pre-line text-ink">{{ $value }}</dd>
                                 </div>
@@ -79,7 +79,7 @@
             </div>
         </div>
 
-        <aside class="order-2 h-fit space-y-5 lg:row-span-2">
+        <aside class="order-2 h-fit space-y-5">
             <section class="rounded-public border border-line bg-paper shadow-card p-4 md:p-5" aria-labelledby="kontak">
                 <h2 id="kontak" class="font-serif text-card-title font-semibold text-ink">Kontak</h2>
                 @if ($contact)

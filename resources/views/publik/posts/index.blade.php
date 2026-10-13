@@ -1,7 +1,7 @@
 <x-layouts.public title="Berita & kegiatan" description="Berita dan kegiatan kelompok usaha dan kelembagaan ekonomi Distrik Ransiki.">
     <x-public.band title="Berita & kegiatan" :crumbs="['Berita' => null]" lead="Kabar terbaru dari kelompok usaha dan Pemerintah Distrik Ransiki." />
 
-    <div class="mx-auto max-w-public px-4 py-8 md:px-6 md:py-10">
+    <div class="mx-auto max-w-public px-4 py-section md:px-6">
         <nav aria-label="Kategori" class="flex flex-wrap gap-2">
             @foreach (['' => 'Semua'] + App\Enums\PostCategory::options() as $value => $label)
                 @php $current = ($category?->value ?? '') === $value; @endphp
@@ -18,19 +18,21 @@
         </nav>
 
         @if ($posts->isEmpty())
-            <div class="mt-8">
+            <div class="mt-section-head">
                 <x-empty-state
                     :title="$category ? 'Belum ada '.mb_strtolower($category->label()).' yang diterbitkan' : 'Belum ada berita yang diterbitkan'"
                     description="Berita dan kegiatan tampil di sini setelah diterbitkan Admin distrik."
                 />
             </div>
         @else
-            <div class="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            <div class="mt-section-head grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
                 @foreach ($posts as $post)
                     @include('publik._post-card')
                 @endforeach
             </div>
-            <div class="mt-8">{{ $posts->links() }}</div>
+            @if ($posts->hasPages())
+                <div class="mt-8">{{ $posts->links() }}</div>
+            @endif
         @endif
     </div>
 </x-layouts.public>

@@ -7,7 +7,7 @@
         @endif
     </x-public.band>
 
-    <div class="mx-auto grid max-w-public gap-10 px-4 py-10 md:px-6 lg:grid-cols-[minmax(0,1fr)_17rem] lg:gap-14">
+    <div class="mx-auto grid max-w-public gap-10 px-4 py-section md:px-6 lg:grid-cols-[minmax(0,1fr)_17rem] lg:gap-14">
         <article>
             @if ($settings['profile_body'])
                 <div class="prose-public">{!! Format::markdown($settings['profile_body']) !!}</div>
@@ -16,8 +16,8 @@
             @endif
 
             @if ($settings['economic_potential'])
-                <h2 class="mt-12 font-serif text-display-sm font-semibold text-ink">Potensi ekonomi</h2>
-                <div class="prose-public mt-4">{!! Format::markdown($settings['economic_potential']) !!}</div>
+                <h2 class="mt-section font-serif text-display-sm font-semibold text-ink">Potensi ekonomi</h2>
+                <div class="prose-public mt-section-head">{!! Format::markdown($settings['economic_potential']) !!}</div>
             @endif
         </article>
 

@@ -102,6 +102,13 @@
     --drop-shadow-*: initial;
     --blur-*: initial;
 
+    /* Jarak vertikal website publik: satu skala. Section (padding atas = bawah) dan kepala bagian ke isi. */
+    --spacing-section-sm: 3.5rem; /* 56px HP */
+    --spacing-section-md: 4.5rem; /* 72px tablet (≥ 768px) */
+    --spacing-section-lg: 6rem; /* 96px desktop (≥ 1024px) */
+    --spacing-section-head-sm: 1.75rem; /* 28px HP */
+    --spacing-section-head-lg: 2.5rem; /* 40px desktop */
+
     --container-app: 75rem; /* 1200px */
     --container-public: 67.5rem; /* 1080px */
 
@@ -172,20 +179,53 @@
 }
 
 /*
+ * Jarak vertikal website publik (token --spacing-section-* di @theme). Setiap section: py-section (atas = bawah),
+ * tanpa margin tambahan di anak pertama/terakhir. Antar-blok di dalam section: mt-section; kepala bagian ke isi:
+ * mt-section-head; judul ke kalimat penjelas: mt-3 (12px).
+ */
+@utility py-section {
+    padding-block: var(--spacing-section-sm);
+    @media (width >= 48rem) {
+        padding-block: var(--spacing-section-md);
+    }
+    @media (width >= 64rem) {
+        padding-block: var(--spacing-section-lg);
+    }
+}
+
+@utility pb-section {
+    padding-bottom: var(--spacing-section-sm);
+    @media (width >= 48rem) {
+        padding-bottom: var(--spacing-section-md);
+    }
+    @media (width >= 64rem) {
+        padding-bottom: var(--spacing-section-lg);
+    }
+}
+
+@utility mt-section {
+    margin-top: var(--spacing-section-sm);
+    @media (width >= 48rem) {
+        margin-top: var(--spacing-section-md);
+    }
+    @media (width >= 64rem) {
+        margin-top: var(--spacing-section-lg);
+    }
+}
+
+@utility mt-section-head {
+    margin-top: var(--spacing-section-head-sm);
+    @media (width >= 64rem) {
+        margin-top: var(--spacing-section-head-lg);
+    }
+}
+
+/*
  * Beranda: strip bidang usaha melayang di batas bawah hero, separuh di atas foto dan separuh di bawahnya.
- * --strip-h = tinggi strip (dikunci di elemen strip); hero dan bagian Tentang memberi ruang setengahnya.
+ * --strip-h = tinggi strip (dikunci di elemen strip); hero dan bagian Tentang memberi ruang setengahnya
+ * (pengecualian skala jarak: Tentang mulai setengah strip + 56px).
  */
 @layer components {
-    /* Satu jarak vertikal untuk semua bagian beranda. */
-    .home-page {
-        --section-y: 4rem;
-    }
-    @media (width >= 48rem) {
-        .home-page {
-            --section-y: 5rem;
-        }
-    }
-
     .home-top {
         --strip-h: 0px;
     }

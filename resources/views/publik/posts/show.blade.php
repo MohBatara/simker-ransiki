@@ -23,7 +23,7 @@
         <p class="mt-3 text-caption text-forest-soft"><time datetime="{{ $post->published_at->toAtomString() }}">{{ Format::date($post->published_at) }}</time></p>
     </x-public.band>
 
-    <div class="mx-auto grid max-w-public gap-10 px-4 py-10 md:px-6 lg:grid-cols-[minmax(0,1fr)_18rem] lg:gap-14">
+    <div class="mx-auto grid max-w-public gap-10 px-4 py-section md:px-6 lg:grid-cols-[minmax(0,1fr)_18rem] lg:gap-14">
         <article class="min-w-0 space-y-8">
             @if ($sources)
                 <x-public.picture :image="$sources" :alt="$post->title" sizes="(min-width: 64rem) 42rem, 100vw" width="960" height="540" frame="block overflow-hidden rounded-public bg-subtle max-w-[42rem]" class="w-full object-cover" />
@@ -55,12 +55,15 @@
     </div>
 
     @if ($others->isNotEmpty())
-        <section class="mx-auto max-w-public px-4 pb-14 md:px-6">
-            @include('publik._section-heading', ['title' => 'Berita lainnya'])
-            <div class="mt-5 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-                @foreach ($others as $other)
-                    @include('publik._post-card', ['post' => $other])
-                @endforeach
+        {{-- Section sendiri berlatar putih: padding sama, tidak menumpuk dengan section artikel di atasnya. --}}
+        <section class="border-t border-line bg-paper">
+            <div class="mx-auto max-w-public px-4 py-section md:px-6">
+                @include('publik._section-heading', ['title' => 'Berita lainnya'])
+                <div class="mt-section-head grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                    @foreach ($others as $other)
+                        @include('publik._post-card', ['post' => $other])
+                    @endforeach
+                </div>
             </div>
         </section>
     @endif

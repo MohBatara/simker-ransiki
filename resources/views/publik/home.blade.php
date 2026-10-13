@@ -8,7 +8,7 @@
 @endphp
 
 <x-layouts.public :description="$settings['home_intro'] ?? 'Direktori kelompok dan kelembagaan ekonomi Distrik Ransiki: profil kelompok, produk, dan kontak.'">
-    {{-- .home-page: satu jarak bagian (--section-y). Hero + strip + Tentang berbagi --strip-h (.home-top). --}}
+    {{-- Jarak vertikal: py-section / mt-section-head (app.css). Hero + strip + Tentang berbagi --strip-h (.home-top). --}}
     <div class="home-page">
     <div class="home-top" @if ($topSectors->isNotEmpty()) data-strip @endif>
     <div class="relative">
@@ -130,9 +130,9 @@
         // Desktop: kata pertama judul di baris sendiri ("Mengenal" / "Distrik Ransiki"); HP mengalir natural.
         $aboutTitle = $text('about_title');
     @endphp
-    {{-- Jarak atas = setengah strip + 40px (HP) / 56px (mulai 768px). --}}
-    <section class="mx-auto max-w-public px-4 pt-[calc(var(--strip-h)/2+2.5rem)] pb-(--section-y) md:px-6 md:pt-[calc(var(--strip-h)/2+3.5rem)]" aria-labelledby="tentang">
-        <div class="grid gap-6 md:grid-cols-12 md:items-start md:gap-x-6">
+    {{-- Pengecualian skala: jarak atas = setengah strip + 56px; bawah = pb-section. --}}
+    <section class="mx-auto max-w-public px-4 pt-[calc(var(--strip-h)/2+3.5rem)] pb-section md:px-6" aria-labelledby="tentang">
+        <div class="grid gap-3 md:grid-cols-12 md:items-start md:gap-x-6">
             <h2 id="tentang" class="font-serif text-display-sm font-semibold text-balance text-ink md:col-span-5 md:text-display lg:text-hero-sm">
                 @if (str_contains($aboutTitle, ' '))
                     {{ Str::before($aboutTitle, ' ') }}<br class="hidden lg:block"> {{ Str::after($aboutTitle, ' ') }}
@@ -151,7 +151,7 @@
             </div>
         </div>
 
-        <div x-data="scrollDots" class="mt-8 md:mt-12">
+        <div x-data="scrollDots" class="mt-section-head">
             {{-- < 1024px: deretan geser selebar layar (−mx-4), kartu 85vw (HP) atau setengah (tablet); desktop 3 kolom. --}}
             <ul x-ref="track" x-on:scroll.passive="update()" class="scrollbar-none relative -mx-4 flex snap-x snap-mandatory scroll-px-4 gap-4 overflow-x-auto px-4 pb-1 md:-mx-6 md:scroll-px-6 md:px-6 lg:mx-0 lg:grid lg:grid-cols-3 lg:gap-6 lg:overflow-visible lg:px-0 lg:pb-0">
                 @foreach ($aboutCards as $card)
@@ -184,7 +184,7 @@
         </div>
 
         {{-- Angka hanya dari data publik (PublicDirectory::stats). HP 2×2; mulai 768px satu baris dipisah titik tengah. --}}
-        <div class="mt-8 flex flex-wrap items-baseline justify-between gap-x-6 gap-y-3 border-t border-line pt-6 lg:mt-10">
+        <div class="mt-section-head flex flex-wrap items-baseline justify-between gap-x-6 gap-y-3 border-t border-line pt-6">
             <dl class="grid w-full grid-cols-2 gap-x-6 gap-y-3 md:flex md:w-auto md:flex-wrap md:items-baseline md:gap-x-4">
                 @foreach ($statItems as [$key, $label])
                     @unless ($loop->first)
@@ -210,7 +210,7 @@
     --}}
     @if ($types->isNotEmpty())
         <section class="border-y border-line bg-paper" aria-labelledby="jenis-kelembagaan" x-data="{ active: 0 }">
-            <div class="mx-auto max-w-public px-4 py-(--section-y) md:px-6">
+            <div class="mx-auto max-w-public px-4 py-section md:px-6">
                 <div class="flex flex-wrap items-end justify-between gap-x-8 gap-y-4">
                     <div>
                         <h2 id="jenis-kelembagaan" class="font-serif text-display-sm font-semibold text-ink">Jenis kelembagaan</h2>
@@ -222,7 +222,7 @@
                     </a>
                 </div>
 
-                <div class="mt-6 grid gap-8 lg:mt-10 lg:grid-cols-12 lg:items-start lg:gap-12">
+                <div class="mt-section-head grid gap-8 lg:grid-cols-12 lg:items-start lg:gap-12">
                     {{-- Panel foto (desktop saja): dekoratif (nama dan jumlah ada di daftar), jadi alt kosong dan aria-hidden. --}}
                     <div class="relative overflow-hidden rounded-tile bg-subtle max-lg:hidden lg:sticky lg:top-24 lg:col-span-5 lg:aspect-[4/5]" aria-hidden="true">
                         @foreach ($types as $type)
@@ -291,9 +291,9 @@
     @endif
 
     @if ($featured->isNotEmpty())
-        <section class="mx-auto max-w-public px-4 py-(--section-y) md:px-6" aria-labelledby="produk-unggulan">
+        <section class="mx-auto max-w-public px-4 py-section md:px-6" aria-labelledby="produk-unggulan">
             @include('publik._section-heading', ['eyebrow' => 'Produk', 'title' => 'Produk unggulan', 'id' => 'produk-unggulan', 'link' => ['href' => route('public.products'), 'label' => 'Lihat semua produk']])
-            <div class="mt-8 grid grid-cols-2 gap-4 lg:grid-cols-4 lg:gap-5">
+            <div class="mt-section-head grid grid-cols-2 gap-4 lg:grid-cols-4 lg:gap-5">
                 @foreach ($featured as $product)
                     @include('publik._product-card')
                 @endforeach
@@ -304,11 +304,11 @@
 
     @if ($posts->isNotEmpty())
         <section @class(['border-y border-line bg-paper' => $featured->isNotEmpty()]) aria-labelledby="berita-kegiatan">
-            <div class="mx-auto max-w-public px-4 py-(--section-y) md:px-6">
+            <div class="mx-auto max-w-public px-4 py-section md:px-6">
                 @include('publik._section-heading', ['eyebrow' => 'Kabar distrik', 'title' => 'Berita & kegiatan', 'id' => 'berita-kegiatan', 'link' => ['href' => route('public.posts'), 'label' => 'Lihat semua berita']])
                 {{-- HP: digeser horizontal; tablet 3 kolom; desktop satu baris. --}}
                 <ul @class([
-                    '-mx-4 mt-8 flex snap-x gap-4 overflow-x-auto px-4 pb-2 md:mx-0 md:grid md:grid-cols-3 md:overflow-visible md:px-0 md:pb-0',
+                    'mt-section-head -mx-4 flex snap-x gap-4 overflow-x-auto px-4 pb-2 md:mx-0 md:grid md:grid-cols-3 md:overflow-visible md:px-0 md:pb-0',
                     'lg:grid-cols-4' => $posts->count() === 4,
                     'lg:grid-cols-5' => $posts->count() === 5,
                 ])>
@@ -330,11 +330,12 @@
     @php
         $contactButton = 'group inline-flex min-h-11 items-center gap-3 rounded-full bg-forest py-1.5 pr-1.5 pl-5 font-semibold text-paper transition-colors hover:bg-brand-hover';
     @endphp
-    <section class="mx-auto max-w-public px-4 py-(--section-y) md:px-6" aria-labelledby="ajakan">
-        <div class="grid gap-8 rounded-panel bg-cream px-6 py-10 md:px-10 lg:grid-cols-12 lg:gap-16 lg:px-14 lg:py-14">
+    {{-- Section kanvas + panel cream; panel memakai padding section yang sama agar tingginya konsisten. --}}
+    <section class="mx-auto max-w-public px-4 py-section md:px-6" aria-labelledby="ajakan">
+        <div class="grid gap-8 rounded-panel bg-cream px-6 py-section md:px-10 lg:grid-cols-12 lg:gap-16 lg:px-14">
             <div class="lg:col-span-5">
                 <h2 id="ajakan" class="font-serif text-display-sm font-semibold text-ink md:text-display">Kelompok Anda belum terdaftar?</h2>
-                <p class="mt-4 max-w-[28rem] text-body leading-7 text-ink-soft">Pendaftaran dilakukan melalui Kantor Distrik Ransiki. Begini alurnya.</p>
+                <p class="mt-3 max-w-[28rem] text-body leading-7 text-ink-soft">Pendaftaran dilakukan melalui Kantor Distrik Ransiki. Begini alurnya.</p>
                 <a href="{{ route('public.contact') }}" class="{{ $contactButton }} mt-8 max-lg:hidden">
                     Hubungi Kantor Distrik
                     <span class="flex size-9 items-center justify-center rounded-full bg-paper text-forest" aria-hidden="true">
