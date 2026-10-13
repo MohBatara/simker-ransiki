@@ -126,11 +126,22 @@
     @php
         $statItems = [['organizations', 'Kelompok'], ['villages', 'Kampung'], ['featured', 'Produk unggulan'], ['sectors', 'Bidang usaha']];
     @endphp
-    <section class="mx-auto max-w-public px-4 pt-[calc(var(--strip-h)/2+var(--section-y))] pb-(--section-y) md:px-6" aria-labelledby="tentang">
-        <div class="grid gap-6 lg:grid-cols-2 lg:items-end lg:gap-16">
-            <h2 id="tentang" class="max-w-[16ch] font-serif text-display-sm font-semibold text-ink md:text-display lg:text-hero-sm">{{ $text('about_title') }}</h2>
-            <div>
-                <p class="max-w-[30rem] text-body leading-7 text-ink-soft">{{ Format::excerpt($settings['profile_body']) ?? 'Profil distrik sedang disiapkan.' }}</p>
+    @php
+        // Desktop: kata pertama judul di baris sendiri ("Mengenal" / "Distrik Ransiki"); HP mengalir natural.
+        $aboutTitle = $text('about_title');
+    @endphp
+    {{-- Jarak atas = setengah strip + 40px (HP) / 56px (mulai 768px). --}}
+    <section class="mx-auto max-w-public px-4 pt-[calc(var(--strip-h)/2+2.5rem)] pb-(--section-y) md:px-6 md:pt-[calc(var(--strip-h)/2+3.5rem)]" aria-labelledby="tentang">
+        <div class="grid gap-6 md:grid-cols-12 md:items-start md:gap-x-6">
+            <h2 id="tentang" class="font-serif text-display-sm font-semibold text-balance text-ink md:col-span-5 md:text-display lg:text-hero-sm">
+                @if (str_contains($aboutTitle, ' '))
+                    {{ Str::before($aboutTitle, ' ') }}<br class="hidden lg:block"> {{ Str::after($aboutTitle, ' ') }}
+                @else
+                    {{ $aboutTitle }}
+                @endif
+            </h2>
+            <div class="md:col-span-6 md:col-start-7">
+                <p class="max-w-[26rem] text-body leading-[1.6] text-ink-soft">{{ Format::excerpt($settings['profile_body']) ?? 'Profil distrik sedang disiapkan.' }}</p>
                 <a href="{{ route('public.profile') }}" class="group mt-6 inline-flex min-h-11 items-center gap-3 rounded-full bg-forest py-1.5 pr-1.5 pl-5 font-semibold text-paper transition-colors hover:bg-brand-hover">
                     Baca profil lengkap
                     <span class="flex size-9 items-center justify-center rounded-full bg-paper text-forest" aria-hidden="true">
@@ -140,7 +151,7 @@
             </div>
         </div>
 
-        <div x-data="scrollDots" class="mt-10">
+        <div x-data="scrollDots" class="mt-8 md:mt-12">
             {{-- < 1024px: deretan geser selebar layar (−mx-4), kartu 85vw (HP) atau setengah (tablet); desktop 3 kolom. --}}
             <ul x-ref="track" x-on:scroll.passive="update()" class="scrollbar-none relative -mx-4 flex snap-x snap-mandatory scroll-px-4 gap-4 overflow-x-auto px-4 pb-1 md:-mx-6 md:scroll-px-6 md:px-6 lg:mx-0 lg:grid lg:grid-cols-3 lg:gap-6 lg:overflow-visible lg:px-0 lg:pb-0">
                 @foreach ($aboutCards as $card)

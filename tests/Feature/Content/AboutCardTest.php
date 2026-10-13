@@ -104,3 +104,12 @@ test('baris angka: angka publik dipisah titik tengah dan tanggal data', function
     expect($section)->toContain('>·</span>')->toContain('Data per 9 Oktober 2026')
         ->and(strip_tags($section))->toMatch('/1\s+Kelompok/');
 });
+
+test('kepala bagian: rata atas, judul 5 kolom, teks mulai kolom 7, kata pertama judul dipisah di desktop', function () {
+    $section = aboutSection($this->get('/')->getContent());
+
+    expect($section)->toContain('md:grid-cols-12 md:items-start')->toContain('md:col-span-6 md:col-start-7')
+        ->toMatch('#Mengenal<br class="hidden lg:block"> Distrik Ransiki#')
+        ->toContain('leading-[1.6]')->not->toContain('lg:items-end');
+});
+
