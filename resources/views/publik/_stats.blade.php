@@ -1,22 +1,22 @@
 {{--
-    Tiga angka ringkas. Variabel: $stats (PublicDirectory::stats()), $tone ('sun' pita kuning, 'dark' latar forest),
-    $class (opsional, tambahan untuk <dl>).
+    Baris angka ringkas (Profil Ransiki). Variabel: $stats (PublicDirectory::stats(), hanya data publik).
+    HP grid 2×2; mulai 768px satu baris dipisah titik tengah, "Data per" di kanan.
 --}}
 @use('App\Support\Format')
 
-@php
-    $tone ??= 'sun';
-@endphp
-
-<dl class="grid grid-cols-3 gap-4 {{ $class ?? '' }}">
-    {{-- [kunci, label HP (satu baris), label layar lebar] --}}
-    @foreach ([['organizations', 'kelompok', 'kelompok terdaftar'], ['products', 'produk', 'produk'], ['sectors', 'bidang usaha', 'bidang usaha']] as [$key, $short, $label])
-        {{-- Angka di atas label; justify-end menjaga angka sejajar walau label turun dua baris. --}}
-        <div class="flex flex-col-reverse justify-end">
-            <dt @class(['whitespace-nowrap text-caption', 'text-ink' => $tone === 'sun', 'text-forest-soft' => $tone === 'dark'])>
-                <span class="md:hidden">{{ $short }}</span><span class="max-md:hidden">{{ $label }}</span>
-            </dt>
-            <dd @class(['text-display-sm font-semibold tabular-nums md:text-display', 'text-ink' => $tone === 'sun', 'text-paper' => $tone === 'dark'])>{{ Format::number($stats[$key]) }}</dd>
-        </div>
-    @endforeach
-</dl>
+<div class="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-3 border-y border-line py-5 {{ $class ?? '' }}">
+    <dl class="grid w-full grid-cols-2 gap-x-6 gap-y-3 md:flex md:w-auto md:flex-wrap md:items-baseline md:gap-x-4">
+        @foreach ([['organizations', 'Kelompok'], ['villages', 'Kampung'], ['featured', 'Produk unggulan'], ['sectors', 'Bidang usaha']] as [$key, $label])
+            @unless ($loop->first)
+                <span class="text-ink-muted max-md:hidden" aria-hidden="true">·</span>
+            @endunless
+            <div class="flex items-baseline gap-2">
+                <dd class="order-first font-serif text-page-title font-semibold text-brand tabular-nums">{{ Format::number($stats[$key]) }}</dd>
+                <dt class="text-ui text-ink-soft">{{ $label }}</dt>
+            </div>
+        @endforeach
+    </dl>
+    @if ($stats['updated_at'])
+        <p class="text-caption text-ink-muted">Data per {{ Format::date($stats['updated_at']) }}</p>
+    @endif
+</div>

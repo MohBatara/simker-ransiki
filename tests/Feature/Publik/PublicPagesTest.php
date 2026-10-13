@@ -34,16 +34,19 @@ test('angka beranda hanya menghitung yang publik, unik, dan di-cache', function 
     expect(PublicDirectory::stats()['organizations'])->toBe(1);
 });
 
-test('beranda menampilkan angka, tanggal data, dan bidang usaha', function () {
+test('beranda tanpa baris angka (pindah ke Profil Ransiki); bidang usaha tetap di strip', function () {
     $this->travelTo('2026-10-09 10:00:00');
     $sector = BusinessSector::factory()->create(['name' => 'Perkebunan']);
     Organization::factory()->public()->create()->sectors()->attach($sector);
 
+    $this->get('/profil')
+        ->assertOk()
+        ->assertSeeInOrder(['Profil distrik sedang disiapkan.', 'Kelompok', 'Kampung', 'Produk unggulan', 'Bidang usaha', 'Data per 9 Oktober 2026']);
+
     $this->get('/')
         ->assertOk()
         ->assertSeeText('Mengenal Distrik Ransiki')
-        ->assertSeeInOrder(['Kelompok', 'Kampung', 'Produk unggulan', 'Bidang usaha'])
-        ->assertSee('Data per 9 Oktober 2026')
+        ->assertDontSee('Data per')
         ->assertSee('Baca profil lengkap')
         ->assertDontSee('Selengkapnya')
         ->assertSee('Perkebunan')
@@ -261,6 +264,8 @@ test('admin mengubah konten dan hasilnya langsung tampil di website publik', fun
 
     $this->get('/')->assertSee('Pengantar contoh beranda.')->assertSee('kantor@contoh.test');
     $this->get('/profil')
+        // Angka ringkas tepat setelah paragraf pembuka.
+        ->assertSeeInOrder(['Sejarah contoh', 'teks tebal', 'Produk unggulan'], false)
         ->assertSee('<h2>Sejarah contoh</h2>', false)
         ->assertSee('<strong>teks tebal</strong>', false)
         ->assertDontSee('<script>alert(1)</script>', false);

@@ -95,14 +95,16 @@ test('hanya Admin yang bisa mengubah kartu', function (string $role) {
     expect(SiteSetting::get('about_card_1_title'))->toBeNull();
 })->with(['opd', 'kelompok']);
 
-test('baris angka: angka publik dipisah titik tengah dan tanggal data', function () {
+test('bagian Mengenal berakhir di kartu foto; baris angka (titik tengah, tanggal data) ada di Profil Ransiki', function () {
     $this->travelTo('2026-10-09 10:00:00');
     Organization::factory()->public()->create();
 
     $section = aboutSection($this->get('/')->getContent());
+    $profile = $this->get('/profil')->assertOk()->getContent();
 
-    expect($section)->toContain('>·</span>')->toContain('Data per 9 Oktober 2026')
-        ->and(strip_tags($section))->toMatch('/1\s+Kelompok/');
+    expect($section)->not->toContain('>·</span>')->not->toContain('Data per')->not->toContain('border-t border-line pt-6')
+        ->and($profile)->toContain('>·</span>')->toContain('Data per 9 Oktober 2026')
+        ->and(strip_tags($profile))->toMatch('/1\s+Kelompok/');
 });
 
 test('kepala bagian: rata atas, judul 5 kolom, teks mulai kolom 7, kata pertama judul dipisah di desktop', function () {

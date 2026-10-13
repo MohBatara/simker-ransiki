@@ -123,12 +123,10 @@
     </div>
 
     {{--
-        Mengenal Distrik Ransiki: kepala dua kolom, tiga kartu foto (sudut kanan bawah "tergigit" berisi tombol panah),
-        lalu baris angka publik. < 1024px kartu digeser (scroll-snap) dengan titik penanda. Jarak atas = setengah strip.
+        Mengenal Distrik Ransiki: kepala dua kolom, lalu tiga kartu foto (sudut kanan bawah "tergigit" berisi tombol panah);
+        bagian berakhir di kartu (angka ringkas ada di halaman Profil Ransiki). < 1024px kartu digeser (scroll-snap) dengan
+        titik penanda. Jarak atas = setengah strip.
     --}}
-    @php
-        $statItems = [['organizations', 'Kelompok'], ['villages', 'Kampung'], ['featured', 'Produk unggulan'], ['sectors', 'Bidang usaha']];
-    @endphp
     @php
         // Desktop: kata pertama judul di baris sendiri ("Mengenal" / "Distrik Ransiki"); HP mengalir natural.
         $aboutTitle = $text('about_title');
@@ -179,24 +177,6 @@
                     @include('publik._row-dot')
                 @endforeach
             </div>
-        </div>
-
-        {{-- Angka hanya dari data publik (PublicDirectory::stats). HP 2×2; mulai 768px satu baris dipisah titik tengah. --}}
-        <div class="mt-section-head flex flex-wrap items-baseline justify-between gap-x-6 gap-y-3 border-t border-line pt-6" x-data>
-            <dl class="grid w-full grid-cols-2 gap-x-6 gap-y-3 md:flex md:w-auto md:flex-wrap md:items-baseline md:gap-x-4">
-                @foreach ($statItems as [$key, $label])
-                    @unless ($loop->first)
-                        <span class="text-ink-muted max-md:hidden" aria-hidden="true">·</span>
-                    @endunless
-                    <div class="flex items-baseline gap-2">
-                        <dd class="order-first font-serif text-page-title font-semibold text-brand tabular-nums"><span x-count>{{ Format::number($stats[$key]) }}</span></dd>
-                        <dt class="text-ui text-ink-soft">{{ $label }}</dt>
-                    </div>
-                @endforeach
-            </dl>
-            @if ($stats['updated_at'])
-                <p class="text-caption text-ink-muted">Data per {{ Format::date($stats['updated_at']) }}</p>
-            @endif
         </div>
     </section>
     </div>

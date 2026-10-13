@@ -30,7 +30,6 @@ class HomeController extends Controller
     public function __invoke(): View
     {
         return view('publik.home', [
-            'stats' => PublicDirectory::stats(),
             'sectors' => PublicDirectory::sectors(),
             'types' => $this->typeCards(PublicDirectory::institutionTypes()),
             'settings' => $settings = SiteSetting::values(),

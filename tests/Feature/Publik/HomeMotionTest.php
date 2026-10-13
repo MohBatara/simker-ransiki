@@ -29,8 +29,8 @@ test('efek scroll: progressive enhancement, angka akhir dirender server, tiap ba
         // Deretan geser < 1024px: varian slide-in-row, kartu aktif + isyarat geser, titik berlabel.
         ->toContain('x-reveal.stagger.intro="fade-up" data-reveal-row')->toContain('x-data="scrollDots({ focus: false })"')
         ->toContain('aria-label="Kartu 1 dari 2"')->toContain('pr-[calc(12vw+12px)]')
-        // Angka statistik: nilai akhir sudah ada di HTML (SEO, tanpa JS tetap benar).
-        ->toMatch('#<span x-count>1</span>#')
+        // Baris angka Mengenal sudah pindah ke Profil Ransiki: hanya strip yang menghitung naik.
+        ->not->toContain('<span x-count>')
         // Header ringkas setelah digulir dan tombol kembali ke atas.
         ->toContain("\$store.scroll.pastHeader")->toContain('aria-label="Kembali ke atas"')->toContain("\$store.scroll.pastFold");
 });

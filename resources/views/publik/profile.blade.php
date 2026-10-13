@@ -9,10 +9,20 @@
 
     <div class="mx-auto grid max-w-public gap-10 px-4 py-section md:px-6 lg:grid-cols-[minmax(0,1fr)_17rem] lg:gap-14">
         <article>
+            {{-- Angka ringkas tepat di bawah paragraf pembuka (paragraf pertama Markdown), sisa profil sesudahnya. --}}
+            @php
+                $profileHtml = (string) Format::markdown($settings['profile_body']);
+                $introEnd = $profileHtml !== '' ? strpos($profileHtml, '</p>') : false;
+                [$profileIntro, $profileRest] = $introEnd === false ? [$profileHtml, ''] : [substr($profileHtml, 0, $introEnd + 4), substr($profileHtml, $introEnd + 4)];
+            @endphp
             @if ($settings['profile_body'])
-                <div class="prose-public">{!! Format::markdown($settings['profile_body']) !!}</div>
+                <div class="prose-public">{!! $profileIntro !!}</div>
             @else
                 <p class="text-body text-ink-soft">Profil distrik sedang disiapkan.</p>
+            @endif
+            @include('publik._stats', ['class' => 'mt-8'])
+            @if (trim($profileRest) !== '')
+                <div class="prose-public mt-8">{!! $profileRest !!}</div>
             @endif
 
             @if ($settings['economic_potential'])
@@ -23,9 +33,8 @@
 
         <aside class="on-dark h-fit rounded-public bg-forest p-4 text-paper shadow-card md:p-5" aria-label="Sekilas">
             <h2 class="font-serif text-card-title font-semibold">Sekilas</h2>
-            @include('publik._stats', ['tone' => 'dark', 'class' => 'mt-3 grid-cols-3! lg:grid-cols-1! gap-3'])
             @if ($sectors->isNotEmpty())
-                <ul class="mt-5 space-y-1.5 border-t border-forest-line pt-4 text-ui">
+                <ul class="mt-4 space-y-1.5 text-ui">
                     @foreach ($sectors as $sector)
                         <li class="flex justify-between gap-3">
                             <a href="{{ route('public.directory', ['bidang' => $sector->id]) }}" class="rounded-control text-paper underline-offset-4 hover:underline">{{ $sector->name }}</a>
