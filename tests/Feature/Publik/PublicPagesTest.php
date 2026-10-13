@@ -439,12 +439,31 @@ test('foto jenis: foto jenis, lalu foto bidang dominan, lalu foto bawaan; foto p
     Organization::factory()->public()->create(['institution_type_id' => $plain->id]);
 
     preg_match('#aria-labelledby="jenis-kelembagaan".*?</section>#s', $this->get('/')->getContent(), $section);
-    preg_match_all('#<img\b[^>]*>#', $section[0], $images);
+    [$panel, $list] = explode('<ul', $section[0], 2);
+    preg_match_all('#<img\b[^>]*>#', $panel, $images);
+    preg_match_all('#<picture\b.*?</picture>#s', $list, $thumbs);
 
+    // Panel desktop.
     expect($images[0])->toHaveCount(3)
         ->and($images[0][0])->toContain("/foto-jenis/{$withPhoto->id}")->not->toContain('loading="lazy"')->not->toContain('fetchpriority')
         ->and($images[0][1])->toContain("/foto-bidang/{$fish->id}")->toContain('loading="lazy"')
         ->and($images[0][2])->toContain('/foto-hero/bawaan')->toContain('loading="lazy"')
         ->and($section[0])->not->toContain("/foto-bidang/{$trade->id}")->not->toContain('/foto-produk/');
+    // Foto kecil HP/tablet: urutan prioritas sama, lazy, sizes 72px (browser memilih varian terkecil: 640, foto bidang 480).
+    expect($thumbs[0])->toHaveCount(3)
+        ->and($thumbs[0][0])->toContain("/foto-jenis/{$withPhoto->id}?ukuran=640")->toContain('sizes="72px"')->toContain('loading="lazy"')->toContain('lg:hidden')
+        ->and($thumbs[0][1])->toContain("/foto-bidang/{$fish->id}?ukuran=480")
+        ->and($thumbs[0][2])->toContain('/foto-hero/bawaan?ukuran=640');
+});
+
+test('jenis kelembagaan di HP/tablet: panel foto disembunyikan, baris berisi jumlah kelompok, tombol di bawah daftar', function () {
+    Organization::factory()->public()->count(7)->create(['institution_type_id' => InstitutionType::factory()->create(['name' => 'UMKM'])->id]);
+
+    preg_match('#aria-labelledby="jenis-kelembagaan".*?</section>#s', $this->get('/')->getContent(), $section);
+
+    expect($section[0])->toContain('max-lg:hidden lg:sticky')
+        ->toContain('<span class="font-semibold tabular-nums">7</span> kelompok')
+        ->toContain('md:grid md:grid-cols-2')
+        ->toMatch('#</ul>\s*</div>\s*<a href="'.preg_quote(route('public.directory'), '#').'"[^>]*lg:hidden[^>]*>\s*Lihat semua kelompok#');
 });
 

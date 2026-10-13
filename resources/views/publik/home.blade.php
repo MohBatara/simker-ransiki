@@ -202,25 +202,25 @@
                         <h2 id="jenis-kelembagaan" class="font-serif text-display-sm font-semibold text-ink">Jenis kelembagaan</h2>
                         <p class="mt-3 max-w-[34rem] text-body text-ink-soft">Kelompok usaha di Distrik Ransiki menurut bentuk kelembagaannya. Pilih salah satu untuk melihat daftar kelompoknya.</p>
                     </div>
-                    <a href="{{ route('public.directory') }}" class="group inline-flex min-h-11 items-center gap-2 rounded-control font-semibold text-brand underline-offset-4 hover:underline focus-visible:underline md:min-h-0">
+                    <a href="{{ route('public.directory') }}" class="group inline-flex items-center gap-2 rounded-control font-semibold text-brand underline-offset-4 hover:underline focus-visible:underline max-lg:hidden">
                         Lihat semua kelompok
                         <x-heroicon-o-arrow-right class="size-4 transition-transform group-hover:translate-x-1 motion-reduce:transition-none" aria-hidden="true" />
                     </a>
                 </div>
 
-                <div class="mt-10 grid gap-8 lg:grid-cols-12 lg:items-start lg:gap-12">
-                    {{-- Panel foto: dekoratif (nama dan jumlah sudah ada di daftar), jadi alt kosong dan aria-hidden. --}}
-                    <div class="relative aspect-[16/9] overflow-hidden rounded-tile bg-subtle lg:sticky lg:top-24 lg:col-span-5 lg:aspect-[4/5]" aria-hidden="true">
+                <div class="mt-6 grid gap-8 lg:mt-10 lg:grid-cols-12 lg:items-start lg:gap-12">
+                    {{-- Panel foto (desktop saja): dekoratif (nama dan jumlah ada di daftar), jadi alt kosong dan aria-hidden. --}}
+                    <div class="relative overflow-hidden rounded-tile bg-subtle max-lg:hidden lg:sticky lg:top-24 lg:col-span-5 lg:aspect-[4/5]" aria-hidden="true">
                         @foreach ($types as $type)
                             <div
-                                {{-- Pergantian hanya mulai lg; di bawahnya foto pertama selalu tampil, foto lain tidak dimuat. --}}
                                 @class([
                                     'absolute inset-0 transition-opacity duration-300 motion-reduce:transition-none',
-                                    'max-lg:hidden lg:opacity-0' => ! $loop->first,
+                                    'lg:opacity-0' => ! $loop->first,
                                 ])
                                 x-bind:class="{ 'lg:opacity-0': active !== {{ $loop->index }} }"
                             >
-                                <x-public.picture :image="$type->photo" alt="" :lazy="! $loop->first" sizes="(min-width: 64rem) 26rem, 100vw" width="960" height="1200" frame="block size-full" class="size-full object-cover" />
+                                {{-- Panel tersembunyi di < 1024px: sizes 1px agar foto pertama (tidak lazy) cukup versi terkecil. --}}
+                                <x-public.picture :image="$type->photo" alt="" :lazy="! $loop->first" sizes="(min-width: 64rem) 26rem, 1px" width="960" height="1200" frame="block size-full" class="size-full object-cover" />
                                 <p class="absolute bottom-4 left-4 max-w-[calc(100%-2rem)] rounded-control bg-forest/85 px-3 py-2 text-paper">
                                     <span class="block font-serif text-card-title font-semibold">{{ $type->name }}</span>
                                     <span class="block text-caption tabular-nums">{{ Format::number($type->organizations_count) }} kelompok</span>
@@ -229,7 +229,8 @@
                         @endforeach
                     </div>
 
-                    <ul class="border-b border-line lg:col-span-7">
+                    {{-- < 1024px: [foto kecil] [nama, deskripsi, jumlah] [panah]; tablet dua kolom. Desktop: [angka] [teks] [panah]. --}}
+                    <ul class="border-b border-line md:grid md:grid-cols-2 md:gap-x-8 lg:col-span-7 lg:block">
                         @foreach ($types as $type)
                             <li class="border-t border-line">
                                 <a
@@ -237,22 +238,23 @@
                                     x-on:mouseenter="active = {{ $loop->index }}"
                                     x-on:focus="active = {{ $loop->index }}"
                                     @class([
-                                        'group grid grid-cols-[3rem_minmax(0,1fr)_auto] items-center gap-4 py-6 transition-colors duration-150 motion-reduce:transition-none md:gap-6 lg:grid-cols-[4rem_minmax(0,1fr)_auto] lg:px-4',
+                                        'group grid min-h-11 grid-cols-[4.5rem_minmax(0,1fr)_auto] items-center gap-4 py-4 transition-colors duration-150 motion-reduce:transition-none lg:grid-cols-[4rem_minmax(0,1fr)_auto] lg:gap-6 lg:px-4 lg:py-6',
                                         'lg:bg-cream/60' => $loop->first,
                                     ])
                                     x-bind:class="{ 'lg:bg-cream/60': active === {{ $loop->index }} }"
                                 >
-                                    <span class="font-serif text-display font-semibold text-brand tabular-nums lg:text-numeral">{{ Format::number($type->organizations_count) }}</span>
+                                    <span class="font-serif text-numeral font-semibold text-brand tabular-nums max-lg:hidden" aria-hidden="true">{{ Format::number($type->organizations_count) }}</span>
+                                    <x-public.picture :image="$type->photo" alt="" sizes="72px" width="72" height="72" frame="block size-18 overflow-hidden rounded-photo bg-subtle lg:hidden" class="size-full object-cover" />
                                     <span class="min-w-0">
-                                        <span class="block font-serif text-page-title font-semibold text-ink">{{ $type->name }}</span>
+                                        <span class="block font-serif text-title-sm font-semibold text-ink lg:text-page-title">{{ $type->name }}</span>
                                         @if ($type->description ?? null)
                                             <span class="mt-1 block text-ui text-ink-soft">{{ $type->description }}</span>
                                         @endif
-                                        <span class="sr-only">{{ Format::number($type->organizations_count) }} kelompok</span>
+                                        <span class="mt-1 block text-caption text-brand lg:sr-only"><span class="font-semibold tabular-nums">{{ Format::number($type->organizations_count) }}</span> kelompok</span>
                                     </span>
                                     <span
                                         @class([
-                                            'flex size-10 shrink-0 items-center justify-center rounded-full border transition-colors duration-150 motion-reduce:transition-none lg:size-11',
+                                            'flex size-9 shrink-0 items-center justify-center rounded-full border transition-colors duration-150 motion-reduce:transition-none lg:size-11',
                                             'border-line-strong text-brand' => ! $loop->first,
                                             'border-line-strong text-brand lg:border-brand lg:bg-brand lg:text-paper' => $loop->first,
                                         ])
@@ -260,7 +262,7 @@
                                         aria-hidden="true"
                                     >
                                         <x-heroicon-o-arrow-right
-                                            @class(['size-5 transition-transform duration-150 motion-reduce:transition-none', 'lg:translate-x-1' => $loop->first])
+                                            @class(['size-4 transition-transform duration-150 motion-reduce:transition-none lg:size-5', 'lg:translate-x-1' => $loop->first])
                                             x-bind:class="{ 'lg:translate-x-1': active === {{ $loop->index }} }"
                                         />
                                     </span>
@@ -269,6 +271,7 @@
                         @endforeach
                     </ul>
                 </div>
+                <x-public.button variant="outline-brand" :href="route('public.directory')" arrow class="mt-6 w-full lg:hidden">Lihat semua kelompok</x-public.button>
             </div>
         </section>
     @endif

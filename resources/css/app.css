@@ -30,6 +30,8 @@
     --text-body--line-height: 1.625rem;
     --text-card-title: 1.125rem; /* 18px judul kartu */
     --text-card-title--line-height: 1.625rem;
+    --text-title-sm: 1.25rem; /* 20px nama jenis di daftar beranda (HP dan tablet) */
+    --text-title-sm--line-height: 1.75rem;
     --text-page-title: 1.375rem; /* 22px judul halaman */
     --text-page-title--line-height: 1.875rem;
     --text-display-sm: 1.75rem; /* 28px judul publik (HP) */
