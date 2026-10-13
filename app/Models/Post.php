@@ -91,6 +91,14 @@ class Post extends Model
         return $slug;
     }
 
+    /** Perkiraan waktu baca dalam menit: jumlah kata isi / 200, minimal 1. */
+    public function readingMinutes(): int
+    {
+        $words = preg_split('/\s+/u', trim(strip_tags((string) $this->body)), flags: PREG_SPLIT_NO_EMPTY);
+
+        return max(1, (int) ceil(count($words) / 200));
+    }
+
     /**
      * Sumber <picture> foto sampul (WebP 480/960/1600 + JPEG), atau null.
      *

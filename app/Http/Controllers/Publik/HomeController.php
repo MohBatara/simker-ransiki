@@ -23,7 +23,8 @@ class HomeController extends Controller
 
     private const SLIDE_LIMIT = 3;
 
-    private const POST_LIMIT = 5;
+    /** Jumlah berita di daftar samping berita utama (HP dan tablet menampilkan 3 pertama). */
+    private const NEWS_LIST_LIMIT = 4;
 
 
     public function __invoke(): View
@@ -35,7 +36,7 @@ class HomeController extends Controller
             'settings' => $settings = SiteSetting::values(),
             'aboutCards' => AboutCards::all($settings),
             'slides' => $this->slides(),
-            'posts' => Post::query()->publiclyListed()->latest('published_at')->latest('id')->limit(self::POST_LIMIT)->get(PostController::COLUMNS),
+            ...$this->news(),
             'featured' => $this->featured(),
         ]);
     }
@@ -108,6 +109,23 @@ class HomeController extends Controller
             ->filter(fn (object $type) => $type->organizations_count > 0)
             ->sortBy([['organizations_count', 'desc'], ['name', 'asc']])
             ->values();
+    }
+
+    /**
+     * Berita & kegiatan: berita utama = post terbit terbaru yang berfoto sampul (tanpa itu, post terbaru), lalu
+     * NEWS_LIST_LIMIT post terbaru lainnya tanpa mengulang berita utama.
+     *
+     * @return array{newsLead: ?Post, newsList: Collection}
+     */
+    private function news(): array
+    {
+        $query = fn () => Post::query()->publiclyListed()->latest('published_at')->latest('id');
+        $lead = $query()->whereNotNull('posts.cover_photo_path')->first(PostController::COLUMNS) ?? $query()->first(PostController::COLUMNS);
+
+        return [
+            'newsLead' => $lead,
+            'newsList' => $lead ? $query()->whereKeyNot($lead->id)->limit(self::NEWS_LIST_LIMIT)->get(PostController::COLUMNS) : collect(),
+        ];
     }
 
     /**

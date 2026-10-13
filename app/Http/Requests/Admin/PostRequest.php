@@ -31,7 +31,7 @@ class PostRequest extends FormRequest
         $post = $this->route('post');
 
         return [
-            'title' => ['required', 'string', 'max:200'],
+            'title' => ['required', 'string', 'max:90'],
             'slug' => ['nullable', 'string', 'max:200', Rule::unique('posts', 'slug')->ignore($post)],
             'category' => ['required', Rule::enum(PostCategory::class)],
             'summary' => ['nullable', 'string', 'max:300'],
@@ -48,6 +48,7 @@ class PostRequest extends FormRequest
         return [
             'slug.unique' => 'Alamat ini sudah dipakai berita lain. Ubah alamatnya atau kosongkan agar dibuat otomatis.',
             'organizations.max' => 'Pilih paling banyak 20 kelompok terkait.',
+            'title.max' => 'Judul paling banyak 90 karakter. Ringkas judulnya agar tetap mudah dibaca di Beranda.',
         ];
     }
 

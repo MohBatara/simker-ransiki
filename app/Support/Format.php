@@ -83,6 +83,12 @@ class Format
         return $value === null ? self::EMPTY : Carbon::parse($value)->translatedFormat('j F Y');
     }
 
+    /** "24 Sep 2026" (bulan disingkat, Bahasa Indonesia). */
+    public static function dateShort(CarbonInterface|string|null $value): string
+    {
+        return $value === null ? self::EMPTY : Carbon::parse($value)->translatedFormat('j M Y');
+    }
+
     /** "Hari ini, 10.42", "Kemarin, 10.42", atau "9 Oktober 2026, 10.42". */
     public static function relativeDateTime(CarbonInterface|string|null $value): string
     {

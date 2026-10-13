@@ -16,4 +16,13 @@ enum PostCategory: string
             self::Activity => 'Kegiatan',
         };
     }
+
+    /** Ikon Heroicons untuk post tanpa foto sampul (Beranda). */
+    public function icon(): string
+    {
+        return match ($this) {
+            self::News => 'newspaper',
+            self::Activity => 'calendar-days',
+        };
+    }
 }

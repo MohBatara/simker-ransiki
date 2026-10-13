@@ -25,7 +25,7 @@
             <x-card title="Isi">
                 <div class="space-y-5">
                     <x-field label="Judul" for="title">
-                        <x-input name="title" :value="$post->title" maxlength="200" required />
+                        <x-input name="title" :value="$post->title" maxlength="90" required />
                     </x-field>
                     <div class="grid gap-5 md:grid-cols-2">
                         <x-field label="Kategori" for="category">

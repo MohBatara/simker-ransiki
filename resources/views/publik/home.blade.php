@@ -315,23 +315,81 @@
         </section>
     @endif
 
-    @if ($posts->isNotEmpty())
-        <section @class(['border-y border-line bg-paper' => $featured->isNotEmpty()]) aria-labelledby="berita-kegiatan">
+    {{--
+        Berita dan kegiatan (gaya portal): berita utama 7 kolom + daftar 4 berikutnya 5 kolom (desktop);
+        < 1024px berita utama lalu 3 item daftar. Disembunyikan bila belum ada post terbit; satu post = lebar penuh.
+    --}}
+    @if ($newsLead)
+        <section class="border-y border-line bg-paper" aria-labelledby="berita-kegiatan">
             <div class="mx-auto max-w-public px-4 py-section md:px-6">
-                @include('publik._section-heading', ['eyebrow' => 'Kabar distrik', 'title' => 'Berita & kegiatan', 'id' => 'berita-kegiatan', 'link' => ['href' => route('public.posts'), 'label' => 'Lihat semua berita']])
-                {{-- HP: digeser horizontal; tablet 3 kolom; desktop satu baris. --}}
-                <ul @class([
-                    'mt-section-head -mx-4 flex snap-x gap-4 overflow-x-auto px-4 pb-2 md:mx-0 md:grid md:grid-cols-3 md:overflow-visible md:px-0 md:pb-0',
-                    'lg:grid-cols-4' => $posts->count() === 4,
-                    'lg:grid-cols-5' => $posts->count() === 5,
-                ])>
-                    @foreach ($posts as $post)
-                        <li class="w-64 shrink-0 snap-start md:w-auto">
-                            @include('publik._post-card', ['compact' => true])
-                        </li>
-                    @endforeach
-                </ul>
-                <x-public.button variant="outline-brand" :href="route('public.posts')" arrow class="mt-6 w-full sm:hidden">Lihat semua berita</x-public.button>
+                <div class="flex flex-wrap items-end justify-between gap-4">
+                    <h2 id="berita-kegiatan" class="font-serif text-display-sm font-semibold text-ink">Berita dan kegiatan</h2>
+                    <x-public.pill-link :href="route('public.posts')" class="max-lg:hidden">Lihat semua berita</x-public.pill-link>
+                </div>
+
+                <div class="mt-section-head grid gap-y-10 lg:grid-cols-12 lg:gap-x-12">
+                    @php
+                        $lead = $newsLead;
+                        $leadCover = $lead->coverSources();
+                    @endphp
+                    <article @class(['group relative min-w-0 has-[a:focus-visible]:outline-2 has-[a:focus-visible]:outline-offset-4 has-[a:focus-visible]:outline-brand', 'lg:col-span-7' => $newsList->isNotEmpty(), 'lg:col-span-12' => $newsList->isEmpty()])>
+                        <div class="aspect-[16/9] overflow-hidden rounded-tile bg-cream lg:aspect-[16/10]">
+                            @if ($leadCover)
+                                <x-public.picture :image="$leadCover" alt="" sizes="(min-width: 64rem) 37rem, 100vw" width="960" height="600" frame="block size-full" class="size-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.03] motion-reduce:transition-none motion-reduce:group-hover:scale-100" />
+                            @else
+                                <span class="flex size-full items-center justify-center text-clay" aria-hidden="true">
+                                    <x-dynamic-component :component="'heroicon-o-'.$lead->category->icon()" class="size-20" />
+                                </span>
+                            @endif
+                        </div>
+                        <p class="mt-5 flex flex-wrap items-center gap-x-2 text-caption text-ink-muted">
+                            <span class="font-semibold tracking-wider text-clay uppercase">{{ $lead->category->label() }}</span>
+                            <span aria-hidden="true">·</span>
+                            <time datetime="{{ $lead->published_at->toAtomString() }}">{{ Format::date($lead->published_at) }}</time>
+                            <span aria-hidden="true">·</span>
+                            <span>{{ $lead->readingMinutes() }} menit baca</span>
+                        </p>
+                        <h3 class="mt-3 font-serif text-headline font-semibold text-ink lg:text-display"><a href="{{ route('public.post', $lead->slug) }}" class="after:absolute after:inset-0 hover:text-brand focus-visible:outline-none">{{ $lead->title }}</a></h3>
+                        @if ($leadSummary = $lead->summary ?: Format::excerpt($lead->body, 200))
+                            <p class="mt-3 line-clamp-3 max-w-[38rem] text-body leading-[1.6] text-ink-soft">{{ $leadSummary }}</p>
+                        @endif
+                        <span class="mt-4 inline-flex items-center gap-2 font-semibold text-brand underline-offset-4 group-hover:underline" aria-hidden="true">
+                            Baca selengkapnya
+                            <x-heroicon-o-arrow-right class="size-4 transition-transform group-hover:translate-x-1 motion-reduce:transition-none" />
+                        </span>
+                    </article>
+
+                    @if ($newsList->isNotEmpty())
+                        <ul class="min-w-0 divide-y divide-line lg:col-span-5">
+                            @foreach ($newsList as $post)
+                                @php $cover = $post->coverSources(); @endphp
+                                {{-- < 1024px hanya 3 item. --}}
+                                <li @class(['py-4 first:pt-0 last:pb-0', 'max-lg:hidden' => $loop->index >= 3])>
+                                    <article class="group relative flex gap-4 has-[a:focus-visible]:outline-2 has-[a:focus-visible]:outline-offset-4 has-[a:focus-visible]:outline-brand">
+                                        <div class="h-20 w-26 shrink-0 overflow-hidden rounded-card bg-cream">
+                                            @if ($cover)
+                                                <x-public.picture :image="$cover" alt="" sizes="104px" width="104" height="80" frame="block size-full" class="size-full object-cover" />
+                                            @else
+                                                <span class="flex size-full items-center justify-center text-clay" aria-hidden="true">
+                                                    <x-dynamic-component :component="'heroicon-o-'.$post->category->icon()" class="size-7" />
+                                                </span>
+                                            @endif
+                                        </div>
+                                        <div class="min-w-0">
+                                            <p class="flex flex-wrap items-center gap-x-2 text-caption text-ink-muted">
+                                                <span class="font-semibold tracking-wider text-clay uppercase">{{ $post->category->label() }}</span>
+                                                <span aria-hidden="true">·</span>
+                                                <time datetime="{{ $post->published_at->toAtomString() }}">{{ Format::dateShort($post->published_at) }}</time>
+                                            </p>
+                                            <h3 class="mt-1 line-clamp-3 font-serif text-card-title font-semibold"><a href="{{ route('public.post', $post->slug) }}" class="text-ink underline-offset-4 after:absolute after:inset-0 group-hover:text-brand group-hover:underline focus-visible:outline-none">{{ $post->title }}</a></h3>
+                                        </div>
+                                    </article>
+                                </li>
+                            @endforeach
+                        </ul>
+                    @endif
+                </div>
+                <x-public.pill-link :href="route('public.posts')" full class="mt-8 lg:hidden">Lihat semua berita</x-public.pill-link>
             </div>
         </section>
     @endif
