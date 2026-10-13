@@ -65,7 +65,12 @@ test('hero dengan foto memakai WebP srcset, prioritas tinggi, dan overlay; gamba
     preg_match_all('/<img\b[^>]*>/', $html, $images);
     $eager = array_filter($images[0], fn ($img) => str_contains($img, 'fetchpriority="high"'));
     $lazy = array_filter($images[0], fn ($img) => str_contains($img, 'loading="lazy"'));
-    expect($eager)->toHaveCount(1)->and(count($lazy))->toBe(count($images[0]) - 1);
+    // Selain hero, hanya foto pertama panel "Jenis kelembagaan" yang dimuat biasa (tanpa lazy dan tanpa prioritas tinggi).
+    preg_match('#aria-labelledby="jenis-kelembagaan".*?<img\b[^>]*>#s', $html, $typePhoto);
+    $notLazy = array_values(array_filter($images[0], fn ($img) => ! str_contains($img, 'loading="lazy"')));
+    expect($eager)->toHaveCount(1)
+        ->and(count($lazy))->toBe(count($images[0]) - 2)
+        ->and($notLazy[1])->toBe(substr($typePhoto[0], strrpos($typePhoto[0], '<img')));
 });
 
 test('varian WebP dibuat per lebar dan hero 1600 px tidak lebih dari 200 KB', function () {

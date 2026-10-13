@@ -317,7 +317,7 @@ final class DemoData
      */
     public const INSTITUTION_TYPE_TEXT = [
         'bumdes' => 'Usaha yang dikelola pemerintah kampung.',
-        // Jenis berfoto (INSTITUTION_TYPE_PHOTOS) maks 30 karakter: teksnya hanya ~55% lebar kartu.
+        // Jenis berfoto (INSTITUTION_TYPE_PHOTOS) dibuat singkat, maks 30 karakter.
         'kub' => 'Warga berbagi modal dan hasil.',
         'kdmp' => 'Lembaga ekonomi yang melayani usaha anggota.',
         'knmp' => 'Lembaga ekonomi untuk memasarkan hasil anggota.',

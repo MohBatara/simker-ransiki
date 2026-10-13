@@ -40,7 +40,7 @@
     --text-hero-sm--line-height: 2.75rem;
     --text-hero: 3rem; /* 48px judul hero publik */
     --text-hero--line-height: 3.5rem;
-    --text-numeral: 4.5rem; /* 72px angka kartu utama "Jenis kelembagaan" (percobaan palet tanah) */
+    --text-numeral: 2.5rem; /* 40px angka daftar "Jenis kelembagaan" (percobaan palet tanah) */
     --text-numeral--line-height: 1;
 
     --color-*: initial;
@@ -85,7 +85,7 @@
     --radius-card: 10px; /* kartu, modal, menu melayang */
     --radius-public: 8px; /* kartu website publik */
     --radius-photo: 12px; /* foto besar website publik (bagian Tentang) */
-    --radius-tile: 16px; /* kartu jenis kelembagaan di beranda */
+    --radius-tile: 16px; /* panel foto "Jenis kelembagaan" di beranda */
     --radius-panel: 24px; /* panel lebar "Cara kerja SIM-KER" */
 
     --shadow-*: initial;
@@ -193,44 +193,6 @@
     @media (width >= 48rem) {
         .home-top[data-strip] {
             --strip-h: 6.5rem;
-        }
-    }
-}
-
-/*
- * Kartu "Jenis kelembagaan": lapisan foto kartu utama dan mask foto kartu kecil. Di bawah teks lapisan tidak pernah
- * < 70% (putih terburuk 5,6:1 di atas bagian foto yang putih). Gradasi hanya sebagai overlay/mask foto (Bagian 7).
- */
-@layer components {
-    /* Menempel pada blok isi kartu utama: 85% di bawah, 70% di batas atas teks (7rem dari atas lapisan), lalu memudar. */
-    .overlay-bento-fade {
-        background-image: linear-gradient(to top, rgb(15 46 34 / 0.85) 0%, rgb(15 46 34 / 0.7) calc(100% - 7rem), rgb(15 46 34 / 0) 100%);
-    }
-    @media (width >= 48rem) {
-        .overlay-bento-fade {
-            background-image: linear-gradient(to top, rgb(15 46 34 / 0.85) 0%, rgb(15 46 34 / 0.7) calc(100% - 9rem), rgb(15 46 34 / 0) 100%);
-        }
-    }
-    /* Desktop: kartu utama setinggi dua baris, jadi pudar lebih pendek (6rem) agar foto terlihat sampai ±55% tinggi. */
-    @media (width >= 64rem) {
-        .overlay-bento-fade {
-            background-image: linear-gradient(to top, rgb(15 46 34 / 0.85) 0%, rgb(15 46 34 / 0.7) calc(100% - 6rem), rgb(15 46 34 / 0) 100%);
-        }
-    }
-
-    /* Foto kartu kecil: memudar ke kiri tanpa garis batas. Teks berakhir sebelum foto menutupi > 10%. */
-    .mask-fade-left {
-        mask-image: linear-gradient(to right, transparent 0%, black 60%);
-    }
-
-    /* Muncul bertahap (Alpine reveal): hanya bila gerak tidak dikurangi; tanpa JS kartu langsung tampil. */
-    @media (prefers-reduced-motion: no-preference) {
-        [data-reveal] {
-            transition: opacity 400ms ease-out, transform 400ms ease-out;
-        }
-        [data-reveal='hidden'] {
-            opacity: 0;
-            transform: translateY(12px);
         }
     }
 }

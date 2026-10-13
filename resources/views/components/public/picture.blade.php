@@ -9,6 +9,8 @@
     'frame' => 'block',
     // Hanya gambar hero: dimuat segera dengan prioritas tinggi. Gambar lain lazy-load.
     'eager' => false,
+    // false = dimuat segera tanpa prioritas tinggi (mis. foto pertama daftar Jenis kelembagaan).
+    'lazy' => true,
 ])
 
 <picture class="{{ $frame }}">
@@ -20,7 +22,7 @@
         alt="{{ $alt }}"
         @if ($width) width="{{ $width }}" @endif
         @if ($height) height="{{ $height }}" @endif
-        @if ($eager) fetchpriority="high" @else loading="lazy" @endif
+        @if ($eager) fetchpriority="high" @elseif ($lazy) loading="lazy" @endif
         decoding="async"
         {{ $attributes }}
     >

@@ -10,10 +10,10 @@ use App\Models\Organization;
 use App\Models\Post;
 use App\Models\Product;
 use App\Models\SiteSetting;
-use App\Support\Initials;
 use App\Support\PublicDirectory;
 use App\Support\PublicImages;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
 class HomeController extends Controller
@@ -24,7 +24,6 @@ class HomeController extends Controller
 
     private const POST_LIMIT = 5;
 
-    private const AVATAR_LIMIT = 3;
 
     public function __invoke(): View
     {
@@ -64,9 +63,9 @@ class HomeController extends Controller
     }
 
     /**
-     * Kartu "Jenis kelembagaan" (bento): jumlah kelompok publik terkini, maksimal 3 avatar kelompok publik (foto produk
-     * publik pertama, atau inisial), urut dari jenis terbanyak. Foto kartu: foto jenis dari Data Master; kartu pertama
-     * (utama) tanpa foto jenis memakai foto bidang usaha yang paling banyak dipakai kelompok jenis itu (Konten Website).
+     * Daftar "Jenis kelembagaan": jumlah kelompok publik terkini, urut terbanyak. Foto tiap jenis: foto jenis dari Data
+     * Master, lalu foto bidang usaha yang paling banyak dipakai kelompok publik jenis itu (Konten Website), lalu foto
+     * bawaan Beranda. Tidak pernah foto produk kelompok.
      *
      * @return Collection<int, object>
      */
@@ -76,61 +75,38 @@ class HomeController extends Controller
             return $types;
         }
 
-        $organizations = Organization::query()->publiclyListed()
+        $counts = Organization::query()->publiclyListed()
             ->whereIn('organizations.institution_type_id', $types->pluck('id'))
-            ->orderBy('organizations.name')
-            ->get(['organizations.id', 'organizations.name', 'organizations.institution_type_id'])
-            ->groupBy('institution_type_id');
+            ->groupBy('organizations.institution_type_id')
+            ->selectRaw('organizations.institution_type_id as type_id, COUNT(DISTINCT organizations.id) as total')
+            ->pluck('total', 'type_id');
 
-        $shown = $organizations->flatMap(fn (Collection $group) => $group->take(self::AVATAR_LIMIT));
-        $photos = Product::query()->publiclyListed()
-            ->whereIn('products.organization_id', $shown->pluck('id'))
-            ->whereNotNull('products.photo_path')
-            ->orderBy('products.id')
-            ->get(['products.id', 'products.organization_id', 'products.photo_path'])
-            ->unique('organization_id')
-            ->keyBy('organization_id');
+        // Bidang berfoto terbanyak per jenis: satu query, dipilih di PHP (jumlah terbanyak, lalu nama).
+        $sectors = BusinessSector::query()
+            ->whereNotNull('business_sectors.photo_path')
+            ->join('organization_sector', 'organization_sector.business_sector_id', '=', 'business_sectors.id')
+            ->join('organizations', 'organizations.id', '=', 'organization_sector.organization_id')
+            ->whereIn('organizations.id', Organization::query()->publiclyListed()->select('organizations.id'))
+            ->whereIn('organizations.institution_type_id', $types->pluck('id'))
+            ->groupBy('organizations.institution_type_id', 'business_sectors.id', 'business_sectors.name', 'business_sectors.photo_path')
+            ->get(['organizations.institution_type_id', 'business_sectors.id', 'business_sectors.name', 'business_sectors.photo_path', DB::raw('COUNT(*) as uses')])
+            ->sortBy([['uses', 'desc'], ['name', 'asc']])
+            ->unique('institution_type_id')
+            ->keyBy('institution_type_id');
 
-        $cards = $types
-            ->map(function (object $type) use ($organizations, $photos) {
-                $group = $organizations->get($type->id, collect());
+        $fallback = PublicImages::heroDefault();
 
-                return (object) [
-                    ...(array) $type,
-                    'organizations_count' => $group->count(),
-                    'avatars' => $group->take(self::AVATAR_LIMIT)->map(function (Organization $organization) use ($photos) {
-                        $sources = $photos->get($organization->id)?->photoSources();
-
-                        return [
-                            'name' => $organization->name,
-                            'initials' => Initials::organization($organization->name),
-                            'photo' => $sources,
-                        ];
-                    })->values()->all(),
-                    'more' => max(0, $group->count() - self::AVATAR_LIMIT),
-                    // Kartu kecil: foto jenis dari Data Master (opsional). Kartu utama diisi di bawah.
-                    'photo' => PublicImages::institutionTypePhoto($type),
-                ];
-            })
-            ->filter(fn (object $card) => $card->organizations_count > 0)
+        return $types
+            ->map(fn (object $type) => (object) [
+                ...(array) $type,
+                'organizations_count' => (int) ($counts[$type->id] ?? 0),
+                'photo' => PublicImages::institutionTypePhoto($type)
+                    ?? (isset($sectors[$type->id]) ? PublicImages::sectorPhoto($sectors[$type->id]) : null)
+                    ?? $fallback,
+            ])
+            ->filter(fn (object $type) => $type->organizations_count > 0)
             ->sortBy([['organizations_count', 'desc'], ['name', 'asc']])
             ->values();
-
-        $featured = $cards->first();
-
-        if ($featured && ! $featured->photo) {
-            $sector = BusinessSector::query()
-                ->whereNotNull('business_sectors.photo_path')
-                ->join('organization_sector', 'organization_sector.business_sector_id', '=', 'business_sectors.id')
-                ->whereIn('organization_sector.organization_id', $organizations->get($featured->id)->pluck('id'))
-                ->groupBy('business_sectors.id', 'business_sectors.name', 'business_sectors.photo_path')
-                ->orderByRaw('COUNT(*) DESC')
-                ->orderBy('business_sectors.name')
-                ->first(['business_sectors.id', 'business_sectors.name', 'business_sectors.photo_path']);
-            $featured->photo = $sector ? PublicImages::sectorPhoto($sector) : null;
-        }
-
-        return $cards;
     }
 
     /**
