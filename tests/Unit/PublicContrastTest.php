@@ -76,6 +76,7 @@ test('palet tanah (beranda): pasangan teks dan latar memenuhi 4,5:1', function (
     'putih 85% di atas clay' => [whiteAt(0.85, '#6B4430'), '#6B4430'],
     'putih 85% di atas sage' => [whiteAt(0.85, '#4E6F4A'), '#4E6F4A'],
     'putih 80% di atas forest (Cara kerja)' => [whiteAt(0.80, '#0F2E22'), '#0F2E22'],
+    'putih 60% di atas forest (baris hak cipta footer)' => [whiteAt(0.60, '#0F2E22'), '#0F2E22'],
     'ink di atas sand' => [hexRgb('#1C1F1E'), '#D8BF98'],
     'ink-soft di atas sand' => [hexRgb('#4A504D'), '#D8BF98'],
     'ink di atas cream' => [hexRgb('#1C1F1E'), '#F3EBDD'],

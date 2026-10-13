@@ -49,7 +49,7 @@
 </head>
 <body class="flex min-h-dvh flex-col bg-canvas font-sans text-ui text-ink antialiased">
     @include('partials.skip-link')
-    @include('partials.test-mode')
+    @include('partials.test-mode', ['top' => true])
 
     {{--
         Tinggi <header> tetap (64/72px) agar isi halaman tidak bergeser; setelah digulir > 24px bilahnya menyusut 12px,
@@ -167,8 +167,9 @@
         ];
     @endphp
     <footer class="on-dark bg-forest text-forest-soft print:hidden">
-        <div class="mx-auto grid max-w-public gap-10 px-4 py-12 sm:grid-cols-2 md:px-6 lg:grid-cols-[1.4fr_1fr_1fr_1.4fr]">
-            <div class="space-y-4">
+        {{-- < 1024px: identitas, dua kelompok tautan berdampingan, kontak selebar penuh; desktop empat kolom. --}}
+        <div class="mx-auto grid max-w-public grid-cols-2 gap-x-6 gap-y-8 px-4 pt-12 pb-8 md:px-6 lg:grid-cols-[1.4fr_1fr_1fr_1.4fr] lg:gap-10 lg:py-12">
+            <div class="col-span-2 space-y-4 lg:col-span-1">
                 <div class="flex items-center gap-3">
                     {{-- Tempat logo resmi: ganti isi komponen x-logo. --}}
                     <x-logo inverse />
@@ -182,19 +183,20 @@
             </div>
 
             @foreach ($footerLinks as $heading => $links)
-                <div>
+                <div class="min-w-0">
                     <h2 class="text-caption font-semibold uppercase tracking-wider text-paper">{{ $heading }}</h2>
                     <ul class="mt-3 text-ui">
                         @foreach ($links as [$label, $href])
-                            <li><a href="{{ $href }}" class="inline-flex min-h-11 items-center rounded-control hover:text-paper hover:underline md:min-h-8">{{ $label }}</a></li>
+                            <li><a href="{{ $href }}" class="flex min-h-10 items-center rounded-control py-2 hover:text-paper hover:underline lg:inline-flex lg:min-h-8 lg:py-0">{{ $label }}</a></li>
                         @endforeach
                     </ul>
                 </div>
             @endforeach
 
-            <div>
+            <div class="col-span-2 border-t border-paper/10 pt-8 lg:col-span-1 lg:border-0 lg:pt-0">
                 <h2 class="text-caption font-semibold uppercase tracking-wider text-paper">Kantor Distrik Ransiki</h2>
-                <dl class="mt-4 space-y-3 text-ui">
+                {{-- < 1024px: alamat dan jam selebar penuh, telepon dan email sebaris bila muat. --}}
+                <dl class="mt-4 flex flex-wrap gap-x-6 gap-y-3 text-ui lg:block lg:space-y-3">
                     @foreach ([
                         ['map-pin', 'Alamat', $office['office_address'], null],
                         ['phone', 'Telepon', $office['office_phone'], $office['office_phone'] ? $tel($office['office_phone']) : null],
@@ -202,9 +204,9 @@
                         ['clock', 'Jam layanan', $office['office_hours'], null],
                     ] as [$icon, $label, $value, $href])
                         @if ($value)
-                            <div class="flex gap-3">
-                                <dt><x-dynamic-component :component="'heroicon-o-'.$icon" class="mt-0.5 size-5 text-forest-soft" aria-hidden="true" /><span class="sr-only">{{ $label }}</span></dt>
-                                <dd class="min-w-0 whitespace-pre-line break-words">@if ($href)<a href="{{ $href }}" class="rounded-control text-paper hover:underline">{{ $value }}</a>@else{{ $value }}@endif</dd>
+                            <div @class(['flex min-w-0 gap-3', 'basis-full' => ! in_array($icon, ['phone', 'envelope'])])>
+                                <dt><x-dynamic-component :component="'heroicon-o-'.$icon" class="mt-px size-4.5 text-forest-soft lg:mt-0.5 lg:size-5" aria-hidden="true" /><span class="sr-only">{{ $label }}</span></dt>
+                                <dd @class(['min-w-0 break-words lg:whitespace-pre-line', 'line-clamp-2' => $icon === 'map-pin'])>@if ($href)<a href="{{ $href }}" class="rounded-control text-paper hover:underline">{{ $value }}</a>@else{{ $value }}@endif</dd>
                             </div>
                         @endif
                     @endforeach
@@ -215,13 +217,13 @@
             </div>
         </div>
         <div class="border-t border-forest-line">
-            <div class="mx-auto flex max-w-public flex-wrap justify-between gap-2 px-4 py-4 text-caption md:px-6">
-                <p>&copy; {{ now()->year }} Distrik Ransiki</p>
-                <a href="{{ route('public.contact') }}" class="rounded-control hover:text-paper">Hubungi kantor distrik</a>
+            <div class="mx-auto flex max-w-public flex-wrap justify-between gap-2 px-4 py-4 text-caption text-paper/60 md:px-6">
+                <p>&copy; {{ now()->year }} Pemerintah Distrik Ransiki</p>
+                <a href="{{ route('public.contact') }}" class="rounded-control hover:text-paper max-lg:hidden">Hubungi kantor distrik</a>
             </div>
         </div>
     </footer>
-    {{-- Kembali ke atas: muncul setelah > 2 tinggi layar; di atas label Mode uji (pojok kanan bawah tablet/desktop). --}}
+    {{-- Kembali ke atas: muncul setelah > 2 tinggi layar. --}}
     <button
         type="button"
         x-data
