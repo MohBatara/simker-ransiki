@@ -208,7 +208,8 @@ test('slide baru dan judul baru langsung tampil di beranda (tidak tertahan cache
     $slide = HeroSlide::sole();
 
     $html = $this->get('/')->getContent();
-    expect($html)->toContain("/foto-hero/{$slide->id}?ukuran=1920&amp;format=webp")->toContain('Judul Baru')->not->toContain('/foto-hero/bawaan');
+    preg_match('#<section[^>]*data-hero.*?</section>#s', $html, $hero);
+    expect($hero[0])->toContain("/foto-hero/{$slide->id}?ukuran=1920&amp;format=webp")->toContain('Judul Baru')->not->toContain('/foto-hero/bawaan');
 
     // Setiap URL di srcset bisa dibuka tanpa login dan berupa WebP; cadangan JPEG juga.
     $this->post('/logout');

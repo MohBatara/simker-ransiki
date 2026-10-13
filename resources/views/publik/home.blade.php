@@ -119,42 +119,75 @@
     @endif
     </div>
 
-    {{-- Tentang: angka hanya dari data publik (PublicDirectory::stats). Jarak atas = setengah strip + jarak bagian. --}}
+    {{--
+        Mengenal Distrik Ransiki: kepala dua kolom, tiga kartu foto (sudut kanan bawah "tergigit" berisi tombol panah),
+        lalu baris angka publik. < 1024px kartu digeser (scroll-snap) dengan titik penanda. Jarak atas = setengah strip.
+    --}}
     @php
-        // Grid angka: 2×2 sampai < 1024px, satu baris 4 kolom mulai lg; garis pemisah tipis warna line.
-        $statCells = [
-            ['organizations', 'Kelompok', ''],
-            ['villages', 'Kampung', 'border-l pl-4 md:pl-5'],
-            ['featured', 'Produk unggulan', 'border-t lg:border-t-0 lg:border-l lg:pl-5'],
-            ['sectors', 'Bidang usaha', 'border-t border-l pl-4 md:pl-5 lg:border-t-0'],
-        ];
+        $statItems = [['organizations', 'Kelompok'], ['villages', 'Kampung'], ['featured', 'Produk unggulan'], ['sectors', 'Bidang usaha']];
     @endphp
     <section class="mx-auto max-w-public px-4 pt-[calc(var(--strip-h)/2+var(--section-y))] pb-(--section-y) md:px-6" aria-labelledby="tentang">
-        <div class="grid gap-8 md:grid-cols-12 md:items-center md:gap-10 lg:gap-16">
-            @if ($about)
-                <x-public.picture :image="$about" alt="Distrik Ransiki" sizes="(min-width: 64rem) 27rem, (min-width: 48rem) 40vw, 100vw" width="960" height="1200" frame="block overflow-hidden rounded-photo bg-subtle shadow-soft md:col-span-5" class="aspect-[4/3] w-full object-cover md:aspect-[4/5]" />
-            @endif
-            <div @class(['md:col-span-7' => $about, 'md:col-span-12 max-w-[42rem]' => ! $about])>
-                <h2 id="tentang" class="font-serif text-display-sm font-semibold text-ink md:text-display">{{ $text('about_title') }}</h2>
-                <p class="mt-5 max-w-[30rem] text-body leading-7 text-ink-soft">{{ Format::excerpt($settings['profile_body']) ?? 'Profil distrik sedang disiapkan.' }}</p>
-
-                <dl class="mt-10 grid grid-cols-2 border-t border-line lg:grid-cols-4">
-                    @foreach ($statCells as [$key, $label, $cell])
-                        <div class="flex min-w-0 flex-col-reverse justify-end border-line py-5 pr-4 {{ $cell }}">
-                            <dt class="mt-1 whitespace-nowrap text-caption text-ink-muted">{{ $label }}</dt>
-                            <dd class="font-serif text-display-sm font-semibold text-brand tabular-nums md:text-display">{{ Format::number($stats[$key]) }}</dd>
-                        </div>
-                    @endforeach
-                </dl>
-                @if ($stats['updated_at'])
-                    <p class="mt-3 text-caption text-ink-muted">Data per {{ Format::date($stats['updated_at']) }}</p>
-                @endif
-
-                <a href="{{ route('public.profile') }}" class="group mt-8 inline-flex min-h-11 items-center gap-2 rounded-control font-semibold text-brand underline-offset-4 hover:underline focus-visible:underline md:min-h-0">
+        <div class="grid gap-6 lg:grid-cols-2 lg:items-end lg:gap-16">
+            <h2 id="tentang" class="max-w-[16ch] font-serif text-display-sm font-semibold text-ink md:text-display lg:text-hero-sm">{{ $text('about_title') }}</h2>
+            <div>
+                <p class="max-w-[30rem] text-body leading-7 text-ink-soft">{{ Format::excerpt($settings['profile_body']) ?? 'Profil distrik sedang disiapkan.' }}</p>
+                <a href="{{ route('public.profile') }}" class="group mt-6 inline-flex min-h-11 items-center gap-3 rounded-full bg-forest py-1.5 pr-1.5 pl-5 font-semibold text-paper transition-colors hover:bg-brand-hover">
                     Baca profil lengkap
-                    <x-heroicon-o-arrow-right class="size-4 transition-transform group-hover:translate-x-1 motion-reduce:transition-none" aria-hidden="true" />
+                    <span class="flex size-9 items-center justify-center rounded-full bg-paper text-forest" aria-hidden="true">
+                        <x-heroicon-o-arrow-right class="size-4 transition-transform group-hover:translate-x-0.5 motion-reduce:transition-none" />
+                    </span>
                 </a>
             </div>
+        </div>
+
+        <div x-data="scrollDots" class="mt-10">
+            {{-- < 1024px: deretan geser selebar layar (−mx-4), kartu 85vw (HP) atau setengah (tablet); desktop 3 kolom. --}}
+            <ul x-ref="track" x-on:scroll.passive="update()" class="scrollbar-none relative -mx-4 flex snap-x snap-mandatory scroll-px-4 gap-4 overflow-x-auto px-4 pb-1 md:-mx-6 md:scroll-px-6 md:px-6 lg:mx-0 lg:grid lg:grid-cols-3 lg:gap-6 lg:overflow-visible lg:px-0 lg:pb-0">
+                @foreach ($aboutCards as $card)
+                    <li class="relative w-[85vw] shrink-0 snap-start md:w-[calc(50%-0.5rem)] lg:w-auto">
+                        <a href="{{ $card['url'] }}" class="group relative block rounded-[20px]">
+                            <div class="card-bite relative isolate flex aspect-[4/5] flex-col justify-end overflow-hidden rounded-[20px] bg-forest">
+                                <x-public.picture :image="$card['photo']" alt="" sizes="(min-width: 64rem) 22rem, (min-width: 48rem) 50vw, 85vw" width="960" height="1200" frame="absolute inset-0 -z-20 block size-full" class="size-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.04] group-focus-visible:scale-[1.04] motion-reduce:transition-none motion-reduce:group-hover:scale-100" />
+                                <div class="relative px-5 pt-5 pr-20 pb-6">
+                                    <div class="overlay-photo-fade absolute -inset-x-0 -top-20 bottom-0 -z-10" aria-hidden="true"></div>
+                                    <h3 class="font-serif text-page-title font-semibold text-paper">{{ $card['title'] }}</h3>
+                                    <p class="mt-2 text-ui text-paper/85">{{ $card['text'] }}</p>
+                                </div>
+                            </div>
+                            {{-- Tombol di luar elemen ber-mask, tepat di pusat potongan. --}}
+                            <span class="absolute right-0 bottom-0 flex size-13 items-center justify-center rounded-full bg-sun text-ink" aria-hidden="true">
+                                <x-heroicon-o-arrow-right class="size-5 transition-transform duration-150 group-hover:translate-x-0.75 group-focus-visible:translate-x-0.75 motion-reduce:transition-none" />
+                            </span>
+                        </a>
+                    </li>
+                @endforeach
+            </ul>
+            <div class="mt-4 flex justify-center lg:hidden">
+                @foreach ($aboutCards as $card)
+                    <button type="button" x-on:click="go({{ $loop->index }})" x-bind:aria-current="active === {{ $loop->index }}" class="flex size-11 items-center justify-center rounded-full">
+                        <span class="sr-only">Kartu {{ $loop->iteration }} dari {{ $loop->count }}</span>
+                        <span @class(['block h-2 rounded-full transition-all motion-reduce:transition-none', 'w-6 bg-brand' => $loop->first, 'w-2 bg-line-input' => ! $loop->first]) x-bind:class="{ 'w-6 bg-brand': active === {{ $loop->index }}, 'w-2 bg-line-input': active !== {{ $loop->index }} }" aria-hidden="true"></span>
+                    </button>
+                @endforeach
+            </div>
+        </div>
+
+        {{-- Angka hanya dari data publik (PublicDirectory::stats). HP 2×2; mulai 768px satu baris dipisah titik tengah. --}}
+        <div class="mt-8 flex flex-wrap items-baseline justify-between gap-x-6 gap-y-3 border-t border-line pt-6 lg:mt-10">
+            <dl class="grid w-full grid-cols-2 gap-x-6 gap-y-3 md:flex md:w-auto md:flex-wrap md:items-baseline md:gap-x-4">
+                @foreach ($statItems as [$key, $label])
+                    @unless ($loop->first)
+                        <span class="text-ink-muted max-md:hidden" aria-hidden="true">·</span>
+                    @endunless
+                    <div class="flex items-baseline gap-2">
+                        <dd class="order-first font-serif text-page-title font-semibold text-brand tabular-nums">{{ Format::number($stats[$key]) }}</dd>
+                        <dt class="text-ui text-ink-soft">{{ $label }}</dt>
+                    </div>
+                @endforeach
+            </dl>
+            @if ($stats['updated_at'])
+                <p class="text-caption text-ink-muted">Data per {{ Format::date($stats['updated_at']) }}</p>
+            @endif
         </div>
     </section>
     </div>

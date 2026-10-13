@@ -120,19 +120,55 @@
             </x-card>
         </form>
 
-        @php $about = $settings['about_photo_path']; @endphp
-        <x-card title="Foto bagian Tentang Distrik Ransiki" description="Opsional. Tampil di samping ringkasan profil di beranda. Bila kosong, dipakai foto sampul (tab Halaman & kontak).">
-            <div class="space-y-4">
-                @if ($about)
-                    <img src="{{ route('public.site-photo', ['slot' => 'tentang', 'ukuran' => 960, 'format' => 'webp', 'v' => substr(md5($about), 0, 8)]) }}" alt="Foto bagian Tentang saat ini" class="aspect-[4/3] w-full max-w-md rounded-card object-cover">
-                    <form method="POST" action="{{ route('admin.content.photo.destroy', 'tentang') }}">
+        <x-card title="Kartu Mengenal Distrik Ransiki" description="Tiga kartu foto di bawah judul Mengenal Distrik Ransiki. Kosongkan isian untuk memakai teks bawaan; tanpa foto, kartu memakai foto bidang usaha tujuan.">
+            <div class="grid gap-5 lg:grid-cols-3">
+                @foreach (range(1, App\Support\AboutCards::COUNT) as $n)
+                    @php
+                        $p = App\Http\Requests\Admin\AboutCardRequest::prefixFor($n);
+                        $current = App\Support\AboutCards::photo($n, $settings);
+                        $cardErrors = collect($errors->getMessages())->filter(fn ($messages, $key) => str_starts_with($key, $p.'.'));
+                    @endphp
+                    <form
+                        method="POST"
+                        action="{{ route('admin.about-cards.update', $n) }}"
+                        enctype="multipart/form-data"
+                        class="space-y-4 rounded-card border border-line p-4"
+                        x-data="{ preview: @js($current['webp'][640] ?? null), pick(event) { const file = event.target.files[0]; this.preview = file ? URL.createObjectURL(file) : @js($current['webp'][640] ?? null) } }"
+                    >
+                        @csrf
+                        <p class="font-semibold text-ink">Kartu {{ $n }}</p>
+                        <div class="aspect-[4/5] max-h-56 overflow-hidden rounded-control bg-subtle">
+                            <template x-if="preview"><img x-bind:src="preview" alt="" class="size-full object-cover"></template>
+                            <p x-show="! preview" class="flex size-full items-center justify-center px-4 text-center text-caption text-ink-muted">Tanpa foto: memakai foto bidang usaha.</p>
+                        </div>
+                        <x-field label="Foto" :for="$p.'[photo]'" hint="JPG, PNG, atau WebP. Maksimal 8 MB, lebar minimal 800 px." optional>
+                            <x-input type="file" :name="$p.'[photo]'" accept="image/jpeg,image/png,image/webp" x-on:change="pick($event)" />
+                        </x-field>
+                        <x-field label="Judul" :for="$p.'[title]'" :hint="'Bawaan: '.App\Models\SiteSetting::DEFAULTS['about_card_'.$n.'_title']" optional>
+                            <x-input :name="$p.'[title]'" :value="$settings['about_card_'.$n.'_title']" :placeholder="App\Models\SiteSetting::DEFAULTS['about_card_'.$n.'_title']" maxlength="60" />
+                        </x-field>
+                        <x-field label="Kalimat" :for="$p.'[text]'" hint="Maksimal 90 karakter." optional>
+                            <x-textarea :name="$p.'[text]'" rows="3" maxlength="90" :value="$settings['about_card_'.$n.'_text']" :placeholder="App\Models\SiteSetting::DEFAULTS['about_card_'.$n.'_text']" />
+                        </x-field>
+                        <x-field label="Bidang usaha tujuan" :for="$p.'[sector]'" :hint="'Bawaan: '.App\Models\SiteSetting::ABOUT_CARD_SECTORS[$n]" optional>
+                            <x-select :name="$p.'[sector]'" :options="$sectorOptions" :selected="$settings['about_card_'.$n.'_sector']" placeholder="Pakai bawaan" />
+                        </x-field>
+                        @if ($cardErrors->isNotEmpty())
+                            <x-alert tone="fix" title="Kartu belum disimpan" data-form-errors>{{ $cardErrors->first()[0] }} Pilih ulang fotonya bila perlu.</x-alert>
+                        @endif
+                        <x-button type="submit" processing="Menyimpan…">Simpan kartu {{ $n }}</x-button>
+                    </form>
+                @endforeach
+            </div>
+            @foreach (range(1, App\Support\AboutCards::COUNT) as $n)
+                @if ($settings['about_card_'.$n.'_photo_path'])
+                    <form method="POST" action="{{ route('admin.about-cards.photo.destroy', $n) }}" class="mt-3 inline-block">
                         @csrf
                         @method('DELETE')
-                        <x-button variant="ghost" type="submit" processing="Menghapus…">Hapus foto</x-button>
+                        <x-button variant="ghost" type="submit" processing="Menghapus…">Hapus foto kartu {{ $n }}</x-button>
                     </form>
                 @endif
-                <x-file-upload :url="route('admin.content.photo.store', 'tentang')" kind="photo" :multiple="false" :remaining="1" hint="Foto JPG atau PNG, maksimal 10 MB. Foto diperkecil dan data lokasinya dibuang otomatis. Foto lama akan diganti." />
-            </div>
+            @endforeach
         </x-card>
     </div>
 </x-layouts.app>

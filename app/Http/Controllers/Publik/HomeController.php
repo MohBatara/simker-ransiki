@@ -10,6 +10,7 @@ use App\Models\Organization;
 use App\Models\Post;
 use App\Models\Product;
 use App\Models\SiteSetting;
+use App\Support\AboutCards;
 use App\Support\PublicDirectory;
 use App\Support\PublicImages;
 use Illuminate\Support\Collection;
@@ -31,9 +32,9 @@ class HomeController extends Controller
             'stats' => PublicDirectory::stats(),
             'sectors' => PublicDirectory::sectors(),
             'types' => $this->typeCards(PublicDirectory::institutionTypes()),
-            'settings' => SiteSetting::values(),
+            'settings' => $settings = SiteSetting::values(),
+            'aboutCards' => AboutCards::all($settings),
             'slides' => $this->slides(),
-            'about' => PublicImages::slot('tentang') ?? PublicImages::slot('sampul'),
             'posts' => Post::query()->publiclyListed()->latest('published_at')->latest('id')->limit(self::POST_LIMIT)->get(PostController::COLUMNS),
             'featured' => $this->featured(),
         ]);

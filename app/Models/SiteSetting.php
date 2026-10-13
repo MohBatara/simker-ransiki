@@ -18,6 +18,7 @@ class SiteSetting extends Model
         'hero_title_accent' => 'Bagian judul berwarna',
         'home_intro' => 'Pengantar beranda',
         'about_title' => 'Judul bagian Tentang',
+        ...self::ABOUT_CARD_KEYS,
         'how_title' => 'Judul bagian Cara kerja',
         'how_1_title' => 'Langkah 1: judul',
         'how_1_text' => 'Langkah 1: penjelasan',
@@ -46,6 +47,12 @@ class SiteSetting extends Model
         'hero_title_accent' => 'Distrik Ransiki',
         'home_intro' => 'Profil kelompok usaha, produk unggulan, dan kontak kelembagaan ekonomi dari berbagai kampung di Distrik Ransiki.',
         'about_title' => 'Mengenal Distrik Ransiki',
+        'about_card_1_title' => 'Kebun kakao dan kopi',
+        'about_card_1_text' => 'Kelompok pekebun merawat kakao, kopi, dan pinang di sekitar kampung.',
+        'about_card_2_title' => 'Laut dan perikanan',
+        'about_card_2_text' => 'Nelayan dan petambak menyediakan ikan segar dan hasil laut olahan.',
+        'about_card_3_title' => 'Olahan rumahan',
+        'about_card_3_text' => 'Usaha warga mengolah hasil kebun dan laut menjadi pangan siap jual.',
         'how_title' => 'Cara kerja SIM-KER',
         'how_1_title' => 'Didaftarkan distrik',
         'how_1_text' => 'Kantor distrik mendata kelompok dan membuatkan akun.',
@@ -56,6 +63,16 @@ class SiteSetting extends Model
         'how_4_title' => 'Diverifikasi OPD',
         'how_4_text' => 'Dinas terkait memeriksa laporan sebelum menjadi data resmi.',
     ];
+
+    /** Tiga kartu foto bagian "Mengenal Distrik Ransiki" (Konten Website > Beranda): judul, kalimat, bidang, foto. */
+    public const ABOUT_CARD_KEYS = [
+        'about_card_1_title' => 'Kartu 1: judul', 'about_card_1_text' => 'Kartu 1: kalimat', 'about_card_1_sector' => 'Kartu 1: bidang usaha', 'about_card_1_photo_path' => 'Kartu 1: foto',
+        'about_card_2_title' => 'Kartu 2: judul', 'about_card_2_text' => 'Kartu 2: kalimat', 'about_card_2_sector' => 'Kartu 2: bidang usaha', 'about_card_2_photo_path' => 'Kartu 2: foto',
+        'about_card_3_title' => 'Kartu 3: judul', 'about_card_3_text' => 'Kartu 3: kalimat', 'about_card_3_sector' => 'Kartu 3: bidang usaha', 'about_card_3_photo_path' => 'Kartu 3: foto',
+    ];
+
+    /** Bidang usaha bawaan tiap kartu (dicocokkan dengan nama di Data Master) selama Admin belum memilih. */
+    public const ABOUT_CARD_SECTORS = [1 => 'Perkebunan', 2 => 'Perikanan', 3 => 'Pengolahan Hasil'];
 
     /** Slot foto lebar di URL (/foto-sampul, /foto-tentang) => kunci pengaturan. */
     public const PHOTO_SLOTS = [

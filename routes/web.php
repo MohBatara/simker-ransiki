@@ -26,6 +26,7 @@ Route::get('/foto-berita/{post}', [Publik\PostController::class, 'photo'])->name
 Route::get('/foto-{slot}', [Publik\SiteImageController::class, 'slot'])->name('public.site-photo')->whereIn('slot', ['sampul', 'tentang']);
 Route::get('/foto-bidang/{sector}', [Publik\SiteImageController::class, 'sector'])->name('public.sector-photo')->whereNumber('sector');
 Route::get('/foto-jenis/{institutionType}', [Publik\SiteImageController::class, 'institutionType'])->name('public.type-photo')->whereNumber('institutionType');
+Route::get('/foto-kartu/{n}', [Publik\SiteImageController::class, 'aboutCard'])->name('public.about-card-photo')->whereIn('n', ['1', '2', '3']);
 Route::get('/foto-hero/bawaan', [Publik\SiteImageController::class, 'heroDefault'])->name('public.hero-default');
 Route::get('/foto-hero/{slide}', [Publik\SiteImageController::class, 'hero'])->name('public.hero-photo')->whereNumber('slide');
 Route::get('/sitemap.xml', [Publik\SitemapController::class, 'sitemap'])->name('sitemap');
@@ -221,6 +222,11 @@ Route::middleware('auth')->group(function () use ($organizationRoutes, $reportRo
                     Route::delete('/foto-{slot}', 'destroyPhoto')->name('photo.destroy')->whereIn('slot', ['sampul', 'tentang']);
                     Route::post('/foto-bidang/{sector}', 'storeSectorPhoto')->name('sector-photo.store')->whereNumber('sector')->middleware('throttle:uploads');
                     Route::delete('/foto-bidang/{sector}', 'destroySectorPhoto')->name('sector-photo.destroy')->whereNumber('sector');
+                });
+
+                Route::controller(Admin\AboutCardController::class)->prefix('konten/kartu/{n}')->name('about-cards.')->whereIn('n', ['1', '2', '3'])->group(function () {
+                    Route::post('/', 'update')->name('update')->middleware('throttle:uploads');
+                    Route::delete('/foto', 'destroyPhoto')->name('photo.destroy');
                 });
 
                 Route::controller(Admin\HeroSlideController::class)->prefix('konten/slide')->name('hero-slides.')->group(function () {

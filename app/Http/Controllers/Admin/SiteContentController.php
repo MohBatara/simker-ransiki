@@ -25,6 +25,7 @@ class SiteContentController extends Controller
         return view('admin.content.home', [
             'settings' => SiteSetting::values(),
             'slides' => HeroSlide::orderBy('position')->orderBy('id')->get(),
+            'sectorOptions' => BusinessSector::orderBy('name')->pluck('name', 'id')->all(),
         ]);
     }
 

@@ -50,6 +50,12 @@ class PublicImages
             : null;
     }
 
+    /** Foto kartu "Mengenal Distrik Ransiki" ke-$n. */
+    public static function aboutCard(int $n, string $path): array
+    {
+        return self::wide(fn (array $query) => route('public.about-card-photo', ['n' => $n, ...$query]), $path, ImageVariants::HERO);
+    }
+
     /** Foto bawaan di resources/aset, selama Admin belum mengaktifkan slide. */
     public static function heroDefault(): array
     {

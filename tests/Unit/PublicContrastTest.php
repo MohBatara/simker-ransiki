@@ -109,3 +109,15 @@ test('jenis kelembagaan (foto + daftar): pasangan teks memenuhi 4,5:1', function
     'panah brand di lingkaran putih' => [hexRgb('#1F5A47'), [255, 255, 255]],
 ]);
 
+test('kartu Mengenal Distrik Ransiki dan tombolnya memenuhi 4,5:1', function (array $text, array $background) {
+    expect(contrast($text, $background))->toBeGreaterThanOrEqual(4.5);
+})->with([
+    'judul putih di atas foto + lapisan forest 70%' => [[255, 255, 255], overlayOnWhite(0.70)],
+    // Putih 85% tercampur dengan latarnya sendiri (lapisan 70% di atas bagian foto yang putih): 4,57:1.
+    'kalimat putih 85% di atas foto + lapisan forest 70%' => [array_map(fn ($c) => 0.85 * 255 + 0.15 * $c, overlayOnWhite(0.70)), overlayOnWhite(0.70)],
+    'panah ink di tombol sun' => [hexRgb('#1C1F1E'), hexRgb('#E9B949')],
+    'teks putih di tombol pil forest' => [[255, 255, 255], hexRgb('#0F2E22')],
+    'panah forest di lingkaran putih' => [hexRgb('#0F2E22'), [255, 255, 255]],
+    'angka brand di canvas' => [hexRgb('#1F5A47'), hexRgb('#F6F6F3')],
+]);
+

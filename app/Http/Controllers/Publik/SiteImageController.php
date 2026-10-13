@@ -45,6 +45,11 @@ class SiteImageController extends Controller
         return $this->respond($request, $institutionType->photo_path, ImageVariants::HERO);
     }
 
+    public function aboutCard(Request $request, int $n): StreamedResponse
+    {
+        return $this->respond($request, SiteSetting::get("about_card_{$n}_photo_path"), ImageVariants::HERO);
+    }
+
     /** Foto hero bawaan dari repo (resources/aset) selama belum ada slide aktif. */
     public function heroDefault(Request $request): BinaryFileResponse
     {

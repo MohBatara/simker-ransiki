@@ -199,6 +199,29 @@
     }
 }
 
+/*
+ * Kartu foto "Mengenal Distrik Ransiki": sudut kanan bawah "tergigit" (mask lingkaran cekung r 37px berpusat 26px dari
+ * tepi kanan dan bawah, cukup untuk memotong titik sudut (26√2 = 36,8) tanpa sisa; tombol 52px di pusat yang sama,
+ * rata dengan tepi kartu, celah 11px menampakkan latar halaman). Lapisan gelap menempel
+ * pada blok teks: ≥ 70% di bawah teks (putih terburuk 5,6:1), lalu memudar 5rem ke atas.
+ */
+@layer components {
+    .card-bite {
+        mask-image: radial-gradient(circle at calc(100% - 26px) calc(100% - 26px), transparent 37px, #000 37.5px);
+    }
+
+    .overlay-photo-fade {
+        background-image: linear-gradient(to top, rgb(15 46 34 / 0.85) 0%, rgb(15 46 34 / 0.7) calc(100% - 5rem), rgb(15 46 34 / 0) 100%);
+    }
+
+    .scrollbar-none {
+        scrollbar-width: none;
+    }
+    .scrollbar-none::-webkit-scrollbar {
+        display: none;
+    }
+}
+
 /* Teks panjang dari Konten Website (Markdown terbatas) di halaman publik. */
 @layer components {
     .prose-public {
