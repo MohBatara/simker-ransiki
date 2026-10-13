@@ -52,7 +52,7 @@
     <header
         x-data="{ open: false, search: false }"
         x-on:keydown.escape="search = false; open = false"
-        class="sticky top-0 z-40 border-b border-line bg-paper pt-[env(safe-area-inset-top)]"
+        class="sticky top-0 z-40 border-b border-line bg-paper pt-[env(safe-area-inset-top)] print:hidden"
     >
         <div class="mx-auto flex h-16 max-w-public items-center justify-between gap-6 px-4 md:h-18 md:px-6">
             <a href="{{ route('home') }}" class="flex items-center gap-3 rounded-control leading-tight">
@@ -155,7 +155,7 @@
             ],
         ];
     @endphp
-    <footer class="on-dark bg-forest text-forest-soft">
+    <footer class="on-dark bg-forest text-forest-soft print:hidden">
         <div class="mx-auto grid max-w-public gap-10 px-4 py-12 sm:grid-cols-2 md:px-6 lg:grid-cols-[1.4fr_1fr_1fr_1.4fr]">
             <div class="space-y-4">
                 <div class="flex items-center gap-3">

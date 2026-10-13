@@ -1,26 +1,26 @@
 {{--
-    Kartu berita publik (halaman Berita dan "Berita lainnya"). Variabel: $post (kolom publik).
-    Tanpa foto: kartu teks saja, tanpa petak pengganti.
+    Kartu berita (halaman Berita dan "Berita lainnya"). Variabel: $post (kolom publik), $level (opsional, h2/h3).
+    Foto 16:10 atau panel cream berikon kategori setinggi foto, sehingga baris meta semua kartu sejajar.
+    Seluruh kartu dapat diklik lewat satu tautan di judul; cincin fokus mengelilingi kartu.
 --}}
-@use('App\Support\Format')
-
 @php
-    $url = route('public.post', $post->slug);
     $sources = $post->coverSources();
+    $level ??= 'h3';
 @endphp
 
-<article class="flex h-full flex-col overflow-hidden rounded-public border border-line bg-paper shadow-card">
-    @if ($sources)
-        <a href="{{ $url }}" class="block aspect-[16/9] overflow-hidden bg-subtle" tabindex="-1" aria-hidden="true">
-            <x-public.picture :image="$sources" alt="" sizes="(min-width: 64rem) 22rem, (min-width: 40rem) 50vw, 100vw" width="480" height="270" frame="block size-full" class="size-full object-cover" />
-        </a>
-    @endif
-    <div class="flex flex-1 flex-col items-start gap-2 p-4">
-        <x-public.pill>{{ $post->category->label() }}</x-public.pill>
-        <h3 class="font-serif text-card-title font-semibold"><a href="{{ $url }}" class="rounded-control text-ink hover:text-brand">{{ $post->title }}</a></h3>
-        <p class="text-caption text-ink-muted"><time datetime="{{ $post->published_at->toAtomString() }}">{{ Format::date($post->published_at) }}</time></p>
-        @if ($text = $post->summary ?: Format::excerpt($post->body, 160))
-            <p class="text-ui text-ink-soft">{{ $text }}</p>
+<article class="group relative flex h-full flex-col has-[a:focus-visible]:outline-2 has-[a:focus-visible]:outline-offset-4 has-[a:focus-visible]:outline-brand">
+    <div class="aspect-[16/10] overflow-hidden rounded-tile bg-cream">
+        @if ($sources)
+            <x-public.picture :image="$sources" alt="" sizes="(min-width: 64rem) 22rem, (min-width: 48rem) 50vw, 100vw" width="480" height="300" frame="block size-full" class="size-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.03] motion-reduce:transition-none motion-reduce:group-hover:scale-100" />
+        @else
+            <span class="flex size-full items-center justify-center text-clay" aria-hidden="true">
+                <x-dynamic-component :component="'heroicon-o-'.$post->category->icon()" class="size-12" />
+            </span>
         @endif
     </div>
+    @include('publik.posts._meta', ['post' => $post, 'class' => 'mt-4'])
+    <{{ $level }} class="mt-2 line-clamp-3 font-serif text-title-sm font-semibold"><a href="{{ route('public.post', $post->slug) }}" class="text-ink after:absolute after:inset-0 group-hover:text-brand focus-visible:outline-none">{{ $post->title }}</a></{{ $level }}>
+    @if ($text = $post->summary ?: App\Support\Format::excerpt($post->body, 160))
+        <p class="mt-2 line-clamp-2 text-ui text-ink-soft">{{ $text }}</p>
+    @endif
 </article>

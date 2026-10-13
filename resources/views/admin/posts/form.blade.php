@@ -35,9 +35,18 @@
                             <x-input name="slug" :value="$post->slug" maxlength="200" autocapitalize="none" spellcheck="false" />
                         </x-field>
                     </div>
-                    <x-field label="Ringkasan" for="summary" hint="1–2 kalimat untuk daftar berita dan pratinjau tautan di WhatsApp. Maksimal 300 karakter." optional>
-                        <x-textarea name="summary" :value="$post->summary" rows="2" maxlength="300" />
+                    <x-field label="Ringkasan" for="summary" hint="Satu atau dua kalimat untuk daftar berita, paragraf pembuka, dan pratinjau tautan di WhatsApp. Maksimal 200 karakter." optional>
+                        <x-textarea name="summary" :value="$post->summary" rows="2" maxlength="200" />
                     </x-field>
+
+                    <div class="grid gap-5 md:grid-cols-2">
+                        <x-field label="Teks alternatif foto sampul" for="photo_alt" :hint="'Jelaskan isi foto untuk pembaca layar, mis. Petani menjemur biji kakao. '.($post->cover_photo_path ? 'Wajib karena berita ini berfoto.' : 'Wajib setelah foto sampul diunggah.')" :optional="! $post->cover_photo_path">
+                            <x-input name="photo_alt" :value="$post->photo_alt" maxlength="150" />
+                        </x-field>
+                        <x-field label="Keterangan foto sampul" for="photo_caption" hint="Tampil kecil di bawah foto, mis. nama tempat atau fotografer." optional>
+                            <x-input name="photo_caption" :value="$post->photo_caption" maxlength="150" />
+                        </x-field>
+                    </div>
 
                     <div x-data="markdownPreview(@js(route('admin.posts.preview')))" class="space-y-2">
                         <label for="body" class="block text-ui font-semibold text-ink">Isi berita</label>
@@ -51,7 +60,7 @@
                                     <p x-show="loading" class="text-ink-muted">Memuat pratinjau…</p>
                                     <p x-cloak x-show="failed && ! loading" class="text-fix">Pratinjau gagal dimuat. Periksa koneksi lalu coba lagi.</p>
                                     <p x-cloak x-show="! loading && ! failed && html === ''" class="text-ink-muted">Isi berita masih kosong.</p>
-                                    <div x-cloak x-show="! loading && ! failed" class="prose-public" x-html="html"></div>
+                                    <div x-cloak x-show="! loading && ! failed" class="prose-article" x-html="html"></div>
                                 </div>
                             </x-tabs.panel>
                         </x-tabs>

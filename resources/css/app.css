@@ -36,6 +36,8 @@
     --text-page-title--line-height: 1.875rem;
     --text-headline: 1.5rem; /* 24px judul berita utama di Beranda (HP dan tablet) */
     --text-headline--line-height: 2rem;
+    --text-title-lg: 2.5rem; /* 40px judul halaman detail berita (desktop) */
+    --text-title-lg--line-height: 3rem;
     --text-display-sm: 1.75rem; /* 28px judul publik (HP) */
     --text-display-sm--line-height: 2.25rem;
     --text-display: 2rem; /* 32px judul publik */
@@ -261,6 +263,61 @@
     }
     .scrollbar-none::-webkit-scrollbar {
         display: none;
+    }
+}
+
+/*
+ * Isi artikel berita (Markdown lewat Format::markdown): kolom baca sempit, paragraf 18px/1,75, subjudul serif,
+ * kutipan bergaris clay, gambar selebar kolom bersudut 12px, tautan brand bergaris bawah. Dipakai juga di pratinjau Admin.
+ */
+@layer components {
+    .prose-article {
+        @apply text-[1.125rem] leading-[1.75] text-ink;
+    }
+    .prose-article > * + * {
+        @apply mt-6;
+    }
+    .prose-article h2 {
+        @apply mt-12 font-serif text-display-sm font-semibold;
+    }
+    .prose-article h3 {
+        @apply mt-10 font-serif text-page-title font-semibold;
+    }
+    .prose-article :is(h2, h3) + * {
+        @apply mt-4;
+    }
+    .prose-article ul {
+        @apply list-disc pl-6;
+    }
+    .prose-article ol {
+        @apply list-decimal pl-6;
+    }
+    .prose-article li + li {
+        @apply mt-2;
+    }
+    .prose-article li::marker {
+        @apply text-clay;
+    }
+    .prose-article blockquote {
+        @apply border-l-4 border-clay pl-5 text-ink-soft italic;
+    }
+    .prose-article img {
+        @apply w-full rounded-photo;
+    }
+    .prose-article a {
+        @apply text-brand underline underline-offset-4 hover:text-brand-hover;
+    }
+    .prose-article strong {
+        @apply font-semibold;
+    }
+    .prose-article hr {
+        @apply my-10 border-line;
+    }
+    @media print {
+        .prose-article,
+        .prose-article * {
+            color: #000 !important;
+        }
     }
 }
 

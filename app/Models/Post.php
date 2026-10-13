@@ -16,7 +16,7 @@ use Illuminate\Support\Str;
 /**
  * Berita & Kegiatan. Isi berupa Markdown yang dirender aman lewat App\Support\Format::markdown.
  */
-#[Fillable(['title', 'slug', 'category', 'summary', 'body', 'status', 'published_at'])]
+#[Fillable(['title', 'slug', 'category', 'summary', 'body', 'status', 'published_at', 'photo_caption', 'photo_alt'])]
 class Post extends Model
 {
     use HasFactory;

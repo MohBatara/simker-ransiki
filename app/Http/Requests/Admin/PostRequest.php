@@ -34,7 +34,10 @@ class PostRequest extends FormRequest
             'title' => ['required', 'string', 'max:90'],
             'slug' => ['nullable', 'string', 'max:200', Rule::unique('posts', 'slug')->ignore($post)],
             'category' => ['required', Rule::enum(PostCategory::class)],
-            'summary' => ['nullable', 'string', 'max:300'],
+            'summary' => ['nullable', 'string', 'max:200'],
+            // Teks alternatif wajib bila berita sudah berfoto sampul (foto diunggah setelah berita disimpan pertama kali).
+            'photo_alt' => [Rule::requiredIf(fn () => filled($post?->cover_photo_path)), 'nullable', 'string', 'max:150'],
+            'photo_caption' => ['nullable', 'string', 'max:150'],
             'body' => ['required', 'string', 'max:50000'],
             'status' => ['required', Rule::enum(PostStatus::class)],
             'published_at' => ['nullable', 'date'],
@@ -49,6 +52,8 @@ class PostRequest extends FormRequest
             'slug.unique' => 'Alamat ini sudah dipakai berita lain. Ubah alamatnya atau kosongkan agar dibuat otomatis.',
             'organizations.max' => 'Pilih paling banyak 20 kelompok terkait.',
             'title.max' => 'Judul paling banyak 90 karakter. Ringkas judulnya agar tetap mudah dibaca di Beranda.',
+            'summary.max' => 'Ringkasan paling banyak 200 karakter. Cukup satu atau dua kalimat.',
+            'photo_alt.required' => 'Isi teks alternatif foto sampul: jelaskan isi foto untuk pembaca layar.',
         ];
     }
 
@@ -59,6 +64,8 @@ class PostRequest extends FormRequest
             'slug' => 'alamat',
             'category' => 'kategori',
             'summary' => 'ringkasan',
+            'photo_alt' => 'teks alternatif foto',
+            'photo_caption' => 'keterangan foto',
             'body' => 'isi',
             'published_at' => 'tanggal terbit',
         ];
