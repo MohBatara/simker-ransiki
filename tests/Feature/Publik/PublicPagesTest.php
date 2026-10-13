@@ -430,13 +430,13 @@ test('jenis kelembagaan: daftar urut terbanyak, hanya jenis publik, tiap baris m
         ->not->toContain('Jenis Tersembunyi')->not->toContain('line-clamp')->not->toContain('...');
 });
 
-test('jenis kelembagaan: tanpa kartu warna, avatar, ikon tekstur, atau animasi muncul', function () {
+test('jenis kelembagaan: tanpa kartu warna, avatar, ikon tekstur; tidak ada konten yang disembunyikan server', function () {
     Organization::factory()->public()->count(3)->create(['institution_type_id' => InstitutionType::factory()->create()->id]);
 
     preg_match('#aria-labelledby="jenis-kelembagaan".*?</section>#s', $this->get('/')->getContent(), $section);
 
     expect($section[0])->not->toMatch('/\bbg-(forest|clay|sand|sage|cream) text-/')
-        ->not->toContain('ring-2')->not->toContain('opacity-[0.08]')->not->toContain('reveal')->not->toContain('mask-fade');
+        ->not->toContain('ring-2')->not->toContain('opacity-[0.08]')->not->toContain('data-reveal-state')->not->toContain('mask-fade');
 });
 
 test('foto jenis: foto jenis, lalu foto bidang dominan, lalu foto bawaan; foto pertama tidak lazy, sisanya lazy', function () {

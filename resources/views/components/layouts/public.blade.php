@@ -33,6 +33,8 @@
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
     @include('partials.head', ['title' => $title])
+    {{-- Efek gerak hanya bila JS aktif dan gerak tidak dikurangi (intro hero memakai kelas ini). --}}
+    <script>if (! matchMedia('(prefers-reduced-motion: reduce)').matches) document.documentElement.classList.add('motion');</script>
     <meta name="description" content="{{ $description }}">
     <link rel="canonical" href="{{ $canonical }}">
     <meta property="og:type" content="{{ $type }}">
@@ -49,58 +51,67 @@
     @include('partials.skip-link')
     @include('partials.test-mode')
 
+    {{--
+        Tinggi <header> tetap (64/72px) agar isi halaman tidak bergeser; setelah digulir > 24px bilahnya menyusut 12px,
+        dengan garis bawah dan bayangan halus (transisi 200ms). Panel cari/menu tampil di bawah bilah.
+    --}}
     <header
         x-data="{ open: false, search: false }"
         x-on:keydown.escape="search = false; open = false"
-        class="sticky top-0 z-40 border-b border-line bg-paper pt-[env(safe-area-inset-top)] print:hidden"
+        class="sticky top-0 z-40 h-16 md:h-18 print:hidden"
     >
-        <div class="mx-auto flex h-16 max-w-public items-center justify-between gap-6 px-4 md:h-18 md:px-6">
-            <a href="{{ route('home') }}" class="flex items-center gap-3 rounded-control leading-tight">
-                <x-logo />
-                <span>
-                    <span class="block font-serif text-card-title font-semibold text-ink">SIM-KER</span>
-                    <span class="block text-caption text-ink-soft">Distrik Ransiki</span>
-                </span>
-            </a>
+        <div
+            class="h-16 border-b border-transparent bg-paper transition-[height,box-shadow,border-color] duration-200 md:h-18"
+            x-bind:class="{ 'h-13 md:h-15 border-line shadow-soft': $store.scroll.pastHeader, 'h-16 md:h-18 border-transparent': ! $store.scroll.pastHeader }"
+        >
+            <div class="mx-auto flex h-full max-w-public items-center justify-between gap-6 px-4 md:px-6">
+                <a href="{{ route('home') }}" class="flex items-center gap-3 rounded-control leading-tight">
+                    <x-logo />
+                    <span>
+                        <span class="block font-serif text-card-title font-semibold text-ink">SIM-KER</span>
+                        <span class="block text-caption text-ink-soft">Distrik Ransiki</span>
+                    </span>
+                </a>
 
-            <div class="flex items-center gap-1">
-                <nav aria-label="Menu utama" class="hidden self-stretch lg:flex">
-                    @foreach ($menu as $item)
-                        <a
-                            href="{{ $item['href'] }}"
-                            @if ($item['active']) aria-current="page" @endif
-                            @class([
-                                'flex h-18 items-center border-b-2 px-3 transition-colors',
-                                'border-brand font-semibold text-brand' => $item['active'],
-                                'border-transparent text-ink-soft hover:text-ink' => ! $item['active'],
-                            ])
-                        >{{ $item['label'] }}</a>
-                    @endforeach
-                </nav>
-                <span class="mx-2 hidden h-6 w-px bg-line lg:block" aria-hidden="true"></span>
-                <button
-                    type="button"
-                    x-on:click="search = ! search; open = false; search && $nextTick(() => $refs.q.focus())"
-                    x-bind:aria-expanded="search"
-                    aria-controls="cari-publik"
-                    class="flex size-11 items-center justify-center rounded-control text-ink-soft hover:bg-subtle hover:text-ink"
-                >
-                    <span class="sr-only">Cari kelompok</span>
-                    <x-heroicon-o-magnifying-glass class="size-5" />
-                </button>
-                {{-- Masuk/Dasbor di header mulai tablet; di HP ada di dalam menu. --}}
-                <x-public.button :href="$account['href']" size="md" class="ml-2 max-md:hidden">{{ $account['label'] }}</x-public.button>
-                <button
-                    type="button"
-                    x-on:click="open = ! open; search = false"
-                    x-bind:aria-expanded="open"
-                    aria-controls="menu-publik"
-                    class="-mr-2 flex size-11 items-center justify-center rounded-control text-ink-soft hover:bg-subtle hover:text-ink lg:hidden"
-                >
-                    <span class="sr-only">Menu</span>
-                    <x-heroicon-o-bars-3 x-show="! open" class="size-6" />
-                    <x-heroicon-o-x-mark x-cloak x-show="open" class="size-6" />
-                </button>
+                <div class="flex items-center gap-1">
+                    <nav aria-label="Menu utama" class="hidden self-stretch lg:flex">
+                        @foreach ($menu as $item)
+                            <a
+                                href="{{ $item['href'] }}"
+                                @if ($item['active']) aria-current="page" @endif
+                                @class([
+                                    'flex h-full items-center border-b-2 px-3 transition-colors',
+                                    'border-brand font-semibold text-brand' => $item['active'],
+                                    'border-transparent text-ink-soft hover:text-ink' => ! $item['active'],
+                                ])
+                            >{{ $item['label'] }}</a>
+                        @endforeach
+                    </nav>
+                    <span class="mx-2 hidden h-6 w-px bg-line lg:block" aria-hidden="true"></span>
+                    <button
+                        type="button"
+                        x-on:click="search = ! search; open = false; search && $nextTick(() => $refs.q.focus())"
+                        x-bind:aria-expanded="search"
+                        aria-controls="cari-publik"
+                        class="flex size-11 items-center justify-center rounded-control text-ink-soft hover:bg-subtle hover:text-ink"
+                    >
+                        <span class="sr-only">Cari kelompok</span>
+                        <x-heroicon-o-magnifying-glass class="size-5" />
+                    </button>
+                    {{-- Masuk/Dasbor di header mulai tablet; di HP ada di dalam menu. --}}
+                    <x-public.button :href="$account['href']" size="md" class="ml-2 max-md:hidden">{{ $account['label'] }}</x-public.button>
+                    <button
+                        type="button"
+                        x-on:click="open = ! open; search = false"
+                        x-bind:aria-expanded="open"
+                        aria-controls="menu-publik"
+                        class="-mr-2 flex size-11 items-center justify-center rounded-control text-ink-soft hover:bg-subtle hover:text-ink lg:hidden"
+                    >
+                        <span class="sr-only">Menu</span>
+                        <x-heroicon-o-bars-3 x-show="! open" class="size-6" />
+                        <x-heroicon-o-x-mark x-cloak x-show="open" class="size-6" />
+                    </button>
+                </div>
             </div>
         </div>
 
@@ -210,5 +221,16 @@
             </div>
         </div>
     </footer>
+    {{-- Kembali ke atas: muncul setelah > 2 tinggi layar; di atas label Mode uji (pojok kanan bawah tablet/desktop). --}}
+    <button
+        type="button"
+        x-data
+        x-on:click="window.scrollTo({ top: 0, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' })"
+        x-bind:class="$store.scroll.pastFold ? 'opacity-100 visible' : 'pointer-events-none invisible opacity-0'"
+        class="invisible fixed right-4 bottom-6 z-30 flex size-11 items-center justify-center rounded-full bg-forest text-paper opacity-0 shadow-float transition-[opacity,visibility] duration-200 hover:bg-brand-hover md:bottom-14 md:right-3 print:hidden"
+        aria-label="Kembali ke atas"
+    >
+        <x-heroicon-o-arrow-up class="size-5" aria-hidden="true" />
+    </button>
 </body>
 </html>
