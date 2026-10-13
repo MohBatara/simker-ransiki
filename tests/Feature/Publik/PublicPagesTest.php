@@ -40,7 +40,7 @@ test('beranda menampilkan angka, tanggal data, dan bidang usaha', function () {
 
     $this->get('/')
         ->assertOk()
-        ->assertSee('Mengenal Distrik Ransiki')
+        ->assertSeeText('Mengenal Distrik Ransiki')
         ->assertSeeInOrder(['Kelompok', 'Kampung', 'Produk unggulan', 'Bidang usaha'])
         ->assertSee('Data per 9 Oktober 2026')
         ->assertSee('Baca profil lengkap')
@@ -333,10 +333,10 @@ test('ikon Lucide dirender sebaris dengan garis setebal Heroicons', function () 
 
 test('judul bagian Tentang bisa diubah Admin, kosong kembali ke bawaan', function () {
     $this->actingAs(User::factory()->admin()->create())->put('/admin/konten', ['about_title' => 'Sekilas Ransiki'])->assertSessionHasNoErrors();
-    $this->get('/')->assertSee('Sekilas Ransiki')->assertDontSee('Mengenal Distrik Ransiki');
+    $this->get('/')->assertSeeText('Sekilas Ransiki')->assertDontSeeText('Mengenal Distrik Ransiki');
 
     $this->put('/admin/konten', ['about_title' => '']);
-    $this->get('/')->assertSee('Mengenal Distrik Ransiki');
+    $this->get('/')->assertSeeText('Mengenal Distrik Ransiki');
 });
 
 test('halaman publik tanpa tanda pisah dan tanpa hiasan garis emas; emas hanya untuk tombol utama dan aksen judul hero', function () {

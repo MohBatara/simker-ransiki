@@ -36,7 +36,7 @@ test('tiga kartu bawaan: judul, kalimat, tautan bidang tujuan, foto bidang bila 
             route('public.directory'), // "Pengolahan Hasil" belum ada di data master tes
         ])
         // Susunan lama (foto 4:5 kiri + teks kanan) sudah tidak ada.
-        ->and($section)->not->toContain('md:col-span-5');
+        ->and($section)->not->toContain('md:aspect-[4/5]')->not->toContain('<picture class="block overflow-hidden rounded-photo');
 });
 
 test('admin mengubah kartu: judul, kalimat, bidang tujuan, dan foto (WebP), lalu menghapus fotonya', function () {
