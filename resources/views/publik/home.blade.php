@@ -142,12 +142,7 @@
             </h2>
             <div class="md:col-span-6 md:col-start-7">
                 <p class="max-w-[26rem] text-body leading-[1.6] text-ink-soft">{{ Format::excerpt($settings['profile_body']) ?? 'Profil distrik sedang disiapkan.' }}</p>
-                <a href="{{ route('public.profile') }}" class="group mt-6 inline-flex min-h-11 items-center gap-3 rounded-full bg-forest py-1.5 pr-1.5 pl-5 font-semibold text-paper transition-colors hover:bg-brand-hover">
-                    Baca profil lengkap
-                    <span class="flex size-9 items-center justify-center rounded-full bg-paper text-forest" aria-hidden="true">
-                        <x-heroicon-o-arrow-right class="size-4 transition-transform group-hover:translate-x-0.5 motion-reduce:transition-none" />
-                    </span>
-                </a>
+                <x-public.pill-link :href="route('public.profile')" class="mt-6">Baca profil lengkap</x-public.pill-link>
             </div>
         </div>
 
@@ -291,14 +286,32 @@
     @endif
 
     @if ($featured->isNotEmpty())
+        {{-- Produk unggulan: HP digeser (scroll-snap, kartu 80% layar, titik penanda), tablet 2 kolom, desktop 4 kolom. --}}
         <section class="mx-auto max-w-public px-4 py-section md:px-6" aria-labelledby="produk-unggulan">
-            @include('publik._section-heading', ['eyebrow' => 'Produk', 'title' => 'Produk unggulan', 'id' => 'produk-unggulan', 'link' => ['href' => route('public.products'), 'label' => 'Lihat semua produk']])
-            <div class="mt-section-head grid grid-cols-2 gap-4 lg:grid-cols-4 lg:gap-5">
-                @foreach ($featured as $product)
-                    @include('publik._product-card')
-                @endforeach
+            <div class="flex flex-wrap items-end justify-between gap-4">
+                <h2 id="produk-unggulan" class="font-serif text-display-sm font-semibold text-ink">Produk unggulan</h2>
+                <x-public.pill-link :href="route('public.products')" class="max-md:hidden">Lihat semua produk</x-public.pill-link>
             </div>
-            <x-public.button variant="outline-brand" :href="route('public.products')" arrow class="mt-6 w-full sm:hidden">Lihat semua produk</x-public.button>
+            <div x-data="scrollDots" class="mt-section-head">
+                <ul x-ref="track" x-on:scroll.passive="update()" class="scrollbar-none relative -mx-4 flex snap-x snap-mandatory scroll-px-4 gap-4 overflow-x-auto px-4 pb-1 md:mx-0 md:grid md:grid-cols-2 md:gap-5 md:overflow-visible md:px-0 md:pb-0 lg:grid-cols-4">
+                    @foreach ($featured as $product)
+                        <li class="w-[80vw] shrink-0 snap-start md:w-auto">
+                            @include('publik._product-card')
+                        </li>
+                    @endforeach
+                </ul>
+                @if ($featured->count() > 1)
+                    <div class="mt-4 flex justify-center md:hidden">
+                        @foreach ($featured as $product)
+                            <button type="button" x-on:click="go({{ $loop->index }})" x-bind:aria-current="active === {{ $loop->index }}" class="flex size-11 items-center justify-center rounded-full">
+                                <span class="sr-only">Produk {{ $loop->iteration }} dari {{ $loop->count }}</span>
+                                <span @class(['block h-2 rounded-full transition-all motion-reduce:transition-none', 'w-6 bg-brand' => $loop->first, 'w-2 bg-line-input' => ! $loop->first]) x-bind:class="{ 'w-6 bg-brand': active === {{ $loop->index }}, 'w-2 bg-line-input': active !== {{ $loop->index }} }" aria-hidden="true"></span>
+                            </button>
+                        @endforeach
+                    </div>
+                @endif
+            </div>
+            <x-public.pill-link :href="route('public.products')" full class="mt-6 md:hidden">Lihat semua produk</x-public.pill-link>
         </section>
     @endif
 
@@ -327,21 +340,13 @@
         Ajakan + alur pendaftaran (teks langkah: Konten Website, kunci how_*). Bagian terang agar tidak ada dua blok
         gelap berturut-turut sebelum footer. Kontras di cream: clay 7,1, ink 14,0, ink-soft 7,0.
     --}}
-    @php
-        $contactButton = 'group inline-flex min-h-11 items-center gap-3 rounded-full bg-forest py-1.5 pr-1.5 pl-5 font-semibold text-paper transition-colors hover:bg-brand-hover';
-    @endphp
     {{-- Section kanvas + panel cream; panel memakai padding section yang sama agar tingginya konsisten. --}}
     <section class="mx-auto max-w-public px-4 py-section md:px-6" aria-labelledby="ajakan">
         <div class="grid gap-8 rounded-panel bg-cream px-6 py-section md:px-10 lg:grid-cols-12 lg:gap-16 lg:px-14">
             <div class="lg:col-span-5">
                 <h2 id="ajakan" class="font-serif text-display-sm font-semibold text-ink md:text-display">Kelompok Anda belum terdaftar?</h2>
                 <p class="mt-3 max-w-[28rem] text-body leading-7 text-ink-soft">Pendaftaran dilakukan melalui Kantor Distrik Ransiki. Begini alurnya.</p>
-                <a href="{{ route('public.contact') }}" class="{{ $contactButton }} mt-8 max-lg:hidden">
-                    Hubungi Kantor Distrik
-                    <span class="flex size-9 items-center justify-center rounded-full bg-paper text-forest" aria-hidden="true">
-                        <x-heroicon-o-arrow-right class="size-4 transition-transform group-hover:translate-x-0.5 motion-reduce:transition-none" />
-                    </span>
-                </a>
+                <x-public.pill-link :href="route('public.contact')" class="mt-8 max-lg:hidden">Hubungi Kantor Distrik</x-public.pill-link>
             </div>
 
             <ol class="lg:col-span-7">
@@ -356,12 +361,7 @@
                 @endforeach
             </ol>
 
-            <a href="{{ route('public.contact') }}" class="{{ $contactButton }} w-full justify-between lg:hidden">
-                Hubungi Kantor Distrik
-                <span class="flex size-9 items-center justify-center rounded-full bg-paper text-forest" aria-hidden="true">
-                    <x-heroicon-o-arrow-right class="size-4" />
-                </span>
-            </a>
+            <x-public.pill-link :href="route('public.contact')" full class="lg:hidden">Hubungi Kantor Distrik</x-public.pill-link>
         </div>
     </section>
     </div>

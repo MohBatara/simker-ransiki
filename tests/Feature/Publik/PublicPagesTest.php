@@ -76,14 +76,14 @@ test('produk unggulan tanpa foto memakai foto bidang usaha dari Admin, atau peta
     preg_match('#id="produk-unggulan".*?</section>#s', $html, $section);
 
     expect($section[0])->toContain('Kakao kering')->toContain("/foto-bidang/{$sector->id}?ukuran=480&amp;format=webp")
-        ->toContain('Sagu lempeng')->toContain('aspect-[16/9]')->toContain('SL');
+        ->toContain('Sagu lempeng')->toContain('aspect-[4/3]')->toContain('SL');
 });
 
-test('halaman produk memakai area inisial kecil 16:9 untuk produk tanpa foto', function () {
+test('halaman produk memakai petak inisial 4:3 untuk produk tanpa foto', function () {
     $organization = Organization::factory()->public()->create();
     Product::factory()->for($organization)->create(['name' => 'Kakao kering', 'is_public' => true]);
 
-    $this->get('/produk')->assertOk()->assertSee('aspect-[16/9]', false)->assertSee('KK');
+    $this->get('/produk')->assertOk()->assertSee('aspect-[4/3]', false)->assertSee('KK');
 });
 
 test('hero berisi judul dan tombol; tanpa bilah atas, Masuk di header, kontak kantor di footer', function () {
@@ -478,5 +478,38 @@ test('jenis kelembagaan di HP/tablet: panel foto disembunyikan, baris berisi jum
         ->toContain('<span class="font-semibold tabular-nums">7</span> kelompok')
         ->toContain('md:grid md:grid-cols-2')
         ->toMatch('#</ul>\s*</div>\s*<a href="'.preg_quote(route('public.directory'), '#').'"[^>]*lg:hidden[^>]*>\s*Lihat semua kelompok#');
+});
+
+test('kartu produk: label bidang, judul 2 baris, kelompok dan kampung satu baris, kapasitas di dasar, tanpa lencana ikon', function () {
+    $organization = Organization::factory()->public()->create(['name' => 'Kelompok Tani Padi Sawah Sri Rejeki']);
+    $organization->sectors()->attach(BusinessSector::factory()->create(['name' => 'Pertanian']));
+    Product::factory()->for($organization)->create(['name' => 'Beras', 'capacity' => '1.200 kg/bulan', 'is_public' => true, 'is_featured' => true, 'photo_path' => 'products/1/a.jpg']);
+    Product::factory()->for($organization)->create(['name' => 'Gabah', 'capacity' => null, 'is_public' => true, 'is_featured' => true]);
+
+    preg_match('#id="produk-unggulan".*?</section>#s', $this->get('/')->getContent(), $section);
+    preg_match_all('#<article\b.*?</article>#s', $section[0], $cards);
+
+    expect($cards[0])->toHaveCount(2)
+        ->and($cards[0][0])->toContain('text-clay uppercase">Pertanian</p>')
+        ->toContain('line-clamp-2 min-h-[3.25rem]')
+        ->toContain('title="Kelompok Tani Padi Sawah Sri Rejeki"')
+        ->toContain('Kapasitas')->toContain('1.200 kg/bulan')->toContain('mt-auto')
+        ->toContain('group-hover:scale-[1.04]')->toContain('after:absolute after:inset-0')
+        ->not->toContain('icon-badge')->not->toContain('-bottom-6')
+        ->and(substr_count($cards[0][0], '<a '))->toBe(1)
+        ->and($cards[0][1])->toContain('Belum diisi');
+});
+
+test('bagian Produk unggulan di Beranda: tanpa label kecil, tombol pil, geser di HP dengan titik penanda', function () {
+    $organization = Organization::factory()->public()->create();
+    Product::factory()->for($organization)->count(3)->create(['is_public' => true, 'is_featured' => true]);
+
+    preg_match('#aria-labelledby="produk-unggulan".*?</section>#s', $this->get('/')->getContent(), $section);
+
+    expect($section[0])->not->toContain('uppercase tracking-wider text-brand')
+        ->toContain('x-data="scrollDots"')->toContain('w-[80vw]')->toContain('md:grid-cols-2')->toContain('lg:grid-cols-4')
+        ->toContain('Produk 3 dari 3')
+        ->and(substr_count($section[0], 'Lihat semua produk'))->toBe(2)
+        ->and($section[0])->toContain('rounded-full bg-forest');
 });
 
