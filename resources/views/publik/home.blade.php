@@ -203,8 +203,10 @@
 
     {{--
         Jenis kelembagaan: satu foto besar + daftar. Desktop: foto 5 kolom (sticky) berganti mengikuti baris aktif
-        (hover/fokus, crossfade 300ms), daftar 7 kolom. < 1024px: foto 16:9 jenis terbanyak di atas, lalu daftar.
-        Kontras: label putih di pita forest 85% di atas foto putih 9,2:1; angka brand dan teks ink-soft di atas cream 50%.
+        (hover/fokus, crossfade 300ms), daftar 7 kolom. < 1024px: grid ubin foto (HP 2 kolom 1:1, tablet 3 kolom 4:5),
+        tanpa deskripsi; jumlah ganjil di HP → ubin terakhir 2 kolom (2:1), di tablet ubin terakhir mengisi sisa baris.
+        Kontras: label putih di pita forest 85% di atas foto putih 9,2:1; angka brand dan teks ink-soft di atas cream 50%;
+        teks ubin di atas .overlay-tile (forest ≥ 75% di area teks) di atas foto putih ≥ 5:1.
     --}}
     @if ($types->isNotEmpty())
         <section class="border-y border-line bg-paper" aria-labelledby="jenis-kelembagaan" x-data="{ active: 0 }">
@@ -212,7 +214,10 @@
                 <div class="flex flex-wrap items-end justify-between gap-x-8 gap-y-4">
                     <div>
                         <h2 id="jenis-kelembagaan" class="font-serif text-display-sm font-semibold text-ink">Jenis kelembagaan</h2>
-                        <p class="mt-3 max-w-[34rem] text-body text-ink-soft">Kelompok usaha di Distrik Ransiki menurut bentuk kelembagaannya. Pilih salah satu untuk melihat daftar kelompoknya.</p>
+                        <p class="mt-3 max-w-[34rem] text-body text-ink-soft">
+                            <span class="lg:hidden">Pilih jenis kelembagaan untuk melihat daftar kelompoknya.</span>
+                            <span class="max-lg:hidden">Kelompok usaha di Distrik Ransiki menurut bentuk kelembagaannya. Pilih salah satu untuk melihat daftar kelompoknya.</span>
+                        </p>
                     </div>
                     <a href="{{ route('public.directory') }}" class="group inline-flex items-center gap-2 rounded-control font-semibold text-brand underline-offset-4 hover:underline focus-visible:underline max-lg:hidden">
                         Lihat semua kelompok
@@ -243,8 +248,51 @@
                         </div>
                     </div>
 
-                    {{-- < 1024px: [foto kecil] [nama, deskripsi, jumlah] [panah]; tablet dua kolom. Desktop: [angka] [teks] [panah]. --}}
-                    <ul class="border-b border-line md:grid md:grid-cols-2 md:gap-x-8 lg:col-span-7 lg:block" x-reveal.stagger="fade-up">
+                    {{-- < 1024px: ubin foto (seluruh ubin satu tautan). --}}
+                    @php
+                        $typeCount = $types->count();
+                    @endphp
+                    <ul class="grid grid-cols-2 gap-3 md:grid-cols-3 lg:hidden" x-reveal.stagger="fade-up" data-reveal-delay="100">
+                        @foreach ($types as $type)
+                            @php
+                                $wideOnPhone = $loop->last && $typeCount % 2 === 1;
+                                $tabletSpan = $loop->last ? $typeCount % 3 : 0; // sisa 1 → 3 kolom, sisa 2 → 2 kolom
+                            @endphp
+                            <li @class([
+                                'min-w-0',
+                                'max-md:col-span-2' => $wideOnPhone,
+                                'md:col-span-3' => $tabletSpan === 1,
+                                'md:col-span-2' => $tabletSpan === 2,
+                            ])>
+                                <a
+                                    href="{{ route('public.directory', ['jenis' => $type->id]) }}"
+                                    @class([
+                                        'group relative isolate block overflow-hidden rounded-tile bg-forest focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand',
+                                        'max-md:aspect-[2/1]' => $wideOnPhone,
+                                        'max-md:aspect-square' => ! $wideOnPhone,
+                                        'md:aspect-[3/1]' => $tabletSpan === 1,
+                                        'md:aspect-[8/5]' => $tabletSpan === 2,
+                                        'md:aspect-[4/5]' => $tabletSpan === 0,
+                                    ])
+                                >
+                                    <x-public.picture :image="$type->photo" alt="" :sizes="$wideOnPhone || $tabletSpan ? '(min-width: 48rem) 66vw, 100vw' : '(min-width: 48rem) 33vw, 50vw'" width="640" height="640" frame="absolute inset-0 -z-20 block size-full" class="size-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.03] motion-reduce:transition-none motion-reduce:group-hover:scale-100" />
+                                    <span class="overlay-tile absolute inset-0 -z-10" aria-hidden="true"></span>
+                                    <span class="flex h-full items-end justify-between gap-2 p-3">
+                                        <span class="min-w-0">
+                                            <span class="line-clamp-2 font-serif text-[17px] leading-[1.2] font-semibold text-paper">{{ $type->name }}</span>
+                                            <span class="mt-1 block text-caption text-paper/85"><span class="tabular-nums">{{ Format::number($type->organizations_count) }}</span> kelompok</span>
+                                        </span>
+                                        <span class="flex size-7 shrink-0 items-center justify-center rounded-full bg-paper/15 text-paper" aria-hidden="true">
+                                            <x-heroicon-o-arrow-right class="size-4 transition-transform duration-150 group-hover:translate-x-0.5 motion-reduce:transition-none" />
+                                        </span>
+                                    </span>
+                                </a>
+                            </li>
+                        @endforeach
+                    </ul>
+
+                    {{-- Desktop: [angka] [teks] [panah]. --}}
+                    <ul class="border-b border-line max-lg:hidden lg:col-span-7" x-reveal.stagger="fade-up">
                         @foreach ($types as $type)
                             <li class="border-t border-line">
                                 <a
@@ -258,13 +306,12 @@
                                     x-bind:class="{ 'lg:bg-cream/60': active === {{ $loop->index }} }"
                                 >
                                     <span class="font-serif text-numeral font-semibold text-brand tabular-nums max-lg:hidden" aria-hidden="true">{{ Format::number($type->organizations_count) }}</span>
-                                    <x-public.picture :image="$type->photo" alt="" sizes="72px" width="72" height="72" frame="block size-18 overflow-hidden rounded-photo bg-subtle lg:hidden" class="size-full object-cover" />
                                     <span class="min-w-0">
                                         <span class="block font-serif text-title-sm font-semibold text-ink lg:text-page-title">{{ $type->name }}</span>
                                         @if ($type->description ?? null)
                                             <span class="mt-1 block text-ui text-ink-soft">{{ $type->description }}</span>
                                         @endif
-                                        <span class="mt-1 block text-caption text-brand lg:sr-only"><span class="font-semibold tabular-nums">{{ Format::number($type->organizations_count) }}</span> kelompok</span>
+                                        <span class="sr-only"><span class="font-semibold tabular-nums">{{ Format::number($type->organizations_count) }}</span> kelompok</span>
                                     </span>
                                     <span
                                         @class([

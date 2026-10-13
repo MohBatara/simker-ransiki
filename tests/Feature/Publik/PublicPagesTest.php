@@ -10,6 +10,7 @@ use App\Models\User;
 use App\Models\Village;
 use App\Support\Format;
 use App\Support\PublicDirectory;
+use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
 
@@ -427,7 +428,9 @@ test('jenis kelembagaan: daftar urut terbanyak, hanya jenis publik, tiap baris m
         ->toContain('x-data="{ active: 0 }"')->toContain('lg:sticky')
         // Pergantian foto hanya di desktop: di HP foto pertama tidak pernah disembunyikan setelah baris disentuh.
         ->toContain("x-bind:class=\"{ 'lg:opacity-0': active !== 0 }\"")->not->toContain("'opacity-0': active")
-        ->not->toContain('Jenis Tersembunyi')->not->toContain('line-clamp')->not->toContain('...');
+        ->not->toContain('Jenis Tersembunyi')->not->toContain('...');
+    // Daftar desktop: deskripsi tidak dipotong (ubin HP/tablet memang tanpa deskripsi).
+    expect(Str::after($section[0], 'border-b border-line max-lg:hidden'))->not->toContain('line-clamp');
 });
 
 test('jenis kelembagaan: tanpa kartu warna, avatar, ikon tekstur; tidak ada konten yang disembunyikan server', function () {
@@ -462,22 +465,31 @@ test('foto jenis: foto jenis, lalu foto bidang dominan, lalu foto bawaan; foto p
         ->and($images[0][1])->toContain("/foto-bidang/{$fish->id}")->toContain('loading="lazy"')
         ->and($images[0][2])->toContain('/foto-hero/bawaan')->toContain('loading="lazy"')
         ->and($section[0])->not->toContain("/foto-bidang/{$trade->id}")->not->toContain('/foto-produk/');
-    // Foto kecil HP/tablet: urutan prioritas sama, lazy, sizes 72px (browser memilih varian terkecil: 640, foto bidang 480).
+    // Ubin HP/tablet: urutan prioritas sama, lazy, varian kecil (640; foto bidang 480) tersedia di srcset.
     expect($thumbs[0])->toHaveCount(3)
-        ->and($thumbs[0][0])->toContain("/foto-jenis/{$withPhoto->id}?ukuran=640")->toContain('sizes="72px"')->toContain('loading="lazy"')->toContain('lg:hidden')
+        ->and($thumbs[0][0])->toContain("/foto-jenis/{$withPhoto->id}?ukuran=640")->toContain('sizes="(min-width: 48rem) 33vw, 50vw"')->toContain('loading="lazy"')
         ->and($thumbs[0][1])->toContain("/foto-bidang/{$fish->id}?ukuran=480")
         ->and($thumbs[0][2])->toContain('/foto-hero/bawaan?ukuran=640');
 });
 
-test('jenis kelembagaan di HP/tablet: panel foto disembunyikan, baris berisi jumlah kelompok, tombol di bawah daftar', function () {
-    Organization::factory()->public()->count(7)->create(['institution_type_id' => InstitutionType::factory()->create(['name' => 'UMKM'])->id]);
+test('jenis kelembagaan di HP/tablet: grid ubin foto tanpa deskripsi, ubin ganjil terakhir melebar, tombol di bawah grid', function () {
+    Organization::factory()->public()->count(7)->create(['institution_type_id' => InstitutionType::factory()->create(['name' => 'UMKM', 'description' => 'Deskripsi khusus desktop.'])->id]);
+    Organization::factory()->public()->count(2)->create(['institution_type_id' => InstitutionType::factory()->create(['name' => 'KUB'])->id]);
+    Organization::factory()->public()->create(['institution_type_id' => InstitutionType::factory()->create(['name' => 'BUMDes'])->id]);
 
     preg_match('#aria-labelledby="jenis-kelembagaan".*?</section>#s', $this->get('/')->getContent(), $section);
+    preg_match('#<ul class="grid grid-cols-2 gap-3 md:grid-cols-3 lg:hidden" x-reveal\.stagger="fade-up" data-reveal-delay="100">.*?</ul>#s', $section[0], $tiles);
+    preg_match_all('#<li class="([^"]*)">\s*<a\s+href="([^"]+)"#', $tiles[0], $items);
 
     expect($section[0])->toContain('max-lg:hidden lg:sticky')
-        ->toContain('<span class="font-semibold tabular-nums">7</span> kelompok')
-        ->toContain('md:grid md:grid-cols-2')
-        ->toMatch('#</ul>\s*</div>\s*<a href="'.preg_quote(route('public.directory'), '#').'"[^>]*lg:hidden[^>]*>\s*Lihat semua kelompok#');
+        ->toContain('Pilih jenis kelembagaan untuk melihat daftar kelompoknya.')
+        ->and($items[2])->toHaveCount(3)->and($items[2][0])->toContain('jenis=')
+        // Urut terbanyak; jumlah ganjil: ubin terakhir 2 kolom di HP (2:1), mengisi baris di tablet (sisa 3 → tidak melebar).
+        ->and($tiles[0])->toContain('<span class="tabular-nums">7</span> kelompok')->toContain('overlay-tile')->toContain('rounded-tile')
+        ->not->toContain('Deskripsi khusus desktop.')
+        ->and($items[1][2])->toContain('max-md:col-span-2')->not->toContain('md:col-span-3')
+        ->and($items[1][0])->not->toContain('col-span')
+        ->and($section[0])->toMatch('#</ul>\s*</div>\s*<a href="'.preg_quote(route('public.directory'), '#').'"[^>]*lg:hidden[^>]*>\s*Lihat semua kelompok#');
 });
 
 test('kartu produk: label bidang, judul 2 baris, kelompok dan kampung satu baris, kapasitas di dasar, tanpa lencana ikon', function () {

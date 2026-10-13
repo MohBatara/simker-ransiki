@@ -49,7 +49,6 @@
 </head>
 <body class="flex min-h-dvh flex-col bg-canvas font-sans text-ui text-ink antialiased">
     @include('partials.skip-link')
-    @include('partials.test-mode', ['top' => true])
 
     {{--
         Tinggi <header> tetap (64/72px) agar isi halaman tidak bergeser; setelah digulir > 24px bilahnya menyusut 12px,
@@ -69,7 +68,13 @@
                     <x-logo />
                     <span>
                         <span class="block font-serif text-card-title font-semibold text-ink">SIM-KER</span>
-                        <span class="block text-caption text-ink-soft">Distrik Ransiki</span>
+                        <span class="flex items-center gap-1.5 text-caption text-ink-soft">
+                            Distrik Ransiki
+                            {{-- Penanda lingkungan non-produksi (latar wait-bg = emas 20% di atas putih). --}}
+                            @unless (app()->isProduction())
+                                <span class="rounded-full bg-wait-bg px-1.5 text-micro leading-4 font-semibold text-ink" aria-hidden="true">Mode uji</span>
+                            @endunless
+                        </span>
                     </span>
                 </a>
 

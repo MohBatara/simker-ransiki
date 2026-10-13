@@ -254,6 +254,12 @@
         mask-image: radial-gradient(circle at calc(100% - 26px) calc(100% - 26px), transparent 37px, #000 37.5px);
     }
 
+    /* Ubin Jenis kelembagaan (< 1024px): area teks (maks sekitar 80px dari bawah) tetap forest ≥ 75%, lalu memudar,
+       sehingga di ubin tablet yang tinggi bagian atas foto bersih mulai sekitar setengah tinggi. */
+    .overlay-tile {
+        background-image: linear-gradient(to top, rgb(15 46 34 / 0.85) 0, rgb(15 46 34 / 0.75) 5.5rem, rgb(15 46 34 / 0) 9rem);
+    }
+
     .overlay-photo-fade {
         background-image: linear-gradient(to top, rgb(15 46 34 / 0.85) 0%, rgb(15 46 34 / 0.7) calc(100% - 5rem), rgb(15 46 34 / 0) 100%);
     }
