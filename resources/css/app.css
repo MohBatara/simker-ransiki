@@ -322,44 +322,65 @@
 }
 
 /*
- * Efek scroll website publik (resources/js/motion.js). Hanya transform dan opacity, 600ms, sekali per elemen.
- * Kelas penyembunyi dipasang JS; tanpa JS atau dengan gerak dikurangi, semua langsung tampil.
+ * Efek scroll website publik (resources/js/motion.js), berulang: muncul saat masuk dari bawah, kembali tersembunyi saat
+ * keluar lewat bawah, tetap tampil saat keluar lewat atas. SATU tempat untuk menyetel jarak, skala, durasi, easing, jeda.
+ * Hanya transform dan opacity; will-change hanya selama animasi. Tanpa JS atau dengan gerak dikurangi: langsung tampil.
  */
+@layer base {
+    :root {
+        --reveal-distance: 48px; /* desktop; HP 60% (lihat --reveal-shift) */
+        --reveal-shift: calc(var(--reveal-distance) * 0.6);
+        --reveal-scale: 0.92;
+        --reveal-duration: 900ms;
+        --reveal-ease: cubic-bezier(0.16, 1, 0.3, 1);
+        --reveal-stagger: 120ms; /* dibaca motion.js; maks 6 item dijeda */
+    }
+    @media (width >= 48rem) {
+        :root {
+            --reveal-shift: var(--reveal-distance);
+        }
+    }
+}
+
 @layer components {
     @media (prefers-reduced-motion: no-preference) {
         [data-reveal] {
             transition:
-                opacity 600ms cubic-bezier(0.22, 1, 0.36, 1),
-                transform 600ms cubic-bezier(0.22, 1, 0.36, 1);
+                opacity var(--reveal-duration) var(--reveal-ease),
+                transform var(--reveal-duration) var(--reveal-ease);
+        }
+        /* Jeda hanya saat muncul; reset (di bawah layar) tanpa jeda. */
+        [data-reveal][data-reveal-state='shown'] {
             transition-delay: var(--reveal-delay, 0ms);
+        }
+        [data-reveal-animating] {
+            will-change: transform, opacity;
         }
         [data-reveal-state='hidden'] {
             opacity: 0;
         }
         [data-reveal='fade-up'][data-reveal-state='hidden'] {
-            transform: translateY(10px);
+            transform: translate3d(0, var(--reveal-shift), 0);
         }
-        [data-reveal='scale-in'][data-reveal-state='hidden'] {
-            transform: scale(1.06);
+        [data-reveal='fade-left'][data-reveal-state='hidden'] {
+            transform: translate3d(var(--reveal-shift), 0, 0);
         }
-        [data-reveal='slide-left'][data-reveal-state='hidden'] {
-            transform: translateX(12px);
+        [data-reveal='fade-right'][data-reveal-state='hidden'] {
+            transform: translate3d(calc(var(--reveal-shift) * -1), 0, 0);
         }
-        @media (width >= 48rem) {
-            [data-reveal='fade-up'][data-reveal-state='hidden'] {
-                transform: translateY(16px);
-            }
+        [data-reveal='zoom-in'][data-reveal-state='hidden'] {
+            transform: scale(var(--reveal-scale));
         }
 
         /* Intro hero: hanya bila <html class="motion"> (skrip kecil di head); tanpa JS tidak ada animasi. */
         @keyframes intro-up {
             from {
                 opacity: 0;
-                transform: translateY(16px);
+                transform: translate3d(0, var(--reveal-shift), 0);
             }
         }
         .motion [data-intro] > * {
-            animation: intro-up 600ms cubic-bezier(0.22, 1, 0.36, 1) both;
+            animation: intro-up var(--reveal-duration) var(--reveal-ease) both;
         }
         .motion [data-intro] > :nth-child(2) {
             animation-delay: 120ms;
@@ -368,7 +389,7 @@
             animation-delay: 240ms;
         }
         .motion [data-intro-late] {
-            animation: intro-up 600ms cubic-bezier(0.22, 1, 0.36, 1) 360ms both;
+            animation: intro-up var(--reveal-duration) var(--reveal-ease) 360ms both;
         }
     }
 }

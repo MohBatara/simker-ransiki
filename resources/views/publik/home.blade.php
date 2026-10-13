@@ -9,7 +9,7 @@
 
 <x-layouts.public :description="$settings['home_intro'] ?? 'Direktori kelompok dan kelembagaan ekonomi Distrik Ransiki: profil kelompok, produk, dan kontak.'">
     {{-- Jarak vertikal: py-section / mt-section-head (app.css). Hero + strip + Tentang berbagi --strip-h (.home-top). --}}
-    <div class="home-page">
+    <div class="home-page overflow-x-clip">
     <div class="home-top" @if ($topSectors->isNotEmpty()) data-strip @endif>
     <div class="relative">
     {{-- Hero: slide dari Admin (maks 3) + overlay; tanpa slide aktif, satu foto bawaan. --}}
@@ -103,7 +103,7 @@
         <div class="absolute inset-x-0 bottom-0 z-10 translate-y-1/2">
             <div class="mx-auto max-w-public px-4 md:px-6">
             <nav aria-label="Bidang usaha" x-data data-intro-late class="h-(--strip-h) overflow-hidden rounded-public border border-line bg-paper shadow-strip">
-                <ul class="flex h-full snap-x divide-x divide-line overflow-x-auto lg:overflow-visible">
+                <ul x-reveal.stagger="fade-up" class="flex h-full snap-x divide-x divide-line overflow-x-auto lg:overflow-visible">
                     @foreach ($topSectors as $sector)
                         <li class="w-44 shrink-0 snap-start lg:w-auto lg:min-w-0 lg:flex-1">
                             <a href="{{ route('public.directory', ['bidang' => $sector->id]) }}" class="group flex h-full items-center gap-3 px-4 transition-colors hover:bg-subtle md:px-5">
@@ -135,15 +135,15 @@
     @endphp
     {{-- Pengecualian skala: jarak atas = setengah strip + 56px; bawah = pb-section. --}}
     <section class="mx-auto max-w-public px-4 pt-[calc(var(--strip-h)/2+3.5rem)] pb-section md:px-6" aria-labelledby="tentang">
-        <div class="grid gap-3 md:grid-cols-12 md:items-start md:gap-x-6" x-data x-reveal:stagger.fade-up.70>
-            <h2 id="tentang" class="font-serif text-display-sm font-semibold text-balance text-ink md:col-span-5 md:text-display lg:text-hero-sm">
+        <div class="grid gap-3 md:grid-cols-12 md:items-start md:gap-x-6" x-data>
+            <h2 id="tentang" x-reveal="fade-right" class="font-serif text-display-sm font-semibold text-balance text-ink md:col-span-5 md:text-display lg:text-hero-sm">
                 @if (str_contains($aboutTitle, ' '))
                     {{ Str::before($aboutTitle, ' ') }}<br class="hidden lg:block"> {{ Str::after($aboutTitle, ' ') }}
                 @else
                     {{ $aboutTitle }}
                 @endif
             </h2>
-            <div class="md:col-span-6 md:col-start-7">
+            <div class="md:col-span-6 md:col-start-7" x-reveal="fade-left">
                 <p class="max-w-[26rem] text-body leading-[1.6] text-ink-soft">{{ Format::excerpt($settings['profile_body']) ?? 'Profil distrik sedang disiapkan.' }}</p>
                 <x-public.pill-link :href="route('public.profile')" class="mt-6">Baca profil lengkap</x-public.pill-link>
             </div>
@@ -151,7 +151,7 @@
 
         <div x-data="scrollDots" class="mt-section-head">
             {{-- < 1024px: deretan geser selebar layar (−mx-4), kartu 85vw (HP) atau setengah (tablet); desktop 3 kolom. --}}
-            <ul x-ref="track" x-on:scroll.passive="update()" x-reveal:stagger.fade-up.70 class="scrollbar-none relative -mx-4 flex snap-x snap-mandatory scroll-px-4 gap-4 overflow-x-auto px-4 pb-1 md:-mx-6 md:scroll-px-6 md:px-6 lg:mx-0 lg:grid lg:grid-cols-3 lg:gap-6 lg:overflow-visible lg:px-0 lg:pb-0">
+            <ul x-ref="track" x-on:scroll.passive="update()" x-reveal.stagger="fade-up" class="scrollbar-none relative -mx-4 flex snap-x snap-mandatory scroll-px-4 gap-4 overflow-x-auto px-4 pb-1 md:-mx-6 md:scroll-px-6 md:px-6 lg:mx-0 lg:grid lg:grid-cols-3 lg:gap-6 lg:overflow-visible lg:px-0 lg:pb-0">
                 @foreach ($aboutCards as $card)
                     <li class="relative w-[85vw] shrink-0 snap-start md:w-[calc(50%-0.5rem)] lg:w-auto">
                         <a href="{{ $card['url'] }}" class="group relative block rounded-[20px]">
@@ -223,7 +223,7 @@
                 <div class="mt-section-head grid gap-8 lg:grid-cols-12 lg:items-start lg:gap-12">
                     {{-- Panel foto (desktop saja): dekoratif (nama dan jumlah ada di daftar), jadi alt kosong dan aria-hidden. --}}
                     <div class="relative overflow-hidden rounded-tile bg-subtle max-lg:hidden lg:sticky lg:top-24 lg:col-span-5 lg:aspect-[4/5]" aria-hidden="true">
-                        <div class="absolute inset-0" x-reveal:scale-in>
+                        <div class="absolute inset-0" x-reveal="zoom-in">
                         @foreach ($types as $type)
                             <div
                                 @class([
@@ -244,7 +244,7 @@
                     </div>
 
                     {{-- < 1024px: [foto kecil] [nama, deskripsi, jumlah] [panah]; tablet dua kolom. Desktop: [angka] [teks] [panah]. --}}
-                    <ul class="border-b border-line md:grid md:grid-cols-2 md:gap-x-8 lg:col-span-7 lg:block" x-reveal:stagger.fade-up.70>
+                    <ul class="border-b border-line md:grid md:grid-cols-2 md:gap-x-8 lg:col-span-7 lg:block" x-reveal.stagger="fade-up">
                         @foreach ($types as $type)
                             <li class="border-t border-line">
                                 <a
@@ -298,7 +298,7 @@
                 <x-public.pill-link :href="route('public.products')" class="max-md:hidden">Lihat semua produk</x-public.pill-link>
             </div>
             <div x-data="scrollDots" class="mt-section-head">
-                <ul x-ref="track" x-on:scroll.passive="update()" x-reveal:stagger.fade-up.70 class="scrollbar-none relative -mx-4 flex snap-x snap-mandatory scroll-px-4 gap-4 overflow-x-auto px-4 pb-1 md:mx-0 md:grid md:grid-cols-2 md:gap-5 md:overflow-visible md:px-0 md:pb-0 lg:grid-cols-4">
+                <ul x-ref="track" x-on:scroll.passive="update()" x-reveal.stagger="fade-up" class="scrollbar-none relative -mx-4 flex snap-x snap-mandatory scroll-px-4 gap-4 overflow-x-auto px-4 pb-1 md:mx-0 md:grid md:grid-cols-2 md:gap-5 md:overflow-visible md:px-0 md:pb-0 lg:grid-cols-4">
                     @foreach ($featured as $product)
                         <li class="w-[80vw] shrink-0 snap-start md:w-auto">
                             @include('publik._product-card')
@@ -337,7 +337,7 @@
                         $lead = $newsLead;
                         $leadCover = $lead->coverSources();
                     @endphp
-                    <article x-reveal:fade-up @class(['group relative min-w-0 has-[a:focus-visible]:outline-2 has-[a:focus-visible]:outline-offset-4 has-[a:focus-visible]:outline-brand', 'lg:col-span-7' => $newsList->isNotEmpty(), 'lg:col-span-12' => $newsList->isEmpty()])>
+                    <article x-reveal="fade-up" @class(['group relative min-w-0 has-[a:focus-visible]:outline-2 has-[a:focus-visible]:outline-offset-4 has-[a:focus-visible]:outline-brand', 'lg:col-span-7' => $newsList->isNotEmpty(), 'lg:col-span-12' => $newsList->isEmpty()])>
                         <div class="aspect-[16/9] overflow-hidden rounded-tile bg-cream lg:aspect-[16/10]">
                             @if ($leadCover)
                                 <x-public.picture :image="$leadCover" alt="" sizes="(min-width: 64rem) 37rem, 100vw" width="960" height="600" frame="block size-full" class="size-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.03] motion-reduce:transition-none motion-reduce:group-hover:scale-100" />
@@ -365,7 +365,7 @@
                     </article>
 
                     @if ($newsList->isNotEmpty())
-                        <ul class="min-w-0 divide-y divide-line lg:col-span-5" x-reveal:stagger.slide-left.70.200>
+                        <ul class="min-w-0 divide-y divide-line lg:col-span-5" x-reveal.stagger="fade-left">
                             @foreach ($newsList as $post)
                                 @php $cover = $post->coverSources(); @endphp
                                 {{-- < 1024px hanya 3 item. --}}
@@ -405,14 +405,14 @@
     --}}
     {{-- Section kanvas + panel cream; panel memakai padding section yang sama agar tingginya konsisten. --}}
     <section class="mx-auto max-w-public px-4 py-section md:px-6" aria-labelledby="ajakan">
-        <div class="grid gap-8 rounded-panel bg-cream px-6 py-section md:px-10 lg:grid-cols-12 lg:gap-16 lg:px-14">
-            <div class="lg:col-span-5">
+        <div class="grid gap-8 rounded-panel bg-cream px-6 py-section md:px-10 lg:grid-cols-12 lg:gap-16 lg:px-14" x-data>
+            <div class="lg:col-span-5" x-reveal="fade-right">
                 <h2 id="ajakan" class="font-serif text-display-sm font-semibold text-ink md:text-display">Kelompok Anda belum terdaftar?</h2>
                 <p class="mt-3 max-w-[28rem] text-body leading-7 text-ink-soft">Pendaftaran dilakukan melalui Kantor Distrik Ransiki. Begini alurnya.</p>
                 <x-public.pill-link :href="route('public.contact')" class="mt-8 max-lg:hidden">Hubungi Kantor Distrik</x-public.pill-link>
             </div>
 
-            <ol class="lg:col-span-7" x-data x-reveal:stagger.fade-up.100>
+            <ol class="lg:col-span-7" x-reveal.stagger="fade-up">
                 @foreach (range(1, 4) as $n)
                     <li class="grid grid-cols-[3.5rem_minmax(0,1fr)] gap-4 border-t border-line py-5 first:border-t-0 first:pt-0 last:pb-0">
                         <span class="font-serif text-display-sm font-semibold text-clay tabular-nums" aria-hidden="true">{{ sprintf('%02d', $n) }}</span>

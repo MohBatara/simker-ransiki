@@ -22,8 +22,10 @@ test('efek scroll: progressive enhancement, angka akhir dirender server, tiap ba
         ->toContain('data-intro>')->toContain('x-parallax="40"')->toContain('data-intro-late')
         ->toMatch('#<span x-count\.600>1</span> kelompok#')
         // Bagian lain.
-        ->toContain('x-reveal:stagger.fade-up.70')->toContain('x-reveal:scale-in')
-        ->toContain('x-reveal:fade-up')->toContain('x-reveal:stagger.slide-left.70.200')->toContain('x-reveal:stagger.fade-up.100')
+        ->toContain('x-reveal.stagger="fade-up"')->toContain('x-reveal="zoom-in"')->toContain('x-reveal="fade-up"')
+        ->toContain('x-reveal.stagger="fade-left"')->toContain('x-reveal="fade-right"')->toContain('x-reveal="fade-left"')
+        // Efek geser tidak menimbulkan geser horizontal halaman.
+        ->toContain('home-page overflow-x-clip')
         // Angka statistik: nilai akhir sudah ada di HTML (SEO, tanpa JS tetap benar).
         ->toMatch('#<span x-count>1</span>#')
         // Header ringkas setelah digulir dan tombol kembali ke atas.
