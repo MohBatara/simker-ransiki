@@ -361,16 +361,29 @@ test('halaman publik tanpa tanda pisah dan tanpa hiasan garis emas; emas hanya u
     expect(SiteSetting::DEFAULTS)->each(fn ($value) => $value->not->toMatch('/[\x{2013}\x{2014}]|\b(\w+)-\1\b/u'));
 });
 
-test('panel Cara kerja SIM-KER memakai teks bawaan dan bisa diubah Admin', function () {
-    $this->get('/')->assertSeeInOrder(['Mengenal Distrik Ransiki', 'Cara kerja SIM-KER', 'Didaftarkan distrik', 'Melengkapi profil', 'Melapor tiap bulan', 'Diverifikasi OPD'])
-        ->assertSee('Dinas terkait memeriksa laporan sebelum menjadi data resmi.');
+test('bagian ajakan memuat empat langkah (teks Konten Website) di latar terang, tanpa panel Cara kerja terpisah', function () {
+    Organization::factory()->public()->create()->sectors()->attach(BusinessSector::factory()->create());
+
+    $html = $this->get('/')->assertOk()->getContent();
+    preg_match('#aria-labelledby="ajakan".*?</section>#s', $html, $cta);
+
+    // Alur beranda: Mengenal, Jenis kelembagaan, Produk/Berita (bila ada), ajakan, footer.
+    expect(strpos($html, 'id="tentang"'))->toBeLessThan(strpos($html, 'id="jenis-kelembagaan"'))
+        ->and(strpos($html, 'id="jenis-kelembagaan"'))->toBeLessThan(strpos($html, 'id="ajakan"'))
+        ->and(strpos($html, 'id="ajakan"'))->toBeLessThan(strpos($html, '<footer'))
+        ->and($html)->not->toContain('id="cara-kerja"')->not->toContain('Cara kerja SIM-KER')
+        ->and($cta[0])->toContain('bg-cream')->not->toContain('bg-forest px')
+        ->toContain('Pendaftaran dilakukan melalui Kantor Distrik Ransiki. Begini alurnya.')
+        ->toContain('Hubungi Kantor Distrik')->toContain('href="'.route('public.contact').'"')
+        ->and(strip_tags($cta[0]))->toMatch('/01\s+Langkah 1: Didaftarkan distrik\s+Kantor distrik mendata kelompok dan membuatkan akun\./')
+        ->toContain('04')->toContain('Diverifikasi OPD');
 
     $this->actingAs(User::factory()->admin()->create())
-        ->put('/admin/konten', ['how_title' => 'Alur data', 'how_2_title' => 'Isi profil', 'how_2_text' => 'Kalimat contoh langkah dua.'])
+        ->put('/admin/konten', ['how_2_title' => 'Isi profil', 'how_2_text' => 'Kalimat contoh langkah dua.'])
         ->assertSessionHasNoErrors();
-    $this->get('/admin/konten')->assertSee('Cara kerja SIM-KER')->assertSee('value="Isi profil"', false);
+    $this->get('/admin/konten')->assertSee('Alur pendaftaran')->assertSee('value="Isi profil"', false)->assertDontSee('Judul panel');
 
-    $this->get('/')->assertSee('Alur data')->assertSee('Isi profil')->assertSee('Kalimat contoh langkah dua.')->assertSee('Melapor tiap bulan');
+    $this->get('/')->assertSee('Isi profil')->assertSee('Kalimat contoh langkah dua.')->assertSee('Melapor tiap bulan');
 });
 
 

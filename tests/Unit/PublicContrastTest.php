@@ -121,3 +121,11 @@ test('kartu Mengenal Distrik Ransiki dan tombolnya memenuhi 4,5:1', function (ar
     'angka brand di canvas' => [hexRgb('#1F5A47'), hexRgb('#F6F6F3')],
 ]);
 
+test('bagian ajakan (latar cream): pasangan teks memenuhi 4,5:1', function (string $text) {
+    expect(contrast(hexRgb($text), hexRgb('#F3EBDD')))->toBeGreaterThanOrEqual(4.5);
+})->with([
+    'nomor langkah clay' => ['#6B4430'],
+    'judul ink' => ['#1C1F1E'],
+    'kalimat ink-soft' => ['#4A504D'],
+]);
+

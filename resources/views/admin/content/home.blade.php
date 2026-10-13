@@ -97,11 +97,8 @@
         <form method="POST" action="{{ route('admin.content.update') }}">
             @csrf
             @method('PUT')
-            <x-card title="Cara kerja SIM-KER" description="Panel empat langkah di bawah bagian Tentang. Kosongkan untuk memakai teks bawaan.">
+            <x-card title="Alur pendaftaran" description="Empat langkah di bagian ajakan Kelompok Anda belum terdaftar? di bawah Beranda. Kosongkan untuk memakai teks bawaan.">
                 <div class="space-y-5">
-                    <x-field label="Judul panel" for="how_title" hint="Bawaan: {{ SiteSetting::DEFAULTS['how_title'] }}" optional>
-                        <x-input name="how_title" :value="$settings['how_title']" :placeholder="SiteSetting::DEFAULTS['how_title']" maxlength="80" />
-                    </x-field>
                     <div class="grid gap-5 md:grid-cols-2">
                         @foreach (range(1, 4) as $i)
                             <fieldset class="space-y-3 rounded-card border border-line p-4">
@@ -115,7 +112,7 @@
                             </fieldset>
                         @endforeach
                     </div>
-                    <x-button type="submit" processing="Menyimpan…">Simpan cara kerja</x-button>
+                    <x-button type="submit" processing="Menyimpan…">Simpan alur</x-button>
                 </div>
             </x-card>
         </form>

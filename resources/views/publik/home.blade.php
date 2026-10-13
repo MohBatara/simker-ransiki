@@ -192,36 +192,6 @@
     </section>
     </div>
 
-    {{-- Cara kerja SIM-KER: panel forest (teks dari Konten Website, bawaan SiteSetting::DEFAULTS). --}}
-    @php
-        $steps = [
-            [1, 'user-plus', ''],
-            [2, 'pencil-square', 'border-t md:border-t-0 md:border-l'],
-            [3, 'calendar-days', 'border-t md:pl-0 lg:border-t-0 lg:border-l lg:pl-6'],
-            [4, 'check-badge', 'border-t md:border-l lg:border-t-0'],
-        ];
-    @endphp
-    <section class="mx-auto max-w-public px-4 pb-(--section-y) md:px-6" aria-labelledby="cara-kerja">
-        <div class="on-dark relative isolate overflow-hidden rounded-panel bg-forest px-6 py-10 text-paper md:px-10 md:py-14 lg:px-14">
-            {{-- Motif daun sederhana, 6%, hanya hiasan. --}}
-            <svg viewBox="0 0 24 24" fill="currentColor" class="pointer-events-none absolute -top-16 -right-16 -z-10 size-80 rotate-12 text-paper opacity-[0.06]" aria-hidden="true">
-                <path d="M21 3C11 3 4 8 4 16c0 1.6.4 3.1 1 4.4C6.5 13 11 8.5 17 6.5 12 9.5 8.3 13.6 6.6 20.9 7.9 21.6 9.4 22 11 22c7 0 10-7 10-19Z" />
-            </svg>
-            <h2 id="cara-kerja" class="font-serif text-display-sm font-semibold md:text-display">{{ $text('how_title') }}</h2>
-            <ol class="mt-10 grid md:grid-cols-2 lg:grid-cols-4">
-                @foreach ($steps as [$n, $icon, $cell])
-                    <li @class(['border-paper/15 py-6 first:pt-0 last:pb-0 md:px-6 md:first:pl-0 md:[&:nth-child(-n+2)]:pt-0 md:[&:nth-child(n+3)]:pb-0 lg:py-0 lg:last:pr-0', $cell])>
-                        <span class="flex size-12 items-center justify-center rounded-full border border-paper/40" aria-hidden="true">
-                            <x-dynamic-component :component="'heroicon-o-'.$icon" class="size-6 text-paper" />
-                        </span>
-                        <h3 class="mt-5 font-serif text-card-title font-semibold"><span class="sr-only">Langkah {{ $n }}: </span>{{ $text("how_{$n}_title") }}</h3>
-                        <p class="mt-2 text-ui text-paper/80">{{ $text("how_{$n}_text") }}</p>
-                    </li>
-                @endforeach
-            </ol>
-        </div>
-    </section>
-
     {{--
         Jenis kelembagaan: satu foto besar + daftar. Desktop: foto 5 kolom (sticky) berganti mengikuti baris aktif
         (hover/fokus, crossfade 300ms), daftar 7 kolom. < 1024px: foto 16:9 jenis terbanyak di atas, lalu daftar.
@@ -342,11 +312,44 @@
         </section>
     @endif
 
+    {{--
+        Ajakan + alur pendaftaran (teks langkah: Konten Website, kunci how_*). Bagian terang agar tidak ada dua blok
+        gelap berturut-turut sebelum footer. Kontras di cream: clay 7,1, ink 14,0, ink-soft 7,0.
+    --}}
+    @php
+        $contactButton = 'group inline-flex min-h-11 items-center gap-3 rounded-full bg-forest py-1.5 pr-1.5 pl-5 font-semibold text-paper transition-colors hover:bg-brand-hover';
+    @endphp
     <section class="mx-auto max-w-public px-4 py-(--section-y) md:px-6" aria-labelledby="ajakan">
-        <div class="on-dark flex flex-col gap-6 rounded-public bg-forest px-5 py-8 text-paper md:flex-row md:items-center md:px-10">
-            <h2 id="ajakan" class="font-serif text-display-sm font-semibold md:max-w-xs">Kelompok Anda belum terdaftar?</h2>
-            <p class="flex-1 text-body text-forest-soft md:border-l md:border-forest-line md:pl-8">Hubungi Kantor Distrik Ransiki agar kelompok usaha Anda didata dan profilnya tampil di direktori.</p>
-            <x-public.button :href="route('public.contact')" arrow class="self-start md:self-center">Hubungi kami</x-public.button>
+        <div class="grid gap-8 rounded-panel bg-cream px-6 py-10 md:px-10 lg:grid-cols-12 lg:gap-16 lg:px-14 lg:py-14">
+            <div class="lg:col-span-5">
+                <h2 id="ajakan" class="font-serif text-display-sm font-semibold text-ink md:text-display">Kelompok Anda belum terdaftar?</h2>
+                <p class="mt-4 max-w-[28rem] text-body leading-7 text-ink-soft">Pendaftaran dilakukan melalui Kantor Distrik Ransiki. Begini alurnya.</p>
+                <a href="{{ route('public.contact') }}" class="{{ $contactButton }} mt-8 max-lg:hidden">
+                    Hubungi Kantor Distrik
+                    <span class="flex size-9 items-center justify-center rounded-full bg-paper text-forest" aria-hidden="true">
+                        <x-heroicon-o-arrow-right class="size-4 transition-transform group-hover:translate-x-0.5 motion-reduce:transition-none" />
+                    </span>
+                </a>
+            </div>
+
+            <ol class="lg:col-span-7">
+                @foreach (range(1, 4) as $n)
+                    <li class="grid grid-cols-[3.5rem_minmax(0,1fr)] gap-4 border-t border-line py-5 first:border-t-0 first:pt-0 last:pb-0">
+                        <span class="font-serif text-display-sm font-semibold text-clay tabular-nums" aria-hidden="true">{{ sprintf('%02d', $n) }}</span>
+                        <div>
+                            <h3 class="text-card-title font-semibold text-ink"><span class="sr-only">Langkah {{ $n }}: </span>{{ $text("how_{$n}_title") }}</h3>
+                            <p class="mt-1 text-ui text-ink-soft">{{ $text("how_{$n}_text") }}</p>
+                        </div>
+                    </li>
+                @endforeach
+            </ol>
+
+            <a href="{{ route('public.contact') }}" class="{{ $contactButton }} w-full justify-between lg:hidden">
+                Hubungi Kantor Distrik
+                <span class="flex size-9 items-center justify-center rounded-full bg-paper text-forest" aria-hidden="true">
+                    <x-heroicon-o-arrow-right class="size-4" />
+                </span>
+            </a>
         </div>
     </section>
     </div>
