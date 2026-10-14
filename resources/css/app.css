@@ -260,6 +260,18 @@
         background-image: linear-gradient(to top, rgb(15 46 34 / 0.85) 0, rgb(15 46 34 / 0.75) 5.5rem, rgb(15 46 34 / 0) 9rem);
     }
 
+    /* Banner Profil Ransiki: teks di bagian bawah. HP padat 75%; mulai 768px forest dari bawah 90% → 75% (60%, batas
+       atas area teks) → 25%. Teks putih di atas foto putih ≥ 6:1 di seluruh area teks. */
+    .overlay-band-bottom {
+        background-color: rgb(15 46 34 / 0.75);
+    }
+    @media (width >= 48rem) {
+        .overlay-band-bottom {
+            background-color: transparent;
+            background-image: linear-gradient(to top, rgb(15 46 34 / 0.9) 0%, rgb(15 46 34 / 0.75) 60%, rgb(15 46 34 / 0.25) 100%);
+        }
+    }
+
     .overlay-photo-fade {
         background-image: linear-gradient(to top, rgb(15 46 34 / 0.85) 0%, rgb(15 46 34 / 0.7) calc(100% - 5rem), rgb(15 46 34 / 0) 100%);
     }

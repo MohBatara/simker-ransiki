@@ -56,6 +56,12 @@ class PublicImages
         return self::wide(fn (array $query) => route('public.about-card-photo', ['n' => $n, ...$query]), $path, ImageVariants::HERO);
     }
 
+    /** Foto blok "Potensi ekonomi" ke-$n (Profil Ransiki). */
+    public static function potential(int $n, string $path): array
+    {
+        return self::wide(fn (array $query) => route('public.potential-photo', ['n' => $n, ...$query]), $path);
+    }
+
     /** Foto bawaan di resources/aset, selama Admin belum mengaktifkan slide. */
     public static function heroDefault(): array
     {

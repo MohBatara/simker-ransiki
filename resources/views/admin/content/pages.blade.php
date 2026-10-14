@@ -3,7 +3,7 @@
         @include('admin.content._tabs', ['active' => 'halaman'])
 
         @foreach ([
-            'sampul' => ['Foto sampul', 'Opsional. Latar pita Profil Ransiki, halaman masuk, dan banner dasbor. Foto hero beranda diatur di tab Beranda. Gunakan foto lanskap asli Ransiki, bukan infografis atau gambar berisi teks.'],
+            'sampul' => ['Foto sampul', 'Opsional. Latar halaman masuk dan banner dasbor, juga banner Profil Ransiki selama foto banner di tab Profil Ransiki kosong. Foto hero beranda diatur di tab Beranda. Gunakan foto lanskap asli Ransiki, bukan infografis atau gambar berisi teks.'],
         ] as $slot => [$title, $description])
             @php $path = $settings[App\Models\SiteSetting::PHOTO_SLOTS[$slot]]; @endphp
             <x-card :title="$title" :description="$description">
@@ -65,21 +65,7 @@
                 </div>
             </x-card>
 
-            <x-card title="Profil Ransiki" description="Bisa memakai format sederhana: ## Judul, - daftar, **tebal**, [teks](tautan). Pisahkan paragraf dengan satu baris kosong.">
-                <div class="space-y-5">
-                    <x-field label="Profil distrik" for="profile_body" optional>
-                        <x-textarea name="profile_body" rows="12" :value="$settings['profile_body']" />
-                    </x-field>
-                    <x-field label="Potensi ekonomi" for="economic_potential" optional>
-                        <x-textarea name="economic_potential" rows="8" :value="$settings['economic_potential']" />
-                    </x-field>
-                </div>
-                <p class="mt-4 text-caption">
-                    <x-link :href="route('public.profile')" target="_blank" rel="noopener" class="font-normal">Lihat halaman Profil Ransiki</x-link>
-                </p>
-            </x-card>
-
-            <x-card title="Kontak kantor distrik" description="Tampil di halaman Kontak dan di bagian bawah semua halaman publik.">
+            <x-card title="Kontak kantor distrik" description="Tampil di halaman Kontak, bagian Kantor distrik di Profil Ransiki, dan bagian bawah semua halaman publik.">
                 <div class="grid gap-5 md:grid-cols-2">
                     <x-field label="Alamat" for="office_address" class="md:col-span-2" optional>
                         <x-textarea name="office_address" rows="2" :value="$settings['office_address']" />

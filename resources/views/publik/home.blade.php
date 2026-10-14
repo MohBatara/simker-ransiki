@@ -142,7 +142,7 @@
                 @endif
             </h2>
             <div class="md:col-span-6 md:col-start-7" x-reveal="fade-left">
-                <p class="max-w-[26rem] text-body leading-[1.6] text-ink-soft">{{ Format::excerpt($settings['profile_body']) ?? 'Profil distrik sedang disiapkan.' }}</p>
+                <p class="max-w-[26rem] text-body leading-[1.6] text-ink-soft">{{ $settings['profile_intro'] ?? Format::excerpt($settings['profile_body']) ?? 'Profil distrik sedang disiapkan.' }}</p>
                 <x-public.pill-link :href="route('public.profile')" class="mt-6">Baca profil lengkap</x-public.pill-link>
             </div>
         </div>

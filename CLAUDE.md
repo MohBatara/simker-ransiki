@@ -398,9 +398,16 @@ Jangan mengarang kepanjangan akronim resmi (KDMP, KNMP, dsb.). Simpan apa adanya
   foto produk kelompok.
 - `site_settings`: key, value. Kunci di `SiteSetting::KEYS`: hero_title, hero_title_accent, home_intro, about_title (bawaan di
   `SiteSetting::DEFAULTS` bila kosong), profile_body,
-  economic_potential (Markdown terbatas, dirender `Format::markdown` tanpa HTML mentah), office_address,
+  office_address,
   office_phone, office_whatsapp, office_email, office_hours, cover_photo_path, cover_caption,
   cover_credit. Di-cache sampai disimpan ulang.
+- Profil Ransiki (`/profil`, Konten Website > tab "Profil Ransiki" `/admin/konten/profil`): banner foto (`profile_photo_path`
+  → foto sampul → foto bawaan; juga og:image), navigasi dalam halaman yang menempel (`sectionNav`, `resources/js/section-nav.js`),
+  Sekilas (`profile_intro` serif + `profile_body` Markdown, kartu cream "Data singkat" dari `SiteSetting::PROFILE_FACT_KEYS` +
+  jumlah kampung Data Master; kosong = baris tidak tampil, tanpa nilai bawaan), angka ringkas (`publik._stats`), Potensi
+  ekonomi (`App\Support\PotentialBlocks`, kunci `potential_{1..3}_*`, foto `/foto-potensi/{n}`), Kampung
+  (`PublicDirectory::villages()`, hanya kelompok publik), Kantor distrik (`office_*` + `office_photo_path`). Jangan mengisi
+  luas wilayah/penduduk dengan angka karangan.
 - `notifications`: tabel bawaan Laravel (database notifications)
 - (diupayakan) `posts` untuk Berita & Kegiatan
 

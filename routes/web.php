@@ -11,6 +11,7 @@ use App\Http\Controllers\Publik;
 use App\Http\Controllers\Shared;
 use App\Models\HeroSlide;
 use App\Models\Organization;
+use App\Models\SiteSetting;
 use App\Models\User;
 use Illuminate\Support\Facades\Route;
 
@@ -23,10 +24,11 @@ Route::get('/produk', Publik\ProductController::class)->name('public.products');
 Route::get('/berita', [Publik\PostController::class, 'index'])->name('public.posts');
 Route::get('/berita/{slug}', [Publik\PostController::class, 'show'])->name('public.post');
 Route::get('/foto-berita/{post}', [Publik\PostController::class, 'photo'])->name('public.post-photo')->whereNumber('post');
-Route::get('/foto-{slot}', [Publik\SiteImageController::class, 'slot'])->name('public.site-photo')->whereIn('slot', ['sampul', 'tentang']);
+Route::get('/foto-{slot}', [Publik\SiteImageController::class, 'slot'])->name('public.site-photo')->whereIn('slot', array_keys(SiteSetting::PHOTO_SLOTS));
 Route::get('/foto-bidang/{sector}', [Publik\SiteImageController::class, 'sector'])->name('public.sector-photo')->whereNumber('sector');
 Route::get('/foto-jenis/{institutionType}', [Publik\SiteImageController::class, 'institutionType'])->name('public.type-photo')->whereNumber('institutionType');
 Route::get('/foto-kartu/{n}', [Publik\SiteImageController::class, 'aboutCard'])->name('public.about-card-photo')->whereIn('n', ['1', '2', '3']);
+Route::get('/foto-potensi/{n}', [Publik\SiteImageController::class, 'potential'])->name('public.potential-photo')->whereIn('n', ['1', '2', '3']);
 Route::get('/foto-hero/bawaan', [Publik\SiteImageController::class, 'heroDefault'])->name('public.hero-default');
 Route::get('/foto-hero/{slide}', [Publik\SiteImageController::class, 'hero'])->name('public.hero-photo')->whereNumber('slide');
 Route::get('/sitemap.xml', [Publik\SitemapController::class, 'sitemap'])->name('sitemap');
@@ -217,11 +219,17 @@ Route::middleware('auth')->group(function () use ($organizationRoutes, $reportRo
                 Route::controller(Admin\SiteContentController::class)->prefix('konten')->name('content.')->group(function () {
                     Route::get('/', 'edit')->name('edit');
                     Route::get('/halaman', 'editPages')->name('pages');
+                    Route::get('/profil', 'editProfile')->name('profile');
                     Route::put('/', 'update')->name('update');
-                    Route::post('/foto-{slot}', 'storePhoto')->name('photo.store')->whereIn('slot', ['sampul', 'tentang'])->middleware('throttle:uploads');
-                    Route::delete('/foto-{slot}', 'destroyPhoto')->name('photo.destroy')->whereIn('slot', ['sampul', 'tentang']);
+                    Route::post('/foto-{slot}', 'storePhoto')->name('photo.store')->whereIn('slot', array_keys(SiteSetting::PHOTO_SLOTS))->middleware('throttle:uploads');
+                    Route::delete('/foto-{slot}', 'destroyPhoto')->name('photo.destroy')->whereIn('slot', array_keys(SiteSetting::PHOTO_SLOTS));
                     Route::post('/foto-bidang/{sector}', 'storeSectorPhoto')->name('sector-photo.store')->whereNumber('sector')->middleware('throttle:uploads');
                     Route::delete('/foto-bidang/{sector}', 'destroySectorPhoto')->name('sector-photo.destroy')->whereNumber('sector');
+                });
+
+                Route::controller(Admin\PotentialBlockController::class)->prefix('konten/potensi/{n}')->name('potential-blocks.')->whereIn('n', ['1', '2', '3'])->group(function () {
+                    Route::post('/', 'update')->name('update')->middleware('throttle:uploads');
+                    Route::delete('/foto', 'destroyPhoto')->name('photo.destroy');
                 });
 
                 Route::controller(Admin\AboutCardController::class)->prefix('konten/kartu/{n}')->name('about-cards.')->whereIn('n', ['1', '2', '3'])->group(function () {

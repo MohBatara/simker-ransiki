@@ -1,6 +1,6 @@
-{{-- Tab Konten Website. Variabel: $active ('beranda' | 'halaman'). --}}
+{{-- Tab Konten Website. Variabel: $active ('beranda' | 'profil' | 'halaman'). --}}
 <x-tabs
-    :tabs="['beranda' => 'Beranda', 'halaman' => 'Halaman & kontak']"
-    :links="['beranda' => route('admin.content.edit'), 'halaman' => route('admin.content.pages')]"
+    :tabs="['beranda' => 'Beranda', 'profil' => 'Profil Ransiki', 'halaman' => 'Halaman & kontak']"
+    :links="['beranda' => route('admin.content.edit'), 'profil' => route('admin.content.profile'), 'halaman' => route('admin.content.pages')]"
     :active="$active"
 />

@@ -1,22 +1,19 @@
 {{--
     Baris angka ringkas (Profil Ransiki). Variabel: $stats (PublicDirectory::stats(), hanya data publik).
-    HP grid 2×2; mulai 768px satu baris dipisah titik tengah, "Data per" di kanan.
+    Angka serif brand yang menghitung naik (x-count). HP grid 2×2; mulai 768px satu baris 4 kolom bergaris pemisah.
 --}}
 @use('App\Support\Format')
 
-<div class="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-3 border-y border-line py-5 {{ $class ?? '' }}">
-    <dl class="grid w-full grid-cols-2 gap-x-6 gap-y-3 md:flex md:w-auto md:flex-wrap md:items-baseline md:gap-x-4">
+<div class="border-t border-line pt-6 md:pt-8 {{ $class ?? '' }}" x-reveal="fade-up">
+    <dl class="grid grid-cols-2 gap-x-6 gap-y-6 md:grid-cols-4 md:gap-0 md:divide-x md:divide-line">
         @foreach ([['organizations', 'Kelompok'], ['villages', 'Kampung'], ['featured', 'Produk unggulan'], ['sectors', 'Bidang usaha']] as [$key, $label])
-            @unless ($loop->first)
-                <span class="text-ink-muted max-md:hidden" aria-hidden="true">·</span>
-            @endunless
-            <div class="flex items-baseline gap-2">
-                <dd class="order-first font-serif text-page-title font-semibold text-brand tabular-nums">{{ Format::number($stats[$key]) }}</dd>
+            <div class="flex flex-col gap-1 md:px-6 md:first:pl-0">
                 <dt class="text-ui text-ink-soft">{{ $label }}</dt>
+                <dd class="order-first font-serif text-display font-semibold text-brand tabular-nums md:text-title-lg" x-count>{{ Format::number($stats[$key]) }}</dd>
             </div>
         @endforeach
     </dl>
     @if ($stats['updated_at'])
-        <p class="text-caption text-ink-muted">Data per {{ Format::date($stats['updated_at']) }}</p>
+        <p class="mt-5 text-caption text-ink-muted">Data per {{ Format::date($stats['updated_at']) }}</p>
     @endif
 </div>

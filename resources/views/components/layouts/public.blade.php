@@ -52,12 +52,13 @@
 
     {{--
         Tinggi <header> tetap (64/72px) agar isi halaman tidak bergeser; setelah digulir > 24px bilahnya menyusut 12px,
-        dengan garis bawah dan bayangan halus (transisi 200ms). Panel cari/menu tampil di bawah bilah.
+        dengan garis bawah dan bayangan halus (transisi 200ms). Panel cari/menu tampil di bawah bilah. Ruang kosong di
+        bawah bilah yang menyusut tidak menangkap klik (bar navigasi dalam halaman Profil Ransiki menempel di sana).
     --}}
     <header
         x-data="{ open: false, search: false }"
         x-on:keydown.escape="search = false; open = false"
-        class="sticky top-0 z-40 h-16 md:h-18 print:hidden"
+        class="pointer-events-none sticky top-0 z-40 h-16 *:pointer-events-auto md:h-18 print:hidden"
     >
         <div
             class="h-16 border-b border-transparent bg-paper transition-[height,box-shadow,border-color] duration-200 md:h-18"

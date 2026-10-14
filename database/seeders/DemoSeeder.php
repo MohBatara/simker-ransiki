@@ -135,7 +135,11 @@ class DemoSeeder extends Seeder
         SiteSetting::put([
             'home_intro' => 'Direktori kelompok usaha, koperasi, dan BUMDes di Distrik Ransiki beserta produk dan perkembangannya setiap bulan.',
             'profile_body' => "Distrik Ransiki berada di Kabupaten Manokwari Selatan, Papua Barat. Sebagian besar warga hidup dari kebun, laut, dan usaha olahan rumahan.\n\nHalaman ini memuat gambaran umum wilayah dan kegiatan ekonomi masyarakat. Teks resmi akan diisi kantor distrik.",
-            'economic_potential' => "- Perkebunan kakao, kopi, pinang, dan kelapa\n- Perikanan tangkap, kepiting bakau, dan ikan asap\n- Pengolahan sagu, pisang, dan hasil kebun lain\n- Kerajinan noken dan anyaman",
+            // Profil Ransiki: teks contoh. Luas wilayah, jumlah penduduk, dan ibu kota distrik sengaja kosong sampai ada data resmi.
+            'profile_intro' => 'Ransiki adalah distrik pesisir tempat kebun kakao, laut, dan usaha olahan rumahan menjadi sumber penghidupan utama warganya.',
+            'profile_regency' => 'Manokwari Selatan',
+            'profile_province' => 'Papua Barat',
+            'profile_data_source' => 'Data contoh untuk uji tampilan, belum data resmi',
             'office_address' => 'Kantor Distrik Ransiki, Kabupaten Manokwari Selatan',
             'office_phone' => '0812-0000-0002',
             'office_whatsapp' => '0812-0000-0003',
