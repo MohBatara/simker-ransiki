@@ -378,6 +378,7 @@
         --swap-stagger: 40ms; /* hasil baru muncul bergiliran */
         --chip-duration: 150ms; /* pil filter aktif masuk/keluar (scale 0,9 ↔ 1) */
         --sheet-duration: 250ms; /* bottom sheet filter meluncur dari bawah */
+        --bar-grow-duration: 900ms; /* batang jumlah kelompok di daftar Kampung (Profil Ransiki) tumbuh dari kiri */
     }
     @media (width >= 48rem) {
         :root {
@@ -449,6 +450,20 @@
         }
         .motion [data-intro] > :nth-child(3) {
             animation-delay: 240ms;
+        }
+        /* Batang daftar Kampung (Profil Ransiki): tumbuh dari kiri (scaleX 0 → 1) bersama munculnya barisnya, berulang
+           seperti reveal; jeda stagger hanya saat muncul. Gerak dikurangi: batang langsung selebar akhirnya. */
+        .village-bar {
+            transform-origin: left;
+            transition:
+                transform var(--bar-grow-duration) var(--reveal-ease),
+                background-color 150ms ease-out;
+        }
+        [data-reveal-state='shown'] .village-bar {
+            transition-delay: var(--reveal-delay, 0ms), 0ms;
+        }
+        [data-reveal-state='hidden'] .village-bar {
+            transform: scaleX(0);
         }
         /* Foto banner Profil Ransiki: zoom pelan sekali saat halaman dibuka (1,06 → 1 selama 1,6 detik). */
         @keyframes banner-zoom {

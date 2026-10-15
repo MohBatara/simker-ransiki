@@ -61,27 +61,56 @@ test('paragraf pembuka dan isi profil tampil; kosong memakai pesan sedang disiap
         ->not->toContain('<script>')->not->toContain('sedang disiapkan');
 });
 
-test('kampung: semua kampung urut abjad, hitungan hanya kelompok publik, tautan ke direktori tersaring', function () {
+test('kampung: daftar indeks urut kelompok publik terbanyak (sama: abjad), tautan ke direktori tersaring, kosong di akhir', function () {
     $beta = Village::factory()->create(['name' => 'Kampung Contoh Beta']);
     $alfa = Village::factory()->create(['name' => 'Kampung Contoh Alfa']);
+    $delta = Village::factory()->create(['name' => 'Kampung Contoh Delta']);
     $kosong = Village::factory()->create(['name' => 'Kampung Contoh Gama']);
 
-    Organization::factory()->public()->count(2)->create(['village_id' => $alfa->id]);
-    Organization::factory()->public()->create(['village_id' => $alfa->id, 'status' => OrganizationStatus::Inactive]);
-    Organization::factory()->public()->create(['village_id' => $alfa->id, 'status' => OrganizationStatus::Closed]);
-    Organization::factory()->create(['village_id' => $alfa->id, 'is_public' => false]);
-    Organization::factory()->public()->create(['village_id' => $beta->id]);
+    Organization::factory()->public()->create(['village_id' => $alfa->id]);
+    Organization::factory()->public()->count(2)->create(['village_id' => $beta->id]);
+    Organization::factory()->public()->create(['village_id' => $beta->id, 'status' => OrganizationStatus::Inactive]);
+    Organization::factory()->public()->create(['village_id' => $beta->id, 'status' => OrganizationStatus::Closed]);
+    Organization::factory()->create(['village_id' => $beta->id, 'is_public' => false]);
+    Organization::factory()->public()->create(['village_id' => $delta->id]);
     Organization::factory()->create(['village_id' => $kosong->id, 'is_public' => false]);
 
     $section = profileSection($this->get('/profil')->getContent(), 'kampung');
+    preg_match('#<ol.*?</ol>#s', $section, $list);
 
-    expect(strip_tags($section))->toMatch('/Kampung Contoh Alfa\s+3 kelompok.*Kampung Contoh Beta\s+1 kelompok.*Kampung Contoh Gama\s+Belum ada kelompok terdaftar/s')
-        ->and($section)->toContain('href="'.route('public.directory', ['kampung' => $alfa->id]).'"')
-        ->toContain('href="'.route('public.directory', ['kampung' => $beta->id]).'"')
-        ->not->toContain('kampung='.$kosong->id);
+    // Nama tanpa awalan "Kampung"; Beta (3 publik) dulu, Alfa dan Delta (1) menurut abjad, Gama (0) di akhir.
+    expect(strip_tags($list[0]))->toMatch('/01\s+Contoh Beta\s+3 kelompok.*02\s+Contoh Alfa\s+1 kelompok.*03\s+Contoh Delta\s+1 kelompok.*04\s+Contoh Gama\s+Belum ada kelompok terdaftar/s')
+        ->and($list[0])->toContain('href="'.route('public.directory', ['kampung' => $beta->id]).'"')
+        ->toContain('href="'.route('public.directory', ['kampung' => $alfa->id]).'"')
+        ->not->toContain('kampung='.$kosong->id)
+        ->and(substr_count($list[0], 'class="village-bar'))->toBe(3)
+        // Batang sebanding kampung terbanyak dan disembunyikan dari pembaca layar.
+        ->and($list[0])->toContain('style="width: 100%"')->toContain('style="width: 33.3%"')
+        ->toMatch('#aria-hidden="true">\s*<span class="village-bar#')
+        ->toContain('x-reveal.stagger="fade-up"');
+
+    expect(strip_tags($section))->toContain('4 kampung')->toContain('5 kelompok terdaftar')->toContain('Paling aktif: Contoh Beta (3 kelompok)');
 
     // Tautan benar-benar menyaring direktori.
-    $this->get(route('public.directory', ['kampung' => $beta->id]))->assertSee(Organization::where('village_id', $beta->id)->value('name'));
+    $this->get(route('public.directory', ['kampung' => $beta->id]))->assertSee(Organization::where('village_id', $beta->id)->where('is_public', true)->value('name'));
+});
+
+test('kampung: maks 3 ikon bidang usaha (terbanyak dipakai) dari kelompok publik, berlabel nama bidang', function () {
+    $village = Village::factory()->create(['name' => 'Kampung Contoh Alfa']);
+    $sectors = collect(['Perkebunan', 'Perikanan', 'Pertanian', 'UMKM', 'Rahasia'])->mapWithKeys(fn ($name) => [$name => BusinessSector::factory()->create(['name' => $name])]);
+    $attach = fn (array $names, array $extra = []) => Organization::factory()->public()->create(['village_id' => $village->id, ...$extra])
+        ->sectors()->attach(collect($names)->map(fn ($name) => $sectors[$name]->id));
+
+    $attach(['Perkebunan', 'Perikanan']);
+    $attach(['Perkebunan', 'Pertanian']);
+    $attach(['UMKM']);
+    $attach(['Rahasia'], ['is_public' => false]);
+
+    preg_match('#<ol.*?</ol>#s', profileSection($this->get('/profil')->getContent(), 'kampung'), $list);
+    preg_match_all('#role="img" aria-label="([^"]+)"#', $list[0], $icons);
+
+    expect($icons[1])->toBe(['Perkebunan', 'Perikanan', 'Pertanian'])
+        ->and($list[0])->toContain('title="Perkebunan"')->not->toContain('Rahasia');
 });
 
 test('potensi ekonomi: bawaan tiga blok, hitungan hanya kelompok publik, tautan ke direktori per bidang', function () {

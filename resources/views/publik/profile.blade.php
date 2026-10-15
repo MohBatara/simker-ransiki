@@ -162,44 +162,81 @@
         </div>
     </section>
 
-    {{-- Kampung: semua kampung Data Master urut abjad; kartu menaut ke direktori tersaring bila ada kelompok publik. --}}
+    {{--
+        Kampung: daftar bergaya indeks, urut jumlah kelompok publik terbanyak (sama: abjad). Desktop grid 4 + 8: kiri judul +
+        ringkasan (menempel), kanan baris [nomor, nama tanpa awalan "Kampung", batang sebanding kampung terbanyak, jumlah,
+        maks 3 ikon bidang, panah]; seluruh baris menaut ke direktori tersaring. < 1024px: ringkasan sebaris di atas, batang
+        selebar baris di baris kedua. Batang tumbuh dari kiri saat baris muncul (.village-bar, app.css). Kampung tanpa
+        kelompok publik di akhir, tanpa batang dan tanpa tautan. Kontras: nomor ink-muted di latar hover cream/50 4,8:1.
+    --}}
+    @php
+        $villageName = fn (string $name) => preg_replace('/^kampung\s+/iu', '', $name);
+        $maxVillage = max(1, (int) $villages->max('organizations_count'));
+        $listedTotal = (int) $villages->sum('organizations_count');
+        $mostActive = $villages->first(fn ($village) => $village->organizations_count > 0);
+        $villageSummary = array_filter([
+            Format::number($villages->count()).' kampung',
+            Format::number($listedTotal).' kelompok terdaftar',
+            $mostActive ? 'Paling aktif: '.$villageName($mostActive->name).' ('.Format::number($mostActive->organizations_count).' kelompok)' : null,
+        ]);
+    @endphp
     <section id="kampung" tabindex="-1" class="{{ $sectionClass }} border-y border-line bg-paper" aria-labelledby="kampung-judul">
-        <div class="mx-auto max-w-public px-4 py-section md:px-6" x-data>
-            <div class="max-w-[42rem]">
-                <h2 id="kampung-judul" class="{{ $headingClass }}">Kampung di Ransiki</h2>
-                <p class="mt-4 text-body text-ink-soft">Pilih kampung untuk melihat kelompok yang terdaftar di sana.</p>
+        <div class="mx-auto max-w-public px-4 py-section md:px-6 lg:grid lg:grid-cols-12 lg:gap-12" x-data>
+            <div class="lg:col-span-4">
+                <div class="lg:sticky lg:top-36">
+                    <h2 id="kampung-judul" class="{{ $headingClass }}">Kampung di Ransiki</h2>
+                    <p class="mt-4 text-body text-ink-soft">Urut dari kampung dengan kelompok terdaftar terbanyak. Pilih kampung untuk melihat kelompoknya di direktori.</p>
+                    @if ($villages->isNotEmpty())
+                        {{-- Ringkasan: sebaris kecil di HP/tablet, daftar bergaris tipis mulai 1024px. --}}
+                        <p class="mt-4 text-ui text-ink-soft lg:hidden">{{ implode(' · ', $villageSummary) }}</p>
+                        <ul class="mt-6 hidden border-t border-line text-ui text-ink-soft lg:block">
+                            @foreach ($villageSummary as $item)
+                                <li class="border-b border-line py-3">{{ $item }}</li>
+                            @endforeach
+                        </ul>
+                    @endif
+                </div>
             </div>
 
-            @if ($villages->isEmpty())
-                <p class="mt-section-head text-body text-ink-soft">Daftar kampung sedang disiapkan.</p>
-            @else
-                <ul class="mt-section-head grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-4 lg:grid-cols-4" x-reveal.stagger="fade-up">
-                    @foreach ($villages as $village)
-                        <li class="min-w-0">
-                            @if ($village->organizations_count > 0)
-                                <a href="{{ route('public.directory', ['kampung' => $village->id]) }}" class="group flex h-full min-h-24 flex-col justify-between gap-3 rounded-public border border-line bg-canvas p-4 transition-colors hover:border-brand hover:bg-brand-tint focus-visible:border-brand focus-visible:bg-brand-tint md:p-5">
-                                    <span class="flex items-start gap-1.5 font-serif text-card-title font-semibold text-ink">
-                                        <x-heroicon-o-map-pin class="mt-1 size-4 shrink-0 text-brand" aria-hidden="true" />
-                                        {{ $village->name }}
-                                    </span>
-                                    <span class="flex items-center justify-between gap-2 text-ui text-ink-soft">
-                                        <span class="tabular-nums">{{ Format::number($village->organizations_count) }} kelompok</span>
-                                        <x-heroicon-o-arrow-right class="size-4 shrink-0 text-brand transition-transform group-hover:translate-x-1 group-focus-visible:translate-x-1 motion-reduce:transition-none" aria-hidden="true" />
-                                    </span>
-                                </a>
-                            @else
-                                <div class="flex h-full min-h-24 flex-col justify-between gap-3 rounded-public border border-dashed border-line-strong p-4 md:p-5">
-                                    <span class="flex items-start gap-1.5 font-serif text-card-title font-semibold text-ink">
-                                        <x-heroicon-o-map-pin class="mt-1 size-4 shrink-0 text-ink-muted" aria-hidden="true" />
-                                        {{ $village->name }}
-                                    </span>
-                                    <span class="text-ui text-ink-muted">Belum ada kelompok terdaftar</span>
-                                </div>
-                            @endif
-                        </li>
-                    @endforeach
-                </ul>
-            @endif
+            <div class="min-w-0 lg:col-span-8">
+                @if ($villages->isEmpty())
+                    <p class="mt-section-head text-body text-ink-soft lg:mt-0">Daftar kampung sedang disiapkan.</p>
+                @else
+                    <ol class="mt-section-head border-t border-line lg:mt-0" x-reveal.stagger="fade-up">
+                        @foreach ($villages as $village)
+                            @php
+                                $number = str_pad((string) $loop->iteration, 2, '0', STR_PAD_LEFT);
+                                $listed = $village->organizations_count > 0;
+                                $rowClass = 'grid grid-cols-[2rem_minmax(0,1fr)_auto_auto] items-center gap-x-3 gap-y-2 px-2 py-3 lg:grid-cols-[2.5rem_minmax(0,12rem)_minmax(0,1fr)_2.5rem_4.5rem_1.25rem] lg:gap-x-4 lg:px-3 lg:py-5';
+                            @endphp
+                            <li class="border-b border-line">
+                                @if ($listed)
+                                    <a href="{{ route('public.directory', ['kampung' => $village->id]) }}" class="group {{ $rowClass }} transition-colors hover:bg-cream/50 focus-visible:bg-cream/50">
+                                        <span class="col-start-1 row-start-1 font-serif text-ui text-ink-muted tabular-nums" aria-hidden="true">{{ $number }}</span>
+                                        <span class="col-start-2 row-start-1 truncate font-serif text-title-sm font-semibold text-ink" title="{{ $village->name }}">{{ $villageName($village->name) }}</span>
+                                        <span class="col-span-full row-start-2 h-1.5 overflow-hidden rounded-full bg-line lg:col-span-1 lg:col-start-3 lg:row-start-1" aria-hidden="true">
+                                            <span class="village-bar block h-full rounded-full bg-brand group-hover:bg-forest group-focus-visible:bg-forest" style="width: {{ round($village->organizations_count / $maxVillage * 100, 1) }}%"></span>
+                                        </span>
+                                        <span class="col-start-4 row-start-1 text-right text-body font-semibold text-ink tabular-nums lg:col-start-4">{{ Format::number($village->organizations_count) }}<span class="sr-only"> kelompok</span></span>
+                                        <span class="col-start-3 row-start-1 flex items-center justify-end gap-1.5 text-clay lg:col-start-5 lg:justify-start">
+                                            @foreach ($village->sectors as $sector)
+                                                <span title="{{ $sector }}" role="img" aria-label="{{ $sector }}"><x-public.icon :name="App\Support\PublicIcons::sector($sector)" class="size-[18px]" /></span>
+                                            @endforeach
+                                        </span>
+                                        <x-heroicon-o-arrow-right class="hidden size-5 text-brand transition-transform group-hover:translate-x-1 group-focus-visible:translate-x-1 motion-reduce:transition-none lg:col-start-6 lg:row-start-1 lg:block" aria-hidden="true" />
+                                    </a>
+                                @else
+                                    <div class="{{ $rowClass }}">
+                                        <span class="col-start-1 row-start-1 font-serif text-ui text-ink-muted tabular-nums" aria-hidden="true">{{ $number }}</span>
+                                        <span class="col-start-2 row-start-1 truncate font-serif text-title-sm font-semibold text-ink" title="{{ $village->name }}">{{ $villageName($village->name) }}</span>
+                                        <span class="col-span-full row-start-2 text-ui text-ink-muted lg:col-span-4 lg:col-start-3 lg:row-start-1">Belum ada kelompok terdaftar</span>
+                                    </div>
+                                @endif
+                            </li>
+                        @endforeach
+                    </ol>
+                @endif
+            </div>
         </div>
     </section>
 
