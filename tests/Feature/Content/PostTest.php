@@ -120,3 +120,20 @@ test('foto sampul diunggah Admin; foto berita draf tidak bisa dibuka tamu', func
     $post->update(['status' => 'published', 'published_at' => now()->subHour()]);
     $this->get(route('public.post-photo', $post))->assertOk()->assertHeader('X-Content-Type-Options', 'nosniff');
 });
+
+test('tanggal kegiatan: diisi Admin hanya untuk kategori Kegiatan, kategori lain dikosongkan; OPD tidak bisa', function () {
+    $payload = ['title' => 'Pelatihan contoh', 'body' => 'Isi.', 'status' => 'published'];
+
+    $this->actingAs($this->admin)->get('/admin/berita/tambah')->assertOk()->assertSee('Tanggal kegiatan')->assertSee('name="event_date"', false);
+
+    $this->post('/admin/berita', [...$payload, 'category' => 'kegiatan', 'event_date' => '2026-11-12'])->assertSessionHasNoErrors();
+    $post = Post::where('title', 'Pelatihan contoh')->first();
+    expect($post->event_date->toDateString())->toBe('2026-11-12');
+
+    $this->put("/admin/berita/{$post->id}", [...$payload, 'category' => 'kegiatan', 'event_date' => 'bukan-tanggal'])->assertSessionHasErrors('event_date');
+    // Pindah ke kategori Berita: tanggal kegiatan diabaikan dan dikosongkan.
+    $this->put("/admin/berita/{$post->id}", [...$payload, 'category' => 'berita', 'event_date' => '2026-12-01'])->assertSessionHasNoErrors();
+    expect($post->fresh()->event_date)->toBeNull();
+
+    $this->actingAs(User::factory()->opd()->create())->put("/admin/berita/{$post->id}", [...$payload, 'category' => 'kegiatan', 'event_date' => '2026-11-12'])->assertForbidden();
+});

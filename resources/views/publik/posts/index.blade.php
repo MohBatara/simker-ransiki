@@ -128,12 +128,16 @@
     @endif
 
     @if ($agenda->isNotEmpty())
-        {{-- Agenda kegiatan: deretan geser (scroll-snap), panah mulai 1024px; HP kartu masuk dari kanan (data-reveal-row). --}}
+        {{--
+            Agenda kegiatan (ada kegiatan setelah hari ini: yang akan datang dulu) atau Kegiatan terbaru: deretan geser
+            (scroll-snap), panah mulai 1024px; HP kartu masuk dari kanan (data-reveal-row). Blok tanggal = tanggal kegiatan,
+            tanpa itu tanggal terbit.
+        --}}
         <section class="mx-auto mt-section max-w-public px-4 md:px-6" aria-labelledby="agenda" x-data="scrollRow">
             <div class="flex items-end justify-between gap-4">
                 <div>
-                    <h2 id="agenda" class="font-serif text-display-sm font-semibold tracking-[-0.01em] text-ink">Agenda kegiatan</h2>
-                    <p class="mt-1 text-ui text-ink-soft">Kegiatan kelompok dan pemerintah distrik, terbaru lebih dulu.</p>
+                    <h2 id="agenda" class="font-serif text-display-sm font-semibold tracking-[-0.01em] text-ink">{{ $agendaUpcoming ? 'Agenda kegiatan' : 'Kegiatan terbaru' }}</h2>
+                    <p class="mt-1 text-ui text-ink-soft">{{ $agendaUpcoming ? 'Kegiatan kelompok dan pemerintah distrik, yang akan datang lebih dulu.' : 'Kegiatan kelompok dan pemerintah distrik, terbaru lebih dulu.' }}</p>
                 </div>
                 <div class="flex items-center gap-2">
                     <a href="{{ route('public.posts', ['kategori' => PostCategory::Activity->value]) }}" class="inline-flex min-h-11 items-center gap-1.5 rounded-control text-ui font-semibold text-brand underline-offset-4 hover:underline max-sm:hidden">Semua kegiatan<x-heroicon-o-arrow-right class="size-4" aria-hidden="true" /></a>
@@ -151,6 +155,7 @@
                     @php
                         $cover = $post->coverSources();
                         $place = $post->organizations->first();
+                        $day = $post->eventDay();
                     @endphp
                     <li class="w-[72vw] max-w-72 shrink-0 snap-start md:w-[calc((100%-2.5rem)/2.6)] md:max-w-none lg:w-[calc((100%-3.75rem)/4)]">
                         <article class="group relative flex h-full flex-col has-[a:focus-visible]:outline-2 has-[a:focus-visible]:outline-offset-4 has-[a:focus-visible]:outline-brand">
@@ -160,20 +165,21 @@
                                 @else
                                     <span class="flex size-full items-center justify-center text-clay" aria-hidden="true"><x-heroicon-o-calendar-days class="size-12" /></span>
                                 @endif
-                                {{-- Blok tanggal bergaya kalender (tanggal terbit). --}}
-                                <time datetime="{{ $post->published_at->toDateString() }}" class="absolute top-3 left-3 flex w-14 flex-col items-center rounded-photo bg-paper py-1.5 shadow-soft">
-                                    <span class="font-serif text-page-title font-semibold text-ink tabular-nums">{{ $post->published_at->format('j') }}</span>
-                                    <span class="text-caption font-semibold tracking-wider text-clay uppercase">{{ $post->published_at->translatedFormat('M') }}</span>
+                                {{-- Blok tanggal kalender 52 × 56px (HP 46 × 50px), putih 95%, sudut 12px. --}}
+                                <time datetime="{{ $day->toDateString() }}" class="absolute top-3 left-3 flex h-[50px] w-[46px] flex-col items-center justify-center gap-1 rounded-photo bg-paper/95 shadow-soft md:h-14 md:w-13">
+                                    <span class="font-serif text-card-title leading-none font-semibold text-ink tabular-nums md:text-title-sm md:leading-none">{{ $day->format('j') }}</span>
+                                    <span class="text-[10px] leading-none font-semibold tracking-[0.06em] text-clay uppercase">{{ $day->translatedFormat('M') }}</span>
                                 </time>
                             </div>
-                            <h3 class="mt-3 line-clamp-3 font-serif text-card-title font-semibold">
+                            {{-- Judul 2 baris (tinggi tetap) agar baris lokasi sejajar antarkartu. --}}
+                            <h3 class="mt-3 line-clamp-2 min-h-[3.25rem] font-serif text-card-title font-semibold">
                                 <a href="{{ route('public.post', $post->slug) }}" class="text-ink after:absolute after:inset-0 focus-visible:outline-none group-hover:text-brand">{{ $post->title }}</a>
                             </h3>
                             @if ($place)
-                                <p class="mt-1.5 flex min-w-0 items-center gap-1.5 text-caption text-ink-soft">
-                                    <x-heroicon-o-map-pin class="size-4 shrink-0 text-brand" aria-hidden="true" />
-                                    <span class="truncate">{{ $place->village->name }} · {{ $place->name }}</span>
+                                <p class="mt-2 flex min-w-0 items-center gap-1.5 text-caption text-ink" title="{{ $place->village->name }}">
+                                    <x-heroicon-o-map-pin class="size-4 shrink-0 text-brand" aria-hidden="true" /><span class="truncate">{{ $place->village->name }}</span>
                                 </p>
+                                <p class="mt-0.5 truncate pl-5.5 text-caption text-ink-soft" title="{{ $place->name }}">{{ $place->name }}</p>
                             @endif
                         </article>
                     </li>

@@ -89,23 +89,30 @@ class PostListing
     }
 
     /**
-     * Agenda kegiatan (halaman 1 tanpa filter): post kategori Kegiatan terbaru, maks AGENDA_LIMIT, dengan kelompok
-     * terkait yang terdaftar publik (nama + kampung).
+     * Kegiatan (halaman 1 tanpa filter): post Kegiatan, maks AGENDA_LIMIT, dengan kelompok terkait yang terdaftar publik.
+     * Yang tanggal kegiatannya setelah hari ini (WIT) lebih dulu, paling dekat dulu; sisanya menurut tanggal kegiatan (atau
+     * tanggal terbit) terbaru. upcoming = ada kegiatan yang akan datang (judul "Agenda kegiatan", selain itu "Kegiatan terbaru").
      *
-     * @return Collection<int, Post>
+     * @return array{posts: Collection<int, Post>, upcoming: bool}
      */
-    public function agenda(int $page): Collection
+    public function agenda(int $page): array
     {
         if ($page > 1 || $this->isFiltered()) {
-            return collect();
+            return ['posts' => collect(), 'upcoming' => false];
         }
 
-        return Post::query()->publiclyListed()->where('posts.category', PostCategory::Activity)
+        $today = now()->toDateString();
+        $posts = Post::query()->publiclyListed()->where('posts.category', PostCategory::Activity)
             ->with(['organizations' => fn ($query) => $query->publiclyListed()->orderBy('name')
                 ->select(['organizations.id', 'organizations.name', 'organizations.village_id'])->with('village:id,name')])
+            ->orderByRaw('(posts.event_date > ?) desc', [$today])
+            ->orderByRaw('case when posts.event_date > ? then posts.event_date end asc', [$today])
+            ->orderByRaw('coalesce(posts.event_date, date(posts.published_at)) desc')
             ->latest('posts.published_at')->latest('posts.id')
             ->limit(self::AGENDA_LIMIT)
-            ->get(PostController::COLUMNS);
+            ->get([...PostController::COLUMNS, 'posts.event_date']);
+
+        return ['posts' => $posts, 'upcoming' => $posts->contains(fn (Post $post) => $post->event_date?->toDateString() > $today)];
     }
 
     /** @return array<string, int> jumlah per kategori ('' = semua), mengikuti cari dan bulan */

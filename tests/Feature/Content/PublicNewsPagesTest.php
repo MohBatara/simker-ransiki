@@ -105,6 +105,39 @@ test('agenda kegiatan: hanya post Kegiatan (maks 8) dengan blok tanggal dan kelo
     expect($this->get('/berita')->getContent())->not->toContain('aria-labelledby="agenda"');
 });
 
+test('judul Agenda kegiatan bila ada kegiatan setelah hari ini (paling dekat dulu), selain itu Kegiatan terbaru', function () {
+    $past = Post::factory()->create(['category' => 'kegiatan', 'title' => 'Kegiatan lalu', 'published_at' => now()->subDays(2)]);
+    $html = $this->get('/berita')->getContent();
+    preg_match('#aria-labelledby="agenda".*?</section>#s', $html, $agenda);
+    expect($agenda[0])->toContain('>Kegiatan terbaru</h2>')->toContain('Kegiatan kelompok dan pemerintah distrik, terbaru lebih dulu.');
+
+    // Hari ini (10 Oktober) bukan "akan datang"; 20 dan 12 Oktober akan datang, paling dekat dulu.
+    Post::factory()->create(['category' => 'kegiatan', 'title' => 'Kegiatan hari ini', 'event_date' => '2026-10-10', 'published_at' => now()->subDays(5)]);
+    Post::factory()->create(['category' => 'kegiatan', 'title' => 'Kegiatan jauh', 'event_date' => '2026-10-20', 'published_at' => now()->subDays(4)]);
+    Post::factory()->create(['category' => 'kegiatan', 'title' => 'Kegiatan dekat', 'event_date' => '2026-10-12', 'published_at' => now()->subDays(3)]);
+
+    $html = $this->get('/berita')->getContent();
+    preg_match('#aria-labelledby="agenda".*?</section>#s', $html, $agenda);
+    preg_match_all('#<h3[^>]*>\s*<a[^>]*>([^<]+)</a>#', $agenda[0], $titles);
+
+    expect($agenda[0])->toContain('>Agenda kegiatan</h2>')
+        ->and($titles[1])->toBe(['Kegiatan dekat', 'Kegiatan jauh', 'Kegiatan hari ini', 'Kegiatan lalu'])
+        // Blok tanggal = tanggal kegiatan (tanpa itu tanggal terbit).
+        ->and($agenda[0])->toContain('<time datetime="2026-10-12"')->toContain('<time datetime="2026-10-08"')
+        ->toMatch('#<time datetime="2026-10-12"[^>]*h-\[50px\] w-\[46px\][^>]*md:h-14 md:w-13">\s*<span[^>]*>12</span>\s*<span[^>]*>Okt</span>#');
+});
+
+test('kartu agenda: judul 2 baris bertinggi tetap, lokasi dua baris (kampung, lalu kelompok dengan title)', function () {
+    $village = App\Models\Village::factory()->create(['name' => 'Kampung Contoh Lokasi']);
+    $organization = App\Models\Organization::factory()->public()->create(['name' => 'Kelompok Contoh Dengan Nama Yang Cukup Panjang', 'village_id' => $village->id]);
+    Post::factory()->create(['category' => 'kegiatan'])->organizations()->attach($organization);
+
+    preg_match('#aria-labelledby="agenda".*?</section>#s', $this->get('/berita')->getContent(), $agenda);
+
+    expect($agenda[0])->toContain('line-clamp-2 min-h-[3.25rem]')
+        ->toMatch('#title="Kampung Contoh Lokasi">.*?<span class="truncate">Kampung Contoh Lokasi</span>\s*</p>\s*<p class="[^"]*truncate[^"]*text-ink-soft" title="Kelompok Contoh Dengan Nama Yang Cukup Panjang">#s');
+});
+
 test('cari judul (query string), tanpa sorotan; hasil kosong menampilkan pesan dan tombol Lihat semua berita', function () {
     Post::factory()->create(['title' => 'Panen raya kakao di kampung']);
     Post::factory()->create(['title' => 'Pelatihan pengemasan keripik']);

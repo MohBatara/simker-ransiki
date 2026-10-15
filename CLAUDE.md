@@ -184,7 +184,9 @@ dipakai bila berada di area perannya sendiri.
   baris tanggal hari ini; bar alat menempel (tab kategori berjumlah + cari). Sorotan (hanya tanpa filter): berita utama
   (terbaru berfoto, tanpa itu terbaru) dengan teks di atas foto (`.overlay-band-bottom`, putih 85% ≥ 5,3:1) + dua terbaru;
   dihitung di setiap halaman agar daftar terbaru tidak pernah mengulangnya, tampil di halaman 1. Agenda kegiatan (post
-  Kegiatan, maks 8, blok tanggal = tanggal terbit karena belum ada kolom tanggal acara). Arsip bulan + Kategori di panel
+  Kegiatan, maks 8; ada `event_date` setelah hari ini WIT → judul "Agenda kegiatan", yang akan datang dulu dari yang paling
+  dekat, selain itu "Kegiatan terbaru"; blok tanggal 52 × 56px (HP 46 × 50px) = `Post::eventDay()` (tanggal kegiatan, tanpa
+  itu tanggal terbit); judul 2 baris bertinggi tetap, lokasi 2 baris: kampung lalu kelompok). Arsip bulan + Kategori di panel
   kanan menempel (HP: pil geser). Detail: garis progres membaca 3px `sun` di bawah header (`readingProgress`, tanpa
   transisi; pengecualian `sun` atas permintaan), judul 44px (HP 30px), baris penerbit, foto 16:9 sudut 20px, drop cap
   (`.prose-article.drop-cap`), rel bagikan menempel mulai 1024px (HP: baris tombol), Sebelumnya/Berikutnya berthumbnail,
@@ -369,7 +371,8 @@ Jangan mengarang kepanjangan akronim resmi (KDMP, KNMP, dsb.). Simpan apa adanya
 - `posts`: id, title, slug (unik; kosong = dari judul), category (enum PostCategory: berita, kegiatan), summary
   (≤ 300, untuk kartu + meta description), body (Markdown), cover_photo_path (nullable; disk `local`, diproses seperti
   foto sampul: WebP 480/960/1600 + JPEG), status (enum PostStatus: draft "Draf", published "Terbit"), published_at
-  (terbit tanpa tanggal = sekarang; tanggal ke depan = terjadwal), created_by, updated_by, timestamps.
+  (terbit tanpa tanggal = sekarang; tanggal ke depan = terjadwal), event_date (date, nullable; "Tanggal kegiatan", hanya
+  kategori Kegiatan, kategori lain dikosongkan saat simpan), created_by, updated_by, timestamps.
 - `organization_post` (pivot): post_id, organization_id (kelompok terkait, opsional, banyak).
 - Admin: menu "Berita & Kegiatan" `/admin/berita` (filter kategori + status Draf/Terjadwal/Sudah tampil). Foto
   sampul diunggah (XHR) setelah berita disimpan pertama kali.

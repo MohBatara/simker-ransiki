@@ -27,12 +27,14 @@ class PostController extends Controller
     {
         $listing = PostListing::fromRequest($request);
         $posts = $listing->results();
+        $agenda = $listing->agenda($posts->currentPage());
 
         return view('publik.posts.index', [
             'listing' => $listing,
             'posts' => $posts,
             'highlights' => $posts->onFirstPage() ? $listing->highlights() : collect(),
-            'agenda' => $listing->agenda($posts->currentPage()),
+            'agenda' => $agenda['posts'],
+            'agendaUpcoming' => $agenda['upcoming'],
             'counts' => $listing->counts(),
             'archive' => $listing->archive(),
         ]);

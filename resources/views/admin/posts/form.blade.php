@@ -27,13 +27,20 @@
                     <x-field label="Judul" for="title">
                         <x-input name="title" :value="$post->title" maxlength="90" required />
                     </x-field>
-                    <div class="grid gap-5 md:grid-cols-2">
+                    @php $category = old('category', $post->category?->value ?? PostCategory::News->value); @endphp
+                    <div class="grid gap-5 md:grid-cols-2" x-data="{ category: @js($category) }" x-on:change="if ($event.target.name === 'category') category = $event.target.value">
                         <x-field label="Kategori" for="category">
-                            <x-select name="category" :options="PostCategory::options()" :selected="old('category', $post->category?->value ?? PostCategory::News->value)" required />
+                            <x-select name="category" :options="PostCategory::options()" :selected="$category" required />
                         </x-field>
                         <x-field label="Alamat halaman" for="slug" hint="Bagian akhir tautan, mis. panen-kakao-2026. Kosongkan agar dibuat dari judul." optional>
                             <x-input name="slug" :value="$post->slug" maxlength="200" autocapitalize="none" spellcheck="false" />
                         </x-field>
+                        {{-- Khusus Kegiatan: tanggal pelaksanaan untuk Agenda di halaman Berita (kategori lain dikosongkan saat simpan). --}}
+                        <div x-show="category === @js(PostCategory::Activity->value)" @if ($category !== PostCategory::Activity->value) style="display: none" @endif>
+                            <x-field label="Tanggal kegiatan" for="event_date" hint="Tanggal pelaksanaan. Kegiatan yang akan datang tampil lebih dulu di Agenda. Kosongkan untuk memakai tanggal terbit." optional>
+                                <x-input name="event_date" type="date" :value="old('event_date', $post->event_date?->format('Y-m-d'))" />
+                            </x-field>
+                        </div>
                     </div>
                     <x-field label="Ringkasan" for="summary" hint="Satu atau dua kalimat untuk daftar berita, paragraf pembuka, dan pratinjau tautan di WhatsApp. Maksimal 200 karakter." optional>
                         <x-textarea name="summary" :value="$post->summary" rows="2" maxlength="200" />

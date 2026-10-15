@@ -243,7 +243,10 @@ class DemoSeeder extends Seeder
         }
     }
 
-    /** Enam berita terbit (empat berfoto), satu draf, dan satu terjadwal (keduanya tidak tampil publik). */
+    /**
+     * Tujuh berita terbit (empat berfoto; satu kegiatan dengan tanggal kegiatan ke depan untuk Agenda), satu draf, dan satu
+     * terjadwal (keduanya tidak tampil publik). Elemen ke-9 opsional = tanggal kegiatan.
+     */
     private function seedPosts(User $admin, array $organizations): void
     {
         $posts = [
@@ -278,6 +281,12 @@ class DemoSeeder extends Seeder
                 "Bawa KTP ketua, data anggota, dan keterangan usaha. Pendampingan tidak dipungut biaya.\n\nKelompok yang sudah punya NIB dapat melanjutkan ke pengurusan PIRT atau sertifikat halal.",
             ],
             [
+                'Pelatihan pengasapan ikan untuk kelompok nelayan', 'kegiatan', '2026-10-05 09:00', 'published', [6, 33], null,
+                'Pelatihan pengasapan ikan yang lebih bersih untuk dua kelompok nelayan, terbuka bagi anggota yang mendaftar.',
+                "Pelatihan contoh ini membahas cara mengasap ikan dengan tungku tertutup agar asap tidak menempel berlebihan.\n\nPendaftaran lewat petugas OPD pembina paling lambat satu pekan sebelum pelatihan.",
+                '2026-11-12',
+            ],
+            [
                 'Rencana pelatihan pengolahan ikan asap', 'kegiatan', null, 'draft', [6, 33], null,
                 'Rencana pelatihan pengasapan ikan yang lebih bersih untuk kelompok nelayan.',
                 "Draf. Jadwal dan tempat menyusul.",
@@ -289,7 +298,8 @@ class DemoSeeder extends Seeder
             ],
         ];
 
-        foreach ($posts as [$title, $category, $publishedAt, $status, $related, $photo, $summary, $body]) {
+        foreach ($posts as $entry) {
+            [$title, $category, $publishedAt, $status, $related, $photo, $summary, $body] = $entry;
             $post = new Post([
                 'title' => $title,
                 'slug' => Post::uniqueSlug($title),
@@ -298,6 +308,7 @@ class DemoSeeder extends Seeder
                 'body' => $body,
                 'status' => $status,
                 'published_at' => $publishedAt ? Carbon::parse($publishedAt) : null,
+                'event_date' => $entry[8] ?? null,
             ]);
             $post->forceFill(['created_by' => $admin->id, 'updated_by' => $admin->id])->save();
             $post->organizations()->sync(collect($related)->map(fn (int $n) => $organizations[$n]['organization']->id)->all());
