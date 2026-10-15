@@ -14,7 +14,7 @@
         ['label' => 'Beranda', 'href' => route('home'), 'active' => request()->routeIs('home')],
         ['label' => 'Profil Ransiki', 'href' => route('public.profile'), 'active' => request()->routeIs('public.profile')],
         ['label' => 'Direktori', 'href' => route('public.directory'), 'active' => request()->routeIs('public.directory', 'public.organization')],
-        ['label' => 'Produk Unggulan', 'href' => route('public.products'), 'active' => request()->routeIs('public.products')],
+        ['label' => 'Produk Unggulan', 'href' => route('public.products'), 'active' => request()->routeIs('public.products', 'public.product')],
         ['label' => 'Berita', 'href' => route('public.posts'), 'active' => request()->routeIs('public.posts', 'public.post')],
         ['label' => 'Kontak', 'href' => route('public.contact'), 'active' => request()->routeIs('public.contact')],
     ];
@@ -229,12 +229,12 @@
             </div>
         </div>
     </footer>
-    {{-- Kembali ke atas: muncul setelah > 2 tinggi layar. --}}
+    {{-- Kembali ke atas: muncul setelah > 2 tinggi layar; naik di atas bar tombol menempel (detail produk, HP). --}}
     <button
         type="button"
         x-data
         x-on:click="window.scrollTo({ top: 0, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' })"
-        x-bind:class="$store.scroll.pastFold ? 'opacity-100 visible' : 'pointer-events-none invisible opacity-0'"
+        x-bind:class="[$store.scroll.pastFold ? 'opacity-100 visible' : 'pointer-events-none invisible opacity-0', $store.scroll.bar ? 'max-md:bottom-24' : '']"
         class="invisible fixed right-4 bottom-6 z-30 flex size-11 items-center justify-center rounded-full bg-forest text-paper opacity-0 shadow-float transition-[opacity,visibility] duration-200 hover:bg-brand-hover md:bottom-14 md:right-3 print:hidden"
         aria-label="Kembali ke atas"
     >

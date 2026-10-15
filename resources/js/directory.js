@@ -1,5 +1,7 @@
 /**
- * Direktori publik (form GET #direktori, lihat publik/directory/index.blade.php). Tanpa JS form tetap bekerja biasa.
+ * Direktori publik (form GET, lihat publik/directory/index.blade.php); dipakai juga katalog Produk
+ * (publik/products/index.blade.php: pil bidang berupa radio, urutan bawaan di data-default-sort). Tanpa JS form tetap
+ * bekerja biasa.
  * - Perubahan filter/urutan memuat ulang hasil (cari: debounce 300 ms), URL diperbarui (pushState) sehingga bisa
  *   dibagikan dan tombol kembali bekerja. Halaman baru diambil utuh; elemen [data-swap] (menurut id) dan angka
  *   [data-facet] ditukar, lalu isian form disamakan dengan URL.
@@ -60,8 +62,9 @@ export default function directory() {
 
         url() {
             const params = new URLSearchParams();
+            const defaultSort = this.$refs.form.dataset.defaultSort ?? 'nama';
             for (const [key, value] of new FormData(this.$refs.form)) {
-                if (value !== '' && !(key === 'urut' && value === 'nama')) params.append(key, value);
+                if (value !== '' && !(key === 'urut' && value === defaultSort)) params.append(key, value);
             }
             const query = params.toString();
 
@@ -157,6 +160,7 @@ export default function directory() {
                 if (!input.name) continue;
                 const current = values[baseName(input.name)] ?? [];
                 if (input.type === 'checkbox') input.checked = current.includes(input.value);
+                else if (input.type === 'radio') input.checked = current.length ? current.includes(input.value) : input.value === '';
                 else if (input.tagName === 'SELECT') input.value = current[0] ?? input.options[0].value;
                 else if (input.type === 'search' && document.activeElement !== input) input.value = current[0] ?? '';
             }

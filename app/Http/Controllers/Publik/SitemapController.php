@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Publik;
 use App\Http\Controllers\Controller;
 use App\Models\Organization;
 use App\Models\Post;
+use App\Models\Product;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Cache;
 
@@ -15,9 +16,11 @@ class SitemapController extends Controller
         $xml = Cache::remember('public.sitemap', 3600, function () {
             $organizations = Organization::query()->publiclyListed()->orderBy('name')->get(['slug', 'updated_at']);
 
+            $products = Product::query()->publiclyListed()->orderBy('products.name')->get(['products.slug', 'products.updated_at']);
+
             $posts = Post::query()->publiclyListed()->latest('published_at')->get(['slug', 'updated_at']);
 
-            return view('publik.sitemap', ['organizations' => $organizations, 'posts' => $posts])->render();
+            return view('publik.sitemap', ['organizations' => $organizations, 'products' => $products, 'posts' => $posts])->render();
         });
 
         return response($xml, 200, ['Content-Type' => 'application/xml; charset=UTF-8']);

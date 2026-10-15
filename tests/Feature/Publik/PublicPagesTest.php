@@ -83,11 +83,15 @@ test('produk unggulan tanpa foto memakai foto bidang usaha dari Admin, atau peta
         ->toContain('Sagu lempeng')->toContain('aspect-[4/3]')->toContain('SL');
 });
 
-test('halaman produk memakai petak inisial 4:3 untuk produk tanpa foto', function () {
+test('katalog produk: produk tanpa foto memakai panel cream dengan ikon bidang (bukan petak inisial)', function () {
     $organization = Organization::factory()->public()->create();
+    $organization->sectors()->attach(BusinessSector::factory()->create(['name' => 'Perkebunan']));
     Product::factory()->for($organization)->create(['name' => 'Kakao kering', 'is_public' => true]);
 
-    $this->get('/produk')->assertOk()->assertSee('aspect-[4/3]', false)->assertSee('KK');
+    preg_match('#<ul data-cards.*?</ul>#s', $this->get('/produk')->assertOk()->getContent(), $grid);
+
+    expect($grid[0])->toContain('rounded-tile bg-cream aspect-square')->toContain('text-clay')->toContain('<svg')
+        ->not->toContain('>KK<');
 });
 
 test('hero berisi judul dan tombol; tanpa bilah atas, Masuk di header, kontak kantor di footer', function () {
@@ -348,9 +352,9 @@ test('judul bagian Tentang bisa diubah Admin, kosong kembali ke bawaan', functio
 test('halaman publik tanpa tanda pisah dan tanpa hiasan garis emas; emas hanya untuk tombol utama dan aksen judul hero', function () {
     $organization = Organization::factory()->public()->create(['name' => 'KUB Contoh Rapi']);
     $organization->sectors()->attach(BusinessSector::factory()->create(['name' => 'Perikanan']));
-    Product::factory()->for($organization)->create(['is_public' => true, 'is_featured' => true]);
+    $product = Product::factory()->for($organization)->create(['is_public' => true, 'is_featured' => true]);
 
-    foreach (['/', '/direktori', '/direktori/kub-contoh-rapi', '/produk', '/berita', '/profil', '/kontak'] as $url) {
+    foreach (['/', '/direktori', '/direktori/kub-contoh-rapi', '/produk', '/produk/'.$product->slug, '/berita', '/profil', '/kontak'] as $url) {
         $html = $this->get($url)->assertOk()->getContent();
         $visible = preg_replace('#<(script|style)\b.*?</\1>|<!--.*?-->|<[^>]+>#s', ' ', $html);
 
@@ -359,7 +363,7 @@ test('halaman publik tanpa tanda pisah dan tanpa hiasan garis emas; emas hanya u
 
         preg_match_all('/class="([^"]*\b(?:bg|text|border)-sun\b[^"]*)"/', $html, $uses);
         foreach ($uses[1] as $classes) {
-            // Tombol utama (x-public.button sun) atau aksen judul hero (span text-sun).
+            // Tombol utama (x-public.button sun), aksen judul hero (span text-sun), atau pil "Pilihan distrik" (bg-sun text-ink).
             expect($classes === 'text-sun' || str_contains($classes, 'bg-sun text-ink'))->toBeTrue("Emas dipakai di luar tombol/aksen: {$classes}");
         }
     }

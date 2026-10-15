@@ -14,6 +14,7 @@
  * x-count.<tunda ms>                                         angka menghitung naik setiap kali masuk dari bawah
  * x-parallax="<px>"                                          geser vertikal halus selama elemen di layar (≥ 768px)
  * $store.scroll.pastHeader / pastFold                        posisi gulir (header ringkas, tombol kembali ke atas)
+ * $store.scroll.bar                                          bar tombol menempel di HP tampil (detail produk)
  *
  * Berulang: muncul saat masuk dari bawah, kembali tersembunyi hanya bila keluar lewat BAWAH (pengunjung menggulir naik
  * melewatinya), tetap tampil bila keluar lewat atas.
@@ -269,7 +270,7 @@ export default function registerMotion(Alpine) {
     Alpine.directive('parallax', parallax);
 
     // Satu pendengar gulir untuk semua penanda posisi; nilai hanya diubah saat berganti (bukan tiap frame).
-    Alpine.store('scroll', { pastHeader: false, pastFold: false });
+    Alpine.store('scroll', { pastHeader: false, pastFold: false, bar: false });
     const store = Alpine.store('scroll');
     let ticking = false;
     const update = () => {

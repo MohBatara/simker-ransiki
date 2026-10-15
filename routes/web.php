@@ -20,7 +20,9 @@ Route::get('/profil', [Publik\PageController::class, 'profile'])->name('public.p
 Route::get('/kontak', [Publik\PageController::class, 'contact'])->name('public.contact');
 Route::get('/direktori', [Publik\DirectoryController::class, 'index'])->name('public.directory');
 Route::get('/direktori/{slug}', [Publik\DirectoryController::class, 'show'])->name('public.organization');
-Route::get('/produk', Publik\ProductController::class)->name('public.products');
+Route::get('/produk', [Publik\ProductController::class, 'index'])->name('public.products');
+Route::get('/produk/{slug}', [Publik\ProductController::class, 'show'])->name('public.product');
+Route::get('/foto-produk/{product}/lampiran/{attachment}', [Publik\ProductController::class, 'photo'])->name('public.product-photo')->whereNumber(['product', 'attachment']);
 Route::get('/berita', [Publik\PostController::class, 'index'])->name('public.posts');
 Route::get('/berita/{slug}', [Publik\PostController::class, 'show'])->name('public.post');
 Route::get('/foto-berita/{post}', [Publik\PostController::class, 'photo'])->name('public.post-photo')->whereNumber('post');

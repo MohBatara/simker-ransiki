@@ -40,7 +40,7 @@ class DirectoryController extends Controller
                 'village:id,name',
                 'sectors:id,name',
                 'products' => fn ($query) => $query->where('is_public', true)->orderBy('name')
-                    ->select(['id', 'organization_id', 'name', 'description', 'unit', 'capacity', 'photo_path', 'updated_at']),
+                    ->select(['id', 'organization_id', 'slug', 'name', 'description', 'unit', 'capacity', 'photo_path', 'updated_at']),
                 // Hanya jenis izin yang sudah terbit; nomor izin tidak pernah tampil publik.
                 'licenses' => fn ($query) => $query->where('status', LicenseStatus::Issued)->orderBy('type')->select(['id', 'organization_id', 'type']),
             ])

@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-use App\Enums\OrganizationStatus;
+use App\Enums\AttachmentVisibility;
 use App\Models\Concerns\HasAttachments;
 use App\Observers\ChangeLogObserver;
 use App\Support\ImageVariants;
@@ -14,7 +14,9 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 #[Fillable(['name', 'description', 'unit', 'capacity', 'is_featured', 'is_public', 'photo_path'])]
 #[ObservedBy(ChangeLogObserver::class)]
@@ -42,7 +44,25 @@ class Product extends Model
 
     protected static function booted(): void
     {
+        // Slug dibuat sekali dari nama dan tidak berubah saat produk diganti nama, agar tautan yang dibagikan tetap jalan.
+        static::creating(function (Product $product) {
+            $product->slug ??= static::uniqueSlug($product->name);
+        });
+
         static::deleted(fn (Product $product) => $product->deletePhotoFiles());
+    }
+
+    public static function uniqueSlug(string $name): string
+    {
+        $base = Str::slug($name) ?: 'produk';
+        $slug = $base;
+        $suffix = 2;
+
+        while (static::where('slug', $slug)->exists()) {
+            $slug = $base.'-'.$suffix++;
+        }
+
+        return $slug;
     }
 
     public function thumbnailPath(): ?string
@@ -106,14 +126,18 @@ class Product extends Model
         return Initials::of($this->name);
     }
 
-    /** Foto boleh dilihat tanpa login hanya bila produk dan kelompoknya tampil di direktori publik. */
+    /** Foto boleh dilihat tanpa login hanya bila produk tampil di website publik (pintu yang sama dengan halaman produk). */
     public function isPubliclyVisible(): bool
     {
-        $organization = $this->organization()->first(['id', 'status', 'is_public']);
+        return $this->is_public && static::query()->publiclyListed()->whereKey($this->id)->exists();
+    }
 
-        return $this->is_public
-            && $organization?->is_public
-            && $organization->status === OrganizationStatus::Active;
+    /** Lampiran gambar yang ditandai publik: foto tambahan di halaman detail produk. */
+    public function publicPhotos(): MorphMany
+    {
+        return $this->attachments()
+            ->where('visibility', AttachmentVisibility::Public)
+            ->whereIn('mime_type', ['image/jpeg', 'image/png']);
     }
 
     public function organization(): BelongsTo

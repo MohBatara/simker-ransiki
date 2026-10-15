@@ -201,14 +201,6 @@ class DirectorySearch
     /** Nama dengan kata kunci disorot (<mark>); teks lain di-escape. */
     public function highlight(string $name): string
     {
-        if ($this->q === '') {
-            return e($name);
-        }
-
-        $parts = preg_split('/('.preg_quote($this->q, '/').')/iu', $name, -1, PREG_SPLIT_DELIM_CAPTURE) ?: [$name];
-
-        return collect($parts)->map(fn (string $part, int $i) => $i % 2 === 1
-            ? '<mark class="rounded-sm bg-highlight text-ink">'.e($part).'</mark>'
-            : e($part))->implode('');
+        return Format::highlight($name, $this->q);
     }
 }

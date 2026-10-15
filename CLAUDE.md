@@ -112,8 +112,10 @@ Laporan `verified` tidak bisa diubah siapa pun. Kelompok `closed` tidak bisa mem
   `/lampiran/{id}` (tampil inline), `/lampiran/{id}/unduh`, `POST /lampiran/{kelompok|izin}/{id}`,
   `DELETE /lampiran/{id}`, `POST/DELETE /foto-produk/{id}`. Hak unggah/hapus = hak `update` atas
   induknya; siapa pun yang berhak boleh menghapus file unggahan orang lain.
-- `GET /foto-produk/{id}` boleh tanpa login bila produk `is_public` dan kelompoknya aktif serta
-  `is_public`; selain itu wajib login + Policy, tamu tanpa hak mendapat 404.
+- `GET /foto-produk/{id}` boleh tanpa login bila produk tampil publik (`Product::publiclyListed()`: produk `is_public`,
+  kelompok `is_public` dan aktif atau tidak aktif sementara); selain itu wajib login + Policy, tamu tanpa hak mendapat 404.
+  Foto tambahan di detail produk: lampiran produk bervisibilitas `public` bertipe JPG/PNG, lewat
+  `GET /foto-produk/{id}/lampiran/{lampiran}` dengan syarat yang sama (lampiran privat/PDF/milik produk lain → 404).
 - Header file: `X-Content-Type-Options: nosniff`; PDF tampil inline dengan
   `Content-Security-Policy: sandbox`, plus tombol "Unduh" (`Content-Disposition: attachment`).
 - Setiap fitur baru yang menyentuh data wajib punya feature test akses: pemilik bisa, peran lain
@@ -123,7 +125,7 @@ Laporan `verified` tidak bisa diubah siapa pun. Kelompok `closed` tidak bisa mem
 
 ```
 /                       publik
-/direktori, /direktori/{slug}, /produk, /profil, /kontak, /berita, /berita/{slug}
+/direktori, /direktori/{slug}, /produk, /produk/{slug}, /profil, /kontak, /berita, /berita/{slug}
 /login (GET, POST), /logout (POST saja)
 /lupa-kata-sandi, /atur-ulang-kata-sandi/{token}, /undangan/{user}/{token}   guest
 /akun/kata-sandi        auth + active (semua peran; juga halaman ganti kata sandi wajib)
@@ -163,6 +165,20 @@ dipakai bila berada di area perannya sendiri.
   intro banner + kotak cari sekali, ganti hasil: memudar 150ms lalu muncul berjeda 40ms (posisi gulir dijaga, paginasi
   gulir halus ke bar hasil), pil filter skala 0,9 ↔ 1, bottom sheet meluncur 250ms. Angka di variabel `--reveal-quick-*`,
   `--swap-*`, `--chip-duration`, `--sheet-duration` (app.css). Panel filter, header, bar hasil tanpa animasi.
+- Produk unggulan (`/produk`): satu tempat logika `App\Support\ProductSearch` (`Product::publiclyListed()`, kolom publik saja).
+  Query string `q` (nama produk, nama kelompok, kampung), `bidang`, `kampung` (satu nilai), `urut` (pilihan = Pilihan distrik
+  dulu [bawaan] / terbaru / nama), `page` (16 per halaman). Pil bidang (radio bergaya pil, ikon `PublicIcons`) dengan jumlah
+  produk unik mengikuti cari + kampung; deretan "Pilihan distrik" (`is_featured`, maks 8, foto 4:5, panah `scrollRow`) hanya
+  di halaman 1 tanpa cari/filter. Muat ulang otomatis memakai Alpine `directory` yang sama dengan Direktori
+  (`data-default-sort="pilihan"`). Kartu `publik/products/_card` (foto 1:1 `rounded-tile`, tanpa foto: cream + ikon bidang
+  clay). BUKAN toko: tanpa harga, keranjang, atau checkout.
+- Detail produk (`/produk/{slug}`, `publik/products/show`): galeri (foto produk + lampiran publik, thumbnail, perbesar lewat
+  `<dialog>`, Alpine `productGallery`), info + kartu kelompok pembuat, "Hubungi kelompok" (wa.me + tel:) HANYA bila
+  `show_contact_publicly` (telepon baru diambil saat itu), selain itu "Lihat profil kelompok"; bagikan WhatsApp + salin tautan;
+  produk lain dari kelompok yang sama (maks 4) dan produk serupa (bidang sama, kelompok lain, maks 4). JSON-LD `Product`
+  TANPA `offers`/harga (name, image, description, brand = kelompok). HP: bar tombol utama menempel (`stickyCta`) setelah
+  tombolnya tergulir lewat, hilang saat footer terlihat. Kartu produk di Beranda dan profil kelompok menaut ke sini; sitemap
+  memuat semua produk publik.
 - Badge "Profil diverifikasi OPD" (pil) di direktori dan profil publik bila `profile_status = verified`; tidak
   pernah memblokir tampil publik.
 - Angka beranda dihitung unik dan di-cache 10 menit (`App\Support\PublicDirectory`). Cache hanya
@@ -294,7 +310,8 @@ Jangan mengarang kepanjangan akronim resmi (KDMP, KNMP, dsb.). Simpan apa adanya
   (enum: none, in_process, issued, needs_fix), submitted_on, issued_on,
   expires_on (date, nullable; label "Berlaku sampai", tidak boleh sebelum issued_on; NULL = tidak diketahui,
   tidak pernah dianggap habis), notes
-- `products`: id, organization_id, name, description, unit, capacity, is_featured, is_public,
+- `products`: id, organization_id, name, slug (unik; dibuat sekali dari nama saat produk dibuat, tidak berubah saat ganti
+  nama; untuk `/produk/{slug}`), description, unit, capacity, is_featured, is_public,
   photo_path (nullable)
 - `attachments` (polimorfik): id, attachable_type, attachable_id, disk, path, original_name,
   mime_type, size, visibility (enum: private, public; default private), uploaded_by
@@ -747,8 +764,8 @@ Pengecualian dari Larangan di atas, khusus publik:
   (`x-public.icon-badge`) di tepi foto kartu produk/direktori; ikon dari `App\Support\PublicIcons`.
 - Judul h1–h3 publik memakai `font-serif`. Label kecil di atas judul bagian (`publik._section-heading`
   `eyebrow`) berwarna `brand`, tanpa garis hiasan. Tidak ada garis emas pendek (di hero, pita, atau label).
-- Emas (`sun`) di publik HANYA untuk tombol utama (`x-public.button` sun) dan aksen kata di judul hero, plus cincin
-  fokus `on-dark` (fungsi aksesibilitas). Ikon footer, titik slider, pil gelap, dan angka memakai warna netral (dijaga tes).
+- Emas (`sun`) di publik HANYA untuk tombol utama (`x-public.button` sun), aksen kata di judul hero, dan pil "Pilihan
+  distrik" di katalog/detail produk (`bg-sun text-ink`, atas permintaan), plus cincin fokus `on-dark` (fungsi aksesibilitas). Ikon footer, titik slider, pil gelap, dan angka memakai warna netral (dijaga tes).
 - Teks tampilan publik dan nilai bawaan `SiteSetting::DEFAULTS` tanpa tanda pisah (– —) dan tanpa kata ulang bertanda
   hubung; tulis dengan koma, titik, atau "sampai" (dijaga tes).
 - Judul hero `text-hero` 48px (desktop) / `text-hero-sm` 36px (HP). Hero beranda memakai `.overlay-hero` yang lebih
