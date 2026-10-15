@@ -168,10 +168,10 @@ test('perintah simker:varian-foto membuat varian untuk foto lama', function () {
         ->and(Storage::disk('local')->exists('products/1/lama-800.webp'))->toBeTrue();
 });
 
-test('kartu direktori tanpa foto memakai inisial di latar subtle', function () {
+test('kartu direktori tanpa foto memakai inisial serif di panel cream', function () {
     Organization::factory()->public()->create(['name' => 'Kelompok Contoh Alfa']);
 
-    $this->get('/direktori')->assertSee('KC')->assertSee('bg-subtle', false);
+    $this->get('/direktori')->assertSee('KC')->assertSee('bg-cream', false);
 });
 
 test('pita judul profil kelompok berlatar forest polos tanpa foto', function () {

@@ -151,6 +151,14 @@ dipakai bila berada di area perannya sendiri.
   `Organization::publiclyListed()`. Isi Markdown dirender `Format::markdown` (html_input strip,
   allow_unsafe_links false), juga untuk tombol "Pratinjau" di form Admin. Beranda menampilkan 3 berita terbaru;
   halaman berita memakai `og:type` article + ringkasan sebagai description + foto sampul sebagai og:image.
+- Direktori (`/direktori`): satu tempat logika `App\Support\DirectorySearch` (publiclyListed, kolom publik saja). Query
+  string `q` (nama kelompok, produk publik, kampung), `jenis[]`, `bidang[]`, `kampung[]` (ATAU dalam satu dimensi, DAN
+  antardimensi; nilai tunggal lama `?bidang=5` tetap diterima), `urut` (nama/terbaru/produk), `page` (12 per halaman).
+  Facet = COUNT DISTINCT per dimensi mengikuti filter dimensi lain. Judul/description dinamis, canonical tanpa q/urut.
+  Form GET biasa (jalan tanpa JS); Alpine `directory` (`resources/js/directory.js`) memuat ulang hasil lewat fetch
+  (debounce cari 300 ms, pushState, tukar `[data-swap]` + `[data-facet]`), bottom sheet filter < 1024px, tampilan
+  Kartu/Daftar (varian CSS `list-view`, localStorage). Foto kartu: foto produk publik → foto bidang usaha → panel cream
+  berinisial (belum ada kolom foto profil kelompok). Sorotan kata kunci `bg-highlight` (sun pucat, bukan `sun`).
 - Badge "Profil diverifikasi OPD" (pil) di direktori dan profil publik bila `profile_status = verified`; tidak
   pernah memblokir tampil publik.
 - Angka beranda dihitung unik dan di-cache 10 menit (`App\Support\PublicDirectory`). Cache hanya

@@ -5,6 +5,9 @@
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../../storage/framework/views/*.php';
 
+/* Direktori publik: tampilan Daftar (wadah [data-view=list]); bawaan tampilan Kartu. */
+@custom-variant list-view (&:where([data-view=list] *));
+
 /*
  * Token desain SIM-KER (CLAUDE.md Bagian 7).
  * Skala bawaan Tailwind untuk warna, teks, ketebalan, radius, dan bayangan sengaja dikosongkan
@@ -87,6 +90,8 @@
     --color-sand: #d8bf98;
     --color-cream: #f3ebdd;
     --color-sage: #4e6f4a;
+    /* Sorotan kata kunci pencarian Direktori (sun pucat; ink di atasnya 15:1). Bukan pengganti sun. */
+    --color-highlight: #fbefcc;
 
     --radius-*: initial;
     --radius-control: 6px; /* input, tombol, badge */
