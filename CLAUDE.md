@@ -407,7 +407,11 @@ Jangan mengarang kepanjangan akronim resmi (KDMP, KNMP, dsb.). Simpan apa adanya
   jumlah kampung Data Master; kosong = baris tidak tampil, tanpa nilai bawaan), angka ringkas (`publik._stats`), Potensi
   ekonomi (`App\Support\PotentialBlocks`, kunci `potential_{1..3}_*`, foto `/foto-potensi/{n}`), Kampung
   (`PublicDirectory::villages()`, hanya kelompok publik), Kantor distrik (`office_*` + `office_photo_path`). Jangan mengisi
-  luas wilayah/penduduk dengan angka karangan.
+  luas wilayah/penduduk dengan angka karangan. Gaya: judul banner `text-hero-lg` 56px (48 tablet, 36 HP), judul bagian 40px
+  (28 HP) `tracking-[-0.01em]`, banner 70vh maks 640px dengan zoom pelan saat dibuka (`.banner-zoom`, 1,06 → 1, 1,6 detik),
+  Data singkat berupa bento (ubin cream `rounded-tile`, ubin Jumlah kampung forest), angka ringkas berupa 4 ubin, blok
+  potensi foto 5:4 + kartu putih menumpuk 32px, nav dalam halaman berupa pil. PENGECUALIAN Bagian 7: nav itu memakai
+  latar putih semi transparan + `backdrop-blur-[12px]` (atas permintaan); blur lain tetap dilarang.
 - `notifications`: tabel bawaan Laravel (database notifications)
 - (diupayakan) `posts` untuk Berita & Kegiatan
 

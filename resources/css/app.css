@@ -46,6 +46,8 @@
     --text-hero-sm--line-height: 2.75rem;
     --text-hero: 3rem; /* 48px judul hero publik */
     --text-hero--line-height: 3.5rem;
+    --text-hero-lg: 3.5rem; /* 56px judul banner Profil Ransiki (desktop) */
+    --text-hero-lg--line-height: 4rem;
     --text-numeral: 2.5rem; /* 40px angka daftar "Jenis kelembagaan" (percobaan palet tanah) */
     --text-numeral--line-height: 1;
 
@@ -423,6 +425,16 @@
         .motion [data-intro] > :nth-child(3) {
             animation-delay: 240ms;
         }
+        /* Foto banner Profil Ransiki: zoom pelan sekali saat halaman dibuka (1,06 → 1 selama 1,6 detik). */
+        @keyframes banner-zoom {
+            from {
+                transform: scale(1.06);
+            }
+        }
+        .motion .banner-zoom {
+            animation: banner-zoom 1600ms cubic-bezier(0.25, 0.1, 0.25, 1) both;
+        }
+
         /* < 1024px strip tidak ikut naik: kartunya masuk dari kanan (x-reveal.intro + data-reveal-row). */
         @media (width >= 64rem) {
             .motion [data-intro-late] {

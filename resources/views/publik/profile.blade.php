@@ -16,7 +16,9 @@
         ['envelope', 'Email', $settings['office_email'], $settings['office_email'] ? 'mailto:'.$settings['office_email'] : null],
     ];
     $office = array_filter($office, fn ($item) => filled($item[2]));
-    $sectionClass = 'scroll-mt-28 focus:outline-none md:scroll-mt-30';
+    $sectionClass = 'scroll-mt-32 focus:outline-none';
+    // Judul bagian: 28px HP, 40px mulai 768px, sedikit dirapatkan.
+    $headingClass = 'font-serif text-display-sm font-semibold tracking-[-0.01em] text-balance text-ink md:text-title-lg';
 @endphp
 
 <x-layouts.public
@@ -24,39 +26,45 @@
     :description="$settings['profile_intro'] ? Str::limit($settings['profile_intro'], 160) : (Format::excerpt($settings['profile_body'], 160) ?? $lead)"
     :image="$banner['fallback']"
 >
-    {{-- Banner: foto (banner → sampul → bawaan), forest dari bawah; teks muncul naik saat dibuka (data-intro). --}}
-    <section class="on-dark relative isolate flex min-h-70 overflow-hidden bg-forest text-paper md:min-h-90 lg:min-h-105" aria-labelledby="judul-profil">
-        <x-public.picture :image="$banner" alt="" eager sizes="100vw" width="1600" height="686" frame="absolute inset-0 -z-20 block size-full" class="size-full object-cover" />
+    {{--
+        Banner: foto (banner → sampul → bawaan) dengan zoom pelan saat dibuka, forest dari bawah; teks rata kiri bawah,
+        muncul naik (data-intro). Tinggi 320px HP, 400px tablet, 70vh (maks 640px) desktop.
+    --}}
+    <section class="on-dark relative isolate flex min-h-80 overflow-hidden bg-forest text-paper md:min-h-100 lg:min-h-[min(70vh,40rem)]" aria-labelledby="judul-profil">
+        <x-public.picture :image="$banner" alt="" eager sizes="100vw" width="1600" height="686" frame="absolute inset-0 -z-20 block size-full" class="banner-zoom size-full object-cover" />
         <div class="overlay-band-bottom absolute inset-0 -z-10" aria-hidden="true"></div>
-        <div class="mx-auto flex w-full max-w-public flex-col justify-end px-4 pt-12 pb-8 md:px-6 md:pb-12 lg:pb-14" data-intro>
-            <nav aria-label="Remah roti" class="mb-4 text-caption text-paper">
+        <div class="mx-auto flex w-full max-w-public flex-col justify-end px-4 pt-16 pb-10 md:px-6 md:pb-16 lg:pb-20" data-intro>
+            <nav aria-label="Remah roti" class="mb-5 text-caption text-paper">
                 <ol class="flex flex-wrap items-center gap-x-1.5 gap-y-1">
                     <li><a href="{{ route('home') }}" class="rounded-control underline-offset-4 hover:underline">Beranda</a></li>
                     <li class="flex items-center gap-1.5"><x-heroicon-o-chevron-right class="size-3.5" aria-hidden="true" /><span aria-current="page">Profil Ransiki</span></li>
                 </ol>
             </nav>
-            <h1 id="judul-profil" class="max-w-3xl font-serif text-hero-sm font-semibold text-balance md:text-hero">Profil Distrik Ransiki</h1>
+            <h1 id="judul-profil" class="max-w-3xl font-serif text-hero-sm font-semibold tracking-[-0.01em] text-balance md:text-hero lg:text-hero-lg">Profil Distrik Ransiki</h1>
             @if ($lead)
-                <p class="mt-3 max-w-[38rem] text-body text-paper md:text-card-title">{{ $lead }}</p>
+                <p class="mt-5 max-w-[38rem] text-body text-paper md:text-page-title">{{ $lead }}</p>
             @endif
         </div>
     </section>
 
-    {{-- Navigasi dalam halaman: menempel tepat di bawah bilah header yang sudah menyusut (52/60px). --}}
-    <nav aria-label="Bagian halaman" x-data="sectionNav" class="sticky top-13 z-30 border-b border-line bg-paper md:top-15 print:hidden">
+    {{--
+        Navigasi dalam halaman: menempel tepat di bawah bilah header yang sudah menyusut (52/60px). Pil; aktif = pil brand
+        berteks putih. Latar putih semi transparan + blur (pengecualian Bagian 7); tanpa dukungan blur, putih hampir padat.
+    --}}
+    <nav aria-label="Bagian halaman" x-data="sectionNav" class="sticky top-13 z-30 border-b border-line bg-paper/95 md:top-15 print:hidden supports-[backdrop-filter]:bg-paper/75 supports-[backdrop-filter]:backdrop-blur-[12px]">
         <div class="mx-auto max-w-public md:px-6">
-            <ul x-ref="track" class="scrollbar-none relative flex gap-2 overflow-x-auto px-4 md:gap-8 md:px-0">
+            <ul x-ref="track" class="scrollbar-none relative flex gap-1 overflow-x-auto px-4 py-2 md:gap-2 md:px-0">
                 @foreach ($sections as $id => $label)
                     <li class="shrink-0">
                         <a
                             href="#{{ $id }}"
                             x-on:click="go($event)"
                             @class([
-                                'flex h-12 items-center border-b-2 px-2 text-ui whitespace-nowrap transition-colors md:px-0',
-                                'border-brand font-semibold text-brand' => $loop->first,
-                                'border-transparent text-ink-soft hover:text-ink' => ! $loop->first,
+                                'flex h-11 items-center rounded-full px-4 text-ui font-semibold whitespace-nowrap transition-colors md:h-9',
+                                'bg-brand text-paper' => $loop->first,
+                                'text-ink-soft hover:bg-subtle hover:text-ink' => ! $loop->first,
                             ])
-                            x-bind:class="{ 'border-brand font-semibold text-brand': active === '{{ $id }}', 'border-transparent text-ink-soft hover:text-ink': active !== '{{ $id }}' }"
+                            x-bind:class="{ 'bg-brand text-paper': active === '{{ $id }}', 'text-ink-soft hover:bg-subtle hover:text-ink': active !== '{{ $id }}' }"
                             x-bind:aria-current="active === '{{ $id }}' && 'location'"
                         >{{ $label }}</a>
                     </li>
@@ -68,32 +76,34 @@
     {{-- Sekilas: pembuka serif + isi profil (7 kolom), kartu Data singkat (5 kolom), lalu angka ringkas. --}}
     <section id="sekilas" tabindex="-1" class="{{ $sectionClass }}" aria-labelledby="sekilas-judul">
         <div class="mx-auto max-w-public px-4 py-section md:px-6" x-data>
-            <div class="grid gap-10 lg:grid-cols-12 lg:gap-x-12">
+            <div class="grid gap-12 lg:grid-cols-12 lg:gap-x-12">
                 <div class="min-w-0 lg:col-span-7" x-reveal="fade-up">
                     <h2 id="sekilas-judul" class="text-caption font-semibold tracking-wider text-brand uppercase">Sekilas</h2>
                     @if ($settings['profile_intro'])
-                        <p class="mt-4 max-w-[34em] font-serif text-page-title text-ink md:text-headline">{{ $settings['profile_intro'] }}</p>
+                        <p class="mt-5 max-w-[34em] font-serif text-page-title leading-[1.45] text-ink">{{ $settings['profile_intro'] }}</p>
                     @endif
                     @if ($settings['profile_body'])
-                        <div class="prose-public mt-6 max-w-[68ch] leading-7 text-ink-soft">{!! Format::markdown($settings['profile_body']) !!}</div>
+                        <div class="prose-public mt-8 max-w-[68ch] leading-7 text-ink-soft">{!! Format::markdown($settings['profile_body']) !!}</div>
                     @elseif (! $settings['profile_intro'])
                         <p class="mt-4 text-body text-ink-soft">Profil distrik sedang disiapkan.</p>
                     @endif
                 </div>
 
                 @if ($facts->isNotEmpty())
-                    <aside class="h-fit rounded-[20px] bg-cream p-6 md:p-8 lg:col-span-5" aria-labelledby="data-singkat" x-reveal="fade-left">
+                    {{-- Bento: ubin cream 2 kolom (ubin terakhir selebar grid bila jumlahnya ganjil); Jumlah kampung = ubin forest. --}}
+                    <aside class="h-fit lg:col-span-5" aria-labelledby="data-singkat" x-reveal="fade-left">
                         <h3 id="data-singkat" class="font-serif text-card-title font-semibold text-ink">Data singkat</h3>
-                        <dl class="mt-4 divide-y divide-sand/70">
+                        <dl class="mt-4 grid grid-cols-2 gap-3">
                             @foreach ($facts as $label => $value)
-                                <div class="flex items-baseline justify-between gap-4 py-3 first:pt-0 last:pb-0">
-                                    <dt class="text-ui text-ink-soft">{{ $label }}</dt>
-                                    <dd class="text-right text-ui font-semibold text-ink tabular-nums">{{ $value }}</dd>
+                                @php $accent = $label === 'Jumlah kampung'; @endphp
+                                <div @class(['flex min-w-0 flex-col gap-1 rounded-tile p-4 odd:last:col-span-2 md:p-5', 'bg-forest text-paper' => $accent, 'bg-cream' => ! $accent])>
+                                    <dt @class(['text-caption', 'text-forest-soft' => $accent, 'text-ink-soft' => ! $accent])>{{ $label }}</dt>
+                                    <dd @class(['font-serif text-headline font-semibold break-words tabular-nums', 'text-paper' => $accent, 'text-ink' => ! $accent])>{{ $value }}</dd>
                                 </div>
                             @endforeach
                         </dl>
                         @if ($settings['profile_data_source'])
-                            <p class="mt-5 text-caption text-ink-soft">Sumber data: {{ $settings['profile_data_source'] }}</p>
+                            <p class="mt-4 text-caption text-ink-muted">Sumber data: {{ $settings['profile_data_source'] }}</p>
                         @endif
                     </aside>
                 @endif
@@ -103,34 +113,37 @@
         </div>
     </section>
 
-    {{-- Potensi ekonomi: blok foto 4:3 dan teks selang seling (HP foto di atas). --}}
-    <section id="potensi" tabindex="-1" class="{{ $sectionClass }} border-y border-line bg-paper" aria-labelledby="potensi-judul">
+    {{--
+        Potensi ekonomi: foto 5:4 (7 kolom) dan kartu teks putih berbayangan halus (5 kolom) yang menumpuk 32px ke foto,
+        selang seling kiri kanan. HP: kartu menumpuk 32px ke bawah foto.
+    --}}
+    <section id="potensi" tabindex="-1" class="{{ $sectionClass }} border-t border-line" aria-labelledby="potensi-judul">
         <div class="mx-auto max-w-public px-4 py-section md:px-6" x-data>
             <div class="max-w-[42rem]">
-                @include('publik._section-heading', ['title' => 'Potensi ekonomi', 'id' => 'potensi-judul'])
+                <h2 id="potensi-judul" class="{{ $headingClass }}">Potensi ekonomi</h2>
                 @if ($text('potential_intro'))
-                    <p class="mt-3 text-body text-ink-soft">{{ $text('potential_intro') }}</p>
+                    <p class="mt-4 text-body text-ink-soft">{{ $text('potential_intro') }}</p>
                 @endif
             </div>
 
             <div class="mt-section-head space-y-14 md:space-y-20">
                 @foreach ($potentials as $block)
-                    <article class="grid items-center gap-6 md:grid-cols-2 md:gap-10 lg:gap-16" x-reveal="{{ $loop->odd ? 'fade-right' : 'fade-left' }}" aria-labelledby="potensi-{{ $block['n'] }}">
+                    <article class="md:grid md:grid-cols-12 md:items-center" x-reveal="{{ $loop->odd ? 'fade-right' : 'fade-left' }}" aria-labelledby="potensi-{{ $block['n'] }}">
                         <x-public.picture
                             :image="$block['photo']"
                             alt=""
-                            sizes="(min-width: 67.5rem) 32rem, (min-width: 48rem) 46vw, 100vw"
+                            sizes="(min-width: 67.5rem) 38rem, (min-width: 48rem) 58vw, 100vw"
                             width="960"
-                            height="720"
-                            frame="{{ 'block overflow-hidden rounded-[20px] bg-subtle'.($loop->even ? ' md:order-last' : '') }}"
-                            class="aspect-[4/3] w-full object-cover"
+                            height="768"
+                            frame="{{ 'block overflow-hidden rounded-panel bg-subtle md:col-span-7 md:row-start-1 '.($loop->odd ? 'md:col-start-1' : 'md:col-start-6') }}"
+                            class="aspect-[5/4] w-full object-cover"
                         />
-                        <div class="min-w-0">
+                        <div class="{{ 'relative z-10 mx-4 -mt-8 min-w-0 rounded-[20px] border border-line bg-paper p-6 shadow-card md:mx-0 md:mt-0 md:col-span-5 md:row-start-1 md:p-8 lg:p-10 '.($loop->odd ? 'md:col-start-8 md:-ml-8' : 'md:col-start-1 md:-mr-8') }}">
                             @if ($block['sector'])
                                 <p class="text-caption font-semibold tracking-wider text-clay uppercase">{{ $block['sector'] }}</p>
                             @endif
-                            <h3 id="potensi-{{ $block['n'] }}" class="mt-2 font-serif text-display-sm font-semibold text-ink">{{ $block['title'] }}</h3>
-                            <p class="mt-3 max-w-[34rem] text-body leading-7 text-ink-soft">{{ $block['text'] }}</p>
+                            <h3 id="potensi-{{ $block['n'] }}" class="mt-3 font-serif text-display-sm font-semibold tracking-[-0.01em] text-ink">{{ $block['title'] }}</h3>
+                            <p class="mt-4 max-w-[34rem] text-body leading-7 text-ink-soft">{{ $block['text'] }}</p>
                             <div class="mt-5 flex flex-wrap items-center gap-x-5 gap-y-1">
                                 @if ($block['url'])
                                     <p class="text-ui text-ink-soft"><span class="font-semibold text-ink tabular-nums">{{ Format::number($block['count']) }}</span> kelompok</p>
@@ -150,11 +163,11 @@
     </section>
 
     {{-- Kampung: semua kampung Data Master urut abjad; kartu menaut ke direktori tersaring bila ada kelompok publik. --}}
-    <section id="kampung" tabindex="-1" class="{{ $sectionClass }}" aria-labelledby="kampung-judul">
+    <section id="kampung" tabindex="-1" class="{{ $sectionClass }} border-y border-line bg-paper" aria-labelledby="kampung-judul">
         <div class="mx-auto max-w-public px-4 py-section md:px-6" x-data>
             <div class="max-w-[42rem]">
-                @include('publik._section-heading', ['title' => 'Kampung di Ransiki', 'id' => 'kampung-judul'])
-                <p class="mt-3 text-body text-ink-soft">Pilih kampung untuk melihat kelompok yang terdaftar di sana.</p>
+                <h2 id="kampung-judul" class="{{ $headingClass }}">Kampung di Ransiki</h2>
+                <p class="mt-4 text-body text-ink-soft">Pilih kampung untuk melihat kelompok yang terdaftar di sana.</p>
             </div>
 
             @if ($villages->isEmpty())
@@ -164,16 +177,22 @@
                     @foreach ($villages as $village)
                         <li class="min-w-0">
                             @if ($village->organizations_count > 0)
-                                <a href="{{ route('public.directory', ['kampung' => $village->id]) }}" class="group flex h-full min-h-24 flex-col justify-between gap-3 rounded-public border border-line bg-paper p-4 shadow-card transition-colors hover:border-brand md:p-5">
-                                    <span class="font-serif text-card-title font-semibold text-ink">{{ $village->name }}</span>
-                                    <span class="flex items-center justify-between gap-2 text-ui text-ink-muted">
+                                <a href="{{ route('public.directory', ['kampung' => $village->id]) }}" class="group flex h-full min-h-24 flex-col justify-between gap-3 rounded-public border border-line bg-canvas p-4 transition-colors hover:border-brand hover:bg-brand-tint focus-visible:border-brand focus-visible:bg-brand-tint md:p-5">
+                                    <span class="flex items-start gap-1.5 font-serif text-card-title font-semibold text-ink">
+                                        <x-heroicon-o-map-pin class="mt-1 size-4 shrink-0 text-brand" aria-hidden="true" />
+                                        {{ $village->name }}
+                                    </span>
+                                    <span class="flex items-center justify-between gap-2 text-ui text-ink-soft">
                                         <span class="tabular-nums">{{ Format::number($village->organizations_count) }} kelompok</span>
-                                        <x-heroicon-o-arrow-right class="size-4 shrink-0 text-brand transition-transform group-hover:translate-x-0.5 motion-reduce:transition-none" aria-hidden="true" />
+                                        <x-heroicon-o-arrow-right class="size-4 shrink-0 text-brand transition-transform group-hover:translate-x-1 group-focus-visible:translate-x-1 motion-reduce:transition-none" aria-hidden="true" />
                                     </span>
                                 </a>
                             @else
-                                <div class="flex h-full min-h-24 flex-col justify-between gap-3 rounded-public border border-line p-4 md:p-5">
-                                    <span class="font-serif text-card-title font-semibold text-ink">{{ $village->name }}</span>
+                                <div class="flex h-full min-h-24 flex-col justify-between gap-3 rounded-public border border-dashed border-line-strong p-4 md:p-5">
+                                    <span class="flex items-start gap-1.5 font-serif text-card-title font-semibold text-ink">
+                                        <x-heroicon-o-map-pin class="mt-1 size-4 shrink-0 text-ink-muted" aria-hidden="true" />
+                                        {{ $village->name }}
+                                    </span>
                                     <span class="text-ui text-ink-muted">Belum ada kelompok terdaftar</span>
                                 </div>
                             @endif
@@ -186,10 +205,10 @@
 
     {{-- Kantor distrik: panel cream dua kolom; kanan foto kantor atau gambar ikon gedung bila belum ada. --}}
     <section id="kantor" tabindex="-1" class="{{ $sectionClass }}" aria-labelledby="kantor-judul">
-        <div class="mx-auto max-w-public px-4 pb-section md:px-6" x-data>
+        <div class="mx-auto max-w-public px-4 py-section md:px-6" x-data>
             <div class="grid items-center gap-8 rounded-panel bg-cream p-6 md:p-10 lg:grid-cols-2 lg:gap-14 lg:p-14" x-reveal="fade-up">
                 <div class="min-w-0">
-                    <h2 id="kantor-judul" class="font-serif text-display-sm font-semibold text-ink md:text-display">Kantor Distrik Ransiki</h2>
+                    <h2 id="kantor-judul" class="{{ $headingClass }}">Kantor Distrik Ransiki</h2>
                     @if ($office)
                         <dl class="mt-6 space-y-4">
                             @foreach ($office as [$icon, $label, $value, $href])

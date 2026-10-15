@@ -100,7 +100,7 @@ test('potensi ekonomi: bawaan tiga blok, hitungan hanya kelompok publik, tautan 
         ->toContain('Olahan rumahan')
         ->and($section)->toContain('href="'.route('public.directory', ['bidang' => $kebun->id]).'"')
         ->not->toContain('bidang='.$ikan->id)
-        ->toContain('fade-right')->toContain('fade-left')->toContain('md:order-last');
+        ->toContain('fade-right')->toContain('fade-left')->toContain('aspect-[5/4]')->toContain('md:-ml-8')->toContain('md:-mr-8');
 
     $this->get(route('public.directory', ['bidang' => $kebun->id]))->assertOk();
 });
@@ -198,4 +198,20 @@ test('validasi data singkat dan blok potensi berbahasa Indonesia', function () {
         ->assertSessionHasErrors(['profile_area' => 'Luas wilayah paling banyak 80 karakter.']);
     $this->from('/admin/konten/profil')->post('/admin/konten/potensi/3', ['potensi_3' => ['text' => str_repeat('a', 401)]])
         ->assertSessionHasErrors(['potensi_3.text' => 'Teks paling banyak 400 karakter.']);
+});
+
+test('tampilan modern: banner zoom, nav pil berlatar blur, data singkat bento dengan ubin kampung forest, angka berubin', function () {
+    Village::factory()->count(2)->create();
+    SiteSetting::put(['profile_regency' => 'Kabupaten Contoh']);
+    $html = $this->get('/profil')->getContent();
+
+    preg_match('#<nav aria-label="Bagian halaman".*?</nav>#s', $html, $nav);
+    preg_match('#<aside[^>]*aria-labelledby="data-singkat".*?</aside>#s', $html, $bento);
+
+    expect($html)->toContain('banner-zoom')->toContain('lg:text-hero-lg')->toContain('lg:min-h-[min(70vh,40rem)]')
+        ->and($nav[0])->toContain('backdrop-blur-[12px]')->toContain('rounded-full')->toContain('bg-brand text-paper')
+        ->and($bento[0])->toContain('grid grid-cols-2')->toContain('rounded-tile p-4')->toContain('bg-cream')
+        ->and(strip_tags($bento[0]))->toMatch('/Kabupaten\s+Kabupaten Contoh\s+Jumlah kampung\s+2/')
+        ->and($bento[0])->toMatch('#bg-forest text-paper[^>]*>\s*<dt[^>]*text-forest-soft[^>]*>Jumlah kampung#')
+        ->and(profileSection($html, 'sekilas'))->toContain('rounded-[20px] border border-line bg-paper');
 });
