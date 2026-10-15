@@ -159,6 +159,10 @@ dipakai bila berada di area perannya sendiri.
   (debounce cari 300 ms, pushState, tukar `[data-swap]` + `[data-facet]`), bottom sheet filter < 1024px, tampilan
   Kartu/Daftar (varian CSS `list-view`, localStorage). Foto kartu: foto produk publik → foto bidang usaha → panel cream
   berinisial (belum ada kolom foto profil kelompok). Sorotan kata kunci `bg-highlight` (sun pucat, bukan `sun`).
+  Efek lebih ringan dari Beranda: `x-reveal.stagger.quick` (sekali per kartu, pemicu 10%, 16/24px, 600ms, jeda 60ms),
+  intro banner + kotak cari sekali, ganti hasil: memudar 150ms lalu muncul berjeda 40ms (posisi gulir dijaga, paginasi
+  gulir halus ke bar hasil), pil filter skala 0,9 ↔ 1, bottom sheet meluncur 250ms. Angka di variabel `--reveal-quick-*`,
+  `--swap-*`, `--chip-duration`, `--sheet-duration` (app.css). Panel filter, header, bar hasil tanpa animasi.
 - Badge "Profil diverifikasi OPD" (pil) di direktori dan profil publik bila `profile_status = verified`; tidak
   pernah memblokir tampil publik.
 - Angka beranda dihitung unik dan di-cache 10 menit (`App\Support\PublicDirectory`). Cache hanya

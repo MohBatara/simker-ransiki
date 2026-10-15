@@ -159,3 +159,13 @@ test('data privat tidak tampil di direktori', function () {
         ->assertDontSee('Ketua Rahasia')->assertDontSee('0812-9999-0000')->assertDontSee('rahasia@contoh.test')
         ->assertDontSee('Alamat rahasia')->assertDontSee('987')->assertDontSee('Aset rahasia');
 });
+
+test('efek ringan: kartu x-reveal quick, banner dan kotak cari intro sekali, pil filter berkunci untuk animasi', function () {
+    $html = $this->get("/direktori?bidang[]={$this->kebun->id}")->getContent();
+
+    expect($html)->toContain('x-reveal.stagger.quick="fade-up"')->toContain('class="reveal-quick"')
+        ->toContain('data-intro>')->toContain('data-intro-search')
+        ->toContain('data-chip="bidang-'.$this->kebun->id.'"')
+        // Panel filter dan bar hasil tanpa x-reveal.
+        ->and(preg_match('#<aside[^>]*id="filter-panel"[^>]*x-reveal#', $html))->toBe(0);
+});

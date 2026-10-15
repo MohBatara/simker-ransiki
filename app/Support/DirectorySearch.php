@@ -155,7 +155,7 @@ class DirectorySearch
     /**
      * Chip filter aktif: label + URL tanpa filter itu (pencarian dan urutan tetap).
      *
-     * @return list<array{label: string, url: string}>
+     * @return list<array{key: string, label: string, url: string}>
      */
     public function chips(): array
     {
@@ -163,7 +163,7 @@ class DirectorySearch
 
         return collect($this->selected)->flatMap(fn (array $ids, string $dimension) => collect($ids)
             ->filter(fn (int $id) => isset($options[$dimension][$id]))
-            ->map(fn (int $id) => ['label' => $options[$dimension][$id], 'url' => route('public.directory', $this->params($dimension, $id))]))
+            ->map(fn (int $id) => ['key' => "{$dimension}-{$id}", 'label' => $options[$dimension][$id], 'url' => route('public.directory', $this->params($dimension, $id))]))
             ->values()->all();
     }
 

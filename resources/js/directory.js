@@ -4,7 +4,9 @@
  *   dibagikan dan tombol kembali bekerja. Halaman baru diambil utuh; elemen [data-swap] (menurut id) dan angka
  *   [data-facet] ditukar, lalu isian form disamakan dengan URL.
  * - Tautan chip, paginasi, dan "Hapus semua filter" ([data-directory-link], [data-directory-pages] a) dimuat sama.
- * - Kartu hasil baru muncul bergiliran (fade-up, variabel --reveal-* di app.css); mati bila prefers-reduced-motion.
+ * - Efek ringan (angka di variabel --swap-*, --chip-*, --sheet-*, --reveal-quick-* di app.css): hasil lama memudar,
+ *   hasil baru muncul bergiliran, pil filter masuk/keluar dengan skala, bottom sheet meluncur dari bawah. Posisi gulir
+ *   dijaga, kecuali pindah halaman (gulir halus ke bar hasil). prefers-reduced-motion: semua langsung tampil.
  * - Tampilan Kartu/Daftar diingat di localStorage (try/catch: penyimpanan bisa diblokir).
  * - Bottom sheet filter (< 1024px): fokus terkunci di dalam, Esc/latar/tombol/geser ke bawah menutup.
  */
@@ -13,6 +15,8 @@ const VIEW_KEY = 'simker:direktori:tampilan';
 const SEARCH_DELAY = 300;
 const token = (name, fallback) => Number.parseFloat(getComputedStyle(document.documentElement).getPropertyValue(name)) || fallback;
 const baseName = (name) => name.replace(/\[\d*\]$/, '');
+const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+const EASE = 'cubic-bezier(0.16, 1, 0.3, 1)';
 
 export default function directory() {
     return {
@@ -22,6 +26,7 @@ export default function directory() {
         drag: 0,
         dragFrom: null,
         opener: null,
+        closing: false,
         timer: null,
         request: null,
 
@@ -41,7 +46,10 @@ export default function directory() {
             this.$watch('sheet', (open) => {
                 document.documentElement.classList.toggle('overflow-hidden', open);
                 if (open) {
-                    this.$nextTick(() => (this.$refs.sheet.querySelector('[data-sheet-first]') ?? this.$refs.sheet).focus());
+                    this.$nextTick(() => {
+                        this.slide(true);
+                        (this.$refs.sheet.querySelector('[data-sheet-first]') ?? this.$refs.sheet).focus();
+                    });
                 } else {
                     this.drag = 0;
                     this.opener?.focus();
@@ -86,11 +94,20 @@ export default function directory() {
         async load(url, { push = true, scroll = false } = {}) {
             this.request?.abort();
             const request = (this.request = new AbortController());
+            const animated = !reduce.matches;
+            const results = this.$refs.hasil;
+            const y = window.scrollY;
             this.loading = true;
             try {
+                // Hasil lama memudar dan pil yang dihapus mengecil, bersamaan dengan pengambilan halaman baru.
+                const chips = this.chipKeys();
+                const fade = animated ? Promise.all([this.fadeOut(results), this.chipsOut(url)]) : Promise.resolve();
                 const response = await fetch(url, { headers: { Accept: 'text/html', 'X-Requested-With': 'XMLHttpRequest' }, signal: request.signal });
                 if (!response.ok) throw new Error(String(response.status));
-                const next = new DOMParser().parseFromString(await response.text(), 'text/html');
+                const html = await response.text();
+                await fade;
+                if (request.signal.aborted) return;
+                const next = new DOMParser().parseFromString(html, 'text/html');
 
                 for (const region of this.$root.querySelectorAll('[data-swap]')) {
                     const fresh = next.getElementById(region.id);
@@ -111,10 +128,20 @@ export default function directory() {
 
                 if (push) window.history.pushState({}, '', url);
                 this.sync(url);
-                if (scroll) this.$refs.results.scrollIntoView({ behavior: reduce.matches ? 'auto' : 'smooth', block: 'start' });
-                // Tunggu Alpine memasang direktif pada isi baru, lalu mainkan kartu.
-                setTimeout(() => this.animate());
+                results.style.transition = 'none';
+                results.style.opacity = '';
+                if (scroll) {
+                    this.$refs.results.scrollIntoView({ behavior: animated ? 'smooth' : 'auto', block: 'start' });
+                } else {
+                    window.scrollTo(0, y);
+                }
+                if (animated) {
+                    this.chipsIn(chips);
+                    // Tunggu Alpine memasang x-reveal pada kartu baru, lalu mainkan yang terlihat.
+                    setTimeout(() => this.animate());
+                }
             } catch (error) {
+                results.style.opacity = '';
                 if (error.name !== 'AbortError') window.location.href = url;
             } finally {
                 if (this.request === request) this.loading = false;
@@ -135,13 +162,56 @@ export default function directory() {
             }
         },
 
+        fadeOut(element) {
+            const duration = token('--swap-out-duration', 150);
+            element.style.transition = `opacity ${duration}ms ease-out`;
+            element.style.opacity = '0';
+
+            return wait(duration);
+        },
+
+        chipKeys() {
+            return new Set([...this.$root.querySelectorAll('[data-chip]')].map((chip) => chip.dataset.chip));
+        },
+
+        chipStyle(chip, shown) {
+            chip.style.transition = `transform ${token('--chip-duration', 150)}ms ease-out, opacity ${token('--chip-duration', 150)}ms ease-out`;
+            chip.style.transform = shown ? '' : 'scale(0.9)';
+            chip.style.opacity = shown ? '' : '0';
+        },
+
+        // Pil yang tidak ada lagi di URL tujuan (kunci "dimensi-id") mengecil dan memudar sebelum ditukar.
+        async chipsOut(url) {
+            const kept = new Set();
+            for (const [key, value] of new URL(url, window.location.href).searchParams) kept.add(`${baseName(key)}-${value}`);
+            const leaving = [...this.$root.querySelectorAll('[data-chip]')].filter((chip) => !kept.has(chip.dataset.chip));
+            if (leaving.length === 0) return;
+            leaving.forEach((chip) => this.chipStyle(chip, false));
+            await wait(token('--chip-duration', 150));
+        },
+
+        // Pil baru mulai dari 0,9 dan transparan, lalu membesar ke ukuran penuh.
+        chipsIn(before) {
+            const entering = [...this.$root.querySelectorAll('[data-chip]')].filter((chip) => !before.has(chip.dataset.chip));
+            for (const chip of entering) {
+                chip.style.transition = 'none';
+                chip.style.transform = 'scale(0.9)';
+                chip.style.opacity = '0';
+            }
+            void document.body.offsetHeight;
+            requestAnimationFrame(() => entering.forEach((chip) => this.chipStyle(chip, true)));
+        },
+
+        // Kartu baru yang terlihat muncul bergiliran (--swap-stagger); kartu di bawah layar menunggu x-reveal.quick.
         animate() {
-            const cards = [...(this.$root.querySelector('[data-cards]')?.children ?? [])];
-            if (reduce.matches || cards.length === 0) return;
-            const step = token('--reveal-stagger', 150) / 2;
+            const cards = [...(this.$root.querySelector('[data-cards]')?.children ?? [])]
+                .filter((card) => card.getBoundingClientRect().top < window.innerHeight);
+            if (cards.length === 0) return;
+            const step = token('--swap-stagger', 40);
             for (const [i, card] of cards.entries()) {
                 card.style.transition = 'none';
                 card.dataset.reveal = 'fade-up';
+                card.dataset.revealQuick = '';
                 card.dataset.revealState = 'hidden';
                 card.style.setProperty('--reveal-delay', `${Math.min(i, 5) * step}ms`);
             }
@@ -154,13 +224,30 @@ export default function directory() {
             });
         },
 
+        // Bottom sheet meluncur dari bawah, latar memudar (Web Animations; langsung bila gerak dikurangi).
+        slide(open, from = 0) {
+            if (reduce.matches || !this.$refs.sheet.animate) return Promise.resolve();
+            const options = { duration: token('--sheet-duration', 250), easing: open ? EASE : 'ease-in', fill: 'none' };
+            const frames = open ? [{ transform: 'translateY(100%)' }, { transform: 'translateY(0)' }] : [{ transform: `translateY(${from}px)` }, { transform: 'translateY(100%)' }];
+            this.$refs.backdrop.animate([{ opacity: open ? 0 : 1 }, { opacity: open ? 1 : 0 }], options);
+
+            return this.$refs.sheet.animate(frames, options).finished.catch(() => {});
+        },
+
         open(event) {
             this.opener = event.currentTarget;
             this.sheet = true;
         },
 
-        close() {
-            if (this.sheet) this.sheet = false;
+        async close() {
+            if (!this.sheet || this.closing) return;
+            this.closing = true;
+            const from = this.drag;
+            this.drag = 0;
+            // Tetap di posisi geser selama animasi keluar; hanya di HP/tablet (di desktop panel bukan sheet).
+            if (window.matchMedia('(max-width: 63.98rem)').matches) await this.slide(false, from);
+            this.sheet = false;
+            this.closing = false;
         },
 
         trap(event) {
@@ -186,9 +273,12 @@ export default function directory() {
         },
 
         dragEnd() {
-            if (this.drag > 80) this.close();
-            this.drag = 0;
             this.dragFrom = null;
+            if (this.drag > 80) {
+                this.close();
+            } else {
+                this.drag = 0;
+            }
         },
     };
 }

@@ -369,11 +369,21 @@
         --row-hint-distance: 28px;
         --row-hint-duration: 900ms;
         --intro-duration: 900ms; /* intro hero saat halaman dibuka */
+        /* Versi ringan (x-reveal.quick, Direktori): sekali per kartu, tanpa ulang saat digulir naik turun. */
+        --reveal-quick-shift: 16px; /* HP; mulai 768px 24px */
+        --reveal-quick-duration: 600ms;
+        --reveal-quick-stagger: 60ms; /* maks 6 kartu dijeda */
+        --reveal-quick-threshold: 0.1; /* 10% kartu terlihat */
+        --swap-out-duration: 150ms; /* hasil lama memudar saat filter/cari/urut/halaman berubah */
+        --swap-stagger: 40ms; /* hasil baru muncul bergiliran */
+        --chip-duration: 150ms; /* pil filter aktif masuk/keluar (scale 0,9 ↔ 1) */
+        --sheet-duration: 250ms; /* bottom sheet filter meluncur dari bawah */
     }
     @media (width >= 48rem) {
         :root {
             --reveal-shift: var(--reveal-distance);
             --reveal-duration: 1200ms;
+            --reveal-quick-shift: 24px;
         }
     }
 }
@@ -388,6 +398,16 @@
         /* Jeda hanya saat muncul; reset (di bawah layar) tanpa jeda. */
         [data-reveal][data-reveal-state='shown'] {
             transition-delay: var(--reveal-delay, 0ms);
+        }
+        /* Versi ringan: jarak dan durasi sendiri; .reveal-quick juga meringankan intro (banner Direktori). */
+        [data-reveal-quick],
+        .reveal-quick {
+            --reveal-shift: var(--reveal-quick-shift);
+            --reveal-duration: var(--reveal-quick-duration);
+            --intro-duration: var(--reveal-quick-duration);
+        }
+        .motion [data-intro-search] {
+            animation: intro-up var(--intro-duration) var(--reveal-ease) 120ms both;
         }
         [data-reveal-animating] {
             will-change: transform, opacity;

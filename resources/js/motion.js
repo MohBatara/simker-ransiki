@@ -8,6 +8,9 @@
  *   + data-reveal-row                                        deretan geser: < 1024px, selama deretan bisa digeser, varian
  *                                                            "slide-in-row" (kartu masuk dari kanan) menggantikan varian tadi
  *   + .intro                                                 terlihat saat dibuka: tetap dimainkan setelah intro hero
+ * x-reveal.quick / x-reveal.stagger.quick                     versi ringan (Direktori): SEKALI per elemen, tiap anak
+ *                                                            diamati sendiri, pemicu --reveal-quick-threshold terlihat,
+ *                                                            jarak/durasi/jeda --reveal-quick-* (atribut data-reveal-quick)
  * x-count.<tunda ms>                                         angka menghitung naik setiap kali masuk dari bawah
  * x-parallax="<px>"                                          geser vertikal halus selama elemen di layar (≥ 768px)
  * $store.scroll.pastHeader / pastFold                        posisi gulir (header ringkas, tombol kembali ke atas)
@@ -54,6 +57,44 @@ const exitObserver = supported
     }, { threshold: 0 })
     : null;
 
+// Versi ringan: elemen muncul sekali saat --reveal-quick-threshold bagiannya terlihat, lalu tidak diamati lagi.
+const quickThreshold = supported ? token('--reveal-quick-threshold', 0.1) : 0;
+const quickObserver = supported
+    ? new IntersectionObserver((entries) => {
+        const entering = entries.filter((entry) => entry.isIntersecting);
+        // Elemen yang masuk bersamaan dijeda bergiliran (maks STAGGER_MAX).
+        entering.forEach((entry, i) => {
+            quickObserver.unobserve(entry.target);
+            entry.target._motion?.enter(Math.min(i, STAGGER_MAX - 1));
+        });
+    }, { threshold: quickThreshold })
+    : null;
+
+function quick(el, { modifiers }) {
+    const targets = modifiers.includes('stagger') ? [...el.children] : [el];
+    const step = Number(el.dataset.revealDelay ?? token('--reveal-quick-stagger', 60));
+    targets.forEach((target) => {
+        target.dataset.reveal = 'fade-up';
+        target.dataset.revealQuick = '';
+        target.addEventListener('transitionend', (event) => {
+            if (event.target === target) delete target.dataset.revealAnimating;
+        });
+        if (seenOnLoad(target)) {
+            target.dataset.revealState = 'shown';
+            return;
+        }
+        target.dataset.revealState = 'hidden';
+        target._motion = {
+            enter: (index) => {
+                target.style.setProperty('--reveal-delay', `${index * step}ms`);
+                target.dataset.revealAnimating = '';
+                target.dataset.revealState = 'shown';
+            },
+        };
+        quickObserver.observe(target);
+    });
+}
+
 function watch(el, handlers) {
     el._motion = handlers;
     enterObserver.observe(el);
@@ -62,6 +103,10 @@ function watch(el, handlers) {
 
 function reveal(el, { expression, modifiers }) {
     if (reduce.matches || !supported) {
+        return;
+    }
+    if (modifiers.includes('quick')) {
+        quick(el, { modifiers });
         return;
     }
 

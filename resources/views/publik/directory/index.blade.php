@@ -20,15 +20,16 @@
     aria-label="Cari dan saring kelompok"
     x-data="directory"
     x-ref="form"
+    class="reveal-quick"
     data-view="grid"
     x-bind:data-view="view"
-    x-on:submit.prevent="submit(); sheet = false"
+    x-on:submit.prevent="submit(); close()"
     x-on:change="submit()"
     x-on:click="navigate($event)"
 >
     {{-- Banner: 180px HP, 240px desktop; ruang bawah = setengah kotak cari (28px) + 24px. --}}
     <section class="on-dark relative bg-forest text-paper">
-        <div class="mx-auto flex min-h-45 max-w-public flex-col justify-end px-4 pt-10 pb-13 md:min-h-60 md:px-6">
+        <div class="mx-auto flex min-h-45 max-w-public flex-col justify-end px-4 pt-10 pb-13 md:min-h-60 md:px-6" data-intro>
             <nav aria-label="Remah roti" class="mb-3 text-caption text-forest-soft">
                 <ol class="flex flex-wrap items-center gap-x-1.5 gap-y-1">
                     <li><a href="{{ route('home') }}" class="rounded-control text-paper underline-offset-4 hover:underline">Beranda</a></li>
@@ -42,7 +43,7 @@
 
         <div class="absolute inset-x-0 bottom-0 z-10 translate-y-1/2">
             <div class="mx-auto max-w-public px-4 md:px-6">
-                <div class="flex h-14 max-w-3xl items-center gap-2 rounded-tile border border-line bg-paper pr-1.5 pl-4 shadow-strip focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-brand">
+                <div data-intro-search class="flex h-14 max-w-3xl items-center gap-2 rounded-tile border border-line bg-paper pr-1.5 pl-4 shadow-strip focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-brand">
                     <x-heroicon-o-magnifying-glass class="size-5 shrink-0 text-ink-muted" aria-hidden="true" />
                     <label for="q" class="sr-only">Cari nama kelompok, produk, atau kampung</label>
                     <input
@@ -65,7 +66,7 @@
 
     <div class="mx-auto max-w-public px-4 pt-[calc(1.75rem+2rem)] pb-section md:px-6 lg:grid lg:grid-cols-[17.5rem_minmax(0,1fr)] lg:gap-10">
         {{-- Latar bottom sheet (HP dan tablet). --}}
-        <div x-cloak x-show="sheet" x-transition.opacity class="fixed inset-0 z-40 bg-ink/40 lg:hidden" x-on:click="close()" aria-hidden="true"></div>
+        <div x-cloak x-show="sheet" x-ref="backdrop" class="fixed inset-0 z-40 bg-ink/40 lg:hidden" x-on:click="close()" aria-hidden="true"></div>
 
         {{-- Panel filter: panel samping sticky mulai 1024px; di bawahnya bottom sheet (dialog, fokus terkunci). --}}
         <aside
@@ -156,7 +157,7 @@
             </div>
         </aside>
 
-        <div class="min-w-0" x-ref="results">
+        <div class="min-w-0 scroll-mt-24" x-ref="results">
             {{-- Bar hasil: jumlah (dibacakan saat berubah), tombol Filter (HP/tablet), urutan, Kartu/Daftar. --}}
             <div class="flex flex-wrap items-center justify-between gap-3">
                 <p id="ringkasan" data-swap role="status" class="min-w-0 text-ui text-ink-soft max-sm:w-full">
@@ -194,7 +195,7 @@
                 @if ($chips)
                     <ul class="mt-4 flex flex-wrap gap-2" aria-label="Filter aktif">
                         @foreach ($chips as $chip)
-                            <li>
+                            <li data-chip="{{ $chip['key'] }}">
                                 <a href="{{ $chip['url'] }}" data-directory-link class="inline-flex min-h-9 items-center gap-1.5 rounded-full border border-brand bg-brand-tint py-1 pr-2 pl-3 text-ui font-semibold text-brand transition-colors hover:bg-paper max-md:min-h-11">
                                     {{ $chip['label'] }}<x-heroicon-o-x-mark class="size-4" aria-hidden="true" /><span class="sr-only">: hapus filter</span>
                                 </a>
@@ -204,7 +205,7 @@
                 @endif
             </div>
 
-            <div id="hasil" data-swap class="mt-6 transition-opacity" x-bind:class="loading && 'opacity-60'" x-bind:aria-busy="loading">
+            <div id="hasil" data-swap class="mt-6" x-ref="hasil" x-bind:aria-busy="loading">
                 @if ($organizations->isEmpty())
                     @if ($filterCount || $search->q !== '')
                         <div class="flex flex-col items-center rounded-panel bg-cream px-6 py-14 text-center md:py-20">
@@ -222,7 +223,7 @@
                         <x-empty-state title="Belum ada kelompok yang dipublikasikan" description="Daftar kelompok akan tampil di sini setelah dipublikasikan oleh Admin distrik." />
                     @endif
                 @else
-                    <ul data-cards x-reveal.stagger="fade-up" class="grid gap-5 md:grid-cols-2 xl:grid-cols-3 list-view:grid-cols-1! list-view:gap-3">
+                    <ul data-cards x-reveal.stagger.quick="fade-up" class="grid gap-5 md:grid-cols-2 xl:grid-cols-3 list-view:grid-cols-1! list-view:gap-3">
                         @foreach ($organizations as $organization)
                             <li class="min-w-0">@include('publik.directory._card')</li>
                         @endforeach
