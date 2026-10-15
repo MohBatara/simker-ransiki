@@ -6,6 +6,7 @@ import scrollDots from './scroll-dots';
 import sectionNav from './section-nav';
 import directory from './directory';
 import { productGallery, scrollRow, stickyCta } from './products';
+import readingProgress from './reading-progress';
 import registerMotion from './motion';
 
 const HEIC_MESSAGE = "Format HEIC belum didukung. Ubah pengaturan kamera iPhone ke 'Paling Kompatibel', atau kirim ulang sebagai JPG.";
@@ -262,6 +263,7 @@ Alpine.data('directory', directory);
 Alpine.data('scrollRow', scrollRow);
 Alpine.data('productGallery', productGallery);
 Alpine.data('stickyCta', stickyCta);
+Alpine.data('readingProgress', readingProgress);
 registerMotion(Alpine);
 
 /**

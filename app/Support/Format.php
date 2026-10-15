@@ -97,6 +97,12 @@ class Format
         return $value === null ? self::EMPTY : Carbon::parse($value)->translatedFormat('j F Y');
     }
 
+    /** "Kamis, 15 Oktober 2026" (nama hari + tanggal, Bahasa Indonesia). */
+    public static function dayDate(CarbonInterface|string|null $value): string
+    {
+        return $value === null ? self::EMPTY : Carbon::parse($value)->translatedFormat('l, j F Y');
+    }
+
     /** "24 Sep 2026" (bulan disingkat, Bahasa Indonesia). */
     public static function dateShort(CarbonInterface|string|null $value): string
     {

@@ -24,6 +24,7 @@
         ['Facebook', 'https://www.facebook.com/sharer/sharer.php?u='.rawurlencode($url), 'arrow-top-right-on-square'],
     ];
     $chip = 'inline-flex h-11 items-center gap-2 rounded-full border border-line-strong bg-paper px-4 text-ui font-semibold text-ink transition-colors hover:border-brand hover:text-brand';
+    $round = 'flex size-10 items-center justify-center rounded-full border border-line-strong bg-paper text-ink transition-colors hover:border-brand hover:text-brand';
 @endphp
 
 <x-layouts.public :title="$post->title" :description="$description" :image="$image" type="article">
@@ -32,6 +33,17 @@
         <meta property="article:modified_time" content="{{ ($post->updated_at ?? $post->published_at)->toAtomString() }}">
         <script type="application/ld+json">{!! json_encode($jsonLd, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP) !!}</script>
     </x-slot:meta>
+
+    {{-- Garis progres membaca: menempel di bawah header (ikut menyusut), lebar mengikuti posisi gulir artikel. --}}
+    <div
+        x-data="readingProgress"
+        data-reading-progress
+        class="reading-progress pointer-events-none fixed inset-x-0 z-40 h-[3px] print:hidden"
+        x-bind:class="$store.scroll.pastHeader ? 'top-13 md:top-15' : 'top-16 md:top-18'"
+        aria-hidden="true"
+    >
+        <div x-ref="bar" class="h-full origin-left scale-x-0 bg-sun"></div>
+    </div>
 
     <article data-print-article class="py-section">
         {{-- Kolom baca: maks 40rem (sekitar 68 karakter per baris pada 18px), di tengah. --}}
@@ -44,35 +56,64 @@
                 </ol>
             </nav>
 
-            @include('publik.posts._meta', ['post' => $post, 'class' => 'mt-8'])
-            <h1 class="mt-3 font-serif text-display-sm font-semibold text-balance text-ink md:text-title-lg">{{ $post->title }}</h1>
-            @if ($post->summary)
-                <p class="mt-5 text-title-sm text-ink-soft">{{ $post->summary }}</p>
-            @endif
-            <p class="mt-6 flex flex-wrap items-center gap-x-2 border-t border-line pt-4 text-caption text-ink-muted">
-                <span>Diterbitkan oleh <span class="font-semibold text-ink-soft">Kantor Distrik Ransiki</span></span>
-                @if ($updated)
-                    <span aria-hidden="true">·</span>
-                    <span>Diperbarui <time datetime="{{ $updated->toAtomString() }}">{{ Format::date($updated) }}</time></span>
+            <div data-intro>
+                <a href="{{ route('public.posts', ['kategori' => $post->category->value]) }}" class="mt-8 inline-flex h-7 items-center rounded-full bg-brand-tint px-3 text-caption font-semibold text-brand transition-colors hover:bg-brand hover:text-paper">{{ $post->category->label() }}</a>
+                <h1 class="mt-4 font-serif text-[1.875rem] leading-[2.375rem] font-semibold tracking-[-0.01em] text-balance text-ink md:text-[2.75rem] md:leading-[3.25rem]">{{ $post->title }}</h1>
+                @if ($post->summary)
+                    <p class="mt-5 text-title-sm text-ink-soft">{{ $post->summary }}</p>
                 @endif
-            </p>
+                {{-- Baris penerbit: inisial, nama, tanggal terbit, waktu baca, diperbarui (bila beda hari). --}}
+                <div class="mt-6 flex items-center gap-3 border-t border-line pt-5">
+                    <span class="flex size-10 shrink-0 items-center justify-center rounded-full bg-forest font-serif text-ui font-semibold text-paper" aria-hidden="true">KD</span>
+                    <div class="min-w-0 text-caption text-ink-soft">
+                        <p class="font-semibold text-ink">Kantor Distrik Ransiki</p>
+                        <p class="mt-0.5 flex flex-wrap items-center gap-x-2">
+                            <time datetime="{{ $post->published_at->toAtomString() }}">{{ Format::date($post->published_at) }}</time>
+                            <span aria-hidden="true">·</span>
+                            <span>{{ $post->readingMinutes() }} menit baca</span>
+                            @if ($updated)
+                                <span aria-hidden="true">·</span>
+                                <span>Diperbarui <time datetime="{{ $updated->toAtomString() }}">{{ Format::date($updated) }}</time></span>
+                            @endif
+                        </p>
+                    </div>
+                </div>
+            </div>
         </header>
 
         @if ($cover)
-            {{-- Foto lebih lebar dari kolom baca (sekitar 960px). --}}
-            <figure class="mx-auto mt-10 max-w-[63rem] px-4 md:px-6">
-                <x-public.picture :image="$cover" :alt="$post->photo_alt ?: $post->title" eager sizes="(min-width: 64rem) 60rem, 100vw" width="1600" height="900" frame="block aspect-[16/9] overflow-hidden rounded-tile bg-subtle" class="size-full object-cover" />
+            {{-- Foto lebih lebar dari kolom baca (sekitar 1040px), sudut 20px. --}}
+            <figure class="mx-auto mt-10 max-w-[65rem] px-4 md:px-6" x-reveal="fade-up">
+                <x-public.picture :image="$cover" :alt="$post->photo_alt ?: $post->title" eager sizes="(min-width: 64rem) 65rem, 100vw" width="1600" height="900" frame="block aspect-[16/9] overflow-hidden rounded-[20px] bg-subtle" class="size-full object-cover" />
                 @if ($post->photo_caption)
                     <figcaption class="mt-3 text-caption text-ink-muted">{{ $post->photo_caption }}</figcaption>
                 @endif
             </figure>
         @endif
 
-        <div class="prose-article mx-auto mt-10 max-w-[40rem] px-4">{!! Format::markdown($post->body) !!}</div>
+        {{-- Isi + rel bagikan (desktop: menempel di kiri kolom baca; HP: baris tombol di bawah artikel). --}}
+        <div class="relative mx-auto mt-10 max-w-[40rem] px-4">
+            <div class="absolute top-0 right-full bottom-0 mr-4 hidden lg:block print:hidden">
+                <div class="sticky top-36 flex flex-col items-center gap-3">
+                    <span class="text-caption font-semibold tracking-wider text-ink-muted uppercase [writing-mode:vertical-rl]" aria-hidden="true">Bagikan</span>
+                    @foreach ($share as [$label, $href, $icon])
+                        <a href="{{ $href }}" target="_blank" rel="noopener" class="{{ $round }}" title="Bagikan ke {{ $label }}">
+                            <span class="sr-only">Bagikan ke {{ $label }}</span><x-dynamic-component :component="'heroicon-o-'.$icon" class="size-5" aria-hidden="true" />
+                        </a>
+                    @endforeach
+                    <button type="button" x-data="copyText(@js($url))" x-on:click="copy()" class="{{ $round }}" x-bind:title="copied ? 'Tautan disalin' : 'Salin tautan'" title="Salin tautan">
+                        <span class="sr-only" x-text="copied ? 'Tautan disalin' : 'Salin tautan'">Salin tautan</span>
+                        <x-heroicon-o-link class="size-5" aria-hidden="true" x-show="! copied" />
+                        <x-heroicon-o-check class="size-5 text-brand" aria-hidden="true" x-show="copied" x-cloak />
+                    </button>
+                </div>
+            </div>
+            <div class="prose-article drop-cap">{!! Format::markdown($post->body) !!}</div>
+        </div>
 
         <div class="mx-auto mt-12 max-w-[40rem] space-y-10 px-4">
             {{-- Bagikan: tautan biasa, tanpa skrip pihak ketiga. --}}
-            <section aria-labelledby="bagikan" class="border-t border-line pt-8 print:hidden">
+            <section aria-labelledby="bagikan" class="border-t border-line pt-8 lg:hidden print:hidden">
                 <h2 id="bagikan" class="text-caption font-semibold tracking-wider text-ink-soft uppercase">Bagikan</h2>
                 <div class="mt-4 flex flex-wrap gap-3">
                     @foreach ($share as [$label, $href, $icon])
@@ -109,18 +150,30 @@
 
             @if ($previous || $next)
                 <nav aria-label="Berita sebelumnya dan berikutnya" class="grid gap-3 border-t border-line pt-8 sm:grid-cols-2 print:hidden">
-                    @if ($previous)
-                        <a href="{{ route('public.post', $previous->slug) }}" class="group rounded-public border border-line bg-paper p-4 transition-colors hover:border-brand">
-                            <span class="flex items-center gap-1 text-caption text-ink-muted"><x-heroicon-o-chevron-left class="size-4" aria-hidden="true" />Sebelumnya</span>
-                            <span class="mt-1 line-clamp-2 block font-serif font-semibold text-ink group-hover:text-brand">{{ $previous->title }}</span>
-                        </a>
-                    @endif
-                    @if ($next)
-                        <a href="{{ route('public.post', $next->slug) }}" @class(['group rounded-public border border-line bg-paper p-4 text-right transition-colors hover:border-brand', 'sm:col-start-2' => ! $previous])>
-                            <span class="flex items-center justify-end gap-1 text-caption text-ink-muted">Berikutnya<x-heroicon-o-chevron-right class="size-4" aria-hidden="true" /></span>
-                            <span class="mt-1 line-clamp-2 block font-serif font-semibold text-ink group-hover:text-brand">{{ $next->title }}</span>
-                        </a>
-                    @endif
+                    @foreach (['previous' => [$previous, 'Sebelumnya'], 'next' => [$next, 'Berikutnya']] as $key => [$item, $label])
+                        @if ($item)
+                            @php $thumb = $item->coverSources(); @endphp
+                            <a href="{{ route('public.post', $item->slug) }}" @class([
+                                'group flex items-center gap-4 rounded-tile border border-line bg-paper p-3 transition-colors hover:border-brand',
+                                'flex-row-reverse text-right' => $key === 'next',
+                                'sm:col-start-2' => $key === 'next' && ! $previous,
+                            ])>
+                                <span class="block size-18 shrink-0 overflow-hidden rounded-photo bg-cream">
+                                    @if ($thumb)
+                                        <x-public.picture :image="$thumb" alt="" sizes="72px" width="480" height="300" frame="block size-full" class="size-full object-cover" />
+                                    @else
+                                        <span class="flex size-full items-center justify-center text-clay" aria-hidden="true"><x-dynamic-component :component="'heroicon-o-'.$item->category->icon()" class="size-7" /></span>
+                                    @endif
+                                </span>
+                                <span class="min-w-0">
+                                    <span @class(['flex items-center gap-1 text-caption text-ink-muted', 'justify-end' => $key === 'next'])>
+                                        @if ($key === 'previous')<x-heroicon-o-chevron-left class="size-4" aria-hidden="true" />@endif{{ $label }}@if ($key === 'next')<x-heroicon-o-chevron-right class="size-4" aria-hidden="true" />@endif
+                                    </span>
+                                    <span class="mt-1 line-clamp-2 block font-serif font-semibold text-ink group-hover:text-brand">{{ $item->title }}</span>
+                                </span>
+                            </a>
+                        @endif
+                    @endforeach
                 </nav>
             @endif
         </div>
@@ -131,10 +184,10 @@
         <section class="border-t border-line bg-paper print:hidden" aria-labelledby="berita-lainnya">
             <div class="mx-auto max-w-public px-4 py-section md:px-6">
                 <div class="flex flex-wrap items-end justify-between gap-4">
-                    <h2 id="berita-lainnya" class="font-serif text-display-sm font-semibold text-ink">Berita lainnya</h2>
+                    <h2 id="berita-lainnya" class="font-serif text-display-sm font-semibold text-ink">Baca juga</h2>
                     <x-public.pill-link :href="route('public.posts')" class="max-md:hidden">Lihat semua berita</x-public.pill-link>
                 </div>
-                <ul class="mt-section-head grid gap-x-8 gap-y-12 md:grid-cols-2 lg:grid-cols-3">
+                <ul class="mt-section-head grid gap-x-8 gap-y-12 md:grid-cols-2 lg:grid-cols-3" x-reveal.stagger="fade-up">
                     @foreach ($others as $other)
                         <li class="min-w-0">@include('publik._post-card', ['post' => $other])</li>
                     @endforeach

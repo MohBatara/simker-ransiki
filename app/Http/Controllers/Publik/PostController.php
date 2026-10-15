@@ -2,13 +2,12 @@
 
 namespace App\Http\Controllers\Publik;
 
-use App\Enums\PostCategory;
 use App\Http\Controllers\Controller;
 use App\Models\Post;
 use App\Support\ImageVariants;
+use App\Support\PostListing;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
@@ -20,37 +19,22 @@ class PostController extends Controller
 {
     public const COLUMNS = ['posts.id', 'posts.slug', 'posts.title', 'posts.category', 'posts.summary', 'posts.body', 'posts.cover_photo_path', 'posts.photo_caption', 'posts.photo_alt', 'posts.published_at', 'posts.updated_at'];
 
-    public const PER_PAGE = 12;
-
     /**
-     * Daftar: tab kategori (?kategori=) dengan jumlah, cari judul (?q=), berita utama di halaman 1 tanpa pencarian
-     * (post terbaru berfoto, atau post terbaru), lalu grid PER_PAGE post tanpa mengulang berita utama.
+     * Daftar bergaya majalah (App\Support\PostListing): sorotan dan agenda di halaman 1 tanpa filter, daftar terbaru 10 per
+     * halaman tanpa mengulang sorotan, arsip bulan, dan tab kategori dengan jumlah.
      */
     public function index(Request $request): View
     {
-        $category = PostCategory::tryFrom((string) $request->query('kategori'));
-        $search = Str::limit(trim((string) $request->query('q')), 100, '');
-
-        $base = fn () => Post::query()->publiclyListed()
-            ->when($search !== '', fn ($query) => $query->where('posts.title', 'like', '%'.addcslashes($search, '\\%_').'%'));
-        $listed = fn () => $base()
-            ->when($category, fn ($query, $category) => $query->where('posts.category', $category))
-            ->latest('posts.published_at')->latest('posts.id');
-
-        $counts = $base()->groupBy('posts.category')->selectRaw('posts.category, COUNT(*) as total')->pluck('total', 'category');
-        $lead = $search === ''
-            ? ($listed()->whereNotNull('posts.cover_photo_path')->first(self::COLUMNS) ?? $listed()->first(self::COLUMNS))
-            : null;
-        $posts = $listed()->when($lead, fn ($query) => $query->whereKeyNot($lead->id))
-            ->paginate(self::PER_PAGE, self::COLUMNS)
-            ->withQueryString();
+        $listing = PostListing::fromRequest($request);
+        $posts = $listing->results();
 
         return view('publik.posts.index', [
-            'lead' => $posts->onFirstPage() ? $lead : null,
+            'listing' => $listing,
             'posts' => $posts,
-            'category' => $category,
-            'search' => $search,
-            'counts' => ['' => (int) $counts->sum()] + collect(PostCategory::cases())->mapWithKeys(fn (PostCategory $case) => [$case->value => (int) ($counts[$case->value] ?? 0)])->all(),
+            'highlights' => $posts->onFirstPage() ? $listing->highlights() : collect(),
+            'agenda' => $listing->agenda($posts->currentPage()),
+            'counts' => $listing->counts(),
+            'archive' => $listing->archive(),
         ]);
     }
 
@@ -68,13 +52,17 @@ class PostController extends Controller
                 ->orWhere(fn ($query) => $query->where('posts.published_at', $post->published_at)->where('posts.id', $direction === 'older' ? '<' : '>', $post->id)))
             ->orderBy('posts.published_at', $direction === 'older' ? 'desc' : 'asc')
             ->orderBy('posts.id', $direction === 'older' ? 'desc' : 'asc')
-            ->first(['posts.id', 'posts.slug', 'posts.title']);
+            ->first(['posts.id', 'posts.slug', 'posts.title', 'posts.category', 'posts.cover_photo_path']);
 
         return view('publik.posts.show', [
             'post' => $post,
             'previous' => $neighbour('older'),
             'next' => $neighbour('newer'),
-            'others' => Post::query()->publiclyListed()->whereKeyNot($post->id)->latest('published_at')->latest('id')->limit(3)->get(self::COLUMNS),
+            // Baca juga: kategori yang sama dulu, lalu terbaru.
+            'others' => Post::query()->publiclyListed()->whereKeyNot($post->id)
+                ->orderByRaw('posts.category = ? desc', [$post->category->value])
+                ->latest('posts.published_at')->latest('posts.id')
+                ->limit(3)->get(self::COLUMNS),
         ]);
     }
 

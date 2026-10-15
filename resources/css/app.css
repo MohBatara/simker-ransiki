@@ -332,6 +332,16 @@
     .prose-article a {
         @apply text-brand underline underline-offset-4 hover:text-brand-hover;
     }
+    /* Detail berita: huruf awal besar serif brand setinggi tiga baris di paragraf pertama (3 × 1,75 × 18px ≈ 94px). */
+    .prose-article.drop-cap > p:first-of-type::first-letter {
+        float: left;
+        margin: 0.3rem 0.6rem 0 0;
+        font-family: var(--font-serif);
+        font-size: 5.6rem;
+        font-weight: 600;
+        line-height: 0.8;
+        color: var(--color-brand);
+    }
     .prose-article strong {
         @apply font-semibold;
     }
@@ -340,7 +350,8 @@
     }
     @media print {
         .prose-article,
-        .prose-article * {
+        .prose-article *,
+        .prose-article.drop-cap > p:first-of-type::first-letter {
             color: #000 !important;
         }
     }

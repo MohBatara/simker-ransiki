@@ -353,8 +353,10 @@ test('halaman publik tanpa tanda pisah dan tanpa hiasan garis emas; emas hanya u
     $organization = Organization::factory()->public()->create(['name' => 'KUB Contoh Rapi']);
     $organization->sectors()->attach(BusinessSector::factory()->create(['name' => 'Perikanan']));
     $product = Product::factory()->for($organization)->create(['is_public' => true, 'is_featured' => true]);
+    $post = App\Models\Post::factory()->create(['category' => 'kegiatan']);
+    $post->organizations()->attach($organization);
 
-    foreach (['/', '/direktori', '/direktori/kub-contoh-rapi', '/produk', '/produk/'.$product->slug, '/berita', '/profil', '/kontak'] as $url) {
+    foreach (['/', '/direktori', '/direktori/kub-contoh-rapi', '/produk', '/produk/'.$product->slug, '/berita', '/berita/'.$post->slug, '/profil', '/kontak'] as $url) {
         $html = $this->get($url)->assertOk()->getContent();
         $visible = preg_replace('#<(script|style)\b.*?</\1>|<!--.*?-->|<[^>]+>#s', ' ', $html);
 
@@ -364,7 +366,8 @@ test('halaman publik tanpa tanda pisah dan tanpa hiasan garis emas; emas hanya u
         preg_match_all('/class="([^"]*\b(?:bg|text|border)-sun\b[^"]*)"/', $html, $uses);
         foreach ($uses[1] as $classes) {
             // Tombol utama (x-public.button sun), aksen judul hero (span text-sun), atau pil "Pilihan distrik" (bg-sun text-ink).
-            expect($classes === 'text-sun' || str_contains($classes, 'bg-sun text-ink'))->toBeTrue("Emas dipakai di luar tombol/aksen: {$classes}");
+            // Garis progres membaca di detail berita (tanpa teks) juga diizinkan.
+            expect($classes === 'text-sun' || str_contains($classes, 'bg-sun text-ink') || $classes === 'h-full origin-left scale-x-0 bg-sun')->toBeTrue("Emas dipakai di luar tombol/aksen: {$classes}");
         }
     }
 

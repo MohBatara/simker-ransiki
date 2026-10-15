@@ -179,6 +179,16 @@ dipakai bila berada di area perannya sendiri.
   TANPA `offers`/harga (name, image, description, brand = kelompok). HP: bar tombol utama menempel (`stickyCta`) setelah
   tombolnya tergulir lewat, hilang saat footer terlihat. Kartu produk di Beranda dan profil kelompok menaut ke sini; sitemap
   memuat semua produk publik.
+- Berita (`/berita`): satu tempat logika `App\Support\PostListing` (`Post::publiclyListed()`). Query string `kategori`, `q`
+  (judul), `bulan` (YYYY-MM, tidak sah = diabaikan), `page` (10 per halaman). Kop editorial cream "Kabar Distrik Ransiki" +
+  baris tanggal hari ini; bar alat menempel (tab kategori berjumlah + cari). Sorotan (hanya tanpa filter): berita utama
+  (terbaru berfoto, tanpa itu terbaru) dengan teks di atas foto (`.overlay-band-bottom`, putih 85% ≥ 5,3:1) + dua terbaru;
+  dihitung di setiap halaman agar daftar terbaru tidak pernah mengulangnya, tampil di halaman 1. Agenda kegiatan (post
+  Kegiatan, maks 8, blok tanggal = tanggal terbit karena belum ada kolom tanggal acara). Arsip bulan + Kategori di panel
+  kanan menempel (HP: pil geser). Detail: garis progres membaca 3px `sun` di bawah header (`readingProgress`, tanpa
+  transisi; pengecualian `sun` atas permintaan), judul 44px (HP 30px), baris penerbit, foto 16:9 sudut 20px, drop cap
+  (`.prose-article.drop-cap`), rel bagikan menempel mulai 1024px (HP: baris tombol), Sebelumnya/Berikutnya berthumbnail,
+  "Baca juga" (kategori sama dulu, lalu terbaru).
 - Badge "Profil diverifikasi OPD" (pil) di direktori dan profil publik bila `profile_status = verified`; tidak
   pernah memblokir tampil publik.
 - Angka beranda dihitung unik dan di-cache 10 menit (`App\Support\PublicDirectory`). Cache hanya
@@ -766,8 +776,8 @@ Pengecualian dari Larangan di atas, khusus publik:
   (`x-public.icon-badge`) di tepi foto kartu produk/direktori; ikon dari `App\Support\PublicIcons`.
 - Judul h1–h3 publik memakai `font-serif`. Label kecil di atas judul bagian (`publik._section-heading`
   `eyebrow`) berwarna `brand`, tanpa garis hiasan. Tidak ada garis emas pendek (di hero, pita, atau label).
-- Emas (`sun`) di publik HANYA untuk tombol utama (`x-public.button` sun), aksen kata di judul hero, dan pil "Pilihan
-  distrik" di katalog/detail produk (`bg-sun text-ink`, atas permintaan), plus cincin fokus `on-dark` (fungsi aksesibilitas). Ikon footer, titik slider, pil gelap, dan angka memakai warna netral (dijaga tes).
+- Emas (`sun`) di publik HANYA untuk tombol utama (`x-public.button` sun), aksen kata di judul hero, pil "Pilihan
+  distrik" di katalog/detail produk (`bg-sun text-ink`, atas permintaan), dan garis progres membaca di detail berita, plus cincin fokus `on-dark` (fungsi aksesibilitas). Ikon footer, titik slider, pil gelap, dan angka memakai warna netral (dijaga tes).
 - Teks tampilan publik dan nilai bawaan `SiteSetting::DEFAULTS` tanpa tanda pisah (– —) dan tanpa kata ulang bertanda
   hubung; tulis dengan koma, titik, atau "sampai" (dijaga tes).
 - Judul hero `text-hero` 48px (desktop) / `text-hero-sm` 36px (HP). Hero beranda memakai `.overlay-hero` yang lebih
