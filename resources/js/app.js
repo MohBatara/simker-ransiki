@@ -3,6 +3,10 @@ import { numberPreview } from './numbers';
 import reportForm, { clearReportBackups } from './report-form';
 import heroSlider from './hero-slider';
 import scrollDots from './scroll-dots';
+import sectionNav from './section-nav';
+import directory from './directory';
+import { productGallery, scrollRow, stickyCta } from './products';
+import readingProgress from './reading-progress';
 import registerMotion from './motion';
 
 const HEIC_MESSAGE = "Format HEIC belum didukung. Ubah pengaturan kamera iPhone ke 'Paling Kompatibel', atau kirim ulang sebagai JPG.";
@@ -254,6 +258,12 @@ Alpine.data('copyText', (text) => ({
 Alpine.data('reportForm', reportForm);
 Alpine.data('heroSlider', heroSlider);
 Alpine.data('scrollDots', scrollDots);
+Alpine.data('sectionNav', sectionNav);
+Alpine.data('directory', directory);
+Alpine.data('scrollRow', scrollRow);
+Alpine.data('productGallery', productGallery);
+Alpine.data('stickyCta', stickyCta);
+Alpine.data('readingProgress', readingProgress);
 registerMotion(Alpine);
 
 /**

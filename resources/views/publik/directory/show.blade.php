@@ -41,7 +41,8 @@
                     @else
                         <div class="mt-section-head grid gap-5 sm:grid-cols-2">
                             @foreach ($organization->products as $product)
-                                <article class="overflow-hidden rounded-public border border-line bg-paper shadow-card">
+                                {{-- Seluruh kartu menaut ke detail produk lewat tautan di judul (lapisan after:inset-0). --}}
+                                <article class="group relative overflow-hidden rounded-public border border-line bg-paper shadow-card transition-colors hover:border-brand has-[a:focus-visible]:outline-2 has-[a:focus-visible]:outline-offset-2 has-[a:focus-visible]:outline-brand">
                                     @if ($sources = $product->photoSources())
                                         {{-- Foto utuh (object-contain), tidak dipotong. --}}
                                         <x-public.picture :image="$sources" :alt="$product->name" sizes="(min-width: 64rem) 20rem, (min-width: 40rem) 50vw, 100vw" width="400" height="300" frame="block bg-subtle" class="aspect-[4/3] w-full object-contain" />
@@ -49,13 +50,16 @@
                                         <div class="flex aspect-[4/3] items-center justify-center bg-subtle text-display font-semibold text-ink-muted" aria-hidden="true">{{ $product->initials() }}</div>
                                     @endif
                                     <div class="p-4">
-                                        <h3 class="font-serif text-card-title font-semibold text-ink">{{ $product->name }}</h3>
+                                        <h3 class="font-serif text-card-title font-semibold text-ink">
+                                            <a href="{{ route('public.product', $product->slug) }}" class="after:absolute after:inset-0 focus-visible:outline-none group-hover:text-brand">{{ $product->name }}</a>
+                                        </h3>
                                         @if ($product->capacity || $product->unit)
                                             <p class="text-caption text-ink-muted">{{ $product->capacity ?? 'Satuan: '.$product->unit }}</p>
                                         @endif
                                         @if ($product->description)
-                                            <p class="mt-1 text-ui text-ink-soft">{{ $product->description }}</p>
+                                            <p class="mt-1 line-clamp-3 text-ui text-ink-soft">{{ $product->description }}</p>
                                         @endif
+                                        <p class="mt-3 inline-flex items-center gap-1.5 text-ui font-semibold text-brand">Lihat detail produk<x-heroicon-o-arrow-right class="size-4 transition-transform group-hover:translate-x-1 motion-reduce:transition-none" aria-hidden="true" /></p>
                                     </div>
                                 </article>
                             @endforeach

@@ -8,6 +8,7 @@ use App\Models\Opd;
 use App\Models\Organization;
 use App\Models\Product;
 use App\Models\SiteSetting;
+use App\Models\Village;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
@@ -31,6 +32,8 @@ class PublicDirectory
     public const TYPES_CACHE_KEY = 'public.types.v3';
 
     public const FOOTER_CACHE_KEY = 'public.footer';
+
+    public const VILLAGES_CACHE_KEY = 'public.villages.v2';
 
     /**
      * @return array{organizations: int, villages: int, products: int, featured: int, sectors: int, updated_at: ?Carbon}
@@ -115,6 +118,42 @@ class PublicDirectory
             ->all());
 
         return collect($types)->map(fn (array $type) => (object) $type);
+    }
+
+    /**
+     * Semua kampung (Data Master), urut jumlah kelompok publik terbanyak lalu abjad (0 = belum ada kelompok terdaftar),
+     * beserta maks 3 bidang usaha kelompok publik di kampung itu (terbanyak dipakai, lalu abjad).
+     *
+     * @return Collection<int, object{id: int, name: string, organizations_count: int, sectors: list<string>}>
+     */
+    public static function villages(): Collection
+    {
+        $villages = Cache::remember(self::VILLAGES_CACHE_KEY, self::CACHE_SECONDS, function () {
+            $sectors = DB::table('organization_sector')
+                ->join('organizations', 'organizations.id', '=', 'organization_sector.organization_id')
+                ->join('business_sectors', 'business_sectors.id', '=', 'organization_sector.business_sector_id')
+                ->whereIn('organizations.id', Organization::query()->publiclyListed()->select('organizations.id'))
+                ->groupBy('organizations.village_id', 'business_sectors.id', 'business_sectors.name')
+                ->get(['organizations.village_id', 'business_sectors.name', DB::raw('COUNT(DISTINCT organizations.id) as uses')])
+                ->sortBy([['uses', 'desc'], ['name', 'asc']])
+                ->groupBy('village_id')
+                ->map(fn (Collection $rows) => $rows->take(3)->pluck('name')->all());
+
+            return Village::query()
+                ->withCount(['organizations' => fn ($query) => $query->publiclyListed()])
+                ->get(['id', 'name'])
+                ->sortBy([['organizations_count', 'desc'], ['name', 'asc']])
+                ->map(fn (Village $village) => [
+                    'id' => $village->id,
+                    'name' => $village->name,
+                    'organizations_count' => (int) $village->organizations_count,
+                    'sectors' => $sectors[$village->id] ?? [],
+                ])
+                ->values()
+                ->all();
+        });
+
+        return collect($villages)->map(fn (array $village) => (object) $village);
     }
 
     /** Kontak kantor distrik dan daftar OPD untuk footer. */

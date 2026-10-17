@@ -41,6 +41,8 @@ class PostRequest extends FormRequest
             'body' => ['required', 'string', 'max:50000'],
             'status' => ['required', Rule::enum(PostStatus::class)],
             'published_at' => ['nullable', 'date'],
+            // Tanggal kegiatan hanya untuk kategori Kegiatan; kategori lain diabaikan (dikosongkan saat simpan).
+            'event_date' => ['exclude_unless:category,'.PostCategory::Activity->value, 'nullable', 'date'],
             'organizations' => ['array', 'max:20'],
             'organizations.*' => ['integer', Rule::exists('organizations', 'id')],
         ];
@@ -68,6 +70,7 @@ class PostRequest extends FormRequest
             'photo_caption' => 'keterangan foto',
             'body' => 'isi',
             'published_at' => 'tanggal terbit',
+            'event_date' => 'tanggal kegiatan',
         ];
     }
 
@@ -81,6 +84,10 @@ class PostRequest extends FormRequest
         $data['published_at'] = filled($data['published_at'] ?? null)
             ? Carbon::parse($data['published_at'])
             : ($data['status'] === PostStatus::Published->value ? now() : null);
+
+        $data['event_date'] = $data['category'] === PostCategory::Activity->value && filled($data['event_date'] ?? null)
+            ? Carbon::parse($data['event_date'])->toDateString()
+            : null;
 
         return $data;
     }

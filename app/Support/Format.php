@@ -61,6 +61,20 @@ class Format
     /**
      * Markdown terbatas dari Konten Website: HTML mentah dibuang, tautan javascript: dan sejenisnya ditolak.
      */
+    /** Teks dengan kata kunci pencarian disorot (<mark>, sun pucat); teks lain di-escape. */
+    public static function highlight(string $text, string $term): string
+    {
+        if ($term === '') {
+            return e($text);
+        }
+
+        $parts = preg_split('/('.preg_quote($term, '/').')/iu', $text, -1, PREG_SPLIT_DELIM_CAPTURE) ?: [$text];
+
+        return collect($parts)->map(fn (string $part, int $i) => $i % 2 === 1
+            ? '<mark class="rounded-sm bg-highlight text-ink">'.e($part).'</mark>'
+            : e($part))->implode('');
+    }
+
     public static function markdown(?string $text): ?string
     {
         return filled($text) ? Str::markdown($text, ['html_input' => 'strip', 'allow_unsafe_links' => false]) : null;
@@ -81,6 +95,12 @@ class Format
     public static function date(CarbonInterface|string|null $value): string
     {
         return $value === null ? self::EMPTY : Carbon::parse($value)->translatedFormat('j F Y');
+    }
+
+    /** "Kamis, 15 Oktober 2026" (nama hari + tanggal, Bahasa Indonesia). */
+    public static function dayDate(CarbonInterface|string|null $value): string
+    {
+        return $value === null ? self::EMPTY : Carbon::parse($value)->translatedFormat('l, j F Y');
     }
 
     /** "24 Sep 2026" (bulan disingkat, Bahasa Indonesia). */

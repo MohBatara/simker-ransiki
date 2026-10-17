@@ -5,6 +5,9 @@
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../../storage/framework/views/*.php';
 
+/* Direktori publik: tampilan Daftar (wadah [data-view=list]); bawaan tampilan Kartu. */
+@custom-variant list-view (&:where([data-view=list] *));
+
 /*
  * Token desain SIM-KER (CLAUDE.md Bagian 7).
  * Skala bawaan Tailwind untuk warna, teks, ketebalan, radius, dan bayangan sengaja dikosongkan
@@ -46,6 +49,8 @@
     --text-hero-sm--line-height: 2.75rem;
     --text-hero: 3rem; /* 48px judul hero publik */
     --text-hero--line-height: 3.5rem;
+    --text-hero-lg: 3.5rem; /* 56px judul banner Profil Ransiki (desktop) */
+    --text-hero-lg--line-height: 4rem;
     --text-numeral: 2.5rem; /* 40px angka daftar "Jenis kelembagaan" (percobaan palet tanah) */
     --text-numeral--line-height: 1;
 
@@ -85,6 +90,8 @@
     --color-sand: #d8bf98;
     --color-cream: #f3ebdd;
     --color-sage: #4e6f4a;
+    /* Sorotan kata kunci pencarian Direktori (sun pucat; ink di atasnya 15:1). Bukan pengganti sun. */
+    --color-highlight: #fbefcc;
 
     --radius-*: initial;
     --radius-control: 6px; /* input, tombol, badge */
@@ -260,6 +267,18 @@
         background-image: linear-gradient(to top, rgb(15 46 34 / 0.85) 0, rgb(15 46 34 / 0.75) 5.5rem, rgb(15 46 34 / 0) 9rem);
     }
 
+    /* Banner Profil Ransiki: teks di bagian bawah. HP padat 75%; mulai 768px forest dari bawah 90% → 75% (60%, batas
+       atas area teks) → 25%. Teks putih di atas foto putih ≥ 6:1 di seluruh area teks. */
+    .overlay-band-bottom {
+        background-color: rgb(15 46 34 / 0.75);
+    }
+    @media (width >= 48rem) {
+        .overlay-band-bottom {
+            background-color: transparent;
+            background-image: linear-gradient(to top, rgb(15 46 34 / 0.9) 0%, rgb(15 46 34 / 0.75) 60%, rgb(15 46 34 / 0.25) 100%);
+        }
+    }
+
     .overlay-photo-fade {
         background-image: linear-gradient(to top, rgb(15 46 34 / 0.85) 0%, rgb(15 46 34 / 0.7) calc(100% - 5rem), rgb(15 46 34 / 0) 100%);
     }
@@ -313,6 +332,16 @@
     .prose-article a {
         @apply text-brand underline underline-offset-4 hover:text-brand-hover;
     }
+    /* Detail berita: huruf awal besar serif brand setinggi tiga baris di paragraf pertama (3 × 1,75 × 18px ≈ 94px). */
+    .prose-article.drop-cap > p:first-of-type::first-letter {
+        float: left;
+        margin: 0.3rem 0.6rem 0 0;
+        font-family: var(--font-serif);
+        font-size: 5.6rem;
+        font-weight: 600;
+        line-height: 0.8;
+        color: var(--color-brand);
+    }
     .prose-article strong {
         @apply font-semibold;
     }
@@ -321,7 +350,8 @@
     }
     @media print {
         .prose-article,
-        .prose-article * {
+        .prose-article *,
+        .prose-article.drop-cap > p:first-of-type::first-letter {
             color: #000 !important;
         }
     }
@@ -350,11 +380,22 @@
         --row-hint-distance: 28px;
         --row-hint-duration: 900ms;
         --intro-duration: 900ms; /* intro hero saat halaman dibuka */
+        /* Versi ringan (x-reveal.quick, Direktori): sekali per kartu, tanpa ulang saat digulir naik turun. */
+        --reveal-quick-shift: 16px; /* HP; mulai 768px 24px */
+        --reveal-quick-duration: 600ms;
+        --reveal-quick-stagger: 60ms; /* maks 6 kartu dijeda */
+        --reveal-quick-threshold: 0.1; /* 10% kartu terlihat */
+        --swap-out-duration: 150ms; /* hasil lama memudar saat filter/cari/urut/halaman berubah */
+        --swap-stagger: 40ms; /* hasil baru muncul bergiliran */
+        --chip-duration: 150ms; /* pil filter aktif masuk/keluar (scale 0,9 ↔ 1) */
+        --sheet-duration: 250ms; /* bottom sheet filter meluncur dari bawah */
+        --bar-grow-duration: 900ms; /* batang jumlah kelompok di daftar Kampung (Profil Ransiki) tumbuh dari kiri */
     }
     @media (width >= 48rem) {
         :root {
             --reveal-shift: var(--reveal-distance);
             --reveal-duration: 1200ms;
+            --reveal-quick-shift: 24px;
         }
     }
 }
@@ -369,6 +410,16 @@
         /* Jeda hanya saat muncul; reset (di bawah layar) tanpa jeda. */
         [data-reveal][data-reveal-state='shown'] {
             transition-delay: var(--reveal-delay, 0ms);
+        }
+        /* Versi ringan: jarak dan durasi sendiri; .reveal-quick juga meringankan intro (banner Direktori). */
+        [data-reveal-quick],
+        .reveal-quick {
+            --reveal-shift: var(--reveal-quick-shift);
+            --reveal-duration: var(--reveal-quick-duration);
+            --intro-duration: var(--reveal-quick-duration);
+        }
+        .motion [data-intro-search] {
+            animation: intro-up var(--intro-duration) var(--reveal-ease) 120ms both;
         }
         [data-reveal-animating] {
             will-change: transform, opacity;
@@ -411,6 +462,30 @@
         .motion [data-intro] > :nth-child(3) {
             animation-delay: 240ms;
         }
+        /* Batang daftar Kampung (Profil Ransiki): tumbuh dari kiri (scaleX 0 → 1) bersama munculnya barisnya, berulang
+           seperti reveal; jeda stagger hanya saat muncul. Gerak dikurangi: batang langsung selebar akhirnya. */
+        .village-bar {
+            transform-origin: left;
+            transition:
+                transform var(--bar-grow-duration) var(--reveal-ease),
+                background-color 150ms ease-out;
+        }
+        [data-reveal-state='shown'] .village-bar {
+            transition-delay: var(--reveal-delay, 0ms), 0ms;
+        }
+        [data-reveal-state='hidden'] .village-bar {
+            transform: scaleX(0);
+        }
+        /* Foto banner Profil Ransiki: zoom pelan sekali saat halaman dibuka (1,06 → 1 selama 1,6 detik). */
+        @keyframes banner-zoom {
+            from {
+                transform: scale(1.06);
+            }
+        }
+        .motion .banner-zoom {
+            animation: banner-zoom 1600ms cubic-bezier(0.25, 0.1, 0.25, 1) both;
+        }
+
         /* < 1024px strip tidak ikut naik: kartunya masuk dari kanan (x-reveal.intro + data-reveal-row). */
         @media (width >= 64rem) {
             .motion [data-intro-late] {

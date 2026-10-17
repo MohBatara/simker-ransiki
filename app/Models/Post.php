@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Enums\PostCategory;
 use App\Enums\PostStatus;
 use App\Support\ImageVariants;
+use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -16,7 +17,7 @@ use Illuminate\Support\Str;
 /**
  * Berita & Kegiatan. Isi berupa Markdown yang dirender aman lewat App\Support\Format::markdown.
  */
-#[Fillable(['title', 'slug', 'category', 'summary', 'body', 'status', 'published_at', 'photo_caption', 'photo_alt'])]
+#[Fillable(['title', 'slug', 'category', 'summary', 'body', 'status', 'published_at', 'event_date', 'photo_caption', 'photo_alt'])]
 class Post extends Model
 {
     use HasFactory;
@@ -34,6 +35,7 @@ class Post extends Model
             'category' => PostCategory::class,
             'status' => PostStatus::class,
             'published_at' => 'datetime',
+            'event_date' => 'date',
         ];
     }
 
@@ -89,6 +91,12 @@ class Post extends Model
         }
 
         return $slug;
+    }
+
+    /** Tanggal di blok kalender Agenda: tanggal kegiatan bila diisi, selain itu tanggal terbit. */
+    public function eventDay(): ?CarbonInterface
+    {
+        return $this->event_date ?? $this->published_at;
     }
 
     /** Perkiraan waktu baca dalam menit: jumlah kata isi / 200, minimal 1. */

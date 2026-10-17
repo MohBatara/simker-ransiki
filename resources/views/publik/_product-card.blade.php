@@ -1,5 +1,5 @@
 {{--
-    Kartu produk publik. Variabel: $product (kolom publik + organization: id, slug, name, village, sectors: id, name, photo_path).
+    Kartu produk Beranda (menaut ke detail produk). Variabel: $product (ProductSearch::COLUMNS + organization: id, slug, name, village, sectors: id, name, photo_path).
     Tanpa foto produk: foto bidang usaha dari Admin, atau petak inisial. Foto selalu 4:3 agar kartu sejajar; isi kartu
     berbaris tetap (bidang, judul 2 baris, kelompok, kampung) dan baris kapasitas di dasar kartu. Seluruh kartu dapat
     diklik lewat satu tautan di judul (lapisan after:inset-0); cincin fokus mengelilingi kartu.
@@ -7,7 +7,7 @@
 @use('App\Support\PublicImages')
 
 @php
-    $url = route('public.organization', $product->organization->slug).'#produk';
+    $url = route('public.product', $product->slug);
     $sector = $product->organization->sectors->first();
     $sources = $product->photoSources() ?? ($sector ? PublicImages::sectorPhoto($sector) : null);
 @endphp

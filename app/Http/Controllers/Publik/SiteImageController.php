@@ -14,7 +14,7 @@ use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
- * Foto lebar website publik (sampul, "Tentang", bidang usaha). Selalu publik; ?ukuran=480|960|1600&format=webp.
+ * Foto lebar website publik (sampul, "Tentang", banner Profil Ransiki, kantor, blok potensi, bidang usaha). Selalu publik; ?ukuran=480|960|1600&format=webp.
  * Slide hero: ?ukuran=640|1280|1920&format=webp; slide nonaktif hanya untuk Admin (pratinjau).
  */
 class SiteImageController extends Controller
@@ -48,6 +48,11 @@ class SiteImageController extends Controller
     public function aboutCard(Request $request, int $n): StreamedResponse
     {
         return $this->respond($request, SiteSetting::get("about_card_{$n}_photo_path"), ImageVariants::HERO);
+    }
+
+    public function potential(Request $request, int $n): StreamedResponse
+    {
+        return $this->respond($request, SiteSetting::get("potential_{$n}_photo_path"));
     }
 
     /** Foto hero bawaan dari repo (resources/aset) selama belum ada slide aktif. */

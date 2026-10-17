@@ -34,7 +34,11 @@ class GenerateImageVariants extends Command
         }
 
         foreach (SiteSetting::PHOTO_SLOTS as $slot => $key) {
-            $count += $this->generate(SiteImageController::DISK, SiteSetting::get($key), ImageVariants::WIDE, $slot === 'sampul' ? ImageVariants::HERO_BUDGET : []);
+            $count += $this->generate(SiteImageController::DISK, SiteSetting::get($key), ImageVariants::WIDE, in_array($slot, SiteSetting::BANNER_SLOTS, true) ? ImageVariants::HERO_BUDGET : []);
+        }
+
+        foreach (range(1, \App\Support\PotentialBlocks::COUNT) as $n) {
+            $count += $this->generate(SiteImageController::DISK, SiteSetting::get("potential_{$n}_photo_path"), ImageVariants::WIDE);
         }
 
         foreach (BusinessSector::whereNotNull('photo_path')->get(['id', 'photo_path']) as $sector) {

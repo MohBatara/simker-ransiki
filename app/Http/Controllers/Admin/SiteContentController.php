@@ -29,12 +29,21 @@ class SiteContentController extends Controller
         ]);
     }
 
-    /** Tab "Halaman & kontak": foto sampul, foto bidang usaha, Profil Ransiki, kontak kantor. */
+    /** Tab "Halaman & kontak": foto sampul, foto bidang usaha, kontak kantor. */
     public function editPages(): View
     {
         return view('admin.content.pages', [
             'settings' => SiteSetting::values(),
             'sectors' => BusinessSector::orderBy('name')->get(['id', 'name', 'photo_path']),
+        ]);
+    }
+
+    /** Tab "Profil Ransiki": foto banner, teks profil, data singkat, blok potensi ekonomi, foto kantor. */
+    public function editProfile(): View
+    {
+        return view('admin.content.profile', [
+            'settings' => SiteSetting::values(),
+            'sectorOptions' => BusinessSector::orderBy('name')->pluck('name', 'id')->all(),
         ]);
     }
 
@@ -46,11 +55,11 @@ class SiteContentController extends Controller
         return back()->with('status', 'Konten website disimpan.');
     }
 
-    /** Foto sampul ("sampul") atau foto bagian Tentang ("tentang"). */
+    /** Foto sampul, foto bagian Tentang, foto banner Profil Ransiki, atau foto kantor distrik (SiteSetting::PHOTO_SLOTS). */
     public function storePhoto(SiteImageRequest $request, string $slot): JsonResponse
     {
         $key = SiteSetting::PHOTO_SLOTS[$slot];
-        $path = $this->storeImage($request, 'site/'.$slot, $slot === 'sampul' ? ImageVariants::HERO_BUDGET : []);
+        $path = $this->storeImage($request, 'site/'.$slot, in_array($slot, SiteSetting::BANNER_SLOTS, true) ? ImageVariants::HERO_BUDGET : []);
 
         ImageVariants::delete(SiteImageController::DISK, SiteSetting::get($key), ImageVariants::WIDE);
         SiteSetting::put([$key => $path]);

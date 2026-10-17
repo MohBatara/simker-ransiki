@@ -112,8 +112,10 @@ Laporan `verified` tidak bisa diubah siapa pun. Kelompok `closed` tidak bisa mem
   `/lampiran/{id}` (tampil inline), `/lampiran/{id}/unduh`, `POST /lampiran/{kelompok|izin}/{id}`,
   `DELETE /lampiran/{id}`, `POST/DELETE /foto-produk/{id}`. Hak unggah/hapus = hak `update` atas
   induknya; siapa pun yang berhak boleh menghapus file unggahan orang lain.
-- `GET /foto-produk/{id}` boleh tanpa login bila produk `is_public` dan kelompoknya aktif serta
-  `is_public`; selain itu wajib login + Policy, tamu tanpa hak mendapat 404.
+- `GET /foto-produk/{id}` boleh tanpa login bila produk tampil publik (`Product::publiclyListed()`: produk `is_public`,
+  kelompok `is_public` dan aktif atau tidak aktif sementara); selain itu wajib login + Policy, tamu tanpa hak mendapat 404.
+  Foto tambahan di detail produk: lampiran produk bervisibilitas `public` bertipe JPG/PNG, lewat
+  `GET /foto-produk/{id}/lampiran/{lampiran}` dengan syarat yang sama (lampiran privat/PDF/milik produk lain → 404).
 - Header file: `X-Content-Type-Options: nosniff`; PDF tampil inline dengan
   `Content-Security-Policy: sandbox`, plus tombol "Unduh" (`Content-Disposition: attachment`).
 - Setiap fitur baru yang menyentuh data wajib punya feature test akses: pemilik bisa, peran lain
@@ -123,7 +125,7 @@ Laporan `verified` tidak bisa diubah siapa pun. Kelompok `closed` tidak bisa mem
 
 ```
 /                       publik
-/direktori, /direktori/{slug}, /produk, /profil, /kontak, /berita, /berita/{slug}
+/direktori, /direktori/{slug}, /produk, /produk/{slug}, /profil, /kontak, /berita, /berita/{slug}
 /login (GET, POST), /logout (POST saja)
 /lupa-kata-sandi, /atur-ulang-kata-sandi/{token}, /undangan/{user}/{token}   guest
 /akun/kata-sandi        auth + active (semua peran; juga halaman ganti kata sandi wajib)
@@ -151,6 +153,44 @@ dipakai bila berada di area perannya sendiri.
   `Organization::publiclyListed()`. Isi Markdown dirender `Format::markdown` (html_input strip,
   allow_unsafe_links false), juga untuk tombol "Pratinjau" di form Admin. Beranda menampilkan 3 berita terbaru;
   halaman berita memakai `og:type` article + ringkasan sebagai description + foto sampul sebagai og:image.
+- Direktori (`/direktori`): satu tempat logika `App\Support\DirectorySearch` (publiclyListed, kolom publik saja). Query
+  string `q` (nama kelompok, produk publik, kampung), `jenis[]`, `bidang[]`, `kampung[]` (ATAU dalam satu dimensi, DAN
+  antardimensi; nilai tunggal lama `?bidang=5` tetap diterima), `urut` (nama/terbaru/produk), `page` (12 per halaman).
+  Facet = COUNT DISTINCT per dimensi mengikuti filter dimensi lain. Judul/description dinamis, canonical tanpa q/urut.
+  Form GET biasa (jalan tanpa JS); Alpine `directory` (`resources/js/directory.js`) memuat ulang hasil lewat fetch
+  (debounce cari 300 ms, pushState, tukar `[data-swap]` + `[data-facet]`), bottom sheet filter < 1024px, tampilan
+  Kartu/Daftar (varian CSS `list-view`, localStorage). Foto kartu: foto produk publik → foto bidang usaha → panel cream
+  berinisial (belum ada kolom foto profil kelompok). Sorotan kata kunci `bg-highlight` (sun pucat, bukan `sun`).
+  Efek lebih ringan dari Beranda: `x-reveal.stagger.quick` (sekali per kartu, pemicu 10%, 16/24px, 600ms, jeda 60ms),
+  intro banner + kotak cari sekali, ganti hasil: memudar 150ms lalu muncul berjeda 40ms (posisi gulir dijaga, paginasi
+  gulir halus ke bar hasil), pil filter skala 0,9 ↔ 1, bottom sheet meluncur 250ms. Angka di variabel `--reveal-quick-*`,
+  `--swap-*`, `--chip-duration`, `--sheet-duration` (app.css). Panel filter, header, bar hasil tanpa animasi.
+- Produk unggulan (`/produk`): satu tempat logika `App\Support\ProductSearch` (`Product::publiclyListed()`, kolom publik saja).
+  Query string `q` (nama produk, nama kelompok, kampung), `bidang`, `kampung` (satu nilai), `urut` (pilihan = Pilihan distrik
+  dulu [bawaan] / terbaru / nama), `page` (16 per halaman). Pil bidang (radio bergaya pil, ikon `PublicIcons`) dengan jumlah
+  produk unik mengikuti cari + kampung; deretan "Pilihan distrik" (`is_featured`, maks 8, foto 4:5, panah `scrollRow`) hanya
+  di halaman 1 tanpa cari/filter. Muat ulang otomatis memakai Alpine `directory` yang sama dengan Direktori
+  (`data-default-sort="pilihan"`). Kartu `publik/products/_card` (foto 1:1 `rounded-tile`, tanpa foto: cream + ikon bidang
+  clay). BUKAN toko: tanpa harga, keranjang, atau checkout.
+- Detail produk (`/produk/{slug}`, `publik/products/show`): galeri (foto produk + lampiran publik, thumbnail, perbesar lewat
+  `<dialog>`, Alpine `productGallery`), info + kartu kelompok pembuat, "Hubungi kelompok" (wa.me + tel:) HANYA bila
+  `show_contact_publicly` (telepon baru diambil saat itu), selain itu "Lihat profil kelompok"; bagikan WhatsApp + salin tautan;
+  produk lain dari kelompok yang sama (maks 4) dan produk serupa (bidang sama, kelompok lain, maks 4). JSON-LD `Product`
+  TANPA `offers`/harga (name, image, description, brand = kelompok). HP: bar tombol utama menempel (`stickyCta`) setelah
+  tombolnya tergulir lewat, hilang saat footer terlihat. Kartu produk di Beranda dan profil kelompok menaut ke sini; sitemap
+  memuat semua produk publik.
+- Berita (`/berita`): satu tempat logika `App\Support\PostListing` (`Post::publiclyListed()`). Query string `kategori`, `q`
+  (judul), `bulan` (YYYY-MM, tidak sah = diabaikan), `page` (10 per halaman). Kop editorial cream "Kabar Distrik Ransiki" +
+  baris tanggal hari ini; bar alat menempel (tab kategori berjumlah + cari). Sorotan (hanya tanpa filter): berita utama
+  (terbaru berfoto, tanpa itu terbaru) dengan teks di atas foto (`.overlay-band-bottom`, putih 85% ≥ 5,3:1) + dua terbaru;
+  dihitung di setiap halaman agar daftar terbaru tidak pernah mengulangnya, tampil di halaman 1. Agenda kegiatan (post
+  Kegiatan, maks 8; ada `event_date` setelah hari ini WIT → judul "Agenda kegiatan", yang akan datang dulu dari yang paling
+  dekat, selain itu "Kegiatan terbaru"; blok tanggal 52 × 56px (HP 46 × 50px) = `Post::eventDay()` (tanggal kegiatan, tanpa
+  itu tanggal terbit); judul 2 baris bertinggi tetap, lokasi 2 baris: kampung lalu kelompok). Arsip bulan + Kategori di panel
+  kanan menempel (HP: pil geser). Detail: garis progres membaca 3px `sun` di bawah header (`readingProgress`, tanpa
+  transisi; pengecualian `sun` atas permintaan), judul 44px (HP 30px), baris penerbit, foto 16:9 sudut 20px, drop cap
+  (`.prose-article.drop-cap`), rel bagikan menempel mulai 1024px (HP: baris tombol), Sebelumnya/Berikutnya berthumbnail,
+  "Baca juga" (kategori sama dulu, lalu terbaru).
 - Badge "Profil diverifikasi OPD" (pil) di direktori dan profil publik bila `profile_status = verified`; tidak
   pernah memblokir tampil publik.
 - Angka beranda dihitung unik dan di-cache 10 menit (`App\Support\PublicDirectory`). Cache hanya
@@ -282,7 +322,8 @@ Jangan mengarang kepanjangan akronim resmi (KDMP, KNMP, dsb.). Simpan apa adanya
   (enum: none, in_process, issued, needs_fix), submitted_on, issued_on,
   expires_on (date, nullable; label "Berlaku sampai", tidak boleh sebelum issued_on; NULL = tidak diketahui,
   tidak pernah dianggap habis), notes
-- `products`: id, organization_id, name, description, unit, capacity, is_featured, is_public,
+- `products`: id, organization_id, name, slug (unik; dibuat sekali dari nama saat produk dibuat, tidak berubah saat ganti
+  nama; untuk `/produk/{slug}`), description, unit, capacity, is_featured, is_public,
   photo_path (nullable)
 - `attachments` (polimorfik): id, attachable_type, attachable_id, disk, path, original_name,
   mime_type, size, visibility (enum: private, public; default private), uploaded_by
@@ -330,7 +371,8 @@ Jangan mengarang kepanjangan akronim resmi (KDMP, KNMP, dsb.). Simpan apa adanya
 - `posts`: id, title, slug (unik; kosong = dari judul), category (enum PostCategory: berita, kegiatan), summary
   (≤ 300, untuk kartu + meta description), body (Markdown), cover_photo_path (nullable; disk `local`, diproses seperti
   foto sampul: WebP 480/960/1600 + JPEG), status (enum PostStatus: draft "Draf", published "Terbit"), published_at
-  (terbit tanpa tanggal = sekarang; tanggal ke depan = terjadwal), created_by, updated_by, timestamps.
+  (terbit tanpa tanggal = sekarang; tanggal ke depan = terjadwal), event_date (date, nullable; "Tanggal kegiatan", hanya
+  kategori Kegiatan, kategori lain dikosongkan saat simpan), created_by, updated_by, timestamps.
 - `organization_post` (pivot): post_id, organization_id (kelompok terkait, opsional, banyak).
 - Admin: menu "Berita & Kegiatan" `/admin/berita` (filter kategori + status Draf/Terjadwal/Sudah tampil). Foto
   sampul diunggah (XHR) setelah berita disimpan pertama kali.
@@ -398,9 +440,22 @@ Jangan mengarang kepanjangan akronim resmi (KDMP, KNMP, dsb.). Simpan apa adanya
   foto produk kelompok.
 - `site_settings`: key, value. Kunci di `SiteSetting::KEYS`: hero_title, hero_title_accent, home_intro, about_title (bawaan di
   `SiteSetting::DEFAULTS` bila kosong), profile_body,
-  economic_potential (Markdown terbatas, dirender `Format::markdown` tanpa HTML mentah), office_address,
+  office_address,
   office_phone, office_whatsapp, office_email, office_hours, cover_photo_path, cover_caption,
   cover_credit. Di-cache sampai disimpan ulang.
+- Profil Ransiki (`/profil`, Konten Website > tab "Profil Ransiki" `/admin/konten/profil`): banner foto (`profile_photo_path`
+  → foto sampul → foto bawaan; juga og:image), navigasi dalam halaman yang menempel (`sectionNav`, `resources/js/section-nav.js`),
+  Sekilas (`profile_intro` serif + `profile_body` Markdown, kartu cream "Data singkat" dari `SiteSetting::PROFILE_FACT_KEYS` +
+  jumlah kampung Data Master; kosong = baris tidak tampil, tanpa nilai bawaan), angka ringkas (`publik._stats`), Potensi
+  ekonomi (`App\Support\PotentialBlocks`, kunci `potential_{1..3}_*`, foto `/foto-potensi/{n}`), Kampung
+  (`PublicDirectory::villages()`, hanya kelompok publik: daftar indeks urut jumlah kelompok terbanyak lalu abjad, nama tanpa
+  awalan "Kampung", batang `brand` sebanding kampung terbanyak yang tumbuh dari kiri `.village-bar` 900ms ikut x-reveal, maks 3
+  ikon bidang clay; desktop 4 + 8 dengan ringkasan menempel di kiri; kampung tanpa kelompok di akhir tanpa tautan), Kantor distrik (`office_*` + `office_photo_path`). Jangan mengisi
+  luas wilayah/penduduk dengan angka karangan. Gaya: judul banner `text-hero-lg` 56px (48 tablet, 36 HP), judul bagian 40px
+  (28 HP) `tracking-[-0.01em]`, banner 70vh maks 640px dengan zoom pelan saat dibuka (`.banner-zoom`, 1,06 → 1, 1,6 detik),
+  Data singkat berupa bento (ubin cream `rounded-tile`, ubin Jumlah kampung forest), angka ringkas berupa 4 ubin, blok
+  potensi foto 5:4 + kartu putih menumpuk 32px, nav dalam halaman berupa pil. PENGECUALIAN Bagian 7: nav itu memakai
+  latar putih semi transparan + `backdrop-blur-[12px]` (atas permintaan); blur lain tetap dilarang.
 - `notifications`: tabel bawaan Laravel (database notifications)
 - (diupayakan) `posts` untuk Berita & Kegiatan
 
@@ -724,8 +779,8 @@ Pengecualian dari Larangan di atas, khusus publik:
   (`x-public.icon-badge`) di tepi foto kartu produk/direktori; ikon dari `App\Support\PublicIcons`.
 - Judul h1–h3 publik memakai `font-serif`. Label kecil di atas judul bagian (`publik._section-heading`
   `eyebrow`) berwarna `brand`, tanpa garis hiasan. Tidak ada garis emas pendek (di hero, pita, atau label).
-- Emas (`sun`) di publik HANYA untuk tombol utama (`x-public.button` sun) dan aksen kata di judul hero, plus cincin
-  fokus `on-dark` (fungsi aksesibilitas). Ikon footer, titik slider, pil gelap, dan angka memakai warna netral (dijaga tes).
+- Emas (`sun`) di publik HANYA untuk tombol utama (`x-public.button` sun), aksen kata di judul hero, pil "Pilihan
+  distrik" di katalog/detail produk (`bg-sun text-ink`, atas permintaan), dan garis progres membaca di detail berita, plus cincin fokus `on-dark` (fungsi aksesibilitas). Ikon footer, titik slider, pil gelap, dan angka memakai warna netral (dijaga tes).
 - Teks tampilan publik dan nilai bawaan `SiteSetting::DEFAULTS` tanpa tanda pisah (– —) dan tanpa kata ulang bertanda
   hubung; tulis dengan koma, titik, atau "sampai" (dijaga tes).
 - Judul hero `text-hero` 48px (desktop) / `text-hero-sm` 36px (HP). Hero beranda memakai `.overlay-hero` yang lebih
