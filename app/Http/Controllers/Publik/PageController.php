@@ -9,6 +9,7 @@ use App\Support\Format;
 use App\Support\PotentialBlocks;
 use App\Support\PublicDirectory;
 use App\Support\PublicImages;
+use Illuminate\Support\Str;
 use Illuminate\View\View;
 
 /**
@@ -41,9 +42,19 @@ class PageController extends Controller
 
     public function contact(): View
     {
+        $settings = SiteSetting::values();
+        $address = $settings['office_address'];
+
         return view('publik.contact', [
-            'settings' => SiteSetting::values(),
-            'opds' => Opd::orderBy('name')->get(['name', 'description']),
+            'settings' => $settings,
+            'officePhoto' => PublicImages::slot('kantor'),
+            // Tautan pencarian alamat (bukan peta tertanam), sama seperti detail kelompok.
+            'mapsUrl' => $address
+                ? 'https://www.google.com/maps/search/?api=1&query='.rawurlencode(collect([preg_replace('/\s+/', ' ', $address)])
+                    ->when(! Str::contains($address, 'Ransiki', ignoreCase: true), fn ($parts) => $parts->push('Distrik Ransiki'))
+                    ->join(', '))
+                : null,
+            'opds' => Opd::orderBy('name')->get(['name', 'short_name', 'description']),
         ]);
     }
 }
