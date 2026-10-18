@@ -1,30 +1,23 @@
-{{-- Profil kelompok sendiri: susunan sama dengan detail kelompok Admin/OPD, tanpa tab (menunya ada di sidebar). --}}
+{{-- Profil kelompok sendiri: kepala yang sama dengan detail kelompok Admin/OPD, tanpa tab (menunya ada di sidebar). --}}
 <x-layouts.app
     :title="$organization->name"
-    eyebrow="Profil Kelompok"
     :description="$organization->village->name.', Distrik Ransiki'"
-    :banner="$banner"
+    phone-title="Profil Kelompok"
+    :header="false"
+    own-heading
 >
-    @can('update', $organization)
-        <x-slot:actions>
-            <x-button variant="secondary" icon="pencil-square" :href="route('kelompok.profile.edit')">Ubah profil</x-button>
-        </x-slot:actions>
-    @endcan
-
-    @if ($organization->status !== App\Enums\OrganizationStatus::Active)
-        <x-slot:badge>
-            <x-badge :tone="$organization->status->badgeColor()">{{ $organization->status->label() }}</x-badge>
-        </x-slot:badge>
-    @endif
-
-    <x-slot:meta>
-        <ul class="flex flex-wrap gap-2" aria-label="Jenis dan bidang usaha">
-            <li><x-tag>{{ $organization->institutionType->name }}</x-tag></li>
-            @foreach ($organization->sectors as $sector)
-                <li><x-tag>{{ $sector->name }}</x-tag></li>
-            @endforeach
-        </ul>
-    </x-slot:meta>
+    <x-slot:lead>
+        <x-admin.organization-header
+            :organization="$organization"
+            :links="['produk' => route('kelompok.products.index'), 'izin' => route('kelompok.licenses.index'), 'laporan' => route('kelompok.reports.index')]"
+        >
+            @can('update', $organization)
+                <x-slot:actions>
+                    <x-button icon="pencil-square" :href="route('kelompok.profile.edit')">Ubah profil</x-button>
+                </x-slot:actions>
+            @endcan
+        </x-admin.organization-header>
+    </x-slot:lead>
 
     @include('shared.organizations._overview', [
         'area' => 'kelompok',

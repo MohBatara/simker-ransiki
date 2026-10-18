@@ -10,11 +10,11 @@
 
     <div class="mt-8 grid gap-4 md:grid-cols-2">
         @foreach (['Kelompok Contoh A' => 'KUB · Kampung Contoh 1', 'Kelompok Contoh B' => 'Kelompok Perikanan · Kampung Contoh 3', 'Kelompok Contoh C' => 'UMKM · Kampung Contoh 5', 'Kelompok Contoh D' => 'BUMDes · Kampung Contoh 2'] as $name => $meta)
-            <x-card>
+            <div class="rounded-public border border-line bg-paper p-5 shadow-card">
                 <p class="text-card-title font-semibold">{{ $name }}</p>
                 <p class="mt-1 text-caption text-ink-muted">{{ $meta }}</p>
                 <p class="mt-3 text-body text-ink-soft">Contoh deskripsi singkat kegiatan usaha kelompok.</p>
-            </x-card>
+            </div>
         @endforeach
     </div>
 

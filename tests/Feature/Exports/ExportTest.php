@@ -141,7 +141,7 @@ test('rekap hanya menjumlahkan laporan terverifikasi, NULL tidak dihitung 0', fu
         ->and($summary['Biaya (Rp)'][1])->toBe('')
         ->and($summary['Biaya (Rp)'][2])->toBe('diisi 0 dari 2 kelompok')
         ->and($summary['Menunggu verifikasi'][1])->toBe(1)
-        ->and($summary['Sudah terverifikasi'][1])->toBe(2);
+        ->and($summary['Terverifikasi'][1])->toBe(2);
 });
 
 test('produksi di rekap dikelompokkan per produk dan satuan, tidak dijumlah lintas satuan', function () {

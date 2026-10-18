@@ -17,8 +17,9 @@
     ];
     $statuses = [
         ['ok', '#2F6B3A', '#E8F1E8', 'Terverifikasi', 'bg-ok', 'bg-ok-bg'],
-        ['wait', '#8A5A00', '#FBF1DC', 'Diajukan / menunggu', 'bg-wait', 'bg-wait-bg'],
-        ['fix', '#A3392B', '#F9E7E4', 'Perlu revisi / terlambat', 'bg-fix', 'bg-fix-bg'],
+        ['wait', '#8A5A00', '#FBF1DC', 'Menunggu verifikasi', 'bg-wait', 'bg-wait-bg'],
+        ['orange', '#A14A12', '#FDEEE3', 'Perlu revisi / perlu perbaikan', 'bg-orange', 'bg-orange-bg'],
+        ['fix', '#A3392B', '#F9E7E4', 'Terlambat / ditutup', 'bg-fix', 'bg-fix-bg'],
         ['idle', '#5C625F', '#EEEFEC', 'Draf / tidak aktif', 'bg-idle', 'bg-idle-bg'],
     ];
 @endphp
@@ -38,7 +39,7 @@
     </x-slot:actions>
 
     <div class="space-y-6">
-        <x-card title="Warna" description="Satu warna aksen. Warna status hanya untuk badge dan angka status.">
+        <x-admin.card title="Warna" description="Satu warna aksen. Warna status hanya untuk badge dan angka status.">
             <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                 @foreach ($colors as [$token, $hex, $use, $class])
                     <div class="flex items-center gap-3">
@@ -64,17 +65,17 @@
                     </div>
                 @endforeach
             </div>
-        </x-card>
+        </x-admin.card>
 
-        <x-card title="Tipografi" description="Public Sans, ketebalan 400 dan 600 saja.">
+        <x-admin.card title="Tipografi" description="Public Sans, ketebalan 400 dan 600 saja.">
             <div class="space-y-4">
                 <div>
                     <p class="text-caption text-ink-muted">text-display · 32px (text-display-sm 28px di HP)</p>
                     <p class="text-display-sm font-semibold md:text-display">Direktori kelompok ekonomi</p>
                 </div>
                 <div>
-                    <p class="text-caption text-ink-muted">text-page-title · 22px</p>
-                    <p class="text-page-title font-semibold">Laporan bulanan</p>
+                    <p class="text-caption text-ink-muted">text-admin-title · 26px, judul halaman area aplikasi</p>
+                    <p class="text-admin-title font-semibold">Laporan bulanan</p>
                 </div>
                 <div>
                     <p class="text-caption text-ink-muted">text-card-title · 18px</p>
@@ -101,9 +102,9 @@
                     <p class="tabular-nums">{{ Format::number(1250000) }} · {{ Format::rupiah(1250000) }} · {{ Format::date('2026-10-09') }} · {{ Format::month('2026-09-01') }} · kosong: {{ Format::rupiah(null) }}</p>
                 </div>
             </div>
-        </x-card>
+        </x-admin.card>
 
-        <x-card title="Tombol">
+        <x-admin.card title="Tombol">
             <div class="flex flex-wrap items-center gap-3">
                 <x-button>Ajukan laporan</x-button>
                 <x-button variant="secondary">Simpan draf</x-button>
@@ -112,57 +113,61 @@
                 <x-button icon="plus">Tambah produk</x-button>
                 <x-button disabled>Tidak aktif</x-button>
             </div>
-        </x-card>
+        </x-admin.card>
 
-        <x-card title="Form" description="Field menggabungkan label, input, pesan error, dan keterangan.">
-            <form class="grid gap-5 md:grid-cols-2" x-on:submit.prevent>
-                <x-field label="Nama kelompok" for="nama">
-                    <x-input name="nama" placeholder="Contoh: Kelompok Tani Contoh" />
-                </x-field>
-                <x-field label="Nama kelompok (contoh error)" for="contoh_error">
-                    <x-input name="contoh_error" />
-                </x-field>
-                <x-field label="Jenis kelembagaan" for="jenis">
-                    <x-select name="jenis" placeholder="Pilih jenis" :options="['bumdes' => 'BUMDes', 'kub' => 'KUB', 'umkm' => 'UMKM', 'lainnya' => 'Lainnya']" />
-                </x-field>
-                <x-field label="Jumlah anggota" for="anggota" hint="Isi 0 bila memang tidak ada. Kosongkan bila belum diketahui." optional>
-                    <x-input name="anggota" type="number" min="0" inputmode="numeric" />
-                </x-field>
-                <x-field label="Ringkasan kegiatan" for="ringkasan" class="md:col-span-2">
-                    <x-textarea name="ringkasan" placeholder="Tuliskan kegiatan utama bulan ini." />
-                </x-field>
-                <x-checkbox-group label="Bidang usaha" name="bidang[]" class="md:col-span-2">
+        <form class="space-y-6" x-on:submit.prevent>
+            <x-admin.form-section title="Form" description="Kartu section: judul dan petunjuk di kiri, isian di kanan. Label di atas, tanda wajib, bantuan dan error di bawah isian.">
+                <div class="grid gap-5 md:grid-cols-2">
+                    <x-field label="Nama kelompok" for="nama" required>
+                        <x-input name="nama" placeholder="Contoh: Kelompok Tani Contoh" required />
+                    </x-field>
+                    <x-field label="Nama kelompok (contoh error)" for="contoh_error">
+                        <x-input name="contoh_error" />
+                    </x-field>
+                    <x-field label="Jenis kelembagaan" for="jenis" required>
+                        <x-select name="jenis" placeholder="Pilih jenis" :options="['bumdes' => 'BUMDes', 'kub' => 'KUB', 'umkm' => 'UMKM', 'lainnya' => 'Lainnya']" required />
+                    </x-field>
+                    <x-field label="Jumlah anggota" for="anggota" hint="Isi 0 bila memang tidak ada. Kosongkan bila belum diketahui." optional>
+                        <x-input name="anggota" type="number" min="0" inputmode="numeric" />
+                    </x-field>
+                    <x-field label="Ringkasan kegiatan" for="ringkasan" class="md:col-span-2">
+                        <x-textarea name="ringkasan" placeholder="Tuliskan kegiatan utama bulan ini." />
+                    </x-field>
+                </div>
+                <x-checkbox-group label="Bidang usaha" name="bidang[]">
                     <x-checkbox name="bidang[]" value="1" checked>Pertanian</x-checkbox>
                     <x-checkbox name="bidang[]" value="2">Perkebunan</x-checkbox>
                     <x-checkbox name="bidang[]" value="3">Perikanan</x-checkbox>
                     <x-checkbox name="bidang[]" value="4">Pengolahan Hasil</x-checkbox>
                     <x-checkbox name="bidang[]" value="5">UMKM</x-checkbox>
                 </x-checkbox-group>
-                <div class="md:col-span-2">
-                    <x-checkbox name="tanpa_aktivitas" hint="Bagian lain menjadi opsional.">Tidak ada aktivitas bulan ini</x-checkbox>
-                </div>
-                <x-field label="Lampiran" for="lampiran" class="md:col-span-2" optional>
+                <x-checkbox name="tanpa_aktivitas" hint="Bagian lain menjadi opsional.">Tidak ada aktivitas bulan ini</x-checkbox>
+            </x-admin.form-section>
+
+            <x-admin.form-section title="Unggah file" description="Kotak tarik-dan-lepas: form biasa (dropzone) dan unggahan langsung (file-upload).">
+                <x-field label="Foto" for="foto" optional>
+                    <x-admin.dropzone name="foto" />
+                </x-field>
+                <x-field label="Lampiran" for="lampiran" optional>
                     <x-file-upload url="" hint="Contoh tampilan. Unggahan di halaman ini tidak disimpan." />
                 </x-field>
-                <x-form-actions sticky class="md:col-span-2">
-                    <x-button variant="secondary" type="submit">Simpan draf</x-button>
-                    <x-button type="submit">Ajukan laporan</x-button>
-                </x-form-actions>
-            </form>
-        </x-card>
+            </x-admin.form-section>
+
+            <x-admin.form-bar cancel="#" submit="Simpan" />
+        </form>
 
         <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-            <x-stat label="Kelompok aktif" value="22" hint="dari 25 kelompok terdaftar" />
-            <x-stat label="Terverifikasi" :value="Format::number(14)" tone="ok" hint="September 2026" />
-            <x-stat label="Menunggu verifikasi" value="5" tone="wait" />
-            <x-stat label="Pendapatan terverifikasi" :value="Format::rupiah(48750000)" hint="diisi 18 dari 25 kelompok" />
+            <x-admin.stat icon="user-group" label="Kelompok aktif" value="22" hint="dari 25 kelompok terdaftar" />
+            <x-admin.stat icon="check-badge" label="Terverifikasi" :value="Format::number(14)" tone="success" hint="September 2026" href="#" />
+            <x-admin.stat compact icon="clock" label="Menunggu verifikasi" value="5" tone="warning" />
+            <x-admin.stat compact icon="banknotes" label="Pendapatan" :value="Format::rupiah(48750000)" hint="diisi 18 dari 25 kelompok" href="#" />
         </div>
 
-        <x-card title="Grafik ringan" description="x-stacked-bar untuk status (angka legenda bisa diklik) dan x-bar-list untuk peringkat.">
+        <x-admin.card title="Grafik ringan" description="x-stacked-bar untuk status (angka legenda bisa diklik) dan x-bar-list untuk peringkat.">
             <div class="grid gap-6 md:grid-cols-2">
                 <x-stacked-bar label="Pelaporan September 2026" :segments="[
                     ['label' => 'Terverifikasi', 'value' => 9, 'tone' => 'ok', 'href' => '#'],
-                    ['label' => 'Menunggu', 'value' => 4, 'tone' => 'wait', 'href' => '#'],
+                    ['label' => 'Menunggu verifikasi', 'value' => 4, 'tone' => 'wait', 'href' => '#'],
                     ['label' => 'Perlu revisi', 'value' => 2, 'tone' => 'fix', 'href' => '#'],
                     ['label' => 'Draf', 'value' => 1, 'tone' => 'idle', 'href' => '#'],
                     ['label' => 'Belum melapor', 'value' => 3, 'tone' => 'empty', 'href' => '#'],
@@ -173,59 +178,59 @@
                     ['label' => 'Bahan baku', 'value' => 1, 'href' => '#'],
                 ]" />
             </div>
-        </x-card>
+        </x-admin.card>
 
-        <x-card title="Badge status">
+        <x-admin.card title="Badge status">
             <div class="flex flex-wrap gap-2">
-                <x-badge tone="idle">Draf</x-badge>
-                <x-badge tone="wait">Diajukan</x-badge>
-                <x-badge tone="fix">Perlu revisi</x-badge>
-                <x-badge tone="ok">Terverifikasi</x-badge>
+                @foreach (App\Enums\ReportStatus::cases() as $status)
+                    <x-admin.badge-status :status="$status" />
+                @endforeach
+                <x-admin.badge-status tone="danger" label="Terlambat" />
             </div>
-        </x-card>
+        </x-admin.card>
 
         <div class="space-y-3">
-            <h2 class="text-card-title font-semibold">Tabel</h2>
+            <h2 class="text-body font-semibold">Tabel</h2>
             <p class="text-ui text-ink-soft">Seluruh baris bisa diklik. Di HP baris berubah menjadi kartu. Kolom "Diajukan" disembunyikan di tablet.</p>
-            <x-table clickable>
+            <x-admin.table clickable>
                 <x-slot:head>
-                    <x-table.heading>Kelompok</x-table.heading>
-                    <x-table.heading>Periode</x-table.heading>
-                    <x-table.heading>Status</x-table.heading>
-                    <x-table.heading numeric>Pendapatan</x-table.heading>
-                    <x-table.heading optional>Diajukan</x-table.heading>
+                    <x-admin.table.heading>Kelompok</x-admin.table.heading>
+                    <x-admin.table.heading>Periode</x-admin.table.heading>
+                    <x-admin.table.heading>Status</x-admin.table.heading>
+                    <x-admin.table.heading numeric>Pendapatan</x-admin.table.heading>
+                    <x-admin.table.heading optional>Diajukan</x-admin.table.heading>
                 </x-slot:head>
 
                 @foreach ($reports as $report)
-                    <x-table.row :href="route('dev.components.form')">
-                        <x-table.cell primary>{{ $report['organization'] }}</x-table.cell>
-                        <x-table.cell subtitle>{{ Format::month($report['period']) }}</x-table.cell>
-                        <x-table.cell badge><x-badge :tone="$report['status'][1]">{{ $report['status'][0] }}</x-badge></x-table.cell>
-                        <x-table.cell label="Pendapatan" numeric>{{ Format::rupiah($report['revenue']) }}</x-table.cell>
-                        <x-table.cell label="Diajukan" optional>{{ Format::date($report['submitted_at']) }}</x-table.cell>
-                    </x-table.row>
+                    <x-admin.table.row :href="route('dev.components.form')">
+                        <x-admin.table.cell primary>{{ $report['organization'] }}</x-admin.table.cell>
+                        <x-admin.table.cell subtitle>{{ Format::month($report['period']) }}</x-admin.table.cell>
+                        <x-admin.table.cell badge><x-admin.badge-status :tone="$report['status'][1]" :label="$report['status'][0]" /></x-admin.table.cell>
+                        <x-admin.table.cell label="Pendapatan" numeric>{{ Format::rupiah($report['revenue']) }}</x-admin.table.cell>
+                        <x-admin.table.cell label="Diajukan" optional><x-admin.date :value="$report['submitted_at']" /></x-admin.table.cell>
+                    </x-admin.table.row>
                 @endforeach
 
                 <x-slot:footer>
                     <p class="text-caption text-ink-muted">Menampilkan 4 laporan</p>
                 </x-slot:footer>
-            </x-table>
+            </x-admin.table>
         </div>
 
-        <x-empty-state title="Belum ada laporan" description="Buat laporan pertama untuk bulan September 2026.">
+        <x-admin.empty icon="document-text" title="Belum ada laporan" description="Buat laporan pertama untuk bulan September 2026.">
             <x-button icon="plus">Buat laporan</x-button>
-        </x-empty-state>
+        </x-admin.empty>
 
-        <x-card title="Alert">
+        <x-admin.card title="Alert">
             <div class="space-y-3">
                 <x-alert>Batas pengiriman laporan September 2026 adalah 10 Oktober 2026.</x-alert>
                 <x-alert tone="ok" dismissible>Laporan diajukan.</x-alert>
                 <x-alert tone="wait" title="Menunggu verifikasi">Laporan terkunci sampai OPD meninjaunya.</x-alert>
                 <x-alert tone="fix" title="Perlu revisi">Lengkapi angka penjualan kakao, lalu ajukan kembali.</x-alert>
             </div>
-        </x-card>
+        </x-admin.card>
 
-        <x-card title="Tab, dropdown, dan modal">
+        <x-admin.card title="Tab, dropdown, dan modal">
             <x-tabs :tabs="['ringkasan' => 'Ringkasan', 'produk' => 'Produk', 'riwayat' => 'Riwayat']">
                 <x-tabs.panel name="ringkasan">Isi tab ringkasan.</x-tabs.panel>
                 <x-tabs.panel name="produk">Kakao, kopi, dan pinang.</x-tabs.panel>
@@ -247,12 +252,12 @@
 
                 <x-button variant="secondary" x-on:click="$dispatch('open-modal', 'minta-revisi')">Buka modal</x-button>
             </div>
-        </x-card>
+        </x-admin.card>
 
-        <x-tabs
-            :tabs="['menunggu' => 'Menunggu', 'semua' => 'Semua laporan']"
+        <x-admin.tabs
+            :tabs="['menunggu' => ['label' => 'Perlu diverifikasi', 'href' => '#', 'count' => 4], 'semua' => ['label' => 'Semua laporan', 'href' => '#']]"
             active="menunggu"
-            :links="['menunggu' => '#', 'semua' => '#']"
+            label="Contoh tab bertautan"
         />
     </div>
 
@@ -262,7 +267,7 @@
             <x-textarea name="catatan" rows="3" />
         </x-field>
         <x-slot:footer>
-            <x-button variant="ghost" x-on:click="$dispatch('close-modal', 'minta-revisi')">Batal</x-button>
+            <x-button variant="secondary" x-on:click="$dispatch('close-modal', 'minta-revisi')">Batal</x-button>
             <x-button>Minta revisi</x-button>
         </x-slot:footer>
     </x-modal>

@@ -17,11 +17,11 @@
     section="dasbor"
     tab="legalitas"
     :tab-urls="['ekonomi' => route($area.'.statistics.economy', $filters), 'legalitas' => route($area.'.statistics.legal', $filters)]"
+    :header="false"
 >
-    <x-slot:secondary>
-        <x-button variant="secondary" icon="arrow-down-tray" :href="route($area.'.statistics.legal.export', $filters)" data-swap="unduh-legalitas">Unduh Excel</x-button>
-    </x-slot:secondary>
-
+    <x-slot:lead>
+        <x-admin.greeting :name="auth()->user()->name" :subtitle="$area === 'opd' ? auth()->user()->opd?->name : 'Distrik Ransiki'" />
+    </x-slot:lead>
     <div class="space-y-6">
         @include('shared.statistics._header', ['tab' => 'legal', 'summaryText' => Format::number($legal['total']).' kelompok'])
 
@@ -30,10 +30,10 @@
 
         <div>
             <div class="grid grid-cols-2 gap-4 xl:grid-cols-4">
-                <x-admin.stat icon="document-check" label="Punya izin terbit" :value="Format::number($legal['issued'])" :hint="$of" tone="success" />
-                <x-admin.stat icon="arrow-path" label="Izin sedang diproses" :value="Format::number($legal['in_process'])" :hint="$of" tone="warning" />
-                <x-admin.stat icon="wrench-screwdriver" label="Izin perlu perbaikan" :value="Format::number($legal['needs_fix'])" :hint="$of" tone="orange" href="#perlu-perbaikan" />
-                <x-admin.stat icon="document-minus" label="Belum punya izin" :value="Format::number($legal['without'])" :hint="$of" href="#belum-punya-izin" />
+                <x-admin.stat compact icon="document-check" label="Punya izin terbit" :value="Format::number($legal['issued'])" :hint="$of" tone="success" />
+                <x-admin.stat compact icon="arrow-path" label="Izin sedang diproses" :value="Format::number($legal['in_process'])" :hint="$of" tone="warning" />
+                <x-admin.stat compact icon="wrench-screwdriver" label="Izin perlu perbaikan" :value="Format::number($legal['needs_fix'])" :hint="$of" tone="orange" href="#perlu-perbaikan" />
+                <x-admin.stat compact icon="document-minus" label="Belum punya izin" :value="Format::number($legal['without'])" :hint="$of" href="#belum-punya-izin" />
             </div>
             <p class="mt-2 text-caption text-ink-soft">
                 Satu kelompok dihitung sekali per kartu, tetapi bisa masuk lebih dari satu kartu bila punya beberapa izin.

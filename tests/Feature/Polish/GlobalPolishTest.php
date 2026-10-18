@@ -38,7 +38,7 @@ test('blok pengguna: avatar, nama dua baris, dan nama singkat OPD', function () 
         ->assertSee('>PD</span>', false);
 });
 
-test('daftar kelompok: kotak cari berikon, filter ringkas, chip yang bisa dihapus, ringkasan hasil', function () {
+test('daftar kelompok: kotak cari berikon, filter ringkas, chip yang bisa dihapus, info tidak aktif di kartu Total kelompok', function () {
     $admin = User::factory()->admin()->create();
     $type = InstitutionType::factory()->create(['name' => 'KUB']);
     Organization::factory()->count(2)->create(['institution_type_id' => $type->id]);
@@ -52,7 +52,8 @@ test('daftar kelompok: kotak cari berikon, filter ringkas, chip yang bisa dihapu
         ->assertSee('x-data="adminToolbar"', false)
         ->assertSee('aria-label="Hapus filter Jenis: KUB"', false)
         ->assertSee('Hapus semua')
-        ->assertSee('1 kelompok · 1 tidak aktif');
+        ->assertSee('1 tidak aktif, sesuai filter')
+        ->assertDontSee('1 kelompok · 1 tidak aktif');
 });
 
 test('daftar kelompok: avatar + nama + jenis · kampung; kolom status dengan badge berwarna (Aktif hijau, Ditutup merah)', function () {
@@ -80,6 +81,6 @@ test('daftar pengguna dan laporan memakai ringkasan hasil', function () {
     $this->actingAs(User::factory()->admin()->create());
     User::factory()->admin()->create(['is_active' => false]);
 
-    $this->get('/admin/pengaturan/pengguna')->assertSee('2 akun · 1 nonaktif');
+    $this->get('/admin/pengaturan/pengguna')->assertSee('2 akun, 1 nonaktif');
     $this->get('/admin/laporan')->assertSee('0 laporan');
 });

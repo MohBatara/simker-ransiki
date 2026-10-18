@@ -20,15 +20,4 @@ enum LegalStatus: string
             self::Registered => 'Terdaftar',
         };
     }
-
-    /** Tone untuk komponen x-badge: ok, wait, fix, idle. */
-    public function badgeColor(): string
-    {
-        return match ($this) {
-            self::Unknown => 'idle',
-            self::None => 'idle',
-            self::InProcess => 'wait',
-            self::Registered => 'ok',
-        };
-    }
 }

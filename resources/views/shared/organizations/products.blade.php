@@ -36,7 +36,7 @@
                 <x-admin.table.heading>Tampil publik</x-admin.table.heading>
                 <x-admin.table.heading>Unggulan</x-admin.table.heading>
                 @if ($canManage)
-                    <x-admin.table.heading><span class="sr-only">Aksi</span></x-admin.table.heading>
+                    <x-admin.table.heading><span class="sr-only">Tindakan</span></x-admin.table.heading>
                 @endif
             </x-slot:head>
 
@@ -54,25 +54,23 @@
                             <span>{{ $product->name }}</span>
                         </span>
                     </x-admin.table.cell>
-                    <x-admin.table.cell label="Satuan">{{ $product->unit ?? '—' }}</x-admin.table.cell>
-                    <x-admin.table.cell label="Kapasitas" optional>{{ $product->capacity ?? '—' }}</x-admin.table.cell>
+                    <x-admin.table.cell label="Satuan">{{ $product->unit ?? \App\Support\Format::EMPTY }}</x-admin.table.cell>
+                    <x-admin.table.cell label="Kapasitas" optional>{{ $product->capacity ?? \App\Support\Format::EMPTY }}</x-admin.table.cell>
                     <x-admin.table.cell label="Tampil publik">{{ $product->is_public ? 'Ya' : 'Tidak' }}</x-admin.table.cell>
                     <x-admin.table.cell label="Unggulan">{{ $product->is_featured ? 'Ya' : 'Tidak' }}</x-admin.table.cell>
                     @if ($canManage)
-                        <x-admin.table.cell actions>
-                            <div class="inline-flex items-center justify-end gap-2 max-md:w-full">
-                                @if ($canPhoto ?? false)
-                                    <x-button variant="ghost" icon="camera" x-on:click="$dispatch('product-photo', {{ Js::from([
-                                        'name' => $product->name,
-                                        'url' => $product->photoUrl(),
-                                        'uploadUrl' => route('product-photos.store', $product),
-                                        'deleteUrl' => route('product-photos.destroy', $product),
-                                    ]) }})">Foto</x-button>
-                                @endif
-                                <x-button variant="ghost" x-on:click="remove({{ Js::from(['id' => $product->id, 'name' => $product->name]) }})">Hapus</x-button>
-                                <x-button variant="secondary" x-on:click="edit({{ Js::from($product->only(['id', ...$fields])) }})">Ubah</x-button>
-                            </div>
-                        </x-admin.table.cell>
+                        <x-admin.table.actions :for="$product->name">
+                            <x-dropdown.item icon="pencil-square" x-on:click="edit({{ Js::from($product->only(['id', ...$fields])) }})">Ubah</x-dropdown.item>
+                            @if ($canPhoto ?? false)
+                                <x-dropdown.item icon="camera" x-on:click="$dispatch('product-photo', {{ Js::from([
+                                    'name' => $product->name,
+                                    'url' => $product->photoUrl(),
+                                    'uploadUrl' => route('product-photos.store', $product),
+                                    'deleteUrl' => route('product-photos.destroy', $product),
+                                ]) }})">{{ $product->photo_path ? 'Ganti foto' : 'Tambah foto' }}</x-dropdown.item>
+                            @endif
+                            <x-dropdown.item icon="trash" class="text-fix!" x-on:click="remove({{ Js::from(['id' => $product->id, 'name' => $product->name]) }})">Hapus</x-dropdown.item>
+                        </x-admin.table.actions>
                     @endif
                 </x-admin.table.row>
             @endforeach
@@ -91,7 +89,7 @@
                 <input type="hidden" name="_modal" value="record-form">
                 <input type="hidden" name="_id" x-bind:value="record.id">
 
-                <x-field label="Nama produk" for="name">
+                <x-field label="Nama produk" for="name" required>
                     <x-input name="name" x-model="record.name" maxlength="255" autofocus required />
                 </x-field>
                 <div class="grid gap-4 sm:grid-cols-2">
@@ -112,7 +110,7 @@
             </form>
 
             <x-slot:footer>
-                <x-button variant="ghost" x-on:click="$dispatch('close-modal', 'record-form')">Batal</x-button>
+                <x-button variant="secondary" x-on:click="$dispatch('close-modal', 'record-form')">Batal</x-button>
                 <x-button type="submit" form="product-form" processing="Menyimpan…">Simpan</x-button>
             </x-slot:footer>
         </x-modal>
@@ -122,7 +120,7 @@
                 <x-modal name="product-photo" title="Foto produk">
                     <p class="font-semibold text-ink" x-text="photo.name"></p>
                     <template x-if="photo.url">
-                        <img x-bind:src="photo.url" alt="Foto produk saat ini" class="mt-3 max-h-64 w-full rounded-control border border-line object-contain">
+                        <img x-bind:src="photo.url" alt="Foto produk saat ini" class="mt-3 max-h-64 w-full rounded-tile border border-line object-contain">
                     </template>
                     <p x-show="! photo.url" class="mt-1">Belum ada foto. Foto tampil di halaman publik bila produk ditampilkan.</p>
                     <div class="mt-4">
@@ -139,7 +137,7 @@
                         <form method="POST" x-bind:action="photo.deleteUrl" x-show="photo.url" class="mr-auto">
                             @csrf
                             @method('DELETE')
-                            <x-button variant="ghost" type="submit" processing="Menghapus…">Hapus foto</x-button>
+                            <x-button variant="danger" type="submit" processing="Menghapus…">Hapus foto</x-button>
                         </form>
                         <x-button variant="secondary" x-on:click="$dispatch('close-modal', 'product-photo')">Tutup</x-button>
                     </x-slot:footer>

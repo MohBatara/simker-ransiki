@@ -12,18 +12,15 @@
     :back="$cancelUrl"
     focus
 >
-    <form method="POST" action="{{ $action }}" class="space-y-5">
+    <form method="POST" action="{{ $action }}" class="space-y-6">
         @csrf
         @if ($editing)
-        <x-form-errors />
             @method('PUT')
         @endif
+        <x-form-errors />
 
         @include('shared.organizations.form')
 
-        <x-form-actions sticky>
-            <x-button variant="ghost" :href="$cancelUrl">Batal</x-button>
-            <x-button type="submit" processing="Menyimpan…">{{ $editing ? 'Simpan perubahan' : 'Simpan kelompok' }}</x-button>
-        </x-form-actions>
+        <x-admin.form-bar :cancel="$cancelUrl" :submit="$editing ? 'Simpan perubahan' : 'Simpan kelompok'" />
     </form>
 </x-layouts.app>

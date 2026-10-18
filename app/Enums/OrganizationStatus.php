@@ -28,14 +28,4 @@ enum OrganizationStatus: string
             self::Closed => 'Tidak bisa membuat laporan baru, tidak dihitung wajib lapor, dan tidak tampil di direktori publik. Data lama tetap tersimpan.',
         };
     }
-
-    /** Tone untuk komponen x-badge: ok, wait, fix, idle. */
-    public function badgeColor(): string
-    {
-        return match ($this) {
-            self::Active => 'ok',
-            self::Inactive => 'idle',
-            self::Closed => 'idle',
-        };
-    }
 }

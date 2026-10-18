@@ -6,7 +6,7 @@
 @use('App\Support\Dashboards\StatisticsCharts')
 
 @php
-    $range = Format::month($stats->from()).' – '.Format::month($stats->to());
+    $range = Format::month($stats->from()).' sampai '.Format::month($stats->to());
     $salesHint = $summary['sales'] === null
         ? 'belum ada yang mengisi'
         : 'diisi '.$summary['sales_filled'].' dari '.$summary['reports'].' laporan';
@@ -18,7 +18,11 @@
     section="dasbor"
     tab="ekonomi"
     :tab-urls="['ekonomi' => route($area.'.statistics.economy', $filters), 'legalitas' => route($area.'.statistics.legal', $filters)]"
+    :header="false"
 >
+    <x-slot:lead>
+        <x-admin.greeting :name="auth()->user()->name" :subtitle="$area === 'opd' ? auth()->user()->opd?->name : 'Distrik Ransiki'" />
+    </x-slot:lead>
     <div class="space-y-6">
         @include('shared.statistics._header', ['tab' => 'economy', 'summaryText' => $range])
 
@@ -26,9 +30,9 @@
         <div data-swap="statistik" class="space-y-6">
 
         <div class="grid grid-cols-2 gap-4 xl:grid-cols-3">
-            <x-admin.stat icon="user-group" label="Kelompok" :value="Format::number($summary['organizations'])" hint="sesuai filter" />
-            <x-admin.stat icon="document-check" label="Laporan terverifikasi" :value="Format::number($summary['reports'])" :hint="'dari '.$summary['reporting_organizations'].' kelompok'" />
-            <x-admin.stat icon="banknotes" label="Pendapatan penjualan" :value="Format::rupiah($summary['sales'])" :hint="$salesHint" class="max-xl:col-span-2" />
+            <x-admin.stat compact icon="user-group" label="Kelompok" :value="Format::number($summary['organizations'])" hint="sesuai filter" />
+            <x-admin.stat compact icon="document-check" label="Laporan terverifikasi" :value="Format::number($summary['reports'])" :hint="'dari '.$summary['reporting_organizations'].' kelompok'" />
+            <x-admin.stat compact icon="banknotes" label="Pendapatan penjualan" :value="Format::rupiah($summary['sales'])" :hint="$salesHint" class="max-xl:col-span-2" />
         </div>
 
         <x-chart

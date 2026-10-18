@@ -45,7 +45,7 @@ test('detail kelompok: badge status (pil bertitik) di samping judul, tag, ringka
         ->assertSee('/admin/pengaturan/pengguna/tambah?kelompok='.$organization->id, false)
         ->getContent();
 
-    expect($html)->toMatch('/<h1[^>]*>.*?<\/h1>\s*<div[^>]*>\s*<span data-tone="neutral"[^>]*><span[^>]*><\/span>Tidak aktif sementara<\/span>/s');
+    expect($html)->toMatch('/<h1[^>]*>.*?<\/h1>.*?aria-label="Status kelompok">\s*<span data-tone="neutral"[^>]*><span[^>]*><\/span>Tidak aktif sementara<\/span>/s');
 });
 
 test('detail kelompok untuk OPD tidak menampilkan peringatan akun', function () {
@@ -69,13 +69,14 @@ test('profil kelompok memakai susunan detail kelompok tanpa tab', function () {
         ->assertDontSee('aria-label="Tindakan lain"', false);
 });
 
-test('form laporan: label ringkasan berubah bila tidak ada aktivitas, dan bilah progres bagian', function () {
+test('form laporan: label ringkasan berubah bila tidak ada aktivitas, dan stepper A sampai H dengan status', function () {
     $organization = Organization::factory()->create(['reporting_starts_on' => '2026-07-01']);
     $report = MonthlyReport::factory()->for($organization)->create(['period' => '2026-09-01']);
 
     $this->actingAs(User::factory()->kelompok($organization)->create())->get("/kelompok/laporan/{$report->id}/ubah")->assertOk()
         ->assertSee('x-text="data.no_activity ? &#039;Keterangan (opsional)&#039; : &#039;Ringkasan aktivitas&#039;"', false)
-        ->assertSee('x-bind:style="`width: ${(index + 1) / sections.length * 100}%`"', false);
+        ->assertSee('aria-label="Bagian laporan"', false)
+        ->assertSee("needsAttention(item.key) ? 'Perlu dilengkapi' : 'Lengkap'", false);
 });
 
 test('notifikasi kosong hanya menampilkan empty state', function () {

@@ -28,7 +28,7 @@
                         <x-admin.table.cell primary>{{ $organization->name }}</x-admin.table.cell>
                         <x-admin.table.cell subtitle class="md:hidden">{{ $organization->institutionType->name }} · {{ $organization->village->name }}</x-admin.table.cell>
                         <x-admin.table.cell label="Field yang berubah">{{ implode(', ', ProfileReview::changedLabels($organization)) }}</x-admin.table.cell>
-                        <x-admin.table.cell label="Diubah" class="whitespace-nowrap">{{ Format::relativeDateTime($organization->profile_changed_at) }}</x-admin.table.cell>
+                        <x-admin.table.cell label="Diubah"><x-admin.date :value="$organization->profile_changed_at" time /></x-admin.table.cell>
                         <x-admin.table.cell badge><x-admin.badge-status :status="$organization->profile_status" /></x-admin.table.cell>
                     </x-admin.table.row>
                 @endforeach

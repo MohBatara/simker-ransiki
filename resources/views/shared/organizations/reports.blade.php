@@ -13,17 +13,21 @@
 
         @foreach ($reports as $report)
             {{-- Draf kelompok yang belum pernah diajukan tidak bisa dibuka peninjau. --}}
-            <x-admin.table.row :href="auth()->user()->can('view', $report) ? route($area.'.reports.show', [$report, 'dari' => 'kelompok']) : null">
+            @php $viewable = auth()->user()->can('view', $report); @endphp
+            <x-admin.table.row :href="$viewable ? route($area.'.reports.show', [$report, 'dari' => 'kelompok']) : null">
                 <x-admin.table.cell primary>{{ Format::month($report->period) }}</x-admin.table.cell>
                 <x-admin.table.cell badge>
                     <span class="inline-flex flex-wrap items-center justify-end gap-1.5 md:justify-start">
-                        <x-admin.badge-status :status="$report->status" :label="$report->status->reviewerLabel()" />
+                        <x-admin.badge-status :status="$report->status" />
+                        @unless ($viewable)
+                            <span class="text-caption text-ink-soft">belum diajukan</span>
+                        @endunless
                         @if ($report->isOverdue())
                             <x-admin.badge-status tone="danger" label="Terlambat" />
                         @endif
                     </span>
                 </x-admin.table.cell>
-                <x-admin.table.cell label="Diajukan">{{ Format::date($report->submitted_at) }}</x-admin.table.cell>
+                <x-admin.table.cell label="Diajukan"><x-admin.date :value="$report->submitted_at" /></x-admin.table.cell>
                 <x-admin.table.cell label="Laba" numeric>{{ Format::rupiah($report->profit) }}</x-admin.table.cell>
             </x-admin.table.row>
         @endforeach
@@ -43,12 +47,12 @@
             @if (App\Models\MonthlyReport::separatesDuties())
                 <p class="text-ink-soft">Laporan yang Anda isi atau ajukan perlu diverifikasi oleh Admin atau petugas OPD lain.</p>
             @endif
-            <x-field label="Bulan laporan" for="period">
+            <x-field label="Bulan laporan" for="period" required>
                 <x-select name="period" :options="$entryPeriods" :selected="old('period', array_key_first($entryPeriods))" required />
             </x-field>
         </form>
         <x-slot:footer>
-            <x-button variant="ghost" x-on:click="$dispatch('close-modal', 'report-entry')">Batal</x-button>
+            <x-button variant="secondary" x-on:click="$dispatch('close-modal', 'report-entry')">Batal</x-button>
             <x-button type="submit" form="form-report-entry" processing="Membuka…">Isi laporan</x-button>
         </x-slot:footer>
     </x-modal>

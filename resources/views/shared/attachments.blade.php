@@ -9,25 +9,25 @@
     $remaining = max(0, App\Actions\Files\StoreAttachment::MAX_FILES - $attachments->count());
 @endphp
 
-<x-card :title="$title" :description="$description ?? 'JPG, PNG, atau PDF. Maksimal 10 file.'" :icon="$icon ?? null">
+<x-admin.card :title="$title" :description="$description ?? 'JPG, PNG, atau PDF. Maksimal 10 file.'" :icon="$icon ?? null">
     <div class="space-y-4" x-data="{ deleting: {} }">
         @if ($attachments->isEmpty())
             <p class="text-ink-soft">Belum ada file.</p>
         @else
-            <ul class="divide-y divide-line rounded-control border border-line">
+            <ul class="divide-y divide-line rounded-tile border border-line">
                 @foreach ($attachments as $attachment)
                     <li class="flex flex-wrap items-center gap-x-3 gap-y-2 px-3 py-3">
                         <x-dynamic-component :component="str_starts_with($attachment->mime_type, 'image/') ? 'heroicon-o-photo' : 'heroicon-o-document-text'" class="size-5 shrink-0 text-ink-muted" />
                         <div class="min-w-0 flex-1">
                             <x-link :href="route('attachments.show', $attachment)" target="_blank" rel="noopener" class="min-w-0 max-w-full font-normal"><span class="truncate">{{ $attachment->original_name }}</span></x-link>
                             <p class="text-caption text-ink-muted">
-                                {{ Format::fileSize($attachment->size) }} · {{ Format::date($attachment->created_at) }}@if ($attachment->uploader) · {{ $attachment->uploader->name }}@endif
+                                {{ Format::fileSize($attachment->size) }} · {{ Format::dateShort($attachment->created_at) }}@if ($attachment->uploader) · {{ $attachment->uploader->name }}@endif
                             </p>
                         </div>
                         <div class="flex gap-2 max-sm:w-full max-sm:justify-end">
                             <x-button variant="ghost" icon="arrow-down-tray" :href="route('attachments.download', $attachment)">Unduh</x-button>
                             @can('delete', $attachment)
-                                <x-button variant="ghost" x-on:click="deleting = {{ Js::from(['url' => route('attachments.destroy', $attachment), 'name' => $attachment->original_name]) }}; $dispatch('open-modal', 'attachment-delete')">Hapus</x-button>
+                                <x-button variant="danger" x-on:click="deleting = {{ Js::from(['url' => route('attachments.destroy', $attachment), 'name' => $attachment->original_name]) }}; $dispatch('open-modal', 'attachment-delete')">Hapus</x-button>
                             @endcan
                         </div>
                     </li>
@@ -43,16 +43,8 @@
             @endif
         @endif
 
-        <x-modal name="attachment-delete" title="Hapus file">
+        <x-admin.confirm name="attachment-delete" title="Hapus file" bind-action="deleting.url" method="DELETE" confirm="Hapus" processing="Menghapus…">
             <p>Hapus <strong class="text-ink" x-text="deleting.name"></strong>? File yang dihapus tidak bisa dikembalikan.</p>
-            <x-slot:footer>
-                <x-button variant="ghost" x-on:click="$dispatch('close-modal', 'attachment-delete')">Batal</x-button>
-                <form method="POST" x-bind:action="deleting.url">
-                    @csrf
-                    @method('DELETE')
-                    <x-button variant="danger" type="submit" processing="Menghapus…">Hapus</x-button>
-                </form>
-            </x-slot:footer>
-        </x-modal>
+        </x-admin.confirm>
     </div>
-</x-card>
+</x-admin.card>

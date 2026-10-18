@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Kelompok;
 use App\Http\Controllers\Controller;
 use App\Models\MonthlyReport;
 use App\Models\Organization;
-use App\Support\BannerImage;
 use App\Support\Dashboards\KelompokSummary;
 use App\Support\Dashboards\Statistics;
 use Illuminate\Http\Request;
@@ -31,7 +30,6 @@ class DashboardController extends Controller
             'incomeTrend' => $stats->incomeTrend(),
             'productionTrend' => $stats->productionTrend(),
             'months' => $stats->months(),
-            'banner' => BannerImage::forOrganization($organization),
             'canCreate' => $request->user()->can('create', [MonthlyReport::class, $organization]),
         ]);
     }

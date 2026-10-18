@@ -33,10 +33,10 @@
 
     <div class="grid gap-5 lg:grid-cols-[minmax(0,1fr)_16rem]">
         <div class="space-y-5">
-            <x-field label="Foto" :for="$p.'[photo]'" :optional="(bool) $slide" hint="JPG, PNG, atau WebP. Maksimal 8 MB, lebar minimal 1.280 px (disarankan 1.600 px atau lebih). Foto diperkecil dan data lokasinya dibuang otomatis.">
-                <x-input type="file" :name="$p.'[photo]'" accept="image/jpeg,image/png,image/webp" x-on:change="pick($event)" />
+            <x-field label="Foto" :for="$p.'[photo]'" :optional="(bool) $slide" :required="! $slide" hint="Foto diperkecil dan data lokasinya dibuang otomatis.">
+                <x-admin.dropzone :name="$p.'[photo]'" accept="image/jpeg,image/png,image/webp" hint="JPG, PNG, atau WebP. Maksimal 8 MB, lebar minimal 1.280 px (disarankan 1.600 px)." :preview="false" x-on:change="pick($event)" />
             </x-field>
-            <x-field label="Teks alternatif" :for="$p.'[alt_text]'" hint="Jelaskan isi foto untuk pembaca layar, mis. Nelayan menarik jaring di perahu kayu.">
+            <x-field label="Teks alternatif" :for="$p.'[alt_text]'" hint="Jelaskan isi foto untuk pembaca layar, mis. Nelayan menarik jaring di perahu kayu." required>
                 <x-input :name="$p.'[alt_text]'" :value="$slide?->alt_text" maxlength="200" required />
             </x-field>
             <div class="grid gap-5 sm:grid-cols-2">
@@ -52,7 +52,7 @@
 
         <div class="space-y-2">
             <p class="text-ui font-semibold text-ink">Pratinjau</p>
-            <div class="aspect-[16/9] overflow-hidden rounded-control bg-subtle">
+            <div class="aspect-[16/9] overflow-hidden rounded-tile bg-subtle">
                 <template x-if="preview">
                     <img
                         x-bind:src="preview"
@@ -88,7 +88,7 @@
     <div class="flex flex-wrap gap-3">
         <x-button type="submit" processing="Menyimpan…">{{ $slide ? 'Simpan slide' : 'Tambah slide' }}</x-button>
         @if ($slide)
-            <x-button variant="ghost" x-on:click="open = false">Batal</x-button>
+            <x-button variant="secondary" x-on:click="open = false">Batal</x-button>
         @endif
     </div>
 </form>

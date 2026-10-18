@@ -33,10 +33,10 @@ class ComponentGalleryController extends Controller implements HasMiddleware
         return view('dev.komponen', [
             'navigation' => $this->sampleNavigation(),
             'reports' => [
-                ['period' => '2026-09-01', 'organization' => 'Kelompok Contoh A', 'status' => ['Diajukan', 'wait'], 'revenue' => 1250000, 'submitted_at' => '2026-10-05'],
-                ['period' => '2026-09-01', 'organization' => 'Kelompok Contoh B', 'status' => ['Perlu revisi', 'fix'], 'revenue' => null, 'submitted_at' => '2026-10-03'],
-                ['period' => '2026-08-01', 'organization' => 'Kelompok Contoh A', 'status' => ['Terverifikasi', 'ok'], 'revenue' => 980000, 'submitted_at' => '2026-09-08'],
-                ['period' => '2026-08-01', 'organization' => 'Kelompok Contoh C', 'status' => ['Draf', 'idle'], 'revenue' => 0, 'submitted_at' => null],
+                ['period' => '2026-09-01', 'organization' => 'Kelompok Contoh A', 'status' => ['Menunggu verifikasi', 'warning'], 'revenue' => 1250000, 'submitted_at' => '2026-10-05'],
+                ['period' => '2026-09-01', 'organization' => 'Kelompok Contoh B', 'status' => ['Perlu revisi', 'orange'], 'revenue' => null, 'submitted_at' => '2026-10-03'],
+                ['period' => '2026-08-01', 'organization' => 'Kelompok Contoh A', 'status' => ['Terverifikasi', 'success'], 'revenue' => 980000, 'submitted_at' => '2026-09-08'],
+                ['period' => '2026-08-01', 'organization' => 'Kelompok Contoh C', 'status' => ['Draf', 'neutral'], 'revenue' => 0, 'submitted_at' => null],
             ],
         ]);
     }

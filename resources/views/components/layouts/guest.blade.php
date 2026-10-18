@@ -29,9 +29,9 @@
                 </span>
             </a>
 
-            <x-card :title="$heading" :description="$description">
+            <x-admin.card :title="$heading" :description="$description">
                 {{ $slot }}
-            </x-card>
+            </x-admin.card>
 
             @isset($footer)
                 {{ $footer }}

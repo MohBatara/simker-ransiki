@@ -3,6 +3,10 @@
     'for' => null,
     'hint' => null,
     'optional' => false,
+    // Isian wajib: tanda * merah di label (isiannya tetap memakai atribut required sendiri).
+    'required' => false,
+    // Wajib bersyarat di form Alpine: ekspresi JS, mis. "! data.no_activity".
+    'requiredIf' => null,
     // Form Alpine yang menyimpan sendiri (mis. laporan bulanan): ekspresi JS kunci error, dibaca lewat
     // method error(key) milik komponen Alpine induk. Contoh: "'income_sales'" atau "`items.${i}.revenue`".
     'live' => null,
@@ -24,6 +28,11 @@
 <div {{ $attributes->class('space-y-2') }}>
     <label @if ($id) for="{{ $id }}" @endif @if ($bindFor) x-bind:for="{{ $bindFor }}" @endif @class(['block text-ui font-semibold text-ink', $labelClass])>
         @if ($labelText)<span x-text="{{ $labelText }}">{{ $label }}</span>@else{{ $label }}@endif
+        @if ($required)
+            <span class="text-fix" aria-hidden="true">*</span><span class="sr-only">(wajib)</span>
+        @elseif ($requiredIf)
+            <span x-show="{{ $requiredIf }}"><span class="text-fix" aria-hidden="true">*</span><span class="sr-only">(wajib)</span></span>
+        @endif
         @if ($optional)
             <span class="font-normal text-ink-muted">(opsional)</span>
         @endif
@@ -36,9 +45,12 @@
         @if ($hint)
             <p x-show="! error({{ $live }})" @if ($hintText) x-text="{{ $hintText }}" @endif class="text-caption text-ink-muted">{{ $hint }}</p>
         @endif
-    @elseif ($error)
-        <p id="{{ $id }}-error" class="text-caption text-fix">{{ $error }}</p>
-    @elseif ($hint)
-        <p class="text-caption text-ink-muted">{{ $hint }}</p>
+    @else
+        @if ($hint)
+            <p class="text-caption text-ink-muted">{{ $hint }}</p>
+        @endif
+        @if ($error)
+            <p id="{{ $id }}-error" class="text-caption text-fix">{{ $error }}</p>
+        @endif
     @endif
 </div>

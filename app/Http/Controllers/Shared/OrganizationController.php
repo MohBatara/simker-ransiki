@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Shared;
 
 use App\Actions\Organizations\SaveOrganization;
+use App\Enums\LicenseStatus;
+use App\Enums\ReportStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Organizations\LicenseRequest;
 use App\Http\Requests\Organizations\OrganizationRequest;
@@ -205,7 +207,12 @@ class OrganizationController extends Controller
     private function detail(Request $request, Organization $organization, string $tab, array $data): View
     {
         $organization->loadMissing(['institutionType', 'village', 'sectors:id,name', 'opds:id,name,short_name', 'profileVerifier.opd'])
-            ->loadCount(['monthlyReports', 'users', 'products', 'licenses', 'opds']);
+            ->loadCount([
+                'monthlyReports', 'users', 'products', 'licenses', 'opds',
+                // Strip angka di kepala detail (tampilan saja).
+                'licenses as issued_licenses_count' => fn ($query) => $query->where('status', LicenseStatus::Issued),
+                'monthlyReports as verified_reports_count' => fn ($query) => $query->where('status', ReportStatus::Verified),
+            ]);
 
         return view('shared.organizations.detail', [
             'area' => $this->area($request),

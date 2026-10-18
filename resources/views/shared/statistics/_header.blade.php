@@ -21,4 +21,10 @@
     ]));
 @endphp
 
-<x-admin.toolbar :action="$url" :filters="$toolbarFilters" :chips="$chips" :summary="$summaryText" :clear-url="$chips ? $url : null" aria-label="Filter statistik" />
+<x-admin.toolbar :action="$url" :filters="$toolbarFilters" :chips="$chips" :summary="$summaryText" :clear-url="$chips ? $url : null" aria-label="Filter statistik">
+    @if ($tab === 'legal')
+        <x-slot:actions>
+            <x-button variant="secondary" icon="arrow-down-tray" :href="route($area.'.statistics.legal.export', $filters)" data-swap="unduh-legalitas">Unduh Excel</x-button>
+        </x-slot:actions>
+    @endif
+</x-admin.toolbar>

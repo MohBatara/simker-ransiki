@@ -62,14 +62,14 @@ test('antrean kosong menampilkan penjelasan', function () {
     $this->actingAs($this->reviewer)->get('/opd/laporan/verifikasi')->assertOk()->assertSee('Tidak ada laporan yang menunggu verifikasi');
 });
 
-test('semua laporan OPD: draf tampil sebagai "Draf, belum diajukan" tanpa tautan', function () {
+test('semua laporan OPD: draf tampil sebagai Draf + "belum diajukan" tanpa tautan', function () {
     $draft = MonthlyReport::factory()->for($this->ours)->create(['period' => '2026-09-01']);
     $submitted = submittedReport($this->second, '2026-09-01', '2026-10-05 09:00:00');
     submittedReport($this->foreign, '2026-09-01', '2026-10-05 09:00:00');
 
     $this->actingAs($this->reviewer)->get('/opd/laporan')
         ->assertOk()
-        ->assertSee('Draf, belum diajukan')
+        ->assertSee('belum diajukan')
         ->assertSee("/opd/laporan/{$submitted->id}")
         ->assertDontSee("/opd/laporan/{$draft->id}\"", false)
         ->assertDontSee('KUB Bukan Binaan');
@@ -107,7 +107,7 @@ test('tab laporan di detail kelompok bisa diklik admin, kecuali draf yang belum 
         ->assertOk()
         ->assertSee("/admin/laporan/{$submitted->id}")
         ->assertDontSee("/admin/laporan/{$draft->id}\"", false)
-        ->assertSee('Draf, belum diajukan');
+        ->assertSee('belum diajukan');
 });
 
 test('peran lain tidak bisa membuka daftar laporan peninjau', function () {

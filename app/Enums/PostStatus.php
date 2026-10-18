@@ -16,12 +16,4 @@ enum PostStatus: string
             self::Published => 'Terbit',
         };
     }
-
-    public function badgeColor(): string
-    {
-        return match ($this) {
-            self::Draft => 'idle',
-            self::Published => 'ok',
-        };
-    }
 }

@@ -106,7 +106,7 @@ test('Semua laporan: menunggu (terlama dulu), perlu revisi, terverifikasi (terba
 
     preg_match('#<tr[^>]*data-draft="true"[^>]*>#', $response->getContent(), $draftRow);
     expect($draftRow[0])->toContain('text-ink-soft')->not->toContain('data-row-href')
-        ->and($response->getContent())->toContain('Draf, belum diajukan');
+        ->and($response->getContent())->toContain('belum diajukan');
 
     // Filter status tetap bisa memilih Draf.
     expect($this->get('/admin/laporan?status=draft')->viewData('reports')->pluck('status')->map->value->all())->toBe(['draft']);

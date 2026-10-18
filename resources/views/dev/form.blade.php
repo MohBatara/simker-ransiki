@@ -8,8 +8,9 @@
     user-role="Kelompok"
     focus
 >
-    <x-card>
-        <form class="grid gap-5 md:grid-cols-2" x-on:submit.prevent>
+    <form class="space-y-6" x-on:submit.prevent>
+        <x-admin.form-section title="Aktivitas" description="Contoh section form dengan bar aksi yang menempel.">
+            <div class="grid gap-5 md:grid-cols-2">
             <x-field label="Jumlah kegiatan" for="activity_count" optional>
                 <x-input name="activity_count" type="number" min="0" inputmode="numeric" />
             </x-field>
@@ -28,10 +29,10 @@
             <x-field label="Capaian" for="achievements" class="md:col-span-2" optional>
                 <x-textarea name="achievements" rows="6" />
             </x-field>
-            <x-form-actions sticky class="md:col-span-2">
-                <x-button variant="secondary" type="submit">Simpan draf</x-button>
-                <x-button type="submit">Ajukan laporan</x-button>
-            </x-form-actions>
-        </form>
-    </x-card>
+            </div>
+        </x-admin.form-section>
+        <x-admin.form-bar :cancel="route('dev.components.app')" submit="Ajukan laporan">
+            <x-button variant="ghost" type="submit">Simpan draf</x-button>
+        </x-admin.form-bar>
+    </form>
 </x-layouts.app>

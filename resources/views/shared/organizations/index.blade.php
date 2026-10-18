@@ -18,11 +18,6 @@
         'laporan' => [null, $month ? ['belum-dibuat' => "Belum membuat laporan {$month}", 'belum-diajukan' => "Belum mengajukan laporan {$month}", 'terlambat' => "Terlambat melapor {$month}"] : [], ['periode']],
     ]);
     $hasFilters = $chips !== [];
-    $summary = collect([
-        Format::number($organizations->total()).' kelompok',
-        $statusCounts['inactive'] ? $statusCounts['inactive'].' tidak aktif' : null,
-        $statusCounts['closed'] ? $statusCounts['closed'].' ditutup' : null,
-    ])->filter()->join(' · ');
     $toolbarFilters = array_values(array_filter([
         ['name' => 'village', 'label' => 'Kampung', 'options' => $options['villages'], 'selected' => $filters['village'] ?? null, 'placeholder' => 'Semua kampung'],
         ['name' => 'type', 'label' => 'Jenis', 'options' => $options['types'], 'selected' => $filters['type'] ?? null, 'placeholder' => 'Semua jenis'],
@@ -31,6 +26,12 @@
         $isOpd ? null : ['name' => 'opd', 'label' => 'OPD pembina', 'options' => ['none' => 'Belum ada OPD'] + $options['opds'], 'selected' => $filters['opd'] ?? null, 'placeholder' => 'Semua OPD'],
     ]));
     $scopeHint = $hasFilters ? 'sesuai filter' : null;
+    // Info tidak aktif/ditutup sebagai keterangan kartu Total kelompok (tidak diulang di baris ringkasan).
+    $totalHint = collect([
+        $statusCounts['inactive'] ? $statusCounts['inactive'].' tidak aktif' : null,
+        $statusCounts['closed'] ? $statusCounts['closed'].' ditutup' : null,
+        $scopeHint,
+    ])->filter()->join(', ') ?: null;
     $membersHint = $totals['members'] === null
         ? 'belum ada yang mengisi'
         : 'diisi '.$totals['members_filled'].' dari '.$totals['organizations'].' kelompok';
@@ -64,17 +65,16 @@
             :filters="$toolbarFilters"
             :keep="collect($filters)->only(['akun', 'laporan', 'periode'])->all()"
             :chips="$chips"
-            :summary="$summary"
             :clear-url="$hasFilters ? $url : null"
         />
 
         {{-- Ditukar oleh x-admin.toolbar saat filter berubah: kartu angka mengikuti filter, lalu tabel. --}}
         <div data-swap="kelompok" class="space-y-6">
             <div class="grid grid-cols-2 gap-4 xl:grid-cols-4">
-                <x-admin.stat icon="user-group" label="Total kelompok" :value="Format::number($totals['organizations'])" :hint="$scopeHint" />
-                <x-admin.stat icon="map-pin" label="Kampung" :value="Format::number($totals['villages'])" :hint="$scopeHint" :href="$isOpd ? null : route('admin.master.items', 'kampung')" />
-                <x-admin.stat icon="squares-2x2" label="Bidang usaha" :value="Format::number($totals['sectors'])" :hint="$scopeHint" :href="$isOpd ? null : route('admin.master.items', 'bidang-usaha')" />
-                <x-admin.stat icon="users" label="Total anggota" :value="Format::number($totals['members'])" :hint="$membersHint" />
+                <x-admin.stat compact icon="user-group" label="Total kelompok" :value="Format::number($totals['organizations'])" :hint="$totalHint" />
+                <x-admin.stat compact icon="map-pin" label="Kampung" :value="Format::number($totals['villages'])" :hint="$scopeHint" :href="$isOpd ? null : route('admin.master.items', 'kampung')" />
+                <x-admin.stat compact icon="squares-2x2" label="Bidang usaha" :value="Format::number($totals['sectors'])" :hint="$scopeHint" :href="$isOpd ? null : route('admin.master.items', 'bidang-usaha')" />
+                <x-admin.stat compact icon="users" label="Total anggota" :value="Format::number($totals['members'])" :hint="$membersHint" />
             </div>
 
             @if ($organizations->isEmpty())

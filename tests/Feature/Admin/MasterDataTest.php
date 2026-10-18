@@ -68,7 +68,7 @@ test('jumlah kelompok pemakai tampil dan menggantikan tombol hapus', function ()
 
     $this->actingAs($this->admin)
         ->get('/admin/pengaturan/data-master/kampung')
-        ->assertSeeInOrder(['Kampung Dipakai', 'Dipakai 2 kelompok', 'Kampung Kosong', 'Hapus']);
+        ->assertSeeInOrder(['Kampung Dipakai', 'dipakai 2 kelompok', 'Kampung Kosong', 'Hapus']);
 });
 
 test('kelompok dengan banyak bidang usaha dihitung sekali per bidang', function () {
@@ -76,7 +76,7 @@ test('kelompok dengan banyak bidang usaha dihitung sekali per bidang', function 
     $other = BusinessSector::factory()->create();
     Organization::factory()->create()->sectors()->attach([$sector->id, $other->id]);
 
-    $this->actingAs($this->admin)->get('/admin/pengaturan/data-master/bidang-usaha')->assertSee('Dipakai 1 kelompok');
+    $this->actingAs($this->admin)->get('/admin/pengaturan/data-master/bidang-usaha')->assertSee('dipakai 1 kelompok');
 });
 
 test('admin menambah data master', function () {

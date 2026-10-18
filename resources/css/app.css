@@ -150,16 +150,6 @@
     .on-dark :where(a, button, summary, input, select, [tabindex]):focus-visible {
         outline-color: var(--color-sun);
     }
-
-    /* Pita forest area aplikasi (mulai tablet) dan banner foto: cincin fokus kuning, sama seperti publik. */
-    .app-band-photo :where(a, button, summary, [tabindex]):focus-visible {
-        outline-color: var(--color-sun);
-    }
-    @media (width >= 48rem) {
-        .app-band :where(a, button, summary, [tabindex]):focus-visible {
-            outline-color: var(--color-sun);
-        }
-    }
 }
 
 /*

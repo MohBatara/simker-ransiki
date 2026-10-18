@@ -24,18 +24,19 @@ test('tenggat tinggal 3 hari atau kurang ditandai wait dan tebal; lewat tenggat 
     'lewat' => ['2026-10-12 09:00:00', 'text-fix', 'lewat 2 hari'],
 ]);
 
-test('dasbor kelompok memakai nama kelompok sebagai judul dengan keterangan Dasbor di atasnya', function () {
+test('dasbor kelompok: kartu sapaan dengan nama kelompok, judul Dasbor', function () {
     Carbon::setTestNow(Carbon::parse('2026-10-04 09:00:00', 'Asia/Jayapura'));
     $organization = Organization::factory()->create(['name' => 'KUB Judul Contoh', 'reporting_starts_on' => '2026-07-01']);
 
     $this->actingAs(User::factory()->kelompok($organization)->create())->get('/kelompok')
         ->assertOk()
-        ->assertSeeInOrder(['>Dasbor</p>', '>KUB Judul Contoh</h1>'], false)
-        ->assertSee('<title>KUB Judul Contoh', false);
+        ->assertSee('<h1 class="sr-only">Dasbor</h1>', false)
+        ->assertSeeInOrder(['KUB Judul Contoh', 'Selamat pagi'])
+        ->assertSee('<title>Dasbor', false);
 });
 
 test('judul kolom angka dan selnya memakai padding dan perataan yang sama', function () {
-    $html = Blade::render('<x-table><x-slot:head><x-table.heading numeric>Laba</x-table.heading></x-slot:head><x-table.row><x-table.cell label="Laba" numeric>1</x-table.cell></x-table.row></x-table>');
+    $html = Blade::render('<x-admin.table><x-slot:head><x-admin.table.heading numeric>Laba</x-admin.table.heading></x-slot:head><x-admin.table.row><x-admin.table.cell label="Laba" numeric>1</x-admin.table.cell></x-admin.table.row></x-admin.table>');
 
     preg_match('/<th scope="col"[^>]*class="([^"]*)"/', $html, $th);
     preg_match('/<td[^>]*class="([^"]*)"/', $html, $td);

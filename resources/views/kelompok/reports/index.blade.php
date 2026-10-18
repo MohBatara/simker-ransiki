@@ -2,30 +2,31 @@
 @use('App\Enums\OrganizationStatus')
 
 <x-layouts.app
-    title="Laporan Bulanan"
+    title="Laporan bulanan"
     :description="'Satu laporan untuk setiap bulan. Tenggat: tanggal '.config('simker.reports.deadline_day').' bulan berikutnya, pukul 23.59 WIT.'"
 >
     @if ($organization->status === OrganizationStatus::Closed)
-        <x-alert class="mb-5">Kelompok ini sudah tutup, sehingga tidak bisa membuat laporan baru. Draf atau laporan yang diminta revisi tetap bisa diselesaikan.</x-alert>
+        <x-alert class="mb-6">Kelompok ini sudah tutup, sehingga tidak bisa membuat laporan baru. Draf atau laporan yang diminta revisi tetap bisa diselesaikan.</x-alert>
     @endif
 
     @error('period')
-        <x-alert tone="fix" class="mb-5">{{ $message }}</x-alert>
+        <x-alert tone="fix" class="mb-6">{{ $message }}</x-alert>
     @enderror
 
     @if ($rows->isEmpty())
-        <x-empty-state
+        <x-admin.empty
+            icon="document-text"
             title="Belum ada bulan yang wajib dilaporkan"
             :description="'Kewajiban lapor dimulai '.(Format::month($organization->reporting_starts_on)).'. Laporan pertama bisa dibuat mulai bulan itu.'"
         />
     @else
-        <x-table clickable>
+        <x-admin.table clickable>
             <x-slot:head>
-                <x-table.heading>Periode</x-table.heading>
-                <x-table.heading>Status</x-table.heading>
-                <x-table.heading>Tenggat</x-table.heading>
-                <x-table.heading>Diajukan</x-table.heading>
-                <x-table.heading><span class="sr-only">Aksi</span></x-table.heading>
+                <x-admin.table.heading>Periode</x-admin.table.heading>
+                <x-admin.table.heading>Status</x-admin.table.heading>
+                <x-admin.table.heading>Tenggat</x-admin.table.heading>
+                <x-admin.table.heading>Diajukan</x-admin.table.heading>
+                <x-admin.table.heading><span class="sr-only">Tindakan</span></x-admin.table.heading>
             </x-slot:head>
 
             @foreach ($rows as $row)
@@ -33,28 +34,28 @@
                     $report = $row['report'];
                     $href = $report ? ($report->status->isEditable() ? route('kelompok.reports.edit', $report) : route('kelompok.reports.show', $report)) : null;
                 @endphp
-                <x-table.row :href="$href">
-                    <x-table.cell primary>{{ Format::month($row['period']) }}</x-table.cell>
-                    <x-table.cell badge>
+                <x-admin.table.row :href="$href">
+                    <x-admin.table.cell primary>{{ Format::month($row['period']) }}</x-admin.table.cell>
+                    <x-admin.table.cell badge>
                         <span class="inline-flex flex-wrap items-center justify-end gap-1.5 md:justify-start">
                             @if ($report)
-                                <x-badge :tone="$report->status->badgeColor()">{{ $report->status->label() }}</x-badge>
+                                <x-admin.badge-status :status="$report->status" />
                             @else
-                                <span class="text-ink-muted">Belum dibuat</span>
+                                <x-admin.badge-status tone="neutral" label="Belum dibuat" />
                             @endif
                             @if ($row['overdue'])
-                                <x-badge tone="fix">Terlambat</x-badge>
+                                <x-admin.badge-status tone="danger" label="Terlambat" />
                             @endif
                         </span>
-                    </x-table.cell>
-                    <x-table.cell label="Tenggat">{{ Format::date($row['deadline']) }}</x-table.cell>
-                    <x-table.cell label="Diajukan">
-                        {{ Format::date($report?->submitted_at) }}
+                    </x-admin.table.cell>
+                    <x-admin.table.cell label="Tenggat"><x-admin.date :value="$row['deadline']" /></x-admin.table.cell>
+                    <x-admin.table.cell label="Diajukan">
+                        <x-admin.date :value="$report?->submitted_at" time />
                         @if ($report?->wasSubmittedLate())
                             <span class="block text-caption text-ink-soft">Diajukan terlambat</span>
                         @endif
-                    </x-table.cell>
-                    <x-table.cell @class(['md:text-right', 'max-md:hidden' => $report || ! $canCreate]) :actions="! $report && $canCreate">
+                    </x-admin.table.cell>
+                    <x-admin.table.cell @class(['md:text-right', 'max-md:hidden' => $report || ! $canCreate]) :actions="! $report && $canCreate">
                         @if (! $report && $canCreate)
                             <form method="POST" action="{{ route('kelompok.reports.store') }}" class="relative z-10">
                                 @csrf
@@ -62,13 +63,13 @@
                                 <x-button type="submit" variant="secondary" class="max-md:w-full" processing="Membuat…">Buat laporan</x-button>
                             </form>
                         @endif
-                    </x-table.cell>
-                </x-table.row>
+                    </x-admin.table.cell>
+                </x-admin.table.row>
             @endforeach
 
             @if ($rows->hasPages())
-                <x-slot:footer>{{ $rows->links() }}</x-slot:footer>
+                <x-slot:footer><x-admin.pagination :paginator="$rows" noun="bulan" /></x-slot:footer>
             @endif
-        </x-table>
+        </x-admin.table>
     @endif
 </x-layouts.app>

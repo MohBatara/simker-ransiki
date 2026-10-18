@@ -10,7 +10,7 @@
     $url = $queue ? route($area.'.verifications.index') : route($area.'.reports.index');
     $chips = \App\Support\FilterChips::from($filters, [
         'q' => [null, null],
-        'status' => ['Status', ReportStatus::reviewerOptions()],
+        'status' => ['Status', ReportStatus::options()],
         'period' => ['Periode', $periods],
         'opd' => ['OPD', ['none' => 'Tanpa OPD pembina'] + $opds],
         'menunggu' => [null, ['7' => 'Menunggu lebih dari 7 hari']],
@@ -38,7 +38,7 @@
 
     @php
         $toolbarFilters = array_values(array_filter([
-            $queue ? null : ['name' => 'status', 'label' => 'Status', 'options' => ReportStatus::reviewerOptions(), 'selected' => $filters['status'] ?? null, 'placeholder' => 'Semua status'],
+            $queue ? null : ['name' => 'status', 'label' => 'Status', 'options' => ReportStatus::options(), 'selected' => $filters['status'] ?? null, 'placeholder' => 'Semua status'],
             ['name' => 'period', 'label' => 'Periode', 'options' => $periods, 'selected' => $filters['period'] ?? null, 'placeholder' => 'Semua periode'],
             $opds ? ['name' => 'opd', 'label' => 'OPD pembina', 'options' => ['none' => 'Tanpa OPD pembina'] + $opds, 'selected' => $filters['opd'] ?? null, 'placeholder' => 'Semua OPD'] : null,
         ]));
@@ -102,21 +102,29 @@
                             {{-- Di antrean semuanya menunggu; pengajuan ulang diberi label sendiri. --}}
                             @if (! $queue)
                                 <span class="inline-flex flex-wrap items-center justify-end gap-1.5 md:justify-start">
-                                    <x-admin.badge-status :status="$report->status" :label="$report->status->reviewerLabel()" />
+                                    <x-admin.badge-status :status="$report->status" />
+                                    @unless ($viewable)
+                                        <span class="text-caption">belum diajukan</span>
+                                    @endunless
                                     @if ($report->isOverdue())
                                         <x-admin.badge-status tone="danger" label="Terlambat" />
                                     @endif
                                 </span>
                             @else
-                                <x-admin.badge-status :status="$report->status" :label="$report->resubmitted ? 'Diajukan ulang' : 'Menunggu'" />
+                                <span class="inline-flex flex-wrap items-center justify-end gap-1.5 md:justify-start">
+                                    <x-admin.badge-status :status="$report->status" />
+                                    @if ($report->resubmitted)
+                                        <span class="text-caption text-ink-soft">Diajukan ulang</span>
+                                    @endif
+                                </span>
                             @endif
                         </x-admin.table.cell>
                         @if ($queue)
-                            <x-admin.table.cell label="Diajukan">{{ Format::date($report->last_submitted_at) }}</x-admin.table.cell>
+                            <x-admin.table.cell label="Diajukan"><x-admin.date :value="$report->last_submitted_at" time /></x-admin.table.cell>
                             <x-admin.table.cell label="Menunggu" @class(['font-semibold text-ink' => $report->last_submitted_at?->lt(now()->subDays(App\Support\Dashboards\DistrictStats::WAITING_DAYS))])>{{ Format::waitingSince($report->last_submitted_at) }}</x-admin.table.cell>
                         @else
                             <x-admin.table.cell label="Diajukan" optional>
-                                {{ Format::date($report->submitted_at) }}
+                                <x-admin.date :value="$report->submitted_at" time />
                                 @if ($report->wasSubmittedLate())
                                     <span class="block text-caption text-ink-soft">Diajukan terlambat</span>
                                 @endif

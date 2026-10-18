@@ -61,25 +61,29 @@ test('dasbor Admin/OPD: kartu sapaan forest kecil, tanpa banner foto walau ada f
     Carbon\CarbonImmutable::setTestNow();
 });
 
-test('peran Kelompok tetap memakai banner foto lama', function () {
+test('peran Kelompok memakai kepala terang yang sama dengan Admin/OPD, tanpa banner foto', function () {
     SiteSetting::put(['cover_photo_path' => 'site/sampul.jpg']);
 
-    $this->actingAs(User::factory()->kelompok($this->organization)->create())->get('/kelompok/profil')
-        ->assertOk()
-        ->assertSee('app-band-photo max-md:relative', false)
-        ->assertSee('overlay-forest', false);
+    foreach (['/kelompok', '/kelompok/profil', '/kelompok/produk', '/kelompok/laporan'] as $url) {
+        $this->actingAs(User::factory()->kelompok($this->organization)->create())->get($url)
+            ->assertOk()
+            ->assertDontSee('overlay-forest', false)
+            ->assertDontSee('app-band', false);
+    }
+
+    $this->get('/kelompok/profil')->assertSee('text-admin-title font-semibold', false)->assertSee('Laporan terverifikasi');
 });
 
-test('detail kelompok Admin: judul, status, tag, lalu aksi; Ubah profil sebagai aksi sekunder (menu … di HP)', function () {
+test('detail kelompok Admin: inisial, judul, jenis dan kampung, badge status dan verifikasi, lalu aksi di kanan', function () {
     $this->organization->update(['name' => 'KUB Banner']);
 
     $html = $this->actingAs(User::factory()->admin()->create())
         ->get('/admin/kelompok/'.$this->organization->id)->assertOk()->getContent();
 
-    expect($html)->not->toContain('app-band-photo max-md:relative')
-        ->toMatch('#<h1[^>]*>KUB Banner</h1>\s*<div[^>]*>\s*<span data-tone="success"#')
-        ->toContain('aria-label="Menu tindakan"')
-        ->and(strpos($html, 'Ubah profil'))->toBeGreaterThan(strpos($html, 'aria-label="Jenis dan bidang usaha"'));
+    expect($html)->not->toContain('overlay-forest')
+        ->toMatch('#<h1[^>]*>KUB Banner</h1>\s*<p[^>]*>.*?</p>\s*<div[^>]*aria-label="Status kelompok">\s*<span data-tone="success"#s')
+        ->toContain('aria-label="Tindakan lain"')
+        ->and(strpos($html, 'Ubah profil'))->toBeGreaterThan(strpos($html, 'aria-label="Status kelompok"'));
 });
 
 test('tab detail kelompok di HP diberi penanda geser di tepi kanan', function () {

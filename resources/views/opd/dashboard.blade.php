@@ -21,12 +21,14 @@
     ]));
 @endphp
 
-<x-layouts.app title="Dasbor" :description="'Ringkasan kelompok binaan '.$user->opd->name.'.'" section="dasbor" tab="ringkasan" :breadcrumbs="[]">
-    <div class="space-y-6">
+<x-layouts.app title="Dasbor" :description="'Ringkasan kelompok binaan '.$user->opd->name.'.'" section="dasbor" tab="ringkasan" :header="false">
+    <x-slot:lead>
         <x-admin.greeting :name="$user->name" :subtitle="$user->opd->name">
             @include('shared.dashboards.period-picker')
         </x-admin.greeting>
+    </x-slot:lead>
 
+    <div class="space-y-6">
         @include('shared.dashboards.tasks')
 
         @include('shared.dashboards.stats', ['area' => 'opd'])

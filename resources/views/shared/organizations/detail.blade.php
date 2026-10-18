@@ -5,8 +5,8 @@
         'produk' => 'Produk',
         'izin' => 'Izin',
         'laporan' => 'Laporan',
-        'riwayat' => 'Riwayat',
         'akun' => 'Akun',
+        'riwayat' => 'Riwayat',
     ];
     $counts = ['produk' => $organization->products_count, 'izin' => $organization->licenses_count, 'laporan' => $organization->monthly_reports_count, 'akun' => $organization->users_count];
     if ($area !== 'admin') {
@@ -26,7 +26,6 @@
     $icons = ['profil' => 'identification', 'produk' => 'cube', 'izin' => 'document-check', 'laporan' => 'document-text', 'riwayat' => 'clock', 'akun' => 'users'];
     $canAddProduct = $tab === 'produk' && auth()->user()->can('create', [App\Models\Product::class, $organization]);
     $canAddLicense = $tab === 'izin' && auth()->user()->can('create', [App\Models\License::class, $organization]);
-    $canAddUser = $tab === 'akun' && auth()->user()->can('create', App\Models\User::class);
     $canManage = $area === 'admin' && auth()->user()->can('administer', $organization);
     $canEnterReport = $tab === 'laporan' && ! empty($entryPeriods);
 @endphp
@@ -35,55 +34,45 @@
     :title="$organization->name"
     :description="$organization->village->name.', Distrik Ransiki'"
     :back="route($area.'.organizations.index')"
-    :breadcrumbs="[
-        ['label' => $area === 'opd' ? 'Kelompok binaan' : 'Kelompok', 'href' => route($area.'.organizations.index')],
-        ['label' => $organization->name],
-    ]"
     phone-title="Detail kelompok"
+    :header="false"
+    own-heading
 >
-    @can('update', $organization)
-        <x-slot:secondary>
-            <x-button variant="secondary" icon="pencil-square" :href="route($area.'.organizations.edit', $organization)">Ubah profil</x-button>
-        </x-slot:secondary>
-    @endcan
-    @if ($canAddProduct || $canAddLicense || $canAddUser || $canEnterReport || $canManage)
-        <x-slot:actions>
-            {{-- Tambah di tab Produk/Izin: tombol header membuka modal milik daftar di bawahnya. --}}
-            @if ($canAddProduct)
-                <x-button icon="plus" x-data x-on:click="$dispatch('product-create')">Tambah produk</x-button>
-            @elseif ($canAddLicense)
-                <x-button icon="plus" x-data x-on:click="$dispatch('license-create')">Tambah izin</x-button>
-            @elseif ($canEnterReport)
-                <x-button icon="pencil-square" x-data x-on:click="$dispatch('open-modal', 'report-entry')">Isi laporan</x-button>
-            @elseif ($canAddUser)
-                <x-button icon="plus" :href="route('admin.users.create', ['kelompok' => $organization->id])">Tambah akun</x-button>
+    <x-slot:lead>
+        <x-admin.organization-header
+            :organization="$organization"
+            :breadcrumbs="[
+                ['label' => $area === 'opd' ? 'Kelompok binaan' : 'Kelompok', 'href' => route($area.'.organizations.index')],
+                ['label' => $organization->name],
+            ]"
+            :links="['produk' => $links['produk'], 'izin' => $links['izin'], 'laporan' => $links['laporan']]"
+        >
+            <x-slot:actions>
+                {{-- Tambah di tab Produk/Izin: tombol header membuka modal milik daftar di bawahnya. --}}
+                @if ($canAddProduct)
+                    <x-button icon="plus" x-data x-on:click="$dispatch('product-create')">Tambah produk</x-button>
+                @elseif ($canAddLicense)
+                    <x-button icon="plus" x-data x-on:click="$dispatch('license-create')">Tambah izin</x-button>
+                @elseif ($canEnterReport)
+                    <x-button icon="pencil-square" x-data x-on:click="$dispatch('open-modal', 'report-entry')">Isi laporan</x-button>
+                @endif
+                @can('update', $organization)
+                    <x-button :variant="$canAddProduct || $canAddLicense || $canEnterReport ? 'secondary' : 'primary'" icon="pencil-square" :href="route($area.'.organizations.edit', $organization)">Ubah profil</x-button>
+                @endcan
+            </x-slot:actions>
+            @if ($canManage || $area === 'admin')
+                <x-slot:menu>
+                    @can('create', App\Models\User::class)
+                        <x-dropdown.item icon="user-plus" :href="route('admin.users.create', ['kelompok' => $organization->id])">Tambah akun</x-dropdown.item>
+                    @endcan
+                    @if ($canManage)
+                        @include('admin.organizations._danger', ['part' => 'menu'])
+                        <p class="px-3 py-2 text-caption text-ink-muted">Kelompok dengan laporan atau akun hanya bisa ditutup, tidak dihapus.</p>
+                    @endif
+                </x-slot:menu>
             @endif
-            @if ($canManage)
-                <x-dropdown width="w-56">
-                    <x-slot:trigger>
-                        <x-button variant="secondary" x-bind:aria-expanded="open" aria-haspopup="menu" class="px-3" aria-label="Tindakan lain">
-                            <x-heroicon-o-ellipsis-horizontal class="size-5" />
-                        </x-button>
-                    </x-slot:trigger>
-                    @include('admin.organizations._danger', ['part' => 'menu'])
-                    <p class="px-3 py-2 text-caption text-ink-muted">Kelompok dengan laporan atau akun hanya bisa ditutup, tidak dihapus.</p>
-                </x-dropdown>
-            @endif
-        </x-slot:actions>
-    @endif
-
-    <x-slot:badge>
-        <x-admin.badge-status :status="$organization->status" />
-    </x-slot:badge>
-
-    <x-slot:meta>
-        <ul class="flex flex-wrap gap-2" aria-label="Jenis dan bidang usaha">
-            <li><x-tag>{{ $organization->institutionType->name }}</x-tag></li>
-            @foreach ($organization->sectors as $sector)
-                <li><x-tag>{{ $sector->name }}</x-tag></li>
-            @endforeach
-        </ul>
-    </x-slot:meta>
+        </x-admin.organization-header>
+    </x-slot:lead>
 
     <div class="space-y-6">
         @if ($area === 'admin' && $organization->users_count === 0)

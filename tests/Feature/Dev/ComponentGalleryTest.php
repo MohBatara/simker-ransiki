@@ -42,12 +42,15 @@ test('sidebar memakai label ringkas dengan nama menu lengkap untuk tooltip', fun
         ->assertDontSee('Dashboard');
 });
 
-test('bar aksi hanya menempel di bawah layar HP bila diminta', function () {
-    $sticky = Blade::render('<x-form-actions sticky><x-button>Simpan</x-button></x-form-actions>');
-    $plain = Blade::render('<x-form-actions><x-button>Simpan</x-button></x-form-actions>');
+test('bar aksi form menempel di bawah layar: Batal, Simpan, dan penanda perubahan belum disimpan', function () {
+    view()->share('errors', new ViewErrorBag);
+    $html = Blade::render('<x-admin.form-bar cancel="/kembali" submit="Simpan akun" />');
 
-    expect($sticky)->toContain('max-md:sticky')
-        ->and($plain)->not->toContain('max-md:sticky');
+    expect($html)->toContain('sticky bottom-[var(--app-bottom,0px)]')
+        ->toContain('x-data="formGuard(false)"')
+        ->toContain('Perubahan belum disimpan')
+        ->toContain('href="/kembali"')
+        ->toContain('Simpan akun');
 });
 
 test('mode form menyembunyikan navigasi bawah dan menampilkan tombol kembali', function () {
@@ -69,15 +72,15 @@ test('mode form menyembunyikan navigasi bawah dan menampilkan tombol kembali', f
 
 test('baris tabel dengan href menjadi satu link dengan chevron, tanpa tombol buka', function () {
     $html = Blade::render(<<<'BLADE'
-        <x-table clickable>
-            <x-table.row href="/laporan/1">
-                <x-table.cell primary>Kelompok Contoh A</x-table.cell>
-                <x-table.cell label="Pendapatan" numeric>Rp 1.000</x-table.cell>
-            </x-table.row>
-            <x-table.row>
-                <x-table.cell primary>Kelompok Contoh B</x-table.cell>
-            </x-table.row>
-        </x-table>
+        <x-admin.table clickable>
+            <x-admin.table.row href="/laporan/1">
+                <x-admin.table.cell primary>Kelompok Contoh A</x-admin.table.cell>
+                <x-admin.table.cell label="Pendapatan" numeric>Rp 1.000</x-admin.table.cell>
+            </x-admin.table.row>
+            <x-admin.table.row>
+                <x-admin.table.cell primary>Kelompok Contoh B</x-admin.table.cell>
+            </x-admin.table.row>
+        </x-admin.table>
         BLADE);
 
     expect(substr_count($html, 'href="/laporan/1"'))->toBe(1)

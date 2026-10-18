@@ -49,26 +49,23 @@
                 <x-admin.table.heading>Terbit</x-admin.table.heading>
                 <x-admin.table.heading numeric optional>Lampiran</x-admin.table.heading>
                 @if ($canManage)
-                    <x-admin.table.heading><span class="sr-only">Aksi</span></x-admin.table.heading>
+                    <x-admin.table.heading><span class="sr-only">Tindakan</span></x-admin.table.heading>
                 @endif
             </x-slot:head>
 
             @foreach ($licenses as $license)
                 <x-admin.table.row :href="str_replace('__ID__', $license->id, $licenseUrl)">
                     <x-admin.table.cell primary>{{ $license->type }}</x-admin.table.cell>
-                    <x-admin.table.cell label="Nomor">{{ $license->number ?? '—' }}</x-admin.table.cell>
+                    <x-admin.table.cell label="Nomor">{{ $license->number ?? Format::EMPTY }}</x-admin.table.cell>
                     <x-admin.table.cell badge><x-admin.badge-status :status="$license->status" /></x-admin.table.cell>
-                    <x-admin.table.cell label="Diajukan" optional>{{ Format::date($license->submitted_on) }}</x-admin.table.cell>
-                    <x-admin.table.cell label="Terbit">{{ Format::date($license->issued_on) }}</x-admin.table.cell>
+                    <x-admin.table.cell label="Diajukan" optional><x-admin.date :value="$license->submitted_on" /></x-admin.table.cell>
+                    <x-admin.table.cell label="Terbit"><x-admin.date :value="$license->issued_on" /></x-admin.table.cell>
                     <x-admin.table.cell label="Lampiran" numeric optional>{{ Format::number($license->attachments_count) }}</x-admin.table.cell>
                     @if ($canManage)
-                        <x-admin.table.cell actions>
-                            {{-- relative z-10: tombol tetap bisa diklik di atas tautan baris. --}}
-                            <div class="relative z-10 inline-flex items-center justify-end gap-2 max-md:w-full">
-                                <x-button variant="ghost" x-on:click="remove({{ Js::from(['id' => $license->id, 'name' => $license->type]) }})">Hapus</x-button>
-                                <x-button variant="secondary" x-on:click="edit({{ Js::from($toRecord($license)) }})">Ubah</x-button>
-                            </div>
-                        </x-admin.table.cell>
+                        <x-admin.table.actions :for="$license->type">
+                            <x-dropdown.item icon="pencil-square" x-on:click="edit({{ Js::from($toRecord($license)) }})">Ubah</x-dropdown.item>
+                            <x-dropdown.item icon="trash" class="text-fix!" x-on:click="remove({{ Js::from(['id' => $license->id, 'name' => $license->type]) }})">Hapus</x-dropdown.item>
+                        </x-admin.table.actions>
                     @endif
                 </x-admin.table.row>
             @endforeach
@@ -87,7 +84,7 @@
                 <input type="hidden" name="_modal" value="record-form">
                 <input type="hidden" name="_id" x-bind:value="record.id">
 
-                <x-field label="Jenis izin" for="type" hint="Pilih dari saran atau ketik jenis lain.">
+                <x-field label="Jenis izin" for="type" hint="Pilih dari saran atau ketik jenis lain." required>
                     <x-input name="type" list="license-types" x-model="record.type" maxlength="100" autofocus required />
                     <datalist id="license-types">
                         @foreach ($licenseTypes as $type)
@@ -96,7 +93,7 @@
                     </datalist>
                 </x-field>
                 <div class="grid gap-4 sm:grid-cols-2">
-                    <x-field label="Status" for="status">
+                    <x-field label="Status" for="status" required>
                         <x-select name="status" :options="App\Enums\LicenseStatus::options()" x-model="record.status" required />
                     </x-field>
                     <x-field label="Nomor izin" for="number" optional>
@@ -118,7 +115,7 @@
             </form>
 
             <x-slot:footer>
-                <x-button variant="ghost" x-on:click="$dispatch('close-modal', 'record-form')">Batal</x-button>
+                <x-button variant="secondary" x-on:click="$dispatch('close-modal', 'record-form')">Batal</x-button>
                 <x-button type="submit" form="license-form" processing="Menyimpan…">Simpan</x-button>
             </x-slot:footer>
         </x-modal>

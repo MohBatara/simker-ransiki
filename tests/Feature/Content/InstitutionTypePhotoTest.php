@@ -66,5 +66,5 @@ test('deskripsi singkat jenis paling banyak 90 karakter', function () {
         ->put("/admin/pengaturan/data-master/jenis-kelembagaan/{$this->type->id}", ['name' => 'KUB', 'code' => $this->type->code, 'description' => str_repeat('a', 91)])
         ->assertSessionHasErrors(['description' => 'Deskripsi singkat paling banyak 90 karakter.']);
 
-    $this->get('/admin/pengaturan/data-master/jenis-kelembagaan')->assertSee('paling banyak 90 karakter')->assertSee('Foto');
+    $this->get('/admin/pengaturan/data-master/jenis-kelembagaan')->assertSee('paling banyak 90 karakter')->assertSee('Tambah foto');
 });

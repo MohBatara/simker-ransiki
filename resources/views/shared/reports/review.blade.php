@@ -36,7 +36,7 @@
         :show="$errors->has('revision_note')"
     >
         <p>Laporan dikembalikan ke kelompok untuk diperbaiki, lalu diajukan lagi.</p>
-        <x-field label="Catatan revisi" for="revision_note" hint="Sebut bagian yang perlu diperbaiki. Catatan ini tampil di atas form laporan kelompok.">
+        <x-field label="Catatan revisi" for="revision_note" hint="Sebut bagian yang perlu diperbaiki. Catatan ini tampil di atas form laporan kelompok." required>
             <x-textarea name="revision_note" rows="4" minlength="10" maxlength="2000" required />
         </x-field>
     </x-admin.confirm>
@@ -53,7 +53,7 @@
         :show="$errors->has('reopen_note')"
     >
         <p>Verifikasi dicabut dan laporan kembali ke kelompok dengan status perlu revisi. Riwayat verifikasi tetap tersimpan.</p>
-        <x-field label="Alasan" for="reopen_note" hint="Wajib. Tampil untuk kelompok sebagai catatan revisi.">
+        <x-field label="Alasan" for="reopen_note" hint="Wajib. Tampil untuk kelompok sebagai catatan revisi." required>
             <x-textarea name="reopen_note" rows="4" minlength="10" maxlength="2000" required />
         </x-field>
     </x-admin.confirm>

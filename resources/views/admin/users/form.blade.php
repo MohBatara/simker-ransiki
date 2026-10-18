@@ -15,19 +15,19 @@
     :back="$cancelUrl"
     focus
 >
-    <form method="POST" action="{{ $editing ? route('admin.users.update', $user) : route('admin.users.store') }}" x-data="{ role: @js($role), email: @js((string) old('email', $user->email)) }" class="space-y-5">
+    <form method="POST" action="{{ $editing ? route('admin.users.update', $user) : route('admin.users.store') }}" x-data="{ role: @js($role), email: @js((string) old('email', $user->email)) }" class="space-y-6">
         @csrf
-        <x-form-errors />
         @if ($editing)
             @method('PUT')
         @endif
+        <x-form-errors />
 
-        <x-card title="Data akun">
+        <x-admin.form-section title="Data akun" description="Nama dan cara masuk. Username dipakai untuk masuk dan tidak boleh sama dengan akun lain.">
             <div class="grid gap-5 md:grid-cols-2">
-                <x-field label="Nama" for="name" class="md:col-span-2">
+                <x-field label="Nama" for="name" class="md:col-span-2" required>
                     <x-input name="name" :value="$user->name" maxlength="255" required />
                 </x-field>
-                <x-field label="Username" for="username" hint="Dipakai untuk masuk. Huruf kecil, angka, titik, garis bawah, atau tanda hubung.">
+                <x-field label="Username" for="username" hint="Dipakai untuk masuk. Huruf kecil, angka, titik, garis bawah, atau tanda hubung." required>
                     <x-input
                         name="username"
                         :value="$user->username"
@@ -57,33 +57,30 @@
                     <x-input name="phone" type="tel" inputmode="tel" :value="$user->phone" maxlength="30" />
                 </x-field>
             </div>
-        </x-card>
+        </x-admin.form-section>
 
-        <x-card title="Peran">
+        <x-admin.form-section title="Peran" description="Peran menentukan menu dan data yang bisa dibuka akun ini.">
             <div class="grid gap-5 md:grid-cols-2">
                 @if ($self)
                     <x-field label="Peran" hint="Peran akun sendiri tidak bisa diubah.">
                         <p>{{ $user->role->label() }}</p>
                     </x-field>
                 @else
-                    <x-field label="Peran" for="role">
+                    <x-field label="Peran" for="role" required>
                         <x-select name="role" :options="$roles" :selected="$role" placeholder="Pilih peran" x-model="role" required />
                     </x-field>
 
-                    <x-field label="OPD" for="opd_id" x-show="role === 'opd'" :x-cloak="$role !== 'opd'">
+                    <x-field label="OPD" for="opd_id" required x-show="role === 'opd'" :x-cloak="$role !== 'opd'">
                         <x-select name="opd_id" :options="$opds" :selected="$user->opd_id" placeholder="Pilih OPD" />
                     </x-field>
 
-                    <x-field label="Kelompok" for="organization_id" hint="Satu kelompok boleh punya lebih dari satu akun." x-show="role === 'kelompok'" :x-cloak="$role !== 'kelompok'">
+                    <x-field label="Kelompok" for="organization_id" required hint="Satu kelompok boleh punya lebih dari satu akun." x-show="role === 'kelompok'" :x-cloak="$role !== 'kelompok'">
                         <x-select name="organization_id" :options="$organizations" :selected="$user->organization_id" placeholder="Pilih kelompok" />
                     </x-field>
                 @endif
             </div>
-        </x-card>
+        </x-admin.form-section>
 
-        <x-form-actions sticky>
-            <x-button variant="ghost" :href="$cancelUrl">Batal</x-button>
-            <x-button type="submit" processing="Menyimpan…">{{ $editing ? 'Simpan perubahan' : 'Simpan akun' }}</x-button>
-        </x-form-actions>
+        <x-admin.form-bar :cancel="$cancelUrl" :submit="$editing ? 'Simpan perubahan' : 'Simpan akun'" />
     </form>
 </x-layouts.app>

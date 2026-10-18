@@ -3,13 +3,14 @@
 namespace App\Http\Controllers\Kelompok;
 
 use App\Actions\Organizations\SaveOrganization;
+use App\Enums\LicenseStatus;
+use App\Enums\ReportStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Organizations\LegalStatusRequest;
 use App\Http\Requests\Organizations\LicenseRequest;
 use App\Http\Requests\Organizations\OrganizationRequest;
 use App\Models\License;
 use App\Models\Organization;
-use App\Support\BannerImage;
 use App\Support\OrganizationOptions;
 use App\Support\OrganizationOverview;
 use Illuminate\Http\RedirectResponse;
@@ -23,12 +24,17 @@ class ProfileController extends Controller
 {
     public function show(Request $request): View
     {
-        $organization = $this->organization($request)->load(['institutionType', 'village', 'sectors', 'opds', 'updater']);
+        $organization = $this->organization($request)->load(['institutionType', 'village', 'sectors', 'opds', 'updater'])
+            ->loadCount([
+                'monthlyReports', 'products', 'licenses',
+                // Strip angka di kepala Profil Kelompok (tampilan saja).
+                'licenses as issued_licenses_count' => fn ($query) => $query->where('status', LicenseStatus::Issued),
+                'monthlyReports as verified_reports_count' => fn ($query) => $query->where('status', ReportStatus::Verified),
+            ]);
 
         return view('kelompok.profile', [
             'organization' => $organization,
             'overview' => OrganizationOverview::data($organization),
-            'banner' => BannerImage::forOrganization($organization),
             'attachments' => $organization->attachments()->with('uploader')->latest()->get()->each->setRelation('attachable', $organization),
         ]);
     }

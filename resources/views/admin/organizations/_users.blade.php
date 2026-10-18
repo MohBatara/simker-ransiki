@@ -21,7 +21,7 @@
                 <x-admin.table.cell badge>
                     <x-admin.badge-status :tone="$user->is_active ? 'success' : 'neutral'" :label="$user->is_active ? 'Aktif' : 'Nonaktif'" />
                 </x-admin.table.cell>
-                <x-admin.table.cell label="Login terakhir">{{ $user->last_login_at ? Format::date($user->last_login_at) : 'Belum pernah' }}</x-admin.table.cell>
+                <x-admin.table.cell label="Login terakhir">@if ($user->last_login_at)<x-admin.date :value="$user->last_login_at" time />@else Belum pernah @endif</x-admin.table.cell>
             </x-admin.table.row>
         @endforeach
     </x-admin.table>

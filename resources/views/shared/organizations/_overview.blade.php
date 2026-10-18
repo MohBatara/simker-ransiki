@@ -55,7 +55,7 @@
                         @else
                             {{ Format::month($latestReport->period) }}
                         @endif
-                        <x-admin.badge-status :status="$latestReport->status" :label="$area === 'kelompok' ? $latestReport->status->label() : $latestReport->status->reviewerLabel()" />
+                        <x-admin.badge-status :status="$latestReport->status"  />
                     </span>
                 @else
                     Belum ada laporan

@@ -9,7 +9,7 @@
 @endphp
 
 <section id="bagian-{{ $key }}" tabindex="-1" aria-label="{{ $title }}" x-cloak x-show="section === '{{ $key }}'" class="focus:outline-none">
-    <x-card :title="$title" :description="$description">
+    <x-admin.form-section :title="$title" :description="$description">
         <div class="space-y-4">
             <p x-show="! data.{{ $kind }}.length" class="text-ink-soft">Belum ada {{ $noun }} yang dicatat.</p>
 
@@ -45,5 +45,5 @@
                 <p x-cloak x-show="data.{{ $kind }}.length >= {{ ReportForm::MAX_ISSUES }}" class="text-caption text-ink-muted">Paling banyak {{ ReportForm::MAX_ISSUES }} {{ $noun }}.</p>
             </div>
         </div>
-    </x-card>
+    </x-admin.form-section>
 </section>

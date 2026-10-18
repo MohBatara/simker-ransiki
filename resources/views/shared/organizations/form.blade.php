@@ -14,22 +14,22 @@
     @include('shared.organizations._duplicates', ['candidates' => $duplicates, 'confirm' => true])
 @endif
 
-<x-card title="Identitas">
+<x-admin.form-section title="Identitas" description="Nama, lokasi, dan kontak utama kelompok.">
     <div class="grid gap-5 md:grid-cols-2">
         @if ($canAdminister)
-            <x-field label="Nama kelompok" for="name" class="md:col-span-2">
+            <x-field label="Nama kelompok" for="name" class="md:col-span-2" required>
                 <x-input name="name" :value="$organization->name" required maxlength="255" />
             </x-field>
-            <x-field label="Jenis kelembagaan" for="institution_type_id">
+            <x-field label="Jenis kelembagaan" for="institution_type_id" required>
                 <x-select name="institution_type_id" :options="$options['types']" :selected="$organization->institution_type_id" placeholder="Pilih jenis" required />
             </x-field>
-            <x-field label="Kampung" for="village_id">
+            <x-field label="Kampung" for="village_id" required>
                 <x-select name="village_id" :options="$options['villages']" :selected="$organization->village_id" placeholder="Pilih kampung" required />
             </x-field>
         @else
             <x-field label="Nama kelompok" :hint="$adminNote" class="md:col-span-2"><p>{{ $organization->name }}</p></x-field>
-            <x-field label="Jenis kelembagaan" :hint="$adminNote"><p>{{ $options['types'][$organization->institution_type_id] ?? '—' }}</p></x-field>
-            <x-field label="Kampung" :hint="$adminNote"><p>{{ $options['villages'][$organization->village_id] ?? '—' }}</p></x-field>
+            <x-field label="Jenis kelembagaan" :hint="$adminNote"><p>{{ $options['types'][$organization->institution_type_id] ?? \App\Support\Format::EMPTY }}</p></x-field>
+            <x-field label="Kampung" :hint="$adminNote"><p>{{ $options['villages'][$organization->village_id] ?? \App\Support\Format::EMPTY }}</p></x-field>
         @endif
         <x-field label="Nama ketua" for="leader_name" optional>
             <x-input name="leader_name" :value="$organization->leader_name" maxlength="255" />
@@ -53,9 +53,9 @@
             <x-textarea name="description" :value="$organization->description" />
         </x-field>
     </div>
-</x-card>
+</x-admin.form-section>
 
-<x-card title="Bidang Usaha & OPD Terkait">
+<x-admin.form-section title="Bidang usaha dan OPD" description="Bidang usaha dipakai di direktori dan statistik; OPD pembina memverifikasi laporan.">
     <div class="space-y-6">
         <x-checkbox-group label="Bidang usaha" name="sectors" hint="Pilih semua yang sesuai.">
             @foreach ($options['sectors'] as $id => $name)
@@ -75,9 +75,9 @@
             </x-field>
         @endif
     </div>
-</x-card>
+</x-admin.form-section>
 
-<x-card title="Informasi Usaha">
+<x-admin.form-section title="Informasi usaha" description="Gambaran kapasitas dan sarana usaha. Semua isian boleh dilengkapi kemudian.">
     <div class="grid gap-5 md:grid-cols-2">
         <x-field label="Kapasitas produksi" for="production_capacity" hint="Contoh: 500 kg kakao kering per bulan." optional>
             <x-textarea name="production_capacity" rows="2" :value="$organization->production_capacity" />
@@ -99,11 +99,11 @@
             <x-textarea name="equipment" rows="2" :value="$organization->equipment" />
         </x-field>
     </div>
-</x-card>
+</x-admin.form-section>
 
-<x-card title="Legalitas" description="Izin usaha (NIB, PIRT, dan lainnya) dicatat di tab Izin.">
+<x-admin.form-section title="Legalitas" description="Status hukum kelompok. Izin usaha (NIB, PIRT, dan lainnya) dicatat di tab Izin.">
     <div class="grid gap-5 md:grid-cols-2">
-        <x-field label="Status hukum" for="legal_status">
+        <x-field label="Status hukum" for="legal_status" required>
             <x-select name="legal_status" :options="$options['legalStatuses']" :selected="$organization->legal_status?->value ?? 'unknown'" required />
         </x-field>
         <x-field label="Nomor legalitas" for="legal_number" hint="Isi bila sudah terdaftar, mis. nomor akta atau SK." optional>
@@ -113,9 +113,9 @@
             <x-textarea name="legal_notes" rows="2" :value="$organization->legal_notes" />
         </x-field>
     </div>
-</x-card>
+</x-admin.form-section>
 
-<x-card title="Publikasi" description="Kelompok yang ditutup tidak tampil di direktori publik.">
+<x-admin.form-section title="Publikasi" description="Apa yang tampil di website publik. Kelompok yang ditutup tidak pernah tampil.">
     <div class="space-y-1">
         @if ($canAdminister)
             <x-checkbox name="is_public" :checked="$organization->is_public" hint="Nama, jenis, kampung, bidang usaha, deskripsi, dan produk publik akan tampil.">Tampilkan di direktori publik</x-checkbox>
@@ -124,9 +124,9 @@
         @endif
         <x-checkbox name="show_contact_publicly" :checked="$organization->show_contact_publicly" hint="Nomor telepon dan email ikut tampil di halaman publik kelompok.">Tampilkan kontak di halaman publik</x-checkbox>
     </div>
-</x-card>
+</x-admin.form-section>
 
-<x-card title="Pelaporan">
+<x-admin.form-section title="Pelaporan" description="Status kelompok dan bulan mulai wajib lapor.">
     @if ($canAdminister)
         <div class="grid gap-5 md:grid-cols-2">
             @if ($organization->exists)
@@ -134,12 +134,12 @@
                     <p>{{ $organization->status->label() }}</p>
                 </x-field>
             @else
-                <x-field label="Status kelompok" for="status" hint="Kelompok yang ditutup tidak dihitung wajib lapor.">
+                <x-field label="Status kelompok" for="status" hint="Kelompok yang ditutup tidak dihitung wajib lapor." required>
                     <x-select name="status" :options="$options['statuses']" :selected="$organization->status?->value ?? 'active'" required />
                 </x-field>
             @endif
             <fieldset class="space-y-2">
-                <legend class="text-ui font-semibold text-ink">Mulai wajib lapor</legend>
+                <legend class="text-ui font-semibold text-ink">Mulai wajib lapor <span class="text-fix" aria-hidden="true">*</span><span class="sr-only">(wajib)</span></legend>
                 <div class="grid grid-cols-2 gap-2">
                     <x-select name="reporting_month" :options="$options['months']" :selected="$organization->reporting_starts_on?->month" aria-label="Bulan mulai wajib lapor" required />
                     <x-select name="reporting_year" :options="$options['years']" :selected="$organization->reporting_starts_on?->year" aria-label="Tahun mulai wajib lapor" required />
@@ -157,4 +157,4 @@
             <x-field label="Mulai wajib lapor" :hint="$adminNote"><p>{{ \App\Support\Format::month($organization->reporting_starts_on) }}</p></x-field>
         </div>
     @endif
-</x-card>
+</x-admin.form-section>

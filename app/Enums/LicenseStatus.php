@@ -20,15 +20,4 @@ enum LicenseStatus: string
             self::NeedsFix => 'Perlu perbaikan',
         };
     }
-
-    /** Tone untuk komponen x-badge: ok, wait, fix, idle. */
-    public function badgeColor(): string
-    {
-        return match ($this) {
-            self::None => 'idle',
-            self::InProcess => 'wait',
-            self::Issued => 'ok',
-            self::NeedsFix => 'fix',
-        };
-    }
 }

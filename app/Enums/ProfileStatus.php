@@ -19,13 +19,4 @@ enum ProfileStatus: string
             self::NeedsReview => 'Perlu verifikasi ulang',
         };
     }
-
-    public function badgeColor(): string
-    {
-        return match ($this) {
-            self::Unverified => 'idle',
-            self::Verified => 'ok',
-            self::NeedsReview => 'wait',
-        };
-    }
 }

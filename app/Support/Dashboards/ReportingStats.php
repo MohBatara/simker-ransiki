@@ -141,7 +141,7 @@ class ReportingStats
 
         return [
             ['label' => 'Terverifikasi', 'value' => $counts['verified'], 'tone' => 'ok', 'href' => $reports('verified')],
-            ['label' => 'Menunggu', 'value' => $counts['submitted'], 'tone' => 'wait', 'href' => $reports('submitted')],
+            ['label' => 'Menunggu verifikasi', 'value' => $counts['submitted'], 'tone' => 'wait', 'href' => $reports('submitted')],
             ['label' => 'Perlu revisi', 'value' => $counts['revision'], 'tone' => 'fix', 'href' => $reports('revision')],
             ['label' => 'Draf', 'value' => $counts['draft'], 'tone' => 'idle', 'href' => $reports('draft')],
             ['label' => 'Belum melapor', 'value' => $counts['missing'], 'tone' => 'empty',

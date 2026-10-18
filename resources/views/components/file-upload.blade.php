@@ -26,15 +26,17 @@
         x-on:dragleave.prevent="dragging = false"
         x-on:drop.prevent="drop($event)"
         x-bind:class="dragging && 'border-brand! bg-brand-tint!'"
-        class="flex flex-col items-center gap-3 rounded-control border border-dashed border-line-input bg-paper px-4 py-5 text-center transition-colors"
+        class="flex flex-col items-center gap-3 rounded-tile border border-dashed border-line-input bg-paper px-4 py-6 text-center transition-colors"
     >
+        <span class="flex size-10 items-center justify-center rounded-full bg-brand-tint text-brand" aria-hidden="true"><x-heroicon-o-arrow-up-tray class="size-5" /></span>
+        <p class="text-ui text-ink max-md:hidden">Tarik dan lepas file di sini, atau</p>
         <div class="flex flex-wrap justify-center gap-2">
             @if ($camera)
                 <x-button variant="secondary" icon="camera" x-on:click="$refs.camera.click()">Ambil foto</x-button>
             @endif
             <x-button variant="secondary" icon="arrow-up-tray" x-on:click="$refs.picker.click()">Pilih file</x-button>
         </div>
-        <p class="text-caption text-ink-muted">{{ $hint }} <span class="max-md:hidden">Bisa juga diseret ke sini.</span></p>
+        <p class="text-caption text-ink-muted">{{ $hint }}</p>
     </div>
 
     <input type="file" x-ref="picker" class="sr-only" tabindex="-1" aria-hidden="true" accept="{{ $accept }}" @if ($multiple) multiple @endif x-on:change="add($event.target.files); $event.target.value = ''">
@@ -46,7 +48,11 @@
         <template x-for="item in queue" :key="item.key">
             <li class="space-y-2 px-3 py-3">
                 <div class="flex items-center justify-between gap-3 text-ui">
-                    <span class="truncate" x-text="item.name"></span>
+                    <template x-if="item.preview"><img x-bind:src="item.preview" alt="" class="size-10 shrink-0 rounded-control bg-subtle object-cover"></template>
+                    <span class="min-w-0 flex-1">
+                        <span class="block truncate" x-text="item.name"></span>
+                        <span class="block text-caption text-ink-muted" x-text="item.size"></span>
+                    </span>
                     <span class="shrink-0 text-caption tabular-nums" x-bind:class="item.status === 'error' ? 'text-fix' : 'text-ink-muted'" x-text="statusText(item)"></span>
                 </div>
                 <div x-show="item.status === 'uploading' || item.status === 'preparing'" class="h-1.5 overflow-hidden rounded-full bg-subtle" role="progressbar" aria-valuemin="0" aria-valuemax="100" x-bind:aria-valuenow="item.progress">

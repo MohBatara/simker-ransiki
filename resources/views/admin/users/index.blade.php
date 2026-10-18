@@ -2,14 +2,17 @@
 
 @php
     $url = route('admin.users.index');
-    $active = collect($filters)->only(['role', 'status'])->filter(fn ($value) => filled($value))->count();
     $chips = \App\Support\FilterChips::from($filters, [
         'q' => [null, null],
         'role' => ['Peran', App\Enums\Role::options()],
         'status' => ['Status', ['active' => 'Aktif', 'inactive' => 'Nonaktif']],
     ]);
     $hasFilters = $chips !== [];
-    $summary = collect([$users->total().' akun', $inactiveCount ? $inactiveCount.' nonaktif' : null])->filter()->join(' · ');
+    $summary = collect([$users->total().' akun', $inactiveCount ? $inactiveCount.' nonaktif' : null])->filter()->join(', ');
+    $toolbarFilters = [
+        ['name' => 'role', 'label' => 'Peran', 'options' => App\Enums\Role::options(), 'selected' => $filters['role'] ?? null, 'placeholder' => 'Semua peran'],
+        ['name' => 'status', 'label' => 'Status akun', 'options' => ['active' => 'Aktif', 'inactive' => 'Nonaktif'], 'selected' => $filters['status'] ?? null, 'placeholder' => 'Semua status'],
+    ];
 @endphp
 
 <x-layouts.app title="Pengguna" description="Akun Admin, petugas OPD, dan pengurus kelompok." section="pengaturan" tab="pengguna">
@@ -17,62 +20,69 @@
         <x-button icon="plus" :href="route('admin.users.create')">Tambah akun</x-button>
     </x-slot:actions>
 
-    <div class="space-y-4">
-        <x-filter-bar :action="$url" search-label="Cari nama, username, atau email" :search="$filters['q'] ?? ''" :active="$active">
-            <x-select size="sm" name="role" :options="App\Enums\Role::options()" :selected="$filters['role'] ?? null" placeholder="Semua peran" aria-label="Peran" x-on:change="$el.form.requestSubmit()" />
-            <x-select size="sm" name="status" :options="['active' => 'Aktif', 'inactive' => 'Nonaktif']" :selected="$filters['status'] ?? null" placeholder="Semua status" aria-label="Status akun" x-on:change="$el.form.requestSubmit()" />
-        </x-filter-bar>
+    <div class="space-y-6">
+        <x-admin.toolbar
+            :action="$url"
+            search-label="Cari nama, username, atau email"
+            :search="$filters['q'] ?? ''"
+            :filters="$toolbarFilters"
+            :chips="$chips"
+            :summary="$summary"
+            :clear-url="$hasFilters ? $url : null"
+        />
 
-        <x-filter-summary :summary="$summary" :chips="$chips" :clear-url="$url" />
-
-        @if ($users->isEmpty())
-            @if ($hasFilters)
-                <x-empty-state title="Tidak ada akun yang cocok" description="Ubah kata pencarian atau hapus filter.">
-                    <x-button variant="secondary" :href="route('admin.users.index')">Hapus filter</x-button>
-                </x-empty-state>
+        {{-- Ditukar oleh x-admin.toolbar saat filter berubah. --}}
+        <div data-swap="pengguna">
+            @if ($users->isEmpty())
+                @if ($hasFilters)
+                    <x-admin.empty icon="magnifying-glass" title="Tidak ada akun yang cocok" description="Ubah kata pencarian atau hapus filter.">
+                        <x-button variant="secondary" :href="$url">Hapus filter</x-button>
+                    </x-admin.empty>
+                @else
+                    <x-admin.empty icon="users" title="Belum ada akun" description="Buat akun untuk petugas OPD dan pengurus kelompok.">
+                        <x-button icon="plus" :href="route('admin.users.create')">Tambah akun</x-button>
+                    </x-admin.empty>
+                @endif
             @else
-                <x-empty-state title="Belum ada akun" description="Buat akun untuk petugas OPD dan pengurus kelompok.">
-                    <x-button icon="plus" :href="route('admin.users.create')">Tambah akun</x-button>
-                </x-empty-state>
+                <x-admin.table clickable>
+                    <x-slot:head>
+                        <x-admin.table.heading>Nama</x-admin.table.heading>
+                        <x-admin.table.heading>Peran</x-admin.table.heading>
+                        <x-admin.table.heading optional>Login terakhir</x-admin.table.heading>
+                        <x-admin.table.heading>Status</x-admin.table.heading>
+                    </x-slot:head>
+
+                    @foreach ($users as $user)
+                        <x-admin.table.row :href="route('admin.users.show', $user)">
+                            <x-admin.table.cell primary>
+                                <span class="flex items-center gap-3">
+                                    <x-avatar :name="$user->name" />
+                                    <span class="min-w-0">
+                                        <span class="block">{{ $user->name }}</span>
+                                        <span class="block text-caption font-normal text-ink-muted">{{ $user->username }}</span>
+                                    </span>
+                                </span>
+                            </x-admin.table.cell>
+                            <x-admin.table.cell label="Peran">
+                                {{ $user->role->label() }}
+                                @if ($user->opd || $user->organization)
+                                    <span class="block text-caption text-ink-muted">{{ $user->opd?->short_name ?? $user->organization->name }}</span>
+                                @endif
+                            </x-admin.table.cell>
+                            <x-admin.table.cell label="Login terakhir" optional>
+                                @if ($user->last_login_at)<x-admin.date :value="$user->last_login_at" time />@else Belum pernah @endif
+                            </x-admin.table.cell>
+                            <x-admin.table.cell badge>
+                                <x-admin.badge-status :tone="$user->is_active ? 'success' : 'neutral'" :label="$user->is_active ? 'Aktif' : 'Nonaktif'" />
+                            </x-admin.table.cell>
+                        </x-admin.table.row>
+                    @endforeach
+
+                    <x-slot:footer>
+                        <x-admin.pagination :paginator="$users" noun="akun" />
+                    </x-slot:footer>
+                </x-admin.table>
             @endif
-        @else
-            <x-table clickable>
-                <x-slot:head>
-                    <x-table.heading>Nama</x-table.heading>
-                    <x-table.heading>Username</x-table.heading>
-                    <x-table.heading>Peran</x-table.heading>
-                    <x-table.heading optional>Login terakhir</x-table.heading>
-                    <x-table.heading>Status</x-table.heading>
-                </x-slot:head>
-
-                @foreach ($users as $user)
-                    <x-table.row :href="route('admin.users.show', $user)">
-                        <x-table.cell primary>
-                            <span class="flex items-center gap-3">
-                                <x-avatar :name="$user->name" size="sm" />
-                                <span class="min-w-0">{{ $user->name }}</span>
-                            </span>
-                        </x-table.cell>
-                        <x-table.cell subtitle>{{ $user->username }}</x-table.cell>
-                        <x-table.cell label="Peran">
-                            {{ $user->role->label() }}@if ($user->opd) · {{ $user->opd->short_name }}@elseif ($user->organization) · {{ $user->organization->name }}@endif
-                        </x-table.cell>
-                        <x-table.cell label="Login terakhir" optional>{{ $user->last_login_at ? Format::date($user->last_login_at) : 'Belum pernah' }}</x-table.cell>
-                        <x-table.cell badge>
-                            <x-admin.badge-status :tone="$user->is_active ? 'success' : 'neutral'" :label="$user->is_active ? 'Aktif' : 'Nonaktif'" />
-                        </x-table.cell>
-                    </x-table.row>
-                @endforeach
-
-                <x-slot:footer>
-                    <div class="space-y-3">
-                        <p class="text-caption text-ink-muted tabular-nums">
-                            Menampilkan {{ $users->firstItem() }}–{{ $users->lastItem() }} dari {{ $users->total() }} akun
-                        </p>
-                        {{ $users->links() }}
-                    </div>
-                </x-slot:footer>
-            </x-table>
-        @endif
+        </div>
     </div>
 </x-layouts.app>

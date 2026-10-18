@@ -1,11 +1,11 @@
 @use('App\Support\ReportForm')
 
 <section id="bagian-b" tabindex="-1" aria-label="B. Produksi & penjualan" x-cloak x-show="section === 'b'" class="focus:outline-none">
-    <x-card title="B. Produksi & penjualan" description="Satu baris untuk setiap produk. Satuan produksi dan penjualan boleh berbeda.">
+    <x-admin.form-section title="B. Produksi & penjualan" description="Satu baris untuk setiap produk. Satuan produksi dan penjualan boleh berbeda.">
         @if ($previous && $previous['items'])
-            <x-slot:actions>
+            <x-slot:aside>
                 <x-button variant="secondary" icon="document-duplicate" x-on:click="copyPrevious('items')">Salin dari bulan lalu</x-button>
-            </x-slot:actions>
+            </x-slot:aside>
         @endif
 
         <div class="space-y-4">
@@ -76,5 +76,5 @@
                 <p x-cloak x-show="data.items.length >= {{ ReportForm::MAX_ITEMS }}" class="text-caption text-ink-muted">Paling banyak {{ ReportForm::MAX_ITEMS }} produk.</p>
             </div>
         </div>
-    </x-card>
+    </x-admin.form-section>
 </section>

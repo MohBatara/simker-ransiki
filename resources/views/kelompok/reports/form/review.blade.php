@@ -1,7 +1,7 @@
 @use('App\Support\Format')
 
 <section id="bagian-h" tabindex="-1" aria-label="H. Periksa & ajukan" x-cloak x-show="section === 'h'" class="space-y-5 focus:outline-none">
-    <x-card title="H. Periksa & ajukan" description="Periksa kelengkapan sebelum laporan diajukan ke OPD.">
+    <x-admin.form-section title="H. Periksa & ajukan" description="Periksa kelengkapan sebelum laporan diajukan ke OPD.">
         <ul class="divide-y divide-line">
             <template x-for="item in sections.filter((candidate) => candidate.key !== 'h')" :key="item.key">
                 <li class="flex items-start justify-between gap-3 py-3 first:pt-0 last:pb-0">
@@ -19,7 +19,7 @@
                 </li>
             </template>
         </ul>
-    </x-card>
+    </x-admin.form-section>
 
     @if ($submitNote)
         <x-alert>{{ $submitNote }} Sementara itu, isian tetap bisa disimpan sebagai draf.</x-alert>

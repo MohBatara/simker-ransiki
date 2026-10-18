@@ -15,9 +15,9 @@
     @endif
 
     @if ($notifications->isEmpty())
-        <x-empty-state title="Belum ada notifikasi" description="Pemberitahuan tentang laporan akan muncul di sini." />
+        <x-admin.empty icon="bell" title="Belum ada notifikasi" description="Pemberitahuan tentang laporan akan muncul di sini." />
     @else
-        <x-card flush>
+        <x-admin.card flush>
             <x-list flush>
                 @foreach ($notifications as $notification)
                     <x-list.item :href="route('notifications.open', $notification['id'])" class="items-start">
@@ -35,8 +35,8 @@
                 @endforeach
             </x-list>
             @if ($notifications->hasPages())
-                <x-slot:footer>{{ $notifications->links() }}</x-slot:footer>
+                <x-slot:footer><x-admin.pagination :paginator="$notifications" noun="notifikasi" class="w-full" /></x-slot:footer>
             @endif
-        </x-card>
+        </x-admin.card>
     @endif
 </x-layouts.app>

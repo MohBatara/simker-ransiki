@@ -56,10 +56,10 @@
                         @csrf
                         <x-form-errors />
                         <div class="grid gap-6 md:grid-cols-2">
-                            <x-field label="Status" for="status">
+                            <x-field label="Status" for="status" required>
                                 <x-select name="status" :options="FollowUpStatus::options()" :selected="$issue->follow_up_status->value" required />
                             </x-field>
-                            <x-field label="Tanggal tindakan" for="acted_on">
+                            <x-field label="Tanggal tindakan" for="acted_on" required>
                                 <x-input type="date" name="acted_on" :value="$today" :max="$today" required />
                             </x-field>
                             @if ($opds)
@@ -68,12 +68,12 @@
                                 </x-field>
                             @endif
                         </div>
-                        <x-field label="Catatan tindakan" for="note" hint="Apa yang sudah atau akan dilakukan, mis. jadwal pelatihan atau alasan tidak dapat ditindaklanjuti.">
+                        <x-field label="Catatan tindakan" for="note" hint="Apa yang sudah atau akan dilakukan, mis. jadwal pelatihan atau alasan tidak dapat ditindaklanjuti." required>
                             <x-textarea name="note" rows="4" minlength="5" maxlength="2000" required />
                         </x-field>
-                        <x-form-actions>
-                            <x-button type="submit" processing="Menyimpan…">Simpan</x-button>
-                        </x-form-actions>
+                        <div class="flex justify-end max-md:*:w-full">
+                            <x-button type="submit" processing="Menyimpan…">Simpan tindak lanjut</x-button>
+                        </div>
                     </form>
                 </x-admin.card>
             @endif

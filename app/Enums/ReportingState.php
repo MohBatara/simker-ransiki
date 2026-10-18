@@ -42,23 +42,12 @@ enum ReportingState: string
     public function label(): string
     {
         return match ($this) {
-            self::Verified => 'Sudah terverifikasi',
+            self::Verified => 'Terverifikasi',
             self::Submitted => 'Menunggu verifikasi',
             self::Revision => 'Perlu revisi',
             self::Draft => 'Draf',
             self::Missing => 'Belum dibuat',
             self::Overdue => 'Terlambat',
-        };
-    }
-
-    /** Tone untuk komponen x-badge: ok, wait, fix, idle. */
-    public function badgeColor(): string
-    {
-        return match ($this) {
-            self::Verified => 'ok',
-            self::Submitted => 'wait',
-            self::Revision, self::Overdue => 'fix',
-            self::Draft, self::Missing => 'idle',
         };
     }
 }

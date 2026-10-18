@@ -26,16 +26,6 @@ enum FollowUpStatus: string
         };
     }
 
-    /** Tone untuk komponen x-badge: ok, wait, fix, idle. */
-    public function badgeColor(): string
-    {
-        return match ($this) {
-            self::New, self::Unable => 'idle',
-            self::Reviewed, self::Planned, self::InProgress => 'wait',
-            self::Done => 'ok',
-        };
-    }
-
     /** Belum benar-benar ditindaklanjuti (dasar kartu "Kebutuhan belum ditindaklanjuti"). */
     public static function pending(): array
     {

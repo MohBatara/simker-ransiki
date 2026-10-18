@@ -74,7 +74,7 @@ test('status per kelompok: terverifikasi, menunggu, revisi tidak pernah terlamba
 
     expect($states->only(['Terverifikasi', 'Menunggu', 'Revisi', 'Draf', 'Belum dibuat'])->all())->toBe([
         'Belum dibuat' => 'Terlambat', 'Draf' => 'Terlambat', 'Menunggu' => 'Menunggu verifikasi',
-        'Revisi' => 'Perlu revisi', 'Terverifikasi' => 'Sudah terverifikasi',
+        'Revisi' => 'Perlu revisi', 'Terverifikasi' => 'Terverifikasi',
     ]);
 
     expect(Organization::overdueFor($this->period)->orderBy('name')->pluck('name')->all())->toBe(['Belum dibuat', 'Draf', 'Tidak aktif'])

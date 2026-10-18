@@ -6,6 +6,7 @@ import scrollDots from './scroll-dots';
 import sectionNav from './section-nav';
 import directory from './directory';
 import adminToolbar from './admin-toolbar';
+import { dropzone, formGuard } from './form-guard';
 import { productGallery, scrollRow, stickyCta } from './products';
 import readingProgress from './reading-progress';
 import registerMotion from './motion';
@@ -76,7 +77,7 @@ Alpine.data('uploader', ({ kind, maxMb, remaining, multiple }) => ({
         const files = Array.from(fileList).slice(0, multiple ? undefined : 1);
 
         for (const file of files) {
-            const item = { key: `${Date.now()}-${Math.random()}`, file, name: file.name, progress: 0, status: 'waiting', error: null, retryable: false };
+            const item = { key: `${Date.now()}-${Math.random()}`, file, name: file.name, size: `${(file.size / 1048576).toFixed(1).replace('.', ',')} MB`, preview: /^image\/(jpeg|png)$/.test(file.type) ? URL.createObjectURL(file) : null, progress: 0, status: 'waiting', error: null, retryable: false };
             const problem = this.problem(file);
 
             if (problem) {
@@ -262,6 +263,8 @@ Alpine.data('scrollDots', scrollDots);
 Alpine.data('sectionNav', sectionNav);
 Alpine.data('directory', directory);
 Alpine.data('adminToolbar', adminToolbar);
+Alpine.data('formGuard', formGuard);
+Alpine.data('dropzone', dropzone);
 
 /**
  * Toast pesan sistem (x-admin.toasts): hilang otomatis setelah 4 detik, berhenti saat disorot/difokuskan.
@@ -312,6 +315,7 @@ registerMotion(Alpine);
  * yang sama seperti halaman publik (HTML mentah dibuang, tautan berbahaya ditolak).
  */
 Alpine.data('markdownPreview', (url) => ({
+    tab: 'tulis',
     html: '',
     loading: false,
     failed: false,

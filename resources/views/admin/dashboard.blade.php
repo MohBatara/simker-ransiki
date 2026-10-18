@@ -32,12 +32,14 @@
     ];
 @endphp
 
-<x-layouts.app title="Dasbor" description="Ringkasan pelaporan dan kelompok di Distrik Ransiki." section="dasbor" tab="ringkasan" :breadcrumbs="[]">
-    <div class="space-y-6">
+<x-layouts.app title="Dasbor" description="Ringkasan pelaporan dan kelompok di Distrik Ransiki." section="dasbor" tab="ringkasan" :header="false">
+    <x-slot:lead>
         <x-admin.greeting :name="auth()->user()->name" subtitle="Distrik Ransiki">
             @include('shared.dashboards.period-picker')
         </x-admin.greeting>
+    </x-slot:lead>
 
+    <div class="space-y-6">
         @include('shared.dashboards.tasks')
 
         @include('shared.dashboards.stats', ['area' => 'admin'])
@@ -50,8 +52,8 @@
                     <x-admin.table.heading>OPD</x-admin.table.heading>
                     <x-admin.table.heading numeric>Wajib lapor</x-admin.table.heading>
                     <x-admin.table.heading numeric>Terverifikasi</x-admin.table.heading>
-                    <x-admin.table.heading numeric optional>Menunggu</x-admin.table.heading>
-                    <x-admin.table.heading numeric optional>Revisi</x-admin.table.heading>
+                    <x-admin.table.heading numeric optional wrap>Menunggu verifikasi</x-admin.table.heading>
+                    <x-admin.table.heading numeric optional wrap>Perlu revisi</x-admin.table.heading>
                     <x-admin.table.heading numeric>Belum diajukan</x-admin.table.heading>
                     <x-admin.table.heading><span class="sr-only">Progres</span></x-admin.table.heading>
                 </x-slot:head>
@@ -62,8 +64,8 @@
                         $reportsUrl = fn (string $status) => route('admin.reports.index', ['opd' => $opdFilter, 'status' => $status, 'period' => $month]);
                         $cells = [
                             ['Terverifikasi', $counts['verified'], $reportsUrl('verified'), false],
-                            ['Menunggu', $counts['submitted'], $reportsUrl('submitted'), true],
-                            ['Revisi', $counts['revision'], $reportsUrl('revision'), true],
+                            ['Menunggu verifikasi', $counts['submitted'], $reportsUrl('submitted'), true],
+                            ['Perlu revisi', $counts['revision'], $reportsUrl('revision'), true],
                             ['Belum diajukan', $counts['draft'] + $counts['missing'], route('admin.organizations.index', ['opd' => $opdFilter, 'laporan' => 'belum-diajukan', 'periode' => $month]), false],
                         ];
                     @endphp

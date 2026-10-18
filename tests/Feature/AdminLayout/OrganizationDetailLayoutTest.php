@@ -19,10 +19,11 @@ beforeEach(function () {
     $this->admin = User::factory()->admin()->create();
 });
 
-test('header: tag jenis dan bidang usaha, lokasi, remah, dan tab berikon dengan angka', function () {
+test('kepala: jenis, kampung, badge status dan verifikasi, bidang usaha, remah, strip angka, dan tab berikon', function () {
     $this->actingAs($this->admin)->get("/admin/kelompok/{$this->organization->id}")->assertOk()
         ->assertSee('Kampung Contoh 3, Distrik Ransiki')
-        ->assertSeeInOrder(['aria-label="Jenis dan bidang usaha"', $this->organization->institutionType->name, 'Perkebunan'], false)
+        ->assertSeeInOrder([$this->organization->institutionType->name, 'aria-label="Status kelompok"', 'Belum diverifikasi', 'Perkebunan'], false)
+        ->assertSeeInOrder(['Anggota', 'Produk', 'Izin terbit', 'Laporan terverifikasi'])
         ->assertSeeInOrder(['Kelompok', $this->organization->name], false)
         ->assertSeeInOrder(['Akun', '<span class="rounded-full px-2 text-caption tabular-nums bg-subtle text-ink-soft">0</span>'], false);
 });
@@ -52,7 +53,7 @@ test('kartu foto: foto produk lalu lampiran gambar, PDF tidak ikut', function ()
 test('ikon judul kartu hanya di detail kelompok', function () {
     $this->actingAs($this->admin);
 
-    $this->get("/admin/kelompok/{$this->organization->id}")->assertSee('<h2 class="flex items-center gap-2 text-card-title font-semibold text-ink">', false)
+    $this->get("/admin/kelompok/{$this->organization->id}")->assertSee('<h2 class="flex items-center gap-2 text-body font-semibold text-ink">', false)
         ->assertSee('size-5 shrink-0 text-brand', false);
     $this->get('/admin')->assertDontSee('size-5 shrink-0 text-brand', false);
     $this->get('/admin/laporan')->assertDontSee('size-5 shrink-0 text-brand', false);

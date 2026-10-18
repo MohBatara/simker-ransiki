@@ -1,5 +1,5 @@
 <section id="bagian-a" tabindex="-1" aria-label="A. Aktivitas" x-cloak x-show="section === 'a'" class="focus:outline-none">
-    <x-card title="A. Aktivitas" description="Kegiatan kelompok selama bulan ini.">
+    <x-admin.form-section title="A. Aktivitas" description="Kegiatan kelompok selama bulan ini.">
         <div class="space-y-5">
             <x-checkbox x-model="data.no_activity" hint="Pilih bila kelompok tidak berkegiatan bulan ini. Bagian lain menjadi opsional.">
                 Tidak ada aktivitas bulan ini
@@ -10,6 +10,7 @@
                 label-text="data.no_activity ? 'Keterangan (opsional)' : 'Ringkasan aktivitas'"
                 for="activity_summary"
                 live="'activity_summary'"
+                required-if="! data.no_activity"
                 hint="Kegiatan utama bulan ini. Wajib diisi, kecuali tidak ada aktivitas."
                 hint-text="data.no_activity ? 'Misalnya alasan tidak berkegiatan bulan ini.' : 'Kegiatan utama bulan ini. Wajib diisi, kecuali tidak ada aktivitas.'"
             >
@@ -32,5 +33,5 @@
                 <x-textarea id="achievements" rows="3" maxlength="5000" x-model="data.achievements" />
             </x-field>
         </div>
-    </x-card>
+    </x-admin.form-section>
 </section>

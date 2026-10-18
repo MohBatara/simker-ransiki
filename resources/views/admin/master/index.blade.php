@@ -20,70 +20,76 @@
             'hadErrors' => $errors->any(),
         ]))"
         x-on:master-create.window="create()"
-        class="space-y-5"
+        class="space-y-6"
     >
-        <x-tabs
-            :tabs="$tabs->mapWithKeys(fn ($tab) => [$tab->value => $tab->label()])->all()"
-            :links="$tabs->mapWithKeys(fn ($tab) => [$tab->value => route('admin.master.items', $tab)])->all()"
+        <x-admin.tabs
+            :tabs="$tabs->mapWithKeys(fn ($tab) => [$tab->value => ['label' => $tab->label(), 'href' => route('admin.master.items', $tab)]])->all()"
             :active="$type->value"
+            label="Jenis data master"
         />
 
-        <form method="GET" action="{{ route('admin.master.items', $type) }}" class="flex flex-wrap items-center gap-2" role="search">
-            <x-search-input :value="$search" :label="'Cari '.$type->noun()" class="flex-1 md:max-w-xs" />
-            <x-button variant="ghost" type="submit">Cari</x-button>
-            @if ($search !== '')
-                <x-button variant="ghost" :href="route('admin.master.items', $type)">Hapus pencarian</x-button>
-            @endif
-        </form>
+        <x-admin.toolbar
+            :action="route('admin.master.items', $type)"
+            :search-label="'Cari '.$type->noun()"
+            :search="$search"
+            :summary="\App\Support\Format::number($items->total()).' '.$type->noun()"
+            :clear-url="$search !== '' ? route('admin.master.items', $type) : null"
+        />
 
-        @if ($items->isEmpty())
-            @if ($search !== '')
-                <x-empty-state title="Tidak ada hasil" :description="'Tidak ada '.$type->noun().' dengan kata “'.$search.'”. Periksa ejaan atau hapus pencarian.'" />
-            @else
-                <x-empty-state :title="'Belum ada '.($type->noun())" :description="'Tambahkan '.($type->noun()).' pertama agar bisa dipilih di profil kelompok.'">
-                    <x-button icon="plus" x-on:click="create()">Tambah {{ $type->noun() }}</x-button>
-                </x-empty-state>
-            @endif
-        @else
-            <x-table>
-                <x-slot:head>
-                    <x-table.heading>Nama</x-table.heading>
-                    @foreach ($columns as $field)
-                        <x-table.heading>{{ $field['label'] }}</x-table.heading>
-                    @endforeach
-                    <x-table.heading numeric>Kelompok</x-table.heading>
-                    <x-table.heading><span class="sr-only">Aksi</span></x-table.heading>
-                </x-slot:head>
-
-                @foreach ($items as $item)
-                    @php $usage = $type->usage($item); @endphp
-                    <x-table.row>
-                        <x-table.cell primary>{{ $item->name }}</x-table.cell>
-                        @foreach ($columns as $column => $field)
-                            <x-table.cell subtitle>{{ $item->{$column} }}</x-table.cell>
-                        @endforeach
-                        <x-table.cell label="Kelompok" numeric>{{ \App\Support\Format::number($item->organizations_count) }}</x-table.cell>
-                        <x-table.cell actions>
-                            <div class="inline-flex items-center justify-end gap-2 max-md:w-full">
-                                @if ($usage)
-                                    <span class="text-caption text-ink-muted">Dipakai {{ $usage }}</span>
-                                @else
-                                    <x-button variant="ghost" x-on:click="remove({{ Js::from(['id' => $item->id, 'name' => $item->name]) }})">Hapus</x-button>
-                                @endif
-                                <x-button variant="secondary" x-on:click="edit({{ Js::from($item->only(['id', ...array_keys($fields)])) }})">Ubah</x-button>
-                                @if ($type === \App\Enums\MasterDataType::InstitutionType)
-                                    <x-button variant="secondary" :href="route('admin.master.type-photo.edit', $item)" :icon="$item->photo_path ? 'photo' : null">Foto</x-button>
-                                @endif
-                            </div>
-                        </x-table.cell>
-                    </x-table.row>
-                @endforeach
-
-                @if ($items->hasPages())
-                    <x-slot:footer>{{ $items->links() }}</x-slot:footer>
+        {{-- Ditukar oleh x-admin.toolbar saat pencarian berubah. --}}
+        <div data-swap="data-master">
+            @if ($items->isEmpty())
+                @if ($search !== '')
+                    <x-admin.empty icon="magnifying-glass" title="Tidak ada hasil" :description="'Tidak ada '.$type->noun().' dengan kata “'.$search.'”. Periksa ejaan atau hapus pencarian.'">
+                        <x-button variant="secondary" :href="route('admin.master.items', $type)">Hapus pencarian</x-button>
+                    </x-admin.empty>
+                @else
+                    <x-admin.empty icon="rectangle-stack" :title="'Belum ada '.($type->noun())" :description="'Tambahkan '.($type->noun()).' pertama agar bisa dipilih di profil kelompok.'">
+                        <x-button icon="plus" x-on:click="create()">Tambah {{ $type->noun() }}</x-button>
+                    </x-admin.empty>
                 @endif
-            </x-table>
-        @endif
+            @else
+                <x-admin.table>
+                    <x-slot:head>
+                        <x-admin.table.heading>Nama</x-admin.table.heading>
+                        @foreach ($columns as $field)
+                            <x-admin.table.heading>{{ $field['label'] }}</x-admin.table.heading>
+                        @endforeach
+                        <x-admin.table.heading numeric>Kelompok</x-admin.table.heading>
+                        <x-admin.table.heading><span class="sr-only">Tindakan</span></x-admin.table.heading>
+                    </x-slot:head>
+
+                    @foreach ($items as $item)
+                        @php $usage = $type->usage($item); @endphp
+                        <x-admin.table.row>
+                            <x-admin.table.cell primary>{{ $item->name }}</x-admin.table.cell>
+                            @foreach ($columns as $column => $field)
+                                <x-admin.table.cell subtitle>{{ $item->{$column} }}</x-admin.table.cell>
+                            @endforeach
+                            <x-admin.table.cell label="Kelompok" numeric>
+                                {{ \App\Support\Format::number($item->organizations_count) }}
+                            </x-admin.table.cell>
+                            <x-admin.table.actions :for="$item->name">
+                                <x-dropdown.item icon="pencil-square" x-on:click="edit({{ Js::from($item->only(['id', ...array_keys($fields)])) }})">Ubah</x-dropdown.item>
+                                @if ($type === \App\Enums\MasterDataType::InstitutionType)
+                                    <x-dropdown.item icon="photo" :href="route('admin.master.type-photo.edit', $item)">{{ $item->photo_path ? 'Ganti foto' : 'Tambah foto' }}</x-dropdown.item>
+                                @endif
+                                @if ($usage)
+                                    {{-- Data master yang dipakai tidak bisa dihapus (FK restrict). --}}
+                                    <p class="border-t border-line px-3 py-2 text-caption text-ink-muted">Tidak bisa dihapus, dipakai {{ $usage }}.</p>
+                                @else
+                                    <x-dropdown.item icon="trash" class="text-fix!" x-on:click="remove({{ Js::from(['id' => $item->id, 'name' => $item->name]) }})">Hapus</x-dropdown.item>
+                                @endif
+                            </x-admin.table.actions>
+                        </x-admin.table.row>
+                    @endforeach
+
+                    @if ($items->hasPages())
+                        <x-slot:footer><x-admin.pagination :paginator="$items" :noun="$type->noun()" /></x-slot:footer>
+                    @endif
+                </x-admin.table>
+            @endif
+        </div>
 
         <x-modal name="record-form" :show="$failed" x-on:close="closed()">
             <x-slot:title>
@@ -98,7 +104,7 @@
 
                 @foreach ($fields as $column => $field)
                     @php $autofocus = $loop->first; @endphp
-                    <x-field :label="$field['label']" :for="$column" :hint="$field['hint'] ?? null" :optional="$field['optional'] ?? false">
+                    <x-field :label="$field['label']" :for="$column" :hint="$field['hint'] ?? null" :optional="$field['optional'] ?? false" :required="! ($field['optional'] ?? false)">
                         @if ($field['textarea'] ?? false)
                             <x-textarea :name="$column" rows="3" x-model="record.{{ $column }}" :autofocus="$autofocus" />
                         @else
@@ -109,22 +115,13 @@
             </form>
 
             <x-slot:footer>
-                <x-button variant="ghost" x-on:click="$dispatch('close-modal', 'record-form')">Batal</x-button>
+                <x-button variant="secondary" x-on:click="$dispatch('close-modal', 'record-form')">Batal</x-button>
                 <x-button type="submit" form="record-form" processing="Menyimpan…">Simpan</x-button>
             </x-slot:footer>
         </x-modal>
 
-        <x-modal name="record-delete" :title="'Hapus '.$type->noun()">
+        <x-admin.confirm name="record-delete" :title="'Hapus '.$type->noun()" bind-action="deleteAction" method="DELETE" confirm="Hapus" processing="Menghapus…">
             <p>Hapus <strong class="text-ink" x-text="deleting.name"></strong>? Data yang dihapus tidak bisa dikembalikan.</p>
-
-            <x-slot:footer>
-                <x-button variant="ghost" x-on:click="$dispatch('close-modal', 'record-delete')">Batal</x-button>
-                <form method="POST" x-bind:action="deleteAction">
-                    @csrf
-                    @method('DELETE')
-                    <x-button variant="danger" type="submit" processing="Menghapus…">Hapus</x-button>
-                </form>
-            </x-slot:footer>
-        </x-modal>
+        </x-admin.confirm>
     </div>
 </x-layouts.app>

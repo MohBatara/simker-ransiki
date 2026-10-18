@@ -83,7 +83,7 @@
                         @foreach ($panel['reports'] as $report)
                             <x-list.item :href="auth()->user()->can('view', $report) ? route($area.'.reports.show', [$report, 'dari' => 'kelompok']) : null">
                                 <span class="min-w-0 flex-1 text-ink">{{ Format::month($report->period) }}</span>
-                                <x-admin.badge-status :status="$report->status" :label="$report->status->reviewerLabel()" />
+                                <x-admin.badge-status :status="$report->status" :label="$report->status->label()" />
                             </x-list.item>
                         @endforeach
                     </x-list>

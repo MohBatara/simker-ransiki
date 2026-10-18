@@ -6,11 +6,7 @@
     'back' => null,
     // Remah halaman bertingkat (desktop). Di HP tetap tombol kembali ke $back.
     'breadcrumbs' => null,
-    // Banner foto (App\Support\BannerImage) untuk dasbor dan detail kelompok; halaman lain pita forest polos.
-    'banner' => null,
-    // Banner foto lebih pendek di HP (detail kelompok), agar kartu pertama terlihat tanpa menggulir.
-    'compactBanner' => false,
-    // Judul header atas HP bila berbeda dari judul halaman (mis. "Detail kelompok"; nama sudah di banner).
+    // Judul header atas HP bila berbeda dari judul halaman (mis. "Detail kelompok").
     'phoneTitle' => null,
     // Item: ['label', 'href', 'icon' (Heroicons outline), 'short' (label ringkas), 'active', 'primary' (tampil di navigasi bawah HP)]
     // Kosongkan agar diambil otomatis dari peran pengguna yang login (App\Support\Navigation).
@@ -25,6 +21,10 @@
     'section' => null,
     'tab' => null,
     'tabUrls' => [],
+    // false: tanpa header halaman (dasbor Admin/OPD: kartu sapaan di slot "lead" menjadi elemen teratas, h1 untuk pembaca layar).
+    'header' => true,
+    // Dengan header false: halaman merender h1 sendiri (mis. kepala detail kelompok), jadi tanpa h1 pembaca layar.
+    'ownHeading' => false,
 ])
 
 @php
@@ -49,8 +49,6 @@
         $headTitle = $title === $sectionTabs['label'] ? $title : $title.' · '.$sectionTabs['label'];
     }
 
-    // Admin dan OPD memakai pola halaman baru (x-admin.*): header terang, tab x-admin.tabs, tanpa banner foto.
-    $isStaff = $user && ($user->isAdmin() || $user->isOpd());
     $navigation = collect($navigation);
     $sidebarGroups = $navigation
         ->reject(fn ($item) => ($item['route'] ?? null) === 'notifications.index' || ! ($item['sidebar'] ?? true))
@@ -85,13 +83,12 @@
     '[--app-bottom:0px] [--app-safe-bottom:env(safe-area-inset-bottom)]' => $focus,
 ])>
     @include('partials.skip-link')
-    @include('partials.test-mode')
     {{-- Sidebar: ikon + label ringkas di tablet (72px), penuh di desktop (248px) --}}
     <aside class="hidden md:fixed md:inset-y-0 md:left-0 md:z-20 md:flex md:w-[72px] md:flex-col md:border-r md:border-line md:bg-paper xl:w-[248px]">
         <div class="flex h-16 shrink-0 items-center gap-3 border-b border-line px-2 max-xl:justify-center xl:px-5" title="SIM-KER Distrik Ransiki">
             <x-logo />
             <div class="hidden min-w-0 leading-tight xl:block">
-                <span class="block text-ui font-semibold text-ink">SIM-KER</span>
+                <span class="flex items-center gap-2 text-ui font-semibold text-ink">SIM-KER @include('partials.test-mode-pill')</span>
                 <span class="block text-caption text-ink-muted">Distrik Ransiki</span>
             </div>
             <span class="sr-only xl:hidden">SIM-KER Distrik Ransiki</span>
@@ -167,6 +164,8 @@
             @else
                 <div class="flex-1"></div>
             @endif
+            {{-- Tablet: sidebar hanya logo, jadi penanda mode uji di bilah atas. --}}
+            @include('partials.test-mode-pill', ['class' => 'xl:hidden'])
             <div class="ml-auto flex items-center gap-2">
                 @if ($notificationsUrl)
                     <x-notification-bell :href="$notificationsUrl" :count="$unreadNotifications" :active="request()->routeIs('notifications.*')" data-bell="desktop" />
@@ -212,7 +211,9 @@
                         <x-heroicon-o-arrow-left class="size-5" />
                     </a>
                 @endif
-                <p class="min-w-0 flex-1 truncate text-ui font-semibold text-ink">{{ $phoneTitle ?? $title }}</p>
+                <p class="min-w-0 truncate text-ui font-semibold text-ink">{{ $phoneTitle ?? $title }}</p>
+                @include('partials.test-mode-pill', ['class' => 'ml-1', 'short' => true])
+                <span class="flex-1"></span>
                 @unless ($focus)
                     <div class="-mr-2 flex shrink-0">
                         @if ($searchUrl)
@@ -239,8 +240,13 @@
             'pb-24' => ! $focus,
             'pb-8' => $focus,
         ])>
-            @if ($isStaff)
-                {{-- Admin/OPD: header terang seragam (x-admin.page-header); aksi sekunder masuk menu "…" di HP. --}}
+            @if (! $header)
+                @unless ($ownHeading)
+                    <h1 class="sr-only">{{ $title }}</h1>
+                @endunless
+                {{ $lead ?? '' }}
+            @else
+                {{-- Semua peran: header terang seragam (x-admin.page-header); aksi sekunder masuk menu "…" di HP. --}}
                 {{-- condensed: di HP judul sudah ada di header atas; bila header atas memakai judul lain (phoneTitle), h1 tetap tampil. --}}
                 <x-admin.page-header :title="$title" :description="$description" :eyebrow="$eyebrow" :breadcrumbs="$breadcrumbs" :condensed="! $phoneTitle">
                     @isset($actions)
@@ -256,27 +262,13 @@
                         <x-slot:meta>{{ $meta }}</x-slot:meta>
                     @endisset
                 </x-admin.page-header>
-            @else
-                <div class="flex items-start gap-3">
-                    <x-page-header class="min-w-0 flex-1" :title="$title" :description="$description" :eyebrow="$eyebrow" :back="$back" :breadcrumbs="$breadcrumbs" :band="! $focus" :image="$banner" :compact="$compactBanner" condensed>
-                        @if (isset($actions) || isset($secondary))
-                            <x-slot:actions>{{ $secondary ?? '' }}{{ $actions ?? '' }}</x-slot:actions>
-                        @endif
-                        @isset($badge)
-                            <x-slot:badge>{{ $badge }}</x-slot:badge>
-                        @endisset
-                        @isset($meta)
-                            <x-slot:meta>{{ $meta }}</x-slot:meta>
-                        @endisset
-                    </x-page-header>
-                </div>
             @endif
 
             @if ($sectionTabs)
                 {{-- data-swap: URL tab ikut filter yang baru diterapkan x-admin.toolbar (mis. Ekonomi ⇄ Legalitas). --}}
                 <x-admin.tabs
                     data-swap="section-tabs"
-                    class="mt-6"
+                    :class="$header || isset($lead) ? 'mt-6' : ''"
                     :tabs="collect($sectionTabs['tabs'])->map(fn ($item, $key) => ['label' => $item['label'], 'href' => $tabUrls[$key] ?? $item['href'], 'count' => $item['count']])->all()"
                     :active="$tab"
                     :label="$sectionTabs['label']"

@@ -8,18 +8,22 @@
     $showCurrent = $current['allowed'] && $canCreate && (! $due || $dueSubmitted || $current['report']);
 @endphp
 
-<x-layouts.app :title="$organization->name" eyebrow="Dasbor" :banner="$banner">
-    <div class="grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1fr)_320px] lg:items-start">
+<x-layouts.app title="Dasbor" :header="false">
+    <x-slot:lead>
+        <x-admin.greeting :name="auth()->user()->name" :subtitle="$organization->name" />
+    </x-slot:lead>
+
+    <div class="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_320px] lg:items-start">
         {{-- Kartu utama: apa yang perlu dilakukan untuk bulan wajib lapor --}}
-        <x-card :title="$due ? 'Laporan '.Format::month($due['period']) : 'Laporan bulanan'" class="lg:col-start-1">
+        <x-admin.card :title="$due ? 'Laporan '.Format::month($due['period']) : 'Laporan bulanan'" class="lg:col-start-1">
             @if ($due)
                 <div class="space-y-4">
                     <div class="space-y-1.5">
                         <div>
                             @if ($dueReport)
-                                <x-badge :tone="$dueReport->status->badgeColor()">{{ $dueReport->status->label() }}</x-badge>
+                                <x-admin.badge-status :status="$dueReport->status" />
                             @else
-                                <x-badge>Belum dibuat</x-badge>
+                                <x-admin.badge-status tone="neutral" label="Belum dibuat" />
                             @endif
                         </div>
 
@@ -64,7 +68,7 @@
                     @include('kelompok.dashboard.report-action', ['period' => $current['period'], 'report' => $current['report'], 'variant' => 'secondary'])
                 </div>
             @endif
-        </x-card>
+        </x-admin.card>
 
         @if ($revision)
             <x-alert tone="fix" :title="'Perlu revisi: Laporan '.Format::month($revision->period)" class="lg:col-start-1">
@@ -81,7 +85,7 @@
         @endif
 
         {{-- Kelengkapan profil: di HP setelah kartu utama, di desktop kolom kanan --}}
-        <x-card title="Kelengkapan profil" class="lg:col-start-2 lg:row-span-2 lg:row-start-1">
+        <x-admin.card title="Kelengkapan profil" class="lg:col-start-2 lg:row-span-2 lg:row-start-1">
             <p class="text-ink-soft"><span class="font-semibold tabular-nums text-ink">{{ $doneCount }} dari {{ count($checklist) }}</span> lengkap</p>
             <div class="mt-2 h-2 overflow-hidden rounded-full bg-subtle" role="img" aria-label="{{ $doneCount }} dari {{ count($checklist) }} lengkap">
                 <div class="h-full rounded-full bg-brand" style="width: {{ round($doneCount / max(1, count($checklist)) * 100) }}%"></div>
@@ -104,11 +108,11 @@
                     </li>
                 @endforeach
             </ul>
-        </x-card>
+        </x-admin.card>
     </div>
 
     {{-- Selebar grid grafik di bawahnya. --}}
-    <x-card title="Riwayat laporan" class="mt-5" flush>
+    <x-admin.card title="Riwayat laporan" class="mt-6" flush>
         <x-slot:actions>
             <x-link :href="route('kelompok.reports.index')">Semua laporan</x-link>
         </x-slot:actions>
@@ -134,7 +138,7 @@
                                 @endif
                             </span>
                             @if ($report)
-                                <x-badge :tone="$report->status->badgeColor()">{{ $report->status->label() }}</x-badge>
+                                <x-admin.badge-status :status="$report->status" />
                             @else
                                 <span class="text-ink-muted">Belum dibuat</span>
                             @endif
@@ -142,11 +146,11 @@
                 @endforeach
             </x-list>
         @endif
-    </x-card>
+    </x-admin.card>
 
     {{-- Status tindak lanjut OPD atas masalah & kebutuhan yang pernah dilaporkan (baca-saja). --}}
     @if ($followUps->isNotEmpty())
-        <x-card title="Tindak lanjut masalah & kebutuhan" description="Dari laporan yang sudah diajukan. Status diubah oleh OPD atau Admin distrik." class="mt-5" flush>
+        <x-admin.card title="Tindak lanjut masalah & kebutuhan" description="Dari laporan yang sudah diajukan. Status diubah oleh OPD atau Admin distrik." class="mt-6" flush>
             <x-list flush>
                 @foreach ($followUps as $issue)
                     <x-list.item :href="route('kelompok.reports.show', $issue->monthly_report_id)">
@@ -157,15 +161,15 @@
                                 <span class="mt-0.5 line-clamp-2 block text-ink-soft break-words">{{ $issue->followUps->first()->note }}</span>
                             @endif
                         </span>
-                        <x-badge :tone="$issue->follow_up_status->badgeColor()">{{ $issue->follow_up_status->label() }}</x-badge>
+                        <x-admin.badge-status :status="$issue->follow_up_status" />
                     </x-list.item>
                 @endforeach
             </x-list>
-        </x-card>
+        </x-admin.card>
     @endif
 
     {{-- Grafik 12 bulan sampai bulan wajib lapor, hanya dari laporan terverifikasi kelompok ini. --}}
-    <div class="mt-5 grid grid-cols-1 gap-5 lg:grid-cols-2 lg:items-stretch">
+    <div class="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-2 lg:items-stretch">
         <x-chart
             title="Pendapatan penjualan, 12 bulan"
             :chart="App\Support\Dashboards\StatisticsCharts::incomeTrend($incomeTrend, coverage: false)"

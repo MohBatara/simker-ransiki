@@ -1,5 +1,5 @@
 <section id="bagian-d" tabindex="-1" aria-label="D. Keuangan" x-cloak x-show="section === 'd'" class="focus:outline-none">
-    <x-card title="D. Keuangan" description="Dalam Rupiah. Isi 0 bila memang tidak ada. Kosongkan bila belum diketahui.">
+    <x-admin.form-section title="D. Keuangan" description="Dalam Rupiah. Isi 0 bila memang tidak ada. Kosongkan bila belum diketahui.">
         <div class="grid gap-5 md:grid-cols-2">
             <x-field label="Pendapatan penjualan" for="income_sales" live="'income_sales'" optional>
                 <x-number-input id="income_sales" model="data.income_sales" kind="money" live="'income_sales'" />
@@ -24,5 +24,5 @@
             <p x-show="profitText" class="mt-1 text-card-title font-semibold tabular-nums text-ink" x-text="profitText"></p>
             <p class="mt-1 text-caption text-ink-muted" x-text="profitText ? 'Dihitung otomatis: penjualan + pendapatan lain − biaya.' : 'Dihitung otomatis setelah penjualan, pendapatan lain, dan biaya terisi. Isi 0 bila memang tidak ada.'"></p>
         </div>
-    </x-card>
+    </x-admin.form-section>
 </section>

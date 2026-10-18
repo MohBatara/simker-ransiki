@@ -66,6 +66,11 @@
         <span x-cloak x-show="loading" class="text-caption text-ink-muted" role="status">Memuat…</span>
         <noscript><x-button variant="secondary" type="submit">Terapkan filter</x-button></noscript>
 
+        @isset($actions)
+            {{-- Aksi yang mengikuti filter (mis. Unduh Excel), rata kanan. --}}
+            <div class="ml-auto flex items-center gap-2">{{ $actions }}</div>
+        @endisset
+
         @if ($filters)
             {{-- Panel: drawer kanan (≥ 768px, filter selain yang sebaris) atau bottom sheet (HP, semua filter). --}}
             <div x-cloak x-show="open" class="fixed inset-0 z-40 bg-ink/40" x-on:click="open = false" aria-hidden="true"></div>
