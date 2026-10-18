@@ -567,7 +567,8 @@ draft ──ajukan──▶ submitted ──verifikasi──▶ verified ──b
   terverifikasi, terlambat melapor → dua grafik ringkas berdampingan (HP bertumpuk, 220px, tanpa filter, tautan
   "Lihat statistik lengkap" ke tab Ekonomi): tren pendapatan 12 bulan (aturan bulan sementara) dan kepatuhan
   pelaporan 6 bulan, dari `Statistics::overview()` (`shared.dashboards.charts`) → Admin: pelaporan per OPD, belum
-  mengajukan, Kelompok, Ekonomi; OPD: belum mengajukan, masalah & kebutuhan. Tanpa banner foto.
+  mengajukan, lalu kartu Kelompok (5/12) dan Ekonomi (7/12) sama tinggi, lalu Produksi per produk selebar penuh (lihat
+  "Kartu Kelompok dan Ekonomi" di Bagian 7); OPD: belum mengajukan, masalah & kebutuhan. Tanpa banner foto.
   Setelah tenggat, daftar "Belum mengajukan" berjudul "Terlambat melapor {bulan}" dengan badge "Terlambat".
   Dasbor Kelompok: "Tenggat {tanggal} · N hari lagi". "Diajukan terlambat" (`wasSubmittedLate()`, informasi saja):
   `submitted_at` melewati tenggat periodenya.
@@ -953,6 +954,17 @@ atau banner foto di area aplikasi; komponen lama (`card`, `table`, `badge`, `sta
 - `x-admin.action-bar`: bar aksi menempel di bawah layar di semua ukuran; detail laporan: Minta revisi + Verifikasi
   (atau Verifikasi nonaktif bila pemisahan tugas).
 - `x-admin.greeting`: kartu sapaan forest kecil dasbor (pengecualian token forest, dijaga `PublicStyleTest`).
+- Kartu Kelompok dan Ekonomi (dasbor Admin, `shared.dashboards.organizations|economy|production`, tampilan saja):
+  Kelompok = total 36px + bar status bersegmen 8px (Aktif `brand`, Tidak aktif sementara `sand`, Ditutup `clay`) dengan
+  legenda berangka, tiap segmen/label menaut ke daftar terfilter; Jenis kelembagaan 5 teratas + "Tampilkan semua (n)"
+  (Alpine, di tempat). Ekonomi = subjudul "Dari laporan terverifikasi" + ikon info bertooltip (catatan cara menghitung),
+  cakupan "X dari Y kelompok wajib lapor terverifikasi" + bar 6px + persen (< 50%: catatan `clay` "Angka belum mewakili
+  seluruh kelompok"), 4 kotak 2x2 (latar `canvas`, 12px) dengan rupiah ringkas `Format::rupiahShort` (rb/jt/M HANYA di
+  kotak ini, nilai lengkap di tooltip), kotak Laba `forest` + nilai `cream` + label `sun` (pengecualian token atas
+  permintaan, dijaga `PublicStyleTest`), laba negatif "Rugi Rp …" (`clay`, di kotak forest `sand`); "diisi X dari Y
+  laporan" hanya bila X < Y. Kosong: ajakan "Buka laporan yang menunggu verifikasi". Produksi: 5 produk teratas, tautan
+  ke tab Ekonomi. OPD tidak punya kedua kartu ini (angkanya khusus seluruh distrik).
+- `x-admin.card`: padding 16px HP / 24px mulai tablet, subjudul 13px `ink-muted`, garis pemisah di bawah kepala.
 - Sidebar: grup kecil tanpa judul dipisah garis (`group` di `Navigation::sections`), item aktif `brand-tint` + garis kiri
   3px `brand`, badge rata kanan, kartu profil kecil di bawah (nama, peran, tombol Keluar). Bilah atas: cari ringkas di
   kiri, lonceng, avatar.

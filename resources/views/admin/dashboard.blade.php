@@ -24,12 +24,6 @@
         $attention['active_without_account'] ? ['icon' => 'user-plus', 'title' => Format::number($attention['active_without_account']).' kelompok aktif belum punya akun', 'hint' => 'Tanpa akun, kelompok belum bisa mengisi laporan sendiri.', 'action' => 'Buat akun '.Format::number($attention['active_without_account']).' kelompok', 'href' => route('admin.organizations.index', ['status' => 'active', 'akun' => 'tidak-ada'])] : null,
         $attention['without_opd'] ? ['icon' => 'building-office-2', 'title' => Format::number($attention['without_opd']).' kelompok belum punya OPD pembina', 'hint' => 'Laporannya hanya bisa diverifikasi Admin.', 'action' => 'Tetapkan OPD', 'href' => route('admin.organizations.index', ['opd' => 'none'])] : null,
     ]));
-    $moneyRows = [
-        'income_sales' => 'Pendapatan penjualan',
-        'income_other' => 'Pendapatan lain',
-        'costs' => 'Biaya',
-        'profit' => 'Laba',
-    ];
 @endphp
 
 <x-layouts.app title="Dasbor" description="Ringkasan pelaporan dan kelompok di Distrik Ransiki." section="dasbor" tab="ringkasan" :header="false">
@@ -90,103 +84,12 @@
 
         @include('shared.dashboards.not-submitted', ['area' => 'admin'])
 
-        <div class="grid grid-cols-1 gap-6 lg:grid-cols-2 lg:items-start">
-            <x-admin.card title="Kelompok">
-                <x-slot:actions>
-                    <x-link :href="route('admin.organizations.index')">Lihat semua</x-link>
-                </x-slot:actions>
-                <div class="space-y-6">
-                    <div>
-                        <p>
-                            <span class="text-display-sm font-semibold tabular-nums text-ink">{{ Format::number($organizations['total']) }}</span>
-                            <span class="text-ink-soft">kelompok terdaftar</span>
-                        </p>
-                        <ul class="mt-2 flex flex-wrap gap-2">
-                            @foreach (OrganizationStatus::cases() as $status)
-                                <li>
-                                    <a href="{{ route('admin.organizations.index', ['status' => $status->value]) }}" class="inline-flex min-h-11 items-center rounded-full md:min-h-0">
-                                        <x-admin.badge-status :status="$status" :label="$status->label().' · '.$organizations['statuses'][$status->value]" />
-                                    </a>
-                                </li>
-                            @endforeach
-                        </ul>
-                    </div>
-
-                    <section>
-                        <h3 class="mb-2 text-ui font-semibold text-ink">Jenis kelembagaan</h3>
-                        <x-bar-list :items="$organizations['types']->map(fn ($row) => [...$row, 'href' => route('admin.organizations.index', ['type' => $row['id']])])" />
-                    </section>
-
-                    <section>
-                        <h3 class="text-ui font-semibold text-ink">Bidang usaha</h3>
-                        <p class="mb-2 text-caption text-ink-muted">Satu kelompok bisa punya beberapa bidang usaha, jadi jumlahnya bisa melebihi total kelompok.</p>
-                        <x-bar-list :items="$organizations['sectors']->map(fn ($row) => [...$row, 'href' => route('admin.organizations.index', ['sector' => $row['id']])])" />
-                    </section>
-                </div>
-            </x-admin.card>
-
-            <x-admin.card :title="'Ekonomi '.Format::month($period)" description="Hanya dari laporan terverifikasi. Angka kosong tidak dihitung sebagai nol.">
-                @if ($economy['reports'] === 0)
-                    <p class="text-ink-soft">Belum ada laporan terverifikasi untuk bulan ini.</p>
-                @else
-                    <p class="text-ink-soft">
-                        <a href="{{ $verifiedUrl }}" class="inline-flex min-h-11 items-center font-semibold tabular-nums text-ink hover:underline md:min-h-0">{{ $economy['reports'] }} dari {{ $economy['obligated'] }}</a>
-                        kelompok wajib lapor sudah terverifikasi.
-                    </p>
-
-                    <dl class="mt-4 divide-y divide-line">
-                        @foreach ($moneyRows as $field => $label)
-                            @php $total = $economy['totals'][$field]; @endphp
-                            <div class="flex items-baseline justify-between gap-4 py-3 first:pt-0">
-                                <dt>
-                                    <span class="text-ink">{{ $label }}</span>
-                                    <span class="block text-caption text-ink-muted">
-                                        @if ($total['filled'] === 0)
-                                            Belum ada yang mengisi
-                                        @else
-                                            diisi {{ $total['filled'] }} dari {{ $economy['reports'] }} laporan
-                                        @endif
-                                    </span>
-                                </dt>
-                                <dd class="text-right">
-                                    <a href="{{ $verifiedUrl }}" class="inline-flex min-h-11 items-center font-semibold tabular-nums text-ink hover:underline md:min-h-0">{{ Format::rupiah($total['sum']) }}</a>
-                                </dd>
-                            </div>
-                        @endforeach
-                    </dl>
-                    <p class="mt-1 text-caption text-ink-muted">Laba hanya dari laporan yang mengisi penjualan, pendapatan lain, dan biaya.</p>
-
-                    <h3 class="mt-6 text-ui font-semibold text-ink">Produksi per produk</h3>
-                    <p class="mb-2 text-caption text-ink-muted">10 produk dengan kelompok terbanyak. Satuan berbeda tidak dijumlahkan.</p>
-                    @if ($production->isEmpty())
-                        <p class="text-ink-soft">Belum ada produksi yang dilaporkan.</p>
-                    @else
-                        <x-admin.table bare label="Produksi per produk">
-                            <x-slot:head>
-                                <x-admin.table.heading>Produk</x-admin.table.heading>
-                                <x-admin.table.heading numeric>Produksi</x-admin.table.heading>
-                                <x-admin.table.heading numeric>Kelompok</x-admin.table.heading>
-                            </x-slot:head>
-                            @foreach ($production as $row)
-                                <x-admin.table.row>
-                                    <x-admin.table.cell primary>{{ $row['product'] }}</x-admin.table.cell>
-                                    <x-admin.table.cell label="Produksi" numeric>
-                                        @if ($row['quantity'] === null)
-                                            <span class="text-ink-muted">Tidak diisi</span>
-                                        @else
-                                            {{ Format::quantity($row['quantity']) }} {{ $row['unit'] }}
-                                            @if ($row['filled'] < $row['organizations'])
-                                                <span class="block text-caption text-ink-muted">diisi {{ $row['filled'] }} dari {{ $row['organizations'] }} kelompok</span>
-                                            @endif
-                                        @endif
-                                    </x-admin.table.cell>
-                                    <x-admin.table.cell label="Kelompok" numeric>{{ $row['organizations'] }}</x-admin.table.cell>
-                                </x-admin.table.row>
-                            @endforeach
-                        </x-admin.table>
-                    @endif
-                @endif
-            </x-admin.card>
+        {{-- Kelompok 5 kolom, Ekonomi 7 kolom, sama tinggi; HP bertumpuk. Produksi selebar penuh di bawahnya. --}}
+        <div class="grid grid-cols-1 gap-6 lg:grid-cols-12 lg:items-stretch">
+            @include('shared.dashboards.organizations', ['class' => 'lg:col-span-5'])
+            @include('shared.dashboards.economy', ['class' => 'lg:col-span-7'])
         </div>
+
+        @include('shared.dashboards.production')
     </div>
 </x-layouts.app>

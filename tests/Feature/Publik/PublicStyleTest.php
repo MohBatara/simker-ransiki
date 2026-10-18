@@ -189,8 +189,9 @@ test('token warna publik tidak dipakai di area Admin, OPD, dan Kelompok', functi
     // Halaman masuk (layouts/auth) memakai panel forest atas permintaan; pengecualian tercatat di CLAUDE.md Bagian 7.
     // Pita/banner forest di header area aplikasi (components/page-header) juga pengecualian Bagian 7, begitu pula
     // badge jumlah menunggu di menu Admin/OPD (components/nav-badge, pil sun, Bagian 6) dan kartu sapaan dasbor
-    // Admin/OPD (components/admin/greeting, forest kecil).
-    $publicViews = ['publik/', 'components/layouts/public.blade.php', 'components/public/', 'components/layouts/auth.blade.php', 'components/page-header.blade.php', 'components/nav-badge.blade.php', 'components/admin/greeting.blade.php'];
+    // Admin/OPD (components/admin/greeting, forest kecil), serta kotak Laba di kartu Ekonomi dasbor Admin
+    // (shared/dashboards/economy, forest dengan label sun, atas permintaan).
+    $publicViews = ['publik/', 'components/layouts/public.blade.php', 'components/public/', 'components/layouts/auth.blade.php', 'components/nav-badge.blade.php', 'components/admin/greeting.blade.php', 'shared/dashboards/economy.blade.php'];
     $offenders = collect(Finder::create()->files()->in(resource_path('views'))->name('*.blade.php'))
         ->filter(fn ($file) => ! collect($publicViews)->contains(fn ($prefix) => str_starts_with($file->getRelativePathname(), $prefix)))
         ->filter(fn ($file) => preg_match('/\b[a-z:-]*(bg|text|border|ring|outline|divide|from|to|via)-(forest|sun)\b/', $file->getContents()))

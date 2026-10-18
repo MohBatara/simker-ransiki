@@ -13,13 +13,13 @@
     $hasHeader = $title || isset($actions);
 @endphp
 
-{{-- Kartu/section area Admin/OPD: putih, sudut 16px, garis tipis; judul 16px + aksi kecil di kanan. --}}
+{{--
+    Kartu/section area aplikasi: putih, garis line, sudut 16px, padding 16px HP / 24px mulai tablet. Kepala: judul 16px
+    semibold + subjudul 13px, aksi kecil di kanan, garis pemisah tipis di bawah kepala.
+--}}
 <section {{ $attributes->class(['min-w-0 rounded-tile border border-line bg-paper', 'flex flex-col' => $stretch]) }}>
     @if ($hasHeader)
-        <header @class([
-            'flex flex-wrap items-start justify-between gap-x-4 gap-y-2 px-4 pt-4 md:px-5 md:pt-5',
-            'border-b border-line pb-4' => $flush,
-        ])>
+        <header class="flex flex-wrap items-start justify-between gap-x-4 gap-y-2 border-b border-line px-4 py-4 md:px-6">
             <div class="min-w-0">
                 @if ($title)
                     <h2 class="flex items-center gap-2 text-body font-semibold text-ink">
@@ -30,7 +30,7 @@
                     </h2>
                 @endif
                 @if ($description)
-                    <p class="mt-0.5 text-ui text-ink-soft">{{ $description }}</p>
+                    <p class="mt-0.5 text-caption text-ink-muted">{{ $description }}</p>
                 @endif
             </div>
             @isset($actions)
@@ -41,13 +41,12 @@
 
     <div @class([
         'flex min-w-0 flex-1 flex-col' => $stretch,
-        'p-4 md:p-5' => ! $flush && ! $hasHeader,
-        'px-4 pb-4 pt-3 md:px-5 md:pb-5' => ! $flush && $hasHeader,
+        'p-4 md:p-6' => ! $flush,
     ])>
         {{ $slot }}
     </div>
 
     @isset($footer)
-        <footer class="flex flex-wrap items-center justify-end gap-2 border-t border-line px-4 py-3 md:px-5">{{ $footer }}</footer>
+        <footer class="flex flex-wrap items-center justify-end gap-2 border-t border-line px-4 py-3 md:px-6">{{ $footer }}</footer>
     @endisset
 </section>

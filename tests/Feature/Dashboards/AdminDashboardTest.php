@@ -48,8 +48,14 @@ test('dasbor admin: perlu dikerjakan, kartu angka, progres per OPD, kelompok, da
         ->assertSee('Tanpa OPD pembina')
         ->assertSee('3')
         ->assertSee('kelompok terdaftar')
-        ->assertSee('Rp 1.250.000')
-        ->assertSee('diisi 1 dari 1 laporan')
+        ->assertSee('Rp 1,3 jt')
+        ->assertSee('title="Rp 1.250.000"', false)
+        // Semua laporan mengisi penjualan: keterangan "diisi X dari Y" tidak ditampilkan.
+        ->assertDontSee('diisi 1 dari 1 laporan')
+        ->assertSee('1 dari 2')
+        ->assertSee('kelompok wajib lapor terverifikasi')
+        ->assertSee('50%')
+        ->assertDontSee('Angka belum mewakili seluruh kelompok')
         ->assertSee('Belum ada yang mengisi')
         ->assertSee('Kakao kering')
         ->assertSee('12,5 kg');
@@ -102,4 +108,39 @@ test('tautan dasbor admin tidak di-escape ganda', function () {
 
     parse_str((string) parse_url($hrefs->first(fn ($href) => str_contains($href, 'laporan=belum-diajukan')), PHP_URL_QUERY), $query);
     expect($query)->toMatchArray(['laporan' => 'belum-diajukan', 'periode' => '2026-09']);
+});
+
+test('rupiah ringkas untuk kotak angka utama: rb, jt, M', function () {
+    expect(App\Support\Format::rupiahShort(850000))->toBe('Rp 850 rb')
+        ->and(App\Support\Format::rupiahShort(121_400_000))->toBe('Rp 121,4 jt')
+        ->and(App\Support\Format::rupiahShort(2_000_000))->toBe('Rp 2 jt')
+        ->and(App\Support\Format::rupiahShort(1_250_000_000))->toBe('Rp 1,3 M')
+        ->and(App\Support\Format::rupiahShort(-500))->toBe('Rp 500');
+});
+
+test('kartu Ekonomi: cakupan di bawah 50% diberi catatan, laba negatif ditulis Rugi, kartu Kelompok bersegmen', function () {
+    foreach (range(1, 3) as $i) {
+        Organization::factory()->create(['reporting_starts_on' => '2026-07-01']);
+    }
+    $organization = Organization::factory()->create(['reporting_starts_on' => '2026-07-01', 'status' => OrganizationStatus::Inactive]);
+    MonthlyReport::factory()->for($organization)->status(ReportStatus::Verified)->create([
+        'period' => '2026-09-01', 'submitted_at' => '2026-10-05 10:00:00',
+        'income_sales' => 100000, 'income_other' => 0, 'costs' => 400000,
+    ]);
+
+    $this->actingAs(User::factory()->admin()->create())->get('/admin')->assertOk()
+        ->assertSee('25%')
+        ->assertSee('Angka belum mewakili seluruh kelompok')
+        ->assertSee('Rugi Rp 300 rb')
+        ->assertSee('title="Rugi Rp 300.000"', false)
+        ->assertSee('/admin/kelompok?status=inactive', false)
+        ->assertSeeInOrder(['Aktif', '3', 'Tidak aktif', '1', 'Ditutup', '0']);
+});
+
+test('kartu Ekonomi kosong: ajakan membuka laporan yang menunggu verifikasi', function () {
+    Organization::factory()->create(['reporting_starts_on' => '2026-07-01']);
+
+    $this->actingAs(User::factory()->admin()->create())->get('/admin')->assertOk()
+        ->assertSee('Belum ada laporan terverifikasi untuk September 2026.')
+        ->assertSee('Buka laporan yang menunggu verifikasi');
 });

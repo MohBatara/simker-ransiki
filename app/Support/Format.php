@@ -33,6 +33,28 @@ class Format
         return $sign.'Rp '.self::number(abs((float) $value));
     }
 
+    /**
+     * Rupiah ringkas tanpa tanda, KHUSUS kotak angka utama dasbor: "Rp 850 rb", "Rp 121,4 jt", "Rp 1,2 M".
+     * Nilai lengkap (rupiah()) tetap ditampilkan di tooltip.
+     */
+    public static function rupiahShort(int|float|string|null $value): string
+    {
+        if ($value === null || $value === '') {
+            return self::EMPTY;
+        }
+
+        $amount = abs((float) $value);
+        [$divisor, $suffix] = match (true) {
+            $amount >= 1_000_000_000 => [1_000_000_000, ' M'],
+            $amount >= 1_000_000 => [1_000_000, ' jt'],
+            $amount >= 1_000 => [1_000, ' rb'],
+            default => [1, ''],
+        };
+        $number = $divisor === 1 ? self::number($amount) : preg_replace('/,0$/', '', self::number($amount / $divisor, 1));
+
+        return 'Rp '.$number.$suffix;
+    }
+
     public static function fileSize(int $bytes): string
     {
         return $bytes < 1024 * 1024
