@@ -1,5 +1,5 @@
 {{--
-    Statistik → Ekonomi (Admin dan OPD). Semua angka dari App\Support\Dashboards\Statistics, dibatasi
+    Dasbor → Ekonomi (Admin dan OPD). Semua angka dari App\Support\Dashboards\Statistics, dibatasi
     kelompok yang terlihat pengguna. Angka ekonomi hanya dari laporan terverifikasi.
 --}}
 @use('App\Support\Format')
@@ -13,8 +13,11 @@
 @endphp
 
 <x-layouts.app
-    title="Statistik"
-    :description="$area === 'opd' ? 'Angka ekonomi dan legalitas kelompok binaan.' : 'Angka ekonomi dan legalitas kelompok di Distrik Ransiki.'"
+    title="Ekonomi"
+    :description="$area === 'opd' ? 'Pendapatan, produksi, dan kepatuhan pelaporan kelompok binaan.' : 'Pendapatan, produksi, dan kepatuhan pelaporan kelompok di Distrik Ransiki.'"
+    section="dasbor"
+    tab="ekonomi"
+    :tab-urls="['ekonomi' => route($area.'.statistics.economy', $filters), 'legalitas' => route($area.'.statistics.legal', $filters)]"
 >
     <div class="space-y-5">
         @include('shared.statistics._header', ['tab' => 'economy', 'summaryText' => $range])

@@ -15,7 +15,7 @@ beforeEach(function () {
 /** Buat akun lewat form Admin dengan pilihan undangan, lalu ambil tautan dari email yang terkirim. */
 function inviteUser(object $test, array $overrides = []): array
 {
-    $test->actingAs($test->admin)->post('/admin/pengguna', [
+    $test->actingAs($test->admin)->post('/admin/pengaturan/pengguna', [
         'name' => 'Ketua Contoh', 'username' => 'ketua.contoh', 'email' => 'ketua@contoh.test',
         'role' => 'kelompok', 'organization_id' => $test->organization->id, 'access' => 'invite', ...$overrides,
     ])->assertSessionHasNoErrors();
@@ -72,19 +72,19 @@ test('tautan yang diubah atau diganti undangan baru ditolak', function () {
 
     $this->get($url.'x')->assertSee('tidak valid');
 
-    $this->actingAs($this->admin)->post("/admin/pengguna/{$user->id}/undangan")->assertSessionHas('status', 'Undangan dikirim ke ketua@contoh.test.');
+    $this->actingAs($this->admin)->post("/admin/pengaturan/pengguna/{$user->id}/undangan")->assertSessionHas('status', 'Undangan dikirim ke ketua@contoh.test.');
     auth()->logout();
     $this->get($url)->assertSee('sudah dipakai atau sudah diganti');
     Notification::assertSentToTimes($user, UserInvitation::class, 2);
 });
 
 test('pilihan undangan butuh email; tanpa undangan tetap kata sandi sementara', function () {
-    $this->actingAs($this->admin)->post('/admin/pengguna', [
+    $this->actingAs($this->admin)->post('/admin/pengaturan/pengguna', [
         'name' => 'Tanpa Email', 'username' => 'tanpa.email', 'role' => 'kelompok',
         'organization_id' => $this->organization->id, 'access' => 'invite',
     ])->assertSessionHasErrors(['email' => 'Isi email untuk mengirim undangan, atau pilih kata sandi sementara.']);
 
-    $this->post('/admin/pengguna', [
+    $this->post('/admin/pengaturan/pengguna', [
         'name' => 'Sementara', 'username' => 'sementara', 'email' => 'sementara@contoh.test', 'role' => 'kelompok',
         'organization_id' => $this->organization->id, 'access' => 'temporary',
     ])->assertSessionHas('credentials');
@@ -95,8 +95,8 @@ test('kirim ulang undangan hanya Admin dan hanya untuk akun berpunya email', fun
     $noEmail = User::factory()->kelompok($this->organization)->create(['email' => null]);
     $withEmail = User::factory()->kelompok($this->organization)->create(['email' => 'ada@contoh.test']);
 
-    $this->actingAs($this->admin)->post("/admin/pengguna/{$noEmail->id}/undangan")->assertForbidden();
-    $this->actingAs(User::factory()->opd()->create())->post("/admin/pengguna/{$withEmail->id}/undangan")->assertForbidden();
+    $this->actingAs($this->admin)->post("/admin/pengaturan/pengguna/{$noEmail->id}/undangan")->assertForbidden();
+    $this->actingAs(User::factory()->opd()->create())->post("/admin/pengaturan/pengguna/{$withEmail->id}/undangan")->assertForbidden();
 });
 
 test('tanda tangan URL undangan tetap memeriksa token yang tersimpan', function () {

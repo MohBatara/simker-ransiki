@@ -4,7 +4,7 @@
     description="Tambah banyak kelompok sekaligus dari spreadsheet."
     :back="route('admin.organizations.index')"
     :breadcrumbs="[
-        ['label' => 'Semua Kelompok', 'href' => route('admin.organizations.index')],
+        ['label' => 'Kelompok', 'href' => route('admin.organizations.index')],
         ['label' => 'Impor'],
     ]"
 >

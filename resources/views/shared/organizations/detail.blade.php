@@ -35,7 +35,7 @@
     :description="$organization->village->name.', Distrik Ransiki'"
     :back="route($area.'.organizations.index')"
     :breadcrumbs="[
-        ['label' => $area === 'opd' ? 'Kelompok Binaan' : 'Semua Kelompok', 'href' => route($area.'.organizations.index')],
+        ['label' => $area === 'opd' ? 'Kelompok binaan' : 'Kelompok', 'href' => route($area.'.organizations.index')],
         ['label' => $organization->name],
     ]"
     :banner="$banner"

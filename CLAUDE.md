@@ -284,7 +284,7 @@ Jangan mengarang kepanjangan akronim resmi (KDMP, KNMP, dsb.). Simpan apa adanya
   Saat Admin menambah, atau mengubah nama/kampung: peringatan kuat → kembali ke form dengan daftar kandidat (nama,
   jenis, kampung, tautan) + centang "Saya sudah memeriksa, tetap simpan"; peringatan ringan → langsung disimpan,
   kandidat tampil di detail kelompok. Tidak pernah memblokir penyimpanan.
-- "Kemungkinan data ganda" (Admin, tombol "Data ganda" di Semua Kelompok): `/admin/kelompok/data-ganda`, daftar
+- "Kemungkinan data ganda" (Admin, menu Kelompok > tab "Kemungkinan data ganda"): `/admin/kelompok/data-ganda`, daftar
   pasangan (kuat dulu; pasangan yang salah satunya `closed` tidak tampil). "Bukan data ganda" menyimpan pasangan di
   `duplicate_dismissals` (organization_id = id kecil, other_organization_id = id besar, user_id, created_at; unik)
   sehingga tidak muncul lagi di halaman maupun peringatan form. TIDAK ada gabung otomatis: Admin membuka kedua
@@ -304,7 +304,7 @@ Jangan mengarang kepanjangan akronim resmi (KDMP, KNMP, dsb.). Simpan apa adanya
   kampung, ketua, telepon, email, alamat, deskripsi, bidang usaha) pada profil terverifikasi → needs_review +
   notifikasi `ProfileNeedsReview` ke akun OPD pembina aktif (tanpa OPD → Admin), sekali saat status berubah.
   Perubahan oleh Admin/OPD atau field lain tidak memicu. Dicek di `SaveOrganization` (satu-satunya jalur ubah
-  profil). Antrean "Profil menunggu verifikasi" `/{area}/verifikasi-profil` (visibleTo, tanpa kelompok `closed`).
+  profil). Antrean "Menunggu verifikasi profil" `/{area}/kelompok/verifikasi-profil` (tab menu Kelompok) (visibleTo, tanpa kelompok `closed`).
 - `change_logs` (riwayat, tidak pernah diubah): id, organization_id, loggable_type (alias morph), loggable_id,
   subject ("Profil", "Produk: Kakao", "Izin: PIRT"), action (enum ChangeAction: created, updated, deleted), field,
   old_value, new_value (teks siap tampil: nama kampung, label enum, Ya/Tidak), user_id (NULL = "Sistem"), created_at.
@@ -374,7 +374,7 @@ Jangan mengarang kepanjangan akronim resmi (KDMP, KNMP, dsb.). Simpan apa adanya
   (terbit tanpa tanggal = sekarang; tanggal ke depan = terjadwal), event_date (date, nullable; "Tanggal kegiatan", hanya
   kategori Kegiatan, kategori lain dikosongkan saat simpan), created_by, updated_by, timestamps.
 - `organization_post` (pivot): post_id, organization_id (kelompok terkait, opsional, banyak).
-- Admin: menu "Berita & Kegiatan" `/admin/berita` (filter kategori + status Draf/Terjadwal/Sudah tampil). Foto
+- Admin: menu Website > tab "Berita & kegiatan" `/admin/website/berita` (filter kategori + status Draf/Terjadwal/Sudah tampil). Foto
   sampul diunggah (XHR) setelah berita disimpan pertama kali.
 
 ### Ekspor & impor (Paket 2)
@@ -400,8 +400,8 @@ Jangan mengarang kepanjangan akronim resmi (KDMP, KNMP, dsb.). Simpan apa adanya
   `storage/app/samples/` (buat ulang dengan `make.php` di folder itu).
 
 ### Statistik (Paket 3)
-- Menu "Statistik" (Admin & OPD): `/{area}/statistik` (tab Ekonomi) dan `/{area}/statistik/legalitas` (tab
-  Legalitas), `GET /{area}/statistik/legalitas/unduh` → `rekap-legalitas-Y-m-d.xlsx` (`App\Support\Exports\LegalRecap`).
+- Statistik (Admin & OPD, menu Dasbor): `/{area}/dasbor/ekonomi` (tab Ekonomi) dan `/{area}/dasbor/legalitas` (tab
+  Legalitas), `GET /{area}/dasbor/legalitas/unduh` → `rekap-legalitas-Y-m-d.xlsx` (`App\Support\Exports\LegalRecap`).
 - SATU service untuk semua angka: `App\Support\Dashboards\Statistics` (juga grafik dasbor Kelompok). Kelompok =
   `Organization::visibleTo` + filter `type`, `village`, `sector`, `opd` (khusus Admin; untuk OPD diabaikan di
   server). Agregasi di database; kelompok dihitung unik (filter lewat subquery/EXISTS, bukan join).
@@ -443,7 +443,7 @@ Jangan mengarang kepanjangan akronim resmi (KDMP, KNMP, dsb.). Simpan apa adanya
   office_address,
   office_phone, office_whatsapp, office_email, office_hours, cover_photo_path, cover_caption,
   cover_credit. Di-cache sampai disimpan ulang.
-- Profil Ransiki (`/profil`, Konten Website > tab "Profil Ransiki" `/admin/konten/profil`): banner foto (`profile_photo_path`
+- Profil Ransiki (`/profil`, Website > tab "Profil Ransiki" `/admin/website/profil`): banner foto (`profile_photo_path`
   → foto sampul → foto bawaan; juga og:image), navigasi dalam halaman yang menempel (`sectionNav`, `resources/js/section-nav.js`),
   Sekilas (`profile_intro` serif + `profile_body` Markdown, kartu cream "Data singkat" dari `SiteSetting::PROFILE_FACT_KEYS` +
   jumlah kampung Data Master; kosong = baris tidak tampil, tanpa nilai bawaan), angka ringkas (`publik._stats`), Potensi
@@ -498,7 +498,7 @@ draft ──ajukan──▶ submitted ──verifikasi──▶ verified ──b
   atas nama (`entered`), atau mengajukan (`submitted`) laporan TIDAK boleh memverifikasi / meminta revisi laporan
   itu (`MonthlyReport::wasHandledBy`, dicek di Policy `verify` → 403). Verifikasi oleh petugas OPD lain yang
   terhubung atau Admin. Penginput melihat "Perlu diverifikasi oleh Admin atau petugas OPD lain" (detail + antrean).
-  Antrean verifikasi Admin (`/admin/verifikasi`, menu "Verifikasi Laporan"): laporan `submitted` yang tidak bisa
+  Antrean verifikasi Admin (`/admin/laporan/verifikasi`, menu Laporan > tab "Perlu diverifikasi"): laporan `submitted` yang tidak bisa
   diverifikasi akun OPD aktif mana pun (`MonthlyReport::needsAdminVerification`: tanpa OPD pembina, atau semua
   petugasnya ikut mengisi/mengajukan). Notifikasi pengajuan tidak dikirim ke penginput; bila tidak ada petugas OPD
   yang berhak, ke Admin.
@@ -516,9 +516,9 @@ draft ──ajukan──▶ submitted ──verifikasi──▶ verified ──b
 - Draf kelompok yang belum pernah diajukan (`submitted_at` kosong) tampil di daftar Admin/OPD sebagai
   "Draf, belum diajukan" tanpa tautan; isinya (termasuk lampiran) 404 bagi Admin/OPD. Pengecualian: draf yang
   dibuat OPD/Admin atas nama kelompok (tautan baris memakai Policy `view`).
-- Antrean verifikasi OPD (`/opd/verifikasi`): laporan `submitted`, urut dari pengajuan TERAKHIR yang
+- Antrean verifikasi OPD (`/opd/laporan/verifikasi`): laporan `submitted`, urut dari pengajuan TERAKHIR yang
   paling lama (dari `report_reviews`), dengan penanda "Diajukan ulang".
-- "Masalah & Kebutuhan" (`/opd/masalah`, `/admin/masalah`): isian bagian E/F hanya dari laporan
+- "Masalah & kebutuhan" (`/opd/laporan/masalah`, `/admin/laporan/masalah`, tab menu Laporan): isian bagian E/F hanya dari laporan
   `submitted`/`verified` (bukan draf atau revisi), scope `ReportIssue::reviewableBy()` + `ReportIssuePolicy`.
   Filter jenis, kategori, status tindak lanjut, kampung, periode (+ OPD untuk Admin; `lama=30` dari kartu dasbor).
   Baris membuka detail `/{area}/masalah/{id}`: isi, tautan kelompok & laporan, form "Ubah status tindak lanjut"
@@ -620,12 +620,38 @@ Setiap perubahan status mencatat baris di `report_reviews` dan mengirim notifika
 **Kelompok:** Dasbor · Profil Kelompok · Produk · Legalitas & Izin · Laporan Bulanan ·
 Notifikasi · Akun Saya
 
-**OPD:** Dasbor · Kelompok Binaan · Verifikasi Laporan · Verifikasi Profil · Semua Laporan ·
-Masalah & Kebutuhan · Statistik · Notifikasi · Akun Saya
+**Admin dan OPD: menu bertab.** Menu yang berkaitan digabung; setiap menu berisi tab, dan setiap tab punya URL sendiri
+(bisa dibuka langsung, tombol kembali bekerja). Satu sumber: `App\Support\Navigation::sections()` (menu, tab, badge);
+halaman memilih menu + tab lewat `<x-layouts.app section="laporan" tab="verifikasi">`. Layout merender `x-tabs` bertautan
+di bawah header (garis bawah `brand` pada tab aktif, angka kecil di tab antrean, geser horizontal di HP), remah bawaan
+"Menu › Tab" (mis. "Laporan › Perlu diverifikasi"), dan judul browser "Tab · Menu". Judul halaman = nama tab.
 
-**Admin:** Dasbor Distrik · Semua Kelompok · Semua Laporan · Verifikasi Laporan · Verifikasi Profil · Masalah & Kebutuhan ·
-Statistik · Pengguna · Data Master (Kampung, Jenis Kelembagaan, Bidang Usaha, OPD) · Konten Website · Berita & Kegiatan ·
-Notifikasi
+**Admin** (5 menu):
+| Menu | Tab (URL) |
+|---|---|
+| Dasbor | Ringkasan `/admin` · Ekonomi `/admin/dasbor/ekonomi` · Legalitas `/admin/dasbor/legalitas` |
+| Kelompok | Semua kelompok `/admin/kelompok` · Menunggu verifikasi profil `/admin/kelompok/verifikasi-profil` · Kemungkinan data ganda `/admin/kelompok/data-ganda` |
+| Laporan | Semua laporan `/admin/laporan` · Perlu diverifikasi `/admin/laporan/verifikasi` · Masalah & kebutuhan `/admin/laporan/masalah` |
+| Website | Konten Beranda `/admin/website` · Profil Ransiki `/admin/website/profil` · Halaman & kontak `/admin/website/halaman` · Berita & kegiatan `/admin/website/berita` |
+| Pengaturan | Pengguna `/admin/pengaturan/pengguna` · Data master `/admin/pengaturan/data-master` (Kampung, Jenis Kelembagaan, Bidang Usaha, OPD) |
+
+**OPD** (3 menu, pola sama, `/opd/...`): Dasbor (Ringkasan · Ekonomi · Legalitas) · Kelompok binaan (Daftar · Menunggu
+verifikasi profil) · Laporan (Semua laporan · Perlu diverifikasi · Masalah & kebutuhan).
+
+- Sidebar Admin/OPD hanya berisi menu di atas; Notifikasi (lonceng) dan Akun Saya ada di bilah atas.
+- Navigasi bawah HP: Admin = Dasbor · Kelompok · Laporan · Website · Lainnya (Pengaturan, Notifikasi, Akun Saya);
+  OPD = Dasbor · Kelompok · Laporan · Notifikasi · Akun (lonceng dan ikon akun di header HP disembunyikan bila sudah
+  ada di navigasi bawah).
+- Badge (`x-nav-badge`, pil `sun` berteks `ink` 9,0:1, maks "99+", tidak tampil bila 0) di sidebar dan navigasi bawah:
+  menu Laporan = laporan menunggu verifikasi, menu Kelompok = profil menunggu verifikasi. Angkanya SAMA dengan isi tab
+  antreannya: `MonthlyReport::verificationQueue($user)` (Admin: hanya yang tidak bisa diverifikasi OPD) dan
+  `Organization::profileReviewQueue($user)`, dihitung sekali per request (`Navigation::counts`). PENGECUALIAN Bagian 7:
+  token `sun` di area aplikasi hanya untuk badge ini (atas permintaan; dijaga `PublicStyleTest`).
+- URL lama (`/{area}/statistik`, `/{area}/verifikasi`, `/{area}/verifikasi-profil`, `/{area}/masalah`, `/admin/konten`,
+  `/admin/berita`, `/admin/pengguna`, `/admin/data-master`, termasuk sisa path dan query string) dialihkan 301 ke URL
+  baru oleh `App\Http\Controllers\LegacyRedirectController` (tanpa middleware; hak akses diperiksa di URL tujuan).
+  Nama route TIDAK berubah (mis. `admin.verifications.index`, `admin.statistics.economy`), jadi kode memakai `route()`.
+- Halaman Website bukan mode form (tujuan menu utama); bar simpan `x-form-actions sticky` tetap dipakai.
 
 Pakai "Dasbor", bukan "Dashboard", di semua teks antarmuka dan semua ukuran layar.
 
@@ -633,22 +659,16 @@ Pakai "Dasbor", bukan "Dashboard", di semua teks antarmuka dan semua ukuran laya
 
 | Menu lengkap | Label ringkas |
 |---|---|
-| Dasbor, Dasbor Distrik | Dasbor |
+| Dasbor | Dasbor |
 | Profil Kelompok | Profil |
 | Produk | Produk |
 | Legalitas & Izin | Izin |
-| Laporan Bulanan, Semua Laporan | Laporan |
+| Laporan Bulanan, Laporan | Laporan |
 | Notifikasi | Notifikasi |
 | Akun Saya | Akun |
-| Kelompok Binaan, Semua Kelompok | Kelompok |
-| Verifikasi Laporan | Verifikasi |
-| Pengguna | Pengguna |
-| Data Master | Master |
-| Konten Website | Konten |
-| Masalah & Kebutuhan | Masalah |
-| Statistik | Statistik |
-| Verifikasi Profil | Profil |
-| Berita & Kegiatan | Berita |
+| Kelompok, Kelompok binaan | Kelompok |
+| Website | Website |
+| Pengaturan | Pengaturan |
 
 Nama menu lengkap tetap tampil di sidebar desktop, dan sebagai tooltip saat label ringkas
 di-hover atau difokuskan.
@@ -816,7 +836,8 @@ Gambar publik: `<picture>` dengan WebP `srcset` + cadangan JPEG (`x-public.pictu
 Varian dibuat saat unggah; foto lama: `php artisan simker:varian-foto`. Tanpa dukungan WebP di
 server, otomatis JPEG saja.
 
-Token `forest`/`sun` tidak boleh dipakai di luar view publik (dijaga tes). Pengecualian: pita/banner
+Token `forest`/`sun` tidak boleh dipakai di luar view publik (dijaga tes). Pengecualian: badge menunggu verifikasi
+`x-nav-badge` (`sun`, lihat Bagian 6), pita/banner
 `x-page-header` (lihat "Pita dan banner area aplikasi") dan halaman masuk (`layouts.auth`): panel kiri forest dengan foto sampul + overlay padat `bg-forest/70`; di atas foto
 teks sekunder memakai putih (forest-soft bisa turun ke ~3:1 bila fotonya terang), forest-soft hanya di
 atas forest polos.
@@ -831,7 +852,7 @@ Di `resources/views/components/`:
 `chart` (kartu grafik Chart.js + "Lihat tabel"; prop `chart` dari `StatisticsCharts`, `panels` untuk beberapa
 grafik kecil, `footnote`), `stacked-bar` (bilah bertumpuk berwarna status + legenda berangka yang bisa diklik),
 `bar-list` (label + bilah tipis warna `brand` + angka, baris bisa diklik),
-`notification-bell` dan `notification-count` (lonceng + angka belum dibaca),
+`notification-bell` dan `notification-count` (lonceng + angka belum dibaca), `nav-badge` (jumlah menunggu di menu, Bagian 6),
 `link` (tautan teks; berdiri sendiri min 44px di HP, `inline` di dalam kalimat bergaris bawah),
 `list` + `list.item` (baris daftar yang bisa diklik: min 44px, hover `subtle`, chevron),
 `breadcrumbs` (remah, desktop saja), `avatar` (inisial 2 huruf, latar `subtle`, teks `ink-soft`),

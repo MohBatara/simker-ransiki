@@ -18,7 +18,12 @@
     ];
 @endphp
 
-<x-layouts.app :title="$user->name" :description="$user->role->label()" :back="route('admin.users.index')">
+<x-layouts.app
+    :title="$user->name"
+    :description="$user->role->label()"
+    :back="route('admin.users.index')"
+    :breadcrumbs="[['label' => 'Pengaturan', 'href' => route('admin.users.index')], ['label' => 'Pengguna', 'href' => route('admin.users.index')], ['label' => $user->name]]"
+>
     <x-slot:actions>
         <x-button variant="secondary" icon="pencil-square" :href="route('admin.users.edit', $user)">Ubah</x-button>
     </x-slot:actions>

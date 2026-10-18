@@ -97,7 +97,7 @@ test('penginput tidak bisa memverifikasi atau meminta revisi, termasuk lewat req
     $this->get("/opd/laporan/{$report->id}")->assertOk()
         ->assertSee('Perlu diverifikasi oleh Admin atau petugas OPD lain')
         ->assertDontSee('id="form-verify"', false);
-    $this->get('/opd/verifikasi')->assertSee('Perlu diverifikasi oleh Admin atau petugas OPD lain');
+    $this->get('/opd/laporan/verifikasi')->assertSee('Perlu diverifikasi oleh Admin atau petugas OPD lain');
 
     $this->post("/opd/laporan/{$report->id}/verifikasi", ['verify_note' => ''])->assertForbidden();
     $this->post("/opd/laporan/{$report->id}/minta-revisi", ['revision_note' => 'Mohon diperbaiki angkanya.'])->assertForbidden();
@@ -137,13 +137,13 @@ test('OPD dengan satu petugas: laporan masuk antrean verifikasi Admin dan notifi
     Notification::assertSentTo($this->admin, ReportSubmitted::class);
     Notification::assertNotSentTo($this->inputter, ReportSubmitted::class);
 
-    $queue = $this->actingAs($this->admin)->get('/admin/verifikasi')->assertOk()->assertSee('KUB Tanpa HP')->viewData('reports');
+    $queue = $this->actingAs($this->admin)->get('/admin/laporan/verifikasi')->assertOk()->assertSee('KUB Tanpa HP')->viewData('reports');
     expect($queue->pluck('id')->all())->toBe([$report->id])
         ->and($queue->pluck('id')->all())->not->toContain($normal->id);
 
     // Begitu ada petugas OPD lain, laporan tidak lagi menunggu Admin.
     User::factory()->opd($this->opd)->create();
-    expect($this->get('/admin/verifikasi')->viewData('reports')->total())->toBe(0);
+    expect($this->get('/admin/laporan/verifikasi')->viewData('reports')->total())->toBe(0);
 });
 
 test('aturan bisa dimatikan lewat config', function () {

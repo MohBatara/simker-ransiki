@@ -42,7 +42,7 @@ test('detail kelompok: badge status di samping judul, tag, ringkasan, dan pering
         ->assertSee("/admin/laporan/{$report->id}?dari=kelompok", false)
         ->assertSee('2 produk')
         ->assertSee('belum punya akun')
-        ->assertSee('/admin/pengguna/tambah?kelompok='.$organization->id, false)
+        ->assertSee('/admin/pengaturan/pengguna/tambah?kelompok='.$organization->id, false)
         ->getContent();
 
     expect($html)->toMatch('/<h1[^>]*>.*?<\/h1>\s*<span[^>]*>\s*Tidak aktif sementara\s*<\/span>/s');

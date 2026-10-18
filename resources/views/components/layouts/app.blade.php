@@ -20,6 +20,11 @@
     'userRole' => null,
     // Mode form di HP: navigasi bawah disembunyikan, header berisi tombol kembali + judul.
     'focus' => false,
+    // Menu bertab Admin/OPD (App\Support\Navigation::sections): kunci menu + kunci tab aktif. Tab tampil di bawah
+    // header; remah bawaan "Menu › Tab". $tabUrls menimpa URL tab tertentu (mis. filter Statistik ikut pindah tab).
+    'section' => null,
+    'tab' => null,
+    'tabUrls' => [],
 ])
 
 @php
@@ -35,6 +40,14 @@
     // Cari global hanya untuk Admin dan OPD (kelompok hanya punya satu kelompok).
     $searchUrl = $user && ! $user->isKelompok() && Route::has($user->role->area().'.search') ? route($user->role->area().'.search') : null;
     $back ??= $focus ? url()->previous() : null;
+
+    $sectionTabs = $section && $user ? \App\Support\Navigation::tabs($user, $section) : null;
+    $headTitle = $title;
+    if ($sectionTabs) {
+        $currentTab = $sectionTabs['tabs'][$tab] ?? null;
+        $breadcrumbs ??= [['label' => $sectionTabs['label'], 'href' => $sectionTabs['href']], ['label' => $currentTab['label'] ?? $title]];
+        $headTitle = $title === $sectionTabs['label'] ? $title : $title.' · '.$sectionTabs['label'];
+    }
 
     $navigation = collect($navigation);
     if ($navigation->count() <= 5) {
@@ -58,7 +71,7 @@
 {{-- scroll-padding: elemen yang difokuskan tidak tertutup header atas atau bar aksi yang menempel. --}}
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}" @class(['scroll-pt-20 md:scroll-pt-6', 'max-md:scroll-pb-36' => $focus, 'max-md:scroll-pb-20' => ! $focus])>
 <head>
-    @include('partials.head', ['title' => $title, 'noindex' => true])
+    @include('partials.head', ['title' => $headTitle, 'noindex' => true])
 </head>
 {{-- --app-bottom: tinggi area tetap di bawah layar HP, dipakai x-form-actions sticky. --}}
 <body @class([
@@ -82,13 +95,16 @@
         {{-- Di tablet nav tidak di-scroll agar tooltip tidak terpotong oleh tepi sidebar. --}}
         <nav aria-label="Menu utama" class="flex-1 px-1 py-3 xl:overflow-y-auto xl:px-3">
             <ul class="space-y-1">
-                {{-- Notifikasi tidak di sidebar: lonceng ada di bilah atas (tablet dan desktop). --}}
-                @foreach ($navigation->reject(fn ($item) => ($item['route'] ?? null) === 'notifications.index') as $item)
-                    @php $active = $item['active'] ?? false; @endphp
+                {{-- Notifikasi tidak di sidebar: lonceng ada di bilah atas (tablet dan desktop); Akun Saya ada di menu profil. --}}
+                @foreach ($navigation->reject(fn ($item) => ($item['route'] ?? null) === 'notifications.index' || ! ($item['sidebar'] ?? true)) as $item)
+                    @php
+                        $active = $item['active'] ?? false;
+                        $navCount = $item['count'] ?? 0;
+                    @endphp
                     <li>
                         <a
                             href="{{ $item['href'] }}"
-                            aria-label="{{ $item['label'] }}{{ ($item['route'] ?? null) === 'notifications.index' && $unreadNotifications > 0 ? ', '.$unreadNotifications.' belum dibaca' : '' }}"
+                            aria-label="{{ $item['label'] }}{{ $navCount > 0 ? ', '.$navCount.' menunggu verifikasi' : '' }}"
                             @if ($active) aria-current="page" @endif
                             @class([
                                 'group relative flex flex-col items-center gap-1 rounded-control px-1 py-2 transition-colors xl:flex-row xl:gap-3 xl:px-3',
@@ -96,13 +112,10 @@
                                 'text-ink-soft hover:bg-subtle hover:text-ink' => ! $active,
                             ])
                         >
-                            @php $navCount = ($item['route'] ?? null) === 'notifications.index' ? $unreadNotifications : 0; @endphp
                             <x-dynamic-component :component="'heroicon-o-'.$item['icon']" class="size-5 shrink-0" />
                             <span class="w-full truncate text-center text-micro xl:hidden" aria-hidden="true">{{ $item['short'] ?? $item['label'] }}</span>
                             <span class="hidden truncate text-ui xl:inline" aria-hidden="true">{{ $item['label'] }}</span>
-                            @if ($navCount > 0)
-                                <x-notification-count :count="$navCount" class="absolute right-2 top-1 xl:static xl:ml-auto" />
-                            @endif
+                            <x-nav-badge :count="$navCount" class="absolute top-1 left-1/2 ml-1.5 xl:static xl:ml-auto" />
                             <span aria-hidden="true" class="pointer-events-none absolute left-full top-1/2 z-30 ml-2 -translate-y-1/2 whitespace-nowrap rounded-control bg-ink px-2 py-1 text-caption font-normal text-paper opacity-0 shadow-float transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100 xl:hidden">
                                 {{ $item['label'] }}
                             </span>
@@ -177,11 +190,11 @@
                                 <x-heroicon-o-magnifying-glass class="size-5" />
                             </a>
                         @endif
-                        @if ($notificationsUrl)
+                        {{-- Lonceng dan akun di header HP hanya bila belum ada di navigasi bawah (OPD: keduanya di navigasi bawah). --}}
+                        @if ($notificationsUrl && ! $bottomNav->contains('route', 'notifications.index'))
                             <x-notification-bell :href="$notificationsUrl" :count="$unreadNotifications" :active="request()->routeIs('notifications.*')" data-bell="mobile" />
                         @endif
-                        {{-- Jalan ke halaman akun dan tombol keluar di HP, karena menu admin tidak memuat Akun Saya. --}}
-                        @if ($accountUrl)
+                        @if ($accountUrl && ! $bottomNav->contains('route', 'account.password.edit'))
                             <a href="{{ $accountUrl }}" class="flex size-11 items-center justify-center rounded-control text-ink-soft hover:bg-subtle hover:text-ink" aria-label="Akun">
                                 <x-heroicon-o-user-circle class="size-5" />
                             </a>
@@ -210,6 +223,17 @@
                 </x-page-header>
             </div>
 
+            @if ($sectionTabs)
+                <x-tabs
+                    class="mt-5 md:mt-6"
+                    :tabs="collect($sectionTabs['tabs'])->map(fn ($item) => $item['label'])->all()"
+                    :links="collect($sectionTabs['tabs'])->map(fn ($item, $key) => $tabUrls[$key] ?? $item['href'])->all()"
+                    :counts="collect($sectionTabs['tabs'])->map(fn ($item) => $item['count'])->all()"
+                    :active="$tab"
+                    :label="$sectionTabs['label']"
+                />
+            @endif
+
             @if (session('status'))
                 <x-alert tone="ok" class="mt-5" dismissible>{{ session('status') }}</x-alert>
             @endif
@@ -233,16 +257,28 @@
             @foreach ($bottomNav as $item)
                 @php $active = $item['active'] ?? false; @endphp
                 <li>
+                    @php
+                        $isBell = ($item['route'] ?? null) === 'notifications.index';
+                        $navCount = $isBell ? $unreadNotifications : ($item['count'] ?? 0);
+                    @endphp
                     <a
                         href="{{ $item['href'] }}"
                         @if ($active) aria-current="page" @endif
+                        @if ($navCount > 0) aria-label="{{ $item['short'] ?? $item['label'] }}, {{ $navCount }} {{ $isBell ? 'belum dibaca' : 'menunggu verifikasi' }}" @endif
                         @class([
                             'flex h-full flex-col items-center justify-center gap-0.5 px-1 text-caption',
                             'font-semibold text-brand' => $active,
                             'text-ink-soft' => ! $active,
                         ])
                     >
-                        <x-dynamic-component :component="'heroicon-o-'.$item['icon']" class="size-5" />
+                        <span class="relative">
+                            <x-dynamic-component :component="'heroicon-o-'.$item['icon']" class="size-5" />
+                            @if ($isBell)
+                                @if ($navCount > 0)<x-notification-count :count="$navCount" class="absolute -top-2 left-3" />@endif
+                            @else
+                                <x-nav-badge :count="$navCount" class="absolute -top-2 left-3" />
+                            @endif
+                        </span>
                         <span class="w-full truncate text-center">{{ $item['short'] ?? $item['label'] }}</span>
                     </a>
                 </li>

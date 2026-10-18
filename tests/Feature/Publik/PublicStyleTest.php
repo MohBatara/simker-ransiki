@@ -128,17 +128,17 @@ test('admin mengunggah dan menghapus foto bidang usaha serta foto Tentang', func
     $sector = BusinessSector::factory()->create();
     $this->actingAs(User::factory()->admin()->create());
 
-    $this->postJson("/admin/konten/foto-bidang/{$sector->id}", ['file' => realUpload('bidang.jpg', file_get_contents(photoFile(1200, 800)))])->assertCreated();
+    $this->postJson("/admin/website/foto-bidang/{$sector->id}", ['file' => realUpload('bidang.jpg', file_get_contents(photoFile(1200, 800)))])->assertCreated();
     $path = $sector->fresh()->photo_path;
     expect(Storage::disk('local')->exists(ImageVariants::path($path, 480)))->toBeTrue();
     $this->get("/foto-bidang/{$sector->id}?ukuran=480&format=webp")->assertOk()->assertHeader('Content-Type', 'image/webp');
 
-    $this->delete("/admin/konten/foto-bidang/{$sector->id}")->assertSessionHas('status', 'Foto bidang usaha dihapus.');
+    $this->delete("/admin/website/foto-bidang/{$sector->id}")->assertSessionHas('status', 'Foto bidang usaha dihapus.');
     expect($sector->fresh()->photo_path)->toBeNull()->and(Storage::disk('local')->allFiles('site'))->toBe([]);
 
-    $this->postJson('/admin/konten/foto-tentang', ['file' => realUpload('tentang.jpg', file_get_contents(photoFile(1200, 800)))])->assertCreated();
+    $this->postJson('/admin/website/foto-tentang', ['file' => realUpload('tentang.jpg', file_get_contents(photoFile(1200, 800)))])->assertCreated();
     expect(SiteSetting::get('about_photo_path'))->not->toBeNull();
-    $this->actingAs(User::factory()->opd()->create())->postJson("/admin/konten/foto-bidang/{$sector->id}", ['file' => realUpload('b.jpg', imageBytes(10, 10))])->assertForbidden();
+    $this->actingAs(User::factory()->opd()->create())->postJson("/admin/website/foto-bidang/{$sector->id}", ['file' => realUpload('b.jpg', imageBytes(10, 10))])->assertForbidden();
 });
 
 test('foto produk mendapat varian WebP 400 dan 800 untuk kartu publik', function () {
@@ -187,8 +187,9 @@ test('pita judul profil kelompok berlatar forest polos tanpa foto', function () 
 
 test('token warna publik tidak dipakai di area Admin, OPD, dan Kelompok', function () {
     // Halaman masuk (layouts/auth) memakai panel forest atas permintaan; pengecualian tercatat di CLAUDE.md Bagian 7.
-    // Pita/banner forest di header area aplikasi (components/page-header) juga pengecualian Bagian 7.
-    $publicViews = ['publik/', 'components/layouts/public.blade.php', 'components/public/', 'components/layouts/auth.blade.php', 'components/page-header.blade.php'];
+    // Pita/banner forest di header area aplikasi (components/page-header) juga pengecualian Bagian 7, begitu pula
+    // badge jumlah menunggu di menu Admin/OPD (components/nav-badge, pil sun, Bagian 6).
+    $publicViews = ['publik/', 'components/layouts/public.blade.php', 'components/public/', 'components/layouts/auth.blade.php', 'components/page-header.blade.php', 'components/nav-badge.blade.php'];
     $offenders = collect(Finder::create()->files()->in(resource_path('views'))->name('*.blade.php'))
         ->filter(fn ($file) => ! collect($publicViews)->contains(fn ($prefix) => str_starts_with($file->getRelativePathname(), $prefix)))
         ->filter(fn ($file) => preg_match('/\b[a-z:-]*(bg|text|border|ring|outline|divide|from|to|via)-(forest|sun)\b/', $file->getContents()))

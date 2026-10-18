@@ -3,7 +3,9 @@
 @use('App\Support\ProfileReview')
 
 <x-layouts.app
-    title="Verifikasi Profil"
+    title="Menunggu verifikasi profil"
+    section="kelompok"
+    tab="profil"
     :description="$area === 'opd'
         ? 'Kelompok binaan yang mengubah data penting profilnya setelah diverifikasi. Periksa perubahannya di tab Riwayat, lalu tandai terverifikasi.'
         : 'Kelompok yang mengubah data penting profilnya setelah diverifikasi. Periksa perubahannya di tab Riwayat, lalu tandai terverifikasi.'"

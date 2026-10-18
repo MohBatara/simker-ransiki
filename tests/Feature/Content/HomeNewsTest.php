@@ -68,8 +68,8 @@ test('satu post: berita utama lebar penuh tanpa daftar; tanpa post terbit: bagia
 
 test('judul berita paling banyak 90 karakter di form Admin', function () {
     $this->actingAs(User::factory()->admin()->create())
-        ->post('/admin/berita', ['title' => str_repeat('a', 91), 'category' => 'berita', 'body' => 'Isi.', 'status' => 'draft'])
+        ->post('/admin/website/berita', ['title' => str_repeat('a', 91), 'category' => 'berita', 'body' => 'Isi.', 'status' => 'draft'])
         ->assertSessionHasErrors(['title' => 'Judul paling banyak 90 karakter. Ringkas judulnya agar tetap mudah dibaca di Beranda.']);
 
-    $this->get('/admin/berita/tambah')->assertSee('maxlength="90"', false);
+    $this->get('/admin/website/berita/tambah')->assertSee('maxlength="90"', false);
 });

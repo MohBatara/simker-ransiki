@@ -1,5 +1,5 @@
 {{--
-    Statistik → Legalitas (Admin dan OPD). Kartu dan tabel dihitung per kelompok unik (EXISTS per kelompok),
+    Dasbor → Legalitas (Admin dan OPD). Kartu dan tabel dihitung per kelompok unik (EXISTS per kelompok),
     bukan per baris izin. Variabel dari Shared\StatisticsController::legal.
 --}}
 @use('App\Support\Format')
@@ -12,8 +12,11 @@
 @endphp
 
 <x-layouts.app
-    title="Statistik"
-    :description="$area === 'opd' ? 'Angka ekonomi dan legalitas kelompok binaan.' : 'Angka ekonomi dan legalitas kelompok di Distrik Ransiki.'"
+    title="Legalitas"
+    :description="$area === 'opd' ? 'Izin dan status hukum kelompok binaan.' : 'Izin dan status hukum kelompok di Distrik Ransiki.'"
+    section="dasbor"
+    tab="legalitas"
+    :tab-urls="['ekonomi' => route($area.'.statistics.economy', $filters), 'legalitas' => route($area.'.statistics.legal', $filters)]"
 >
     <x-slot:actions>
         <x-button variant="secondary" icon="arrow-down-tray" :href="route($area.'.statistics.legal.export', $filters)">Unduh Excel</x-button>

@@ -52,15 +52,15 @@ test('kelompok mengubah field penting: perlu verifikasi ulang, masuk antrean, OP
     Notification::assertSentTo($this->opdUser, ProfileNeedsReview::class);
     Notification::assertNotSentTo($otherOpdUser, ProfileNeedsReview::class);
 
-    $this->actingAs($this->opdUser)->get('/opd/verifikasi-profil')
+    $this->actingAs($this->opdUser)->get('/opd/kelompok/verifikasi-profil')
         ->assertOk()->assertSee('KUB Contoh Verifikasi')->assertSee('Ketua, Telepon');
-    $this->actingAs($otherOpdUser)->get('/opd/verifikasi-profil')->assertOk()->assertDontSee('KUB Contoh Verifikasi');
-    $this->actingAs(User::factory()->admin()->create())->get('/admin/verifikasi-profil')->assertOk()->assertSee('KUB Contoh Verifikasi');
+    $this->actingAs($otherOpdUser)->get('/opd/kelompok/verifikasi-profil')->assertOk()->assertDontSee('KUB Contoh Verifikasi');
+    $this->actingAs(User::factory()->admin()->create())->get('/admin/kelompok/verifikasi-profil')->assertOk()->assertSee('KUB Contoh Verifikasi');
 
     // Verifikasi ulang mengosongkan daftar perubahan dan mengeluarkannya dari antrean.
     $this->actingAs($this->opdUser)->post("/opd/kelompok/{$this->organization->id}/verifikasi-profil");
     expect($this->organization->fresh())->profile_status->toBe(ProfileStatus::Verified)->profile_changed_fields->toBeNull();
-    $this->get('/opd/verifikasi-profil')->assertDontSee('KUB Contoh Verifikasi');
+    $this->get('/opd/kelompok/verifikasi-profil')->assertDontSee('KUB Contoh Verifikasi');
 });
 
 test('bidang usaha termasuk field penting', function () {

@@ -25,11 +25,11 @@ test('hanya admin yang bisa mengelola pengguna', function (string $role) {
     $target = User::factory()->create();
     $this->actingAs($role === 'opd' ? User::factory()->opd($this->opd)->create() : User::factory()->create());
 
-    $this->get('/admin/pengguna')->assertForbidden();
-    $this->get('/admin/pengguna/tambah')->assertForbidden();
-    $this->post('/admin/pengguna', ['name' => 'X', 'username' => 'x.baru', 'role' => 'admin'])->assertForbidden();
-    $this->post("/admin/pengguna/{$target->id}/reset-kata-sandi")->assertForbidden();
-    $this->patch("/admin/pengguna/{$target->id}/nonaktifkan")->assertForbidden();
+    $this->get('/admin/pengaturan/pengguna')->assertForbidden();
+    $this->get('/admin/pengaturan/pengguna/tambah')->assertForbidden();
+    $this->post('/admin/pengaturan/pengguna', ['name' => 'X', 'username' => 'x.baru', 'role' => 'admin'])->assertForbidden();
+    $this->post("/admin/pengaturan/pengguna/{$target->id}/reset-kata-sandi")->assertForbidden();
+    $this->patch("/admin/pengaturan/pengguna/{$target->id}/nonaktifkan")->assertForbidden();
 
     expect(User::where('username', 'x.baru')->exists())->toBeFalse()
         ->and($target->fresh()->is_active)->toBeTrue();
@@ -40,7 +40,7 @@ test('daftar pengguna bisa difilter peran, status, dan kata kunci', function (st
     User::factory()->opd($this->opd)->inactive()->create(['name' => 'Petugas Contoh Nonaktif']);
     User::factory()->kelompok($this->organization)->create(['name' => 'Ketua Contoh Akun']);
 
-    $response = $this->actingAs($this->admin)->get('/admin/pengguna?'.$query)->assertOk();
+    $response = $this->actingAs($this->admin)->get('/admin/pengaturan/pengguna?'.$query)->assertOk();
 
     foreach (['Petugas Contoh Aktif', 'Petugas Contoh Nonaktif', 'Ketua Contoh Akun'] as $name) {
         in_array($name, $visible) ? $response->assertSee($name) : $response->assertDontSee($name);
@@ -57,13 +57,13 @@ test('daftar pengguna bisa difilter peran, status, dan kata kunci', function (st
 test('akun baru mendapat kata sandi sementara yang ditampilkan sekali', function () {
     $this->actingAs($this->admin);
 
-    $response = $this->post('/admin/pengguna', [
+    $response = $this->post('/admin/pengaturan/pengguna', [
         'name' => 'Petugas Baru', 'username' => '  Petugas.Baru ', 'role' => 'opd', 'opd_id' => $this->opd->id,
     ]);
 
     $user = User::where('username', 'petugas.baru')->firstOrFail();
     $password = temporaryPasswordFrom($response);
-    $response->assertRedirect("/admin/pengguna/{$user->id}");
+    $response->assertRedirect("/admin/pengaturan/pengguna/{$user->id}");
 
     expect($user->role)->toBe(Role::Opd)
         ->and($user->opd_id)->toBe($this->opd->id)
@@ -73,17 +73,17 @@ test('akun baru mendapat kata sandi sementara yang ditampilkan sekali', function
         ->and($user->password)->not->toBe($password)
         ->and(json_encode(session()->all()))->not->toContain($password);
 
-    $this->get("/admin/pengguna/{$user->id}")
+    $this->get("/admin/pengaturan/pengguna/{$user->id}")
         ->assertSee($password)
         ->assertSee('Salin info masuk')
         // Teks yang disalin tombol "Salin info masuk".
         ->assertSee(Js::from('Alamat: '.route('login').', Username: petugas.baru, Kata sandi sementara: '.$password)->toHtml(), false);
 
-    $this->get("/admin/pengguna/{$user->id}")->assertDontSee($password);
+    $this->get("/admin/pengaturan/pengguna/{$user->id}")->assertDontSee($password);
 });
 
 test('pengguna masuk dengan kata sandi sementara lalu wajib menggantinya', function () {
-    $response = $this->actingAs($this->admin)->post('/admin/pengguna', [
+    $response = $this->actingAs($this->admin)->post('/admin/pengaturan/pengguna', [
         'name' => 'Ketua Baru', 'username' => 'ketua.baru', 'role' => 'kelompok', 'organization_id' => $this->organization->id,
     ]);
     $password = temporaryPasswordFrom($response);
@@ -95,7 +95,7 @@ test('pengguna masuk dengan kata sandi sementara lalu wajib menggantinya', funct
 
 test('akun OPD wajib memilih OPD dan akun kelompok wajib memilih kelompok', function (array $input, string $field, string $message) {
     $this->actingAs($this->admin)
-        ->post('/admin/pengguna', ['name' => 'Akun Uji', 'username' => 'akun.uji', ...$input])
+        ->post('/admin/pengaturan/pengguna', ['name' => 'Akun Uji', 'username' => 'akun.uji', ...$input])
         ->assertSessionHasErrors([$field => $message]);
 })->with([
     'OPD tanpa OPD' => [['role' => 'opd'], 'opd_id', 'Pilih OPD untuk akun OPD.'],
@@ -104,7 +104,7 @@ test('akun OPD wajib memilih OPD dan akun kelompok wajib memilih kelompok', func
 ]);
 
 test('OPD dan kelompok hanya disimpan sesuai peran', function () {
-    $this->actingAs($this->admin)->post('/admin/pengguna', [
+    $this->actingAs($this->admin)->post('/admin/pengaturan/pengguna', [
         'name' => 'Ketua Baru', 'username' => 'ketua.baru', 'role' => 'kelompok',
         'organization_id' => $this->organization->id, 'opd_id' => $this->opd->id,
     ]);
@@ -117,7 +117,7 @@ test('username unik tanpa membedakan huruf besar dan hanya memakai karakter yang
     User::factory()->create(['username' => 'ketua.satu']);
 
     $this->actingAs($this->admin)
-        ->post('/admin/pengguna', ['name' => 'Akun Uji', 'username' => $username, 'role' => 'admin'])
+        ->post('/admin/pengaturan/pengguna', ['name' => 'Akun Uji', 'username' => $username, 'role' => 'admin'])
         ->assertSessionHasErrors(['username' => $message]);
 })->with([
     'kembar' => ['Ketua.Satu', 'Username sudah dipakai.'],
@@ -130,9 +130,9 @@ test('form tambah dari detail kelompok sudah memilih kelompok itu', function () 
 
     $this->get("/admin/kelompok/{$this->organization->id}/akun")
         ->assertSee('Tambah akun')
-        ->assertSee("/admin/pengguna/tambah?kelompok={$this->organization->id}", false);
+        ->assertSee("/admin/pengaturan/pengguna/tambah?kelompok={$this->organization->id}", false);
 
-    $this->get("/admin/pengguna/tambah?kelompok={$this->organization->id}")
+    $this->get("/admin/pengaturan/pengguna/tambah?kelompok={$this->organization->id}")
         ->assertOk()
         ->assertSee('<option value="kelompok" selected>', false)
         ->assertSee('<option value="'.$this->organization->id.'" selected>', false);
@@ -143,10 +143,10 @@ test('reset kata sandi membuat kata sandi sementara baru dan mengeluarkan penggu
     DB::table('sessions')->insert(['id' => 'sesi-lama', 'user_id' => $user->id, 'payload' => '', 'last_activity' => time()]);
     config(['session.driver' => 'database']);
 
-    $response = $this->actingAs($this->admin)->post("/admin/pengguna/{$user->id}/reset-kata-sandi");
+    $response = $this->actingAs($this->admin)->post("/admin/pengaturan/pengguna/{$user->id}/reset-kata-sandi");
     $password = temporaryPasswordFrom($response);
 
-    $response->assertRedirect("/admin/pengguna/{$user->id}")->assertSessionHas('status', 'Kata sandi direset.');
+    $response->assertRedirect("/admin/pengaturan/pengguna/{$user->id}")->assertSessionHas('status', 'Kata sandi direset.');
     $user->refresh();
     expect($user->must_change_password)->toBeTrue()
         ->and(Hash::check($password, $user->password))->toBeTrue()
@@ -158,25 +158,25 @@ test('admin menonaktifkan dan mengaktifkan kembali akun', function () {
     $user = User::factory()->create(['username' => 'ketua.aktif']);
     $this->actingAs($this->admin);
 
-    $this->patch("/admin/pengguna/{$user->id}/nonaktifkan")->assertSessionHas('status', 'Akun dinonaktifkan.');
+    $this->patch("/admin/pengaturan/pengguna/{$user->id}/nonaktifkan")->assertSessionHas('status', 'Akun dinonaktifkan.');
     expect($user->fresh()->is_active)->toBeFalse();
 
     $this->post('/logout');
     $this->post('/login', ['login' => 'ketua.aktif', 'password' => 'password'])
         ->assertSessionHasErrors(['login' => 'Akun ini dinonaktifkan. Hubungi Admin distrik.']);
 
-    $this->actingAs($this->admin)->patch("/admin/pengguna/{$user->id}/aktifkan")->assertSessionHas('status', 'Akun diaktifkan.');
+    $this->actingAs($this->admin)->patch("/admin/pengaturan/pengguna/{$user->id}/aktifkan")->assertSessionHas('status', 'Akun diaktifkan.');
     expect($user->fresh()->is_active)->toBeTrue();
 });
 
 test('admin tidak bisa menonaktifkan akunnya sendiri', function () {
     $this->actingAs($this->admin);
 
-    $this->get("/admin/pengguna/{$this->admin->id}")
+    $this->get("/admin/pengaturan/pengguna/{$this->admin->id}")
         ->assertSee('Anda tidak bisa menonaktifkan akun sendiri.')
         ->assertDontSee('Nonaktifkan akun');
 
-    $this->patch("/admin/pengguna/{$this->admin->id}/nonaktifkan")
+    $this->patch("/admin/pengaturan/pengguna/{$this->admin->id}/nonaktifkan")
         ->assertForbidden()
         ->assertSee('Anda tidak bisa menonaktifkan akun sendiri.');
 
@@ -185,7 +185,7 @@ test('admin tidak bisa menonaktifkan akunnya sendiri', function () {
 
 test('admin tidak bisa mengubah peran akunnya sendiri', function () {
     $this->actingAs($this->admin)
-        ->put("/admin/pengguna/{$this->admin->id}", ['name' => 'Admin Baru', 'username' => 'admin', 'role' => 'kelompok', 'organization_id' => $this->organization->id])
+        ->put("/admin/pengaturan/pengguna/{$this->admin->id}", ['name' => 'Admin Baru', 'username' => 'admin', 'role' => 'kelompok', 'organization_id' => $this->organization->id])
         ->assertSessionHasNoErrors();
 
     $this->admin->refresh();
@@ -198,7 +198,7 @@ test('admin mengubah peran akun lain dan relasinya ikut menyesuaikan', function 
     $user = User::factory()->kelompok($this->organization)->create(['username' => 'pindah.peran']);
 
     $this->actingAs($this->admin)
-        ->put("/admin/pengguna/{$user->id}", ['name' => $user->name, 'username' => 'pindah.peran', 'role' => 'opd', 'opd_id' => $this->opd->id])
+        ->put("/admin/pengaturan/pengguna/{$user->id}", ['name' => $user->name, 'username' => 'pindah.peran', 'role' => 'opd', 'opd_id' => $this->opd->id])
         ->assertSessionHas('status', 'Akun diperbarui.');
 
     $user->refresh();
@@ -206,5 +206,5 @@ test('admin mengubah peran akun lain dan relasinya ikut menyesuaikan', function 
 });
 
 test('ID pengguna yang tidak ada 404', function () {
-    $this->actingAs($this->admin)->get('/admin/pengguna/999999')->assertNotFound();
+    $this->actingAs($this->admin)->get('/admin/pengaturan/pengguna/999999')->assertNotFound();
 });

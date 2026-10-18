@@ -12,7 +12,7 @@
     $summary = collect([$users->total().' akun', $inactiveCount ? $inactiveCount.' nonaktif' : null])->filter()->join(' · ');
 @endphp
 
-<x-layouts.app title="Pengguna" description="Akun Admin, petugas OPD, dan pengurus kelompok.">
+<x-layouts.app title="Pengguna" description="Akun Admin, petugas OPD, dan pengurus kelompok." section="pengaturan" tab="pengguna">
     <x-slot:actions>
         <x-button icon="plus" :href="route('admin.users.create')">Tambah akun</x-button>
     </x-slot:actions>

@@ -3,10 +3,8 @@
 @use('App\Models\SiteSetting')
 @use('App\Support\PublicImages')
 
-<x-layouts.app title="Konten Website" description="Teks dan foto yang tampil di website publik." :back="route('admin.dashboard')" focus>
+<x-layouts.app title="Konten Beranda" description="Foto hero, judul, dan bagian lain di beranda website publik." section="website" tab="beranda">
     <div class="space-y-5">
-        @include('admin.content._tabs', ['active' => 'beranda'])
-
         <x-card title="Foto hero" description="Maksimal 3 slide, bergantian setiap 7 detik di bagian atas beranda. Selama belum ada slide yang ditampilkan, beranda memakai foto bawaan.">
             @if ($slides->isEmpty())
                 <p class="text-ui text-ink-soft">Belum ada slide. Tambah slide pertama di bawah.</p>

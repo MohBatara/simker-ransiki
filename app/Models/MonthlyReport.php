@@ -202,6 +202,17 @@ class MonthlyReport extends Model
     }
 
     /**
+     * Antrean "Perlu diverifikasi": laporan diajukan yang terlihat pengguna. Admin: hanya yang tidak bisa diverifikasi
+     * petugas OPD mana pun. Dipakai daftar antrean dan badge menu Laporan (App\Support\Navigation).
+     */
+    public static function verificationQueue(User $user): Builder
+    {
+        return static::visibleTo($user)
+            ->where('monthly_reports.status', ReportStatus::Submitted)
+            ->when($user->isAdmin(), fn (Builder $query) => $query->needsAdminVerification());
+    }
+
+    /**
      * Laporan diajukan yang hanya bisa diverifikasi Admin: tidak ada akun OPD aktif yang terhubung dan boleh
      * memverifikasinya (kelompok tanpa OPD pembina, atau semua petugas OPD-nya ikut mengisi/mengajukan).
      */

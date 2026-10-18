@@ -23,7 +23,7 @@ test('banner: tag jenis dan bidang usaha, lokasi, remah, dan tab berikon', funct
     $this->actingAs($this->admin)->get("/admin/kelompok/{$this->organization->id}")->assertOk()
         ->assertSee('Kampung Contoh 3, Distrik Ransiki')
         ->assertSeeInOrder(['aria-label="Jenis dan bidang usaha"', $this->organization->institutionType->name, 'Perkebunan'], false)
-        ->assertSeeInOrder(['Semua Kelompok', $this->organization->name], false)
+        ->assertSeeInOrder(['Kelompok', $this->organization->name], false)
         ->assertSee('Akun (0)');
 });
 

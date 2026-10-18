@@ -12,7 +12,7 @@
     ]);
 @endphp
 
-<x-layouts.app title="Berita & Kegiatan" description="Berita dan kegiatan yang tampil di menu Berita website publik.">
+<x-layouts.app title="Berita & kegiatan" description="Berita dan kegiatan yang tampil di menu Berita website publik." section="website" tab="berita">
     <x-slot:actions>
         <x-button icon="plus" :href="route('admin.posts.create')">Tambah berita</x-button>
     </x-slot:actions>

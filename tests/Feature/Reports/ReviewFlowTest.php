@@ -43,7 +43,7 @@ test('siklus lengkap: ajukan, minta revisi, perbaiki, ajukan ulang, verifikasi',
     $this->patchJson("/kelompok/laporan/{$id}/draf", ['activity_summary' => 'Panen kakao', 'members_active' => '10', 'costs' => '150.000'])->assertOk();
     $this->post("/kelompok/laporan/{$id}/ajukan")->assertSessionHasNoErrors();
 
-    $this->actingAs($this->reviewer)->get('/opd/verifikasi')->assertSee('Diajukan ulang');
+    $this->actingAs($this->reviewer)->get('/opd/laporan/verifikasi')->assertSee('Diajukan ulang');
     $this->post("/opd/laporan/{$id}/verifikasi", ['verify_note' => ''])
         ->assertSessionHas('status', 'Laporan diverifikasi.');
 

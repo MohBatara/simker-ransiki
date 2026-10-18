@@ -15,7 +15,7 @@
     :title="$issue->kind->label().': '.$title"
     :description="$organization->name.' · laporan '.Format::month($report->period)"
     :back="$back"
-    :breadcrumbs="[['label' => 'Masalah & Kebutuhan', 'href' => $back], ['label' => $issue->kind->label().': '.$title]]"
+    :breadcrumbs="[['label' => 'Laporan', 'href' => route($area.'.reports.index')], ['label' => 'Masalah & kebutuhan', 'href' => $back], ['label' => $issue->kind->label().': '.$title]]"
 >
     <x-slot:badge>
         <x-badge :tone="$issue->follow_up_status->badgeColor()">{{ $issue->follow_up_status->label() }}</x-badge>

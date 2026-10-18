@@ -140,15 +140,15 @@ test('admin mengatur blok potensi (judul, teks, bidang, foto) dan kalimat pengan
     Organization::factory()->public()->create()->sectors()->attach($sector);
     $this->actingAs(User::factory()->admin()->create());
 
-    $this->get('/admin/konten/profil')->assertOk()->assertSee('Profil Ransiki')->assertSee('Blok 2')->assertSee('Data singkat');
+    $this->get('/admin/website/profil')->assertOk()->assertSee('Profil Ransiki')->assertSee('Blok 2')->assertSee('Data singkat');
 
-    $this->post('/admin/konten/potensi/2', ['potensi_2' => [
+    $this->post('/admin/website/potensi/2', ['potensi_2' => [
         'title' => 'Judul blok contoh',
         'text' => 'Teks blok contoh.',
         'sector' => $sector->id,
         'photo' => UploadedFile::fake()->image('blok.jpg', 1200, 900),
-    ]])->assertRedirect('/admin/konten/profil')->assertSessionHas('status', 'Blok potensi 2 disimpan.');
-    $this->put('/admin/konten', ['potential_intro' => 'Pengantar potensi contoh.'])->assertSessionHasNoErrors();
+    ]])->assertRedirect('/admin/website/profil')->assertSessionHas('status', 'Blok potensi 2 disimpan.');
+    $this->put('/admin/website', ['potential_intro' => 'Pengantar potensi contoh.'])->assertSessionHasNoErrors();
 
     $path = SiteSetting::get('potential_2_photo_path');
     expect($path)->not->toBeNull()->and(Storage::disk('local')->exists($path))->toBeTrue();
@@ -158,7 +158,7 @@ test('admin mengatur blok potensi (judul, teks, bidang, foto) dan kalimat pengan
         ->toContain('/foto-potensi/2?')->toContain('bidang='.$sector->id);
     $this->get('/foto-potensi/2')->assertOk()->assertHeader('X-Content-Type-Options', 'nosniff');
 
-    $this->delete('/admin/konten/potensi/2/foto')->assertRedirect('/admin/konten/profil');
+    $this->delete('/admin/website/potensi/2/foto')->assertRedirect('/admin/website/profil');
     expect(SiteSetting::get('potential_2_photo_path'))->toBeNull()->and(Storage::disk('local')->exists($path))->toBeFalse();
 });
 
@@ -170,7 +170,7 @@ test('banner dan Open Graph memakai foto banner; tanpa itu foto sampul, lalu fot
     $this->get('/profil')->assertSee('/foto-sampul?v=', false)->assertDontSee('/foto-profil');
 
     $this->actingAs(User::factory()->admin()->create())
-        ->post('/admin/konten/foto-profil', ['file' => UploadedFile::fake()->image('banner.jpg', 1800, 900)])
+        ->post('/admin/website/foto-profil', ['file' => UploadedFile::fake()->image('banner.jpg', 1800, 900)])
         ->assertCreated();
     $path = SiteSetting::get('profile_photo_path');
     expect(Storage::disk('local')->exists(ImageVariants::path($path, 1600)))->toBeTrue();
@@ -204,28 +204,28 @@ test('hanya Admin yang bisa mengubah konten Profil Ransiki', function (string $r
     $user = $role === 'opd' ? User::factory()->opd()->create() : User::factory()->kelompok(Organization::factory()->create())->create();
     $this->actingAs($user);
 
-    $this->get('/admin/konten/profil')->assertForbidden();
-    $this->put('/admin/konten', ['profile_intro' => 'Diubah tanpa hak.', 'profile_area' => '1 km²'])->assertForbidden();
-    $this->post('/admin/konten/potensi/1', ['potensi_1' => ['title' => 'Diubah tanpa hak.']])->assertForbidden();
-    $this->delete('/admin/konten/potensi/1/foto')->assertForbidden();
-    $this->post('/admin/konten/foto-profil', ['file' => UploadedFile::fake()->image('a.jpg', 1600, 900)])->assertForbidden();
-    $this->post('/admin/konten/foto-kantor', ['file' => UploadedFile::fake()->image('a.jpg', 1600, 900)])->assertForbidden();
+    $this->get('/admin/website/profil')->assertForbidden();
+    $this->put('/admin/website', ['profile_intro' => 'Diubah tanpa hak.', 'profile_area' => '1 km²'])->assertForbidden();
+    $this->post('/admin/website/potensi/1', ['potensi_1' => ['title' => 'Diubah tanpa hak.']])->assertForbidden();
+    $this->delete('/admin/website/potensi/1/foto')->assertForbidden();
+    $this->post('/admin/website/foto-profil', ['file' => UploadedFile::fake()->image('a.jpg', 1600, 900)])->assertForbidden();
+    $this->post('/admin/website/foto-kantor', ['file' => UploadedFile::fake()->image('a.jpg', 1600, 900)])->assertForbidden();
 
     expect(SiteSetting::get('profile_intro'))->toBeNull()->and(SiteSetting::get('potential_1_title'))->toBeNull()
         ->and(SiteSetting::get('profile_photo_path'))->toBeNull();
 })->with(['opd', 'kelompok']);
 
 test('tamu diarahkan ke halaman masuk saat membuka editor Profil Ransiki', function () {
-    $this->get('/admin/konten/profil')->assertRedirect('/login');
-    $this->post('/admin/konten/potensi/1')->assertRedirect('/login');
+    $this->get('/admin/website/profil')->assertRedirect('/login');
+    $this->post('/admin/website/potensi/1')->assertRedirect('/login');
 });
 
 test('validasi data singkat dan blok potensi berbahasa Indonesia', function () {
     $this->actingAs(User::factory()->admin()->create());
 
-    $this->from('/admin/konten/profil')->put('/admin/konten', ['profile_area' => str_repeat('a', 81)])
+    $this->from('/admin/website/profil')->put('/admin/website', ['profile_area' => str_repeat('a', 81)])
         ->assertSessionHasErrors(['profile_area' => 'Luas wilayah paling banyak 80 karakter.']);
-    $this->from('/admin/konten/profil')->post('/admin/konten/potensi/3', ['potensi_3' => ['text' => str_repeat('a', 401)]])
+    $this->from('/admin/website/profil')->post('/admin/website/potensi/3', ['potensi_3' => ['text' => str_repeat('a', 401)]])
         ->assertSessionHasErrors(['potensi_3.text' => 'Teks paling banyak 400 karakter.']);
 });
 

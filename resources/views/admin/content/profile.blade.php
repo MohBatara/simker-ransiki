@@ -2,10 +2,8 @@
 @use('App\Support\PotentialBlocks')
 @use('App\Http\Requests\Admin\PotentialBlockRequest')
 
-<x-layouts.app title="Konten Website" description="Teks dan foto yang tampil di website publik." :back="route('admin.dashboard')" focus>
+<x-layouts.app title="Profil Ransiki" description="Teks dan foto halaman Profil Ransiki di website publik." section="website" tab="profil">
     <div class="space-y-5">
-        @include('admin.content._tabs', ['active' => 'profil'])
-
         @foreach ([
             'profil' => ['Foto banner', 'Opsional. Latar banner di atas halaman Profil Ransiki dan gambar pratinjau tautan. Tanpa foto ini, banner memakai foto sampul (tab Halaman & kontak) lalu foto bawaan. Gunakan foto lanskap asli Ransiki.'],
             'kantor' => ['Foto kantor distrik', 'Opsional. Tampil di bagian Kantor distrik. Tanpa foto, bagian itu memakai gambar ikon gedung sederhana.'],

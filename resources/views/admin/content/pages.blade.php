@@ -1,7 +1,5 @@
-<x-layouts.app title="Konten Website" description="Teks dan foto yang tampil di website publik." :back="route('admin.dashboard')" focus>
+<x-layouts.app title="Halaman & kontak" description="Foto sampul, foto bidang usaha, dan kontak kantor distrik di website publik." section="website" tab="halaman">
     <div class="space-y-5">
-        @include('admin.content._tabs', ['active' => 'halaman'])
-
         @foreach ([
             'sampul' => ['Foto sampul', 'Opsional. Latar halaman masuk dan banner dasbor, juga banner Profil Ransiki selama foto banner di tab Profil Ransiki kosong. Foto hero beranda diatur di tab Beranda. Gunakan foto lanskap asli Ransiki, bukan infografis atau gambar berisi teks.'],
         ] as $slot => [$title, $description])

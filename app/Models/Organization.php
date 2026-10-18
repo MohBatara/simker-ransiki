@@ -201,6 +201,17 @@ class Organization extends Model
             && $period->lte(now()->startOfMonth());
     }
 
+    /**
+     * Antrean "Menunggu verifikasi profil": profil berubah setelah diverifikasi, kelompok yang terlihat pengguna, tanpa
+     * kelompok yang ditutup. Dipakai daftar antrean dan badge menu Kelompok (App\Support\Navigation).
+     */
+    public static function profileReviewQueue(User $user): Builder
+    {
+        return static::visibleTo($user)
+            ->where('profile_status', ProfileStatus::NeedsReview)
+            ->where('status', '!=', OrganizationStatus::Closed);
+    }
+
     public function isVisibleTo(User $user): bool
     {
         return $user->canAccessOrganization($this->id);

@@ -249,8 +249,8 @@ test('tautan WhatsApp dari nomor Indonesia', function (string $phone, ?string $u
 test('Konten Website hanya untuk admin', function (string $role) {
     $this->actingAs($role === 'opd' ? User::factory()->opd()->create() : User::factory()->create());
 
-    $this->get('/admin/konten')->assertForbidden();
-    $this->put('/admin/konten', ['home_intro' => 'Diubah'])->assertForbidden();
+    $this->get('/admin/website')->assertForbidden();
+    $this->put('/admin/website', ['home_intro' => 'Diubah'])->assertForbidden();
     expect(SiteSetting::get('home_intro'))->toBeNull();
 })->with(['opd', 'kelompok']);
 
@@ -258,7 +258,7 @@ test('admin mengubah konten dan hasilnya langsung tampil di website publik', fun
     $this->get('/kontak'); // mengisi cache footer lebih dulu
     $this->actingAs(User::factory()->admin()->create());
 
-    $this->put('/admin/konten', [
+    $this->put('/admin/website', [
         'home_intro' => 'Pengantar contoh beranda.',
         'profile_body' => "## Sejarah contoh\n\nParagraf contoh dengan **teks tebal**.\n\n<script>alert(1)</script>",
         'office_phone' => '0800-1234-5678',
@@ -278,7 +278,7 @@ test('admin mengubah konten dan hasilnya langsung tampil di website publik', fun
 
 test('validasi Konten Website berbahasa Indonesia', function () {
     $this->actingAs(User::factory()->admin()->create())
-        ->put('/admin/konten', ['office_email' => 'bukan-email', 'home_intro' => str_repeat('a', 301)])
+        ->put('/admin/website', ['office_email' => 'bukan-email', 'home_intro' => str_repeat('a', 301)])
         ->assertSessionHasErrors([
             'office_email' => 'Email kantor harus berupa alamat email yang valid.',
             'home_intro' => 'Pengantar beranda paling banyak 300 karakter.',
@@ -289,7 +289,7 @@ test('foto sampul diunggah, diproses, tampil publik, lalu bisa dihapus', functio
     Storage::fake('local');
     $this->actingAs(User::factory()->admin()->create());
 
-    $this->postJson('/admin/konten/foto-sampul', ['file' => realUpload('sampul.jpg', jpegWithExif(3200, 1400, orientation: 1))])->assertCreated();
+    $this->postJson('/admin/website/foto-sampul', ['file' => realUpload('sampul.jpg', jpegWithExif(3200, 1400, orientation: 1))])->assertCreated();
 
     $path = SiteSetting::get('cover_photo_path');
     $stored = Storage::disk('local')->get($path);
@@ -298,7 +298,7 @@ test('foto sampul diunggah, diproses, tampil publik, lalu bisa dihapus', functio
     $this->post('/logout');
     $this->get('/foto-sampul')->assertOk()->assertHeader('Content-Type', 'image/jpeg');
 
-    $this->actingAs(User::factory()->admin()->create())->delete('/admin/konten/foto-sampul')->assertSessionHas('status', 'Foto sampul dihapus.');
+    $this->actingAs(User::factory()->admin()->create())->delete('/admin/website/foto-sampul')->assertSessionHas('status', 'Foto sampul dihapus.');
     expect(Storage::disk('local')->exists($path))->toBeFalse();
     $this->get('/foto-sampul')->assertNotFound();
 });
@@ -342,10 +342,10 @@ test('ikon Lucide dirender sebaris dengan garis setebal Heroicons', function () 
 });
 
 test('judul bagian Tentang bisa diubah Admin, kosong kembali ke bawaan', function () {
-    $this->actingAs(User::factory()->admin()->create())->put('/admin/konten', ['about_title' => 'Sekilas Ransiki'])->assertSessionHasNoErrors();
+    $this->actingAs(User::factory()->admin()->create())->put('/admin/website', ['about_title' => 'Sekilas Ransiki'])->assertSessionHasNoErrors();
     $this->get('/')->assertSeeText('Sekilas Ransiki')->assertDontSeeText('Mengenal Distrik Ransiki');
 
-    $this->put('/admin/konten', ['about_title' => '']);
+    $this->put('/admin/website', ['about_title' => '']);
     $this->get('/')->assertSeeText('Mengenal Distrik Ransiki');
 });
 
@@ -392,9 +392,9 @@ test('bagian ajakan memuat empat langkah (teks Konten Website) di latar terang, 
         ->toContain('04')->toContain('Diverifikasi OPD');
 
     $this->actingAs(User::factory()->admin()->create())
-        ->put('/admin/konten', ['how_2_title' => 'Isi profil', 'how_2_text' => 'Kalimat contoh langkah dua.'])
+        ->put('/admin/website', ['how_2_title' => 'Isi profil', 'how_2_text' => 'Kalimat contoh langkah dua.'])
         ->assertSessionHasNoErrors();
-    $this->get('/admin/konten')->assertSee('Alur pendaftaran')->assertSee('value="Isi profil"', false)->assertDontSee('Judul panel');
+    $this->get('/admin/website')->assertSee('Alur pendaftaran')->assertSee('value="Isi profil"', false)->assertDontSee('Judul panel');
 
     $this->get('/')->assertSee('Isi profil')->assertSee('Kalimat contoh langkah dua.')->assertSee('Melapor tiap bulan');
 });
@@ -406,12 +406,12 @@ test('admin mengisi deskripsi jenis kelembagaan di Data Master dan langsung tamp
     $this->get('/'); // mengisi cache jenis kelembagaan
 
     $this->actingAs(User::factory()->admin()->create())
-        ->put("/admin/data-master/jenis-kelembagaan/{$type->id}", ['name' => 'KDMP', 'code' => $type->code, 'description' => 'Deskripsi contoh untuk kartu.'])
+        ->put("/admin/pengaturan/data-master/jenis-kelembagaan/{$type->id}", ['name' => 'KDMP', 'code' => $type->code, 'description' => 'Deskripsi contoh untuk kartu.'])
         ->assertSessionHas('status');
 
     expect($type->fresh()->description)->toBe('Deskripsi contoh untuk kartu.');
     $this->get('/')->assertSee('Deskripsi contoh untuk kartu.');
-    $this->get('/admin/data-master/jenis-kelembagaan')->assertSee('Deskripsi singkat');
+    $this->get('/admin/pengaturan/data-master/jenis-kelembagaan')->assertSee('Deskripsi singkat');
 });
 
 test('keterangan dan kredit foto publik tanpa catatan internal (data demo)', function () {

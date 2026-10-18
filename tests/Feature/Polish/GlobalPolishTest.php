@@ -80,6 +80,6 @@ test('daftar pengguna dan laporan memakai ringkasan hasil', function () {
     $this->actingAs(User::factory()->admin()->create());
     User::factory()->admin()->create(['is_active' => false]);
 
-    $this->get('/admin/pengguna')->assertSee('2 akun · 1 nonaktif');
+    $this->get('/admin/pengaturan/pengguna')->assertSee('2 akun · 1 nonaktif');
     $this->get('/admin/laporan')->assertSee('0 laporan');
 });

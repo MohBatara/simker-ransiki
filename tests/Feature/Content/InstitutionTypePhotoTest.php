@@ -13,9 +13,9 @@ beforeEach(function () {
 });
 
 test('admin mengunggah foto jenis: varian WebP 640/1280/1920 + JPEG, foto lama dihapus saat diganti', function () {
-    $this->actingAs($this->admin)->get("/admin/data-master/jenis-kelembagaan/{$this->type->id}/foto")->assertOk()->assertSee('Pratinjau');
+    $this->actingAs($this->admin)->get("/admin/pengaturan/data-master/jenis-kelembagaan/{$this->type->id}/foto")->assertOk()->assertSee('Pratinjau');
 
-    $this->post("/admin/data-master/jenis-kelembagaan/{$this->type->id}/foto", ['photo' => realUpload('kub.jpg', jpegWithExif(1000, 700, orientation: 1))])
+    $this->post("/admin/pengaturan/data-master/jenis-kelembagaan/{$this->type->id}/foto", ['photo' => realUpload('kub.jpg', jpegWithExif(1000, 700, orientation: 1))])
         ->assertSessionHas('status', 'Foto jenis kelembagaan disimpan.');
     $first = $this->type->fresh()->photo_path;
     foreach (ImageVariants::HERO as $width) {
@@ -23,20 +23,20 @@ test('admin mengunggah foto jenis: varian WebP 640/1280/1920 + JPEG, foto lama d
     }
     expect(exifOf(Storage::disk('local')->get($first)))->not->toHaveKey('GPSLatitudeRef');
 
-    $this->post("/admin/data-master/jenis-kelembagaan/{$this->type->id}/foto", ['photo' => realUpload('kub.png', imageBytes(900, 600, 'png'))])->assertSessionHasNoErrors();
+    $this->post("/admin/pengaturan/data-master/jenis-kelembagaan/{$this->type->id}/foto", ['photo' => realUpload('kub.png', imageBytes(900, 600, 'png'))])->assertSessionHasNoErrors();
     expect(Storage::disk('local')->exists($first))->toBeFalse()->and($this->type->fresh()->photo_path)->not->toBe($first);
 
     $this->post('/logout');
     $this->get("/foto-jenis/{$this->type->id}?ukuran=640&format=webp")->assertOk()->assertHeader('Content-Type', 'image/webp');
 
-    $this->actingAs($this->admin)->delete("/admin/data-master/jenis-kelembagaan/{$this->type->id}/foto")->assertSessionHas('status', 'Foto jenis kelembagaan dihapus.');
+    $this->actingAs($this->admin)->delete("/admin/pengaturan/data-master/jenis-kelembagaan/{$this->type->id}/foto")->assertSessionHas('status', 'Foto jenis kelembagaan dihapus.');
     expect($this->type->fresh()->photo_path)->toBeNull()->and(Storage::disk('local')->allFiles('site'))->toBe([]);
     $this->get("/foto-jenis/{$this->type->id}")->assertNotFound();
 });
 
 test('foto jenis: lebar minimal 800 px, tipe dan ukuran dicek', function () {
     $this->actingAs($this->admin);
-    $url = "/admin/data-master/jenis-kelembagaan/{$this->type->id}/foto";
+    $url = "/admin/pengaturan/data-master/jenis-kelembagaan/{$this->type->id}/foto";
 
     $this->post($url, ['photo' => realUpload('kecil.jpg', imageBytes(799, 500))])
         ->assertSessionHasErrors(['photo' => 'Foto terlalu kecil: lebarnya 799 px, minimal 800 px. Pakai foto asli dari kamera, bukan hasil kiriman WhatsApp.']);
@@ -50,7 +50,7 @@ test('foto jenis: lebar minimal 800 px, tipe dan ukuran dicek', function () {
 
 test('hanya Admin yang bisa mengelola foto jenis; tamu diarahkan ke halaman masuk', function (string $role) {
     $user = $role === 'opd' ? User::factory()->opd()->create() : User::factory()->kelompok(Organization::factory()->create())->create();
-    $url = "/admin/data-master/jenis-kelembagaan/{$this->type->id}/foto";
+    $url = "/admin/pengaturan/data-master/jenis-kelembagaan/{$this->type->id}/foto";
 
     $this->actingAs($user)->get($url)->assertForbidden();
     $this->post($url, ['photo' => realUpload('kub.jpg', imageBytes(900, 600))])->assertForbidden();
@@ -63,8 +63,8 @@ test('hanya Admin yang bisa mengelola foto jenis; tamu diarahkan ke halaman masu
 
 test('deskripsi singkat jenis paling banyak 90 karakter', function () {
     $this->actingAs($this->admin)
-        ->put("/admin/data-master/jenis-kelembagaan/{$this->type->id}", ['name' => 'KUB', 'code' => $this->type->code, 'description' => str_repeat('a', 91)])
+        ->put("/admin/pengaturan/data-master/jenis-kelembagaan/{$this->type->id}", ['name' => 'KUB', 'code' => $this->type->code, 'description' => str_repeat('a', 91)])
         ->assertSessionHasErrors(['description' => 'Deskripsi singkat paling banyak 90 karakter.']);
 
-    $this->get('/admin/data-master/jenis-kelembagaan')->assertSee('paling banyak 90 karakter')->assertSee('Foto');
+    $this->get('/admin/pengaturan/data-master/jenis-kelembagaan')->assertSee('paling banyak 90 karakter')->assertSee('Foto');
 });

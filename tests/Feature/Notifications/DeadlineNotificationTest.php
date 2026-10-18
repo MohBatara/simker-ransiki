@@ -150,9 +150,9 @@ test('admin bisa menambah akun kedua dari detail kelompok', function () {
     $this->actingAs($this->admin)->get("/admin/kelompok/{$organization->id}/akun")
         ->assertOk()
         ->assertSee('Tambah akun')
-        ->assertSee("/admin/pengguna/tambah?kelompok={$organization->id}", false);
+        ->assertSee("/admin/pengaturan/pengguna/tambah?kelompok={$organization->id}", false);
 
-    $this->post('/admin/pengguna', [
+    $this->post('/admin/pengaturan/pengguna', [
         'name' => 'Bendahara Contoh', 'username' => 'bendahara.dua', 'role' => 'kelompok', 'organization_id' => $organization->id,
     ])->assertSessionHasNoErrors();
 

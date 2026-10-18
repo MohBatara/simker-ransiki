@@ -14,11 +14,11 @@ test('menu tiap peran sesuai CLAUDE.md bagian 6', function (Role $role, array $l
         ['Dasbor', 'Profil Kelompok', 'Produk', 'Legalitas & Izin', 'Laporan Bulanan', 'Notifikasi', 'Akun Saya'],
         ['Dasbor', 'Profil', 'Produk', 'Laporan']],
     'opd' => [Role::Opd,
-        ['Dasbor', 'Kelompok Binaan', 'Verifikasi Laporan', 'Verifikasi Profil', 'Semua Laporan', 'Masalah & Kebutuhan', 'Statistik', 'Notifikasi', 'Akun Saya'],
-        ['Dasbor', 'Kelompok', 'Verifikasi', 'Masalah']],
+        ['Dasbor', 'Kelompok binaan', 'Laporan', 'Notifikasi', 'Akun Saya'],
+        ['Dasbor', 'Kelompok', 'Laporan']],
     'admin' => [Role::Admin,
-        ['Dasbor Distrik', 'Semua Kelompok', 'Semua Laporan', 'Verifikasi Laporan', 'Verifikasi Profil', 'Masalah & Kebutuhan', 'Statistik', 'Pengguna', 'Data Master', 'Konten Website', 'Berita & Kegiatan', 'Notifikasi'],
-        ['Dasbor', 'Kelompok', 'Laporan', 'Pengguna']],
+        ['Dasbor', 'Kelompok', 'Laporan', 'Website', 'Pengaturan', 'Notifikasi', 'Akun Saya'],
+        ['Dasbor', 'Kelompok', 'Laporan', 'Website']],
 ]);
 
 test('label ringkas sesuai tabel CLAUDE.md bagian 6', function () {
@@ -28,11 +28,9 @@ test('label ringkas sesuai tabel CLAUDE.md bagian 6', function () {
         ->all();
 
     expect($shorts)->toMatchArray([
-        'Dasbor Distrik' => 'Dasbor', 'Profil Kelompok' => 'Profil', 'Legalitas & Izin' => 'Izin',
-        'Laporan Bulanan' => 'Laporan', 'Semua Laporan' => 'Laporan', 'Akun Saya' => 'Akun',
-        'Kelompok Binaan' => 'Kelompok', 'Semua Kelompok' => 'Kelompok', 'Verifikasi Laporan' => 'Verifikasi',
-        'Data Master' => 'Master', 'Konten Website' => 'Konten', 'Masalah & Kebutuhan' => 'Masalah', 'Statistik' => 'Statistik',
-        'Verifikasi Profil' => 'Profil', 'Berita & Kegiatan' => 'Berita',
+        'Dasbor' => 'Dasbor', 'Profil Kelompok' => 'Profil', 'Legalitas & Izin' => 'Izin',
+        'Laporan Bulanan' => 'Laporan', 'Laporan' => 'Laporan', 'Akun Saya' => 'Akun',
+        'Kelompok binaan' => 'Kelompok', 'Kelompok' => 'Kelompok', 'Website' => 'Website', 'Pengaturan' => 'Pengaturan',
     ]);
 });
 

@@ -52,7 +52,7 @@ test('perlu tindakan, progres, belum mengajukan, masalah, dan tren hanya untuk b
         ->assertSee('Terlambat melapor September 2026')
         ->assertSee('Tenggat 10 Oktober 2026 · lewat 10 hari')
         ->assertSee('KUB Belum Lapor')
-        ->assertSee('/opd/masalah?kind=problem&amp;category=modal&amp;period=2026-09', false)
+        ->assertSee('/opd/laporan/masalah?kind=problem&amp;category=modal&amp;period=2026-09', false)
         ->assertSee('/opd/kelompok?laporan=belum-dibuat&amp;periode=2026-09', false)
         ->assertSee('Laporan terverifikasi, 6 bulan')
         ->assertDontSee('KUB OPD Lain');

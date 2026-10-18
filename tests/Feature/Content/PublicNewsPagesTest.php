@@ -225,11 +225,11 @@ test('validasi Admin: ringkasan maks 200, teks alternatif wajib bila berita berf
     $post = Post::factory()->create(['cover_photo_path' => 'posts/1/a.jpg']);
     $payload = ['title' => 'Judul', 'category' => 'berita', 'body' => 'Isi.', 'status' => 'published'];
 
-    $this->actingAs($admin)->post('/admin/berita', [...$payload, 'summary' => str_repeat('a', 201)])
+    $this->actingAs($admin)->post('/admin/website/berita', [...$payload, 'summary' => str_repeat('a', 201)])
         ->assertSessionHasErrors(['summary' => 'Ringkasan paling banyak 200 karakter. Cukup satu atau dua kalimat.']);
-    $this->put("/admin/berita/{$post->id}", [...$payload, 'photo_alt' => ''])
+    $this->put("/admin/website/berita/{$post->id}", [...$payload, 'photo_alt' => ''])
         ->assertSessionHasErrors(['photo_alt' => 'Isi teks alternatif foto sampul: jelaskan isi foto untuk pembaca layar.']);
-    $this->put("/admin/berita/{$post->id}", [...$payload, 'photo_alt' => 'Petani menjemur kakao', 'photo_caption' => 'Keterangan'])
+    $this->put("/admin/website/berita/{$post->id}", [...$payload, 'photo_alt' => 'Petani menjemur kakao', 'photo_caption' => 'Keterangan'])
         ->assertSessionHasNoErrors();
 
     expect($post->fresh()->only(['photo_alt', 'photo_caption']))->toBe(['photo_alt' => 'Petani menjemur kakao', 'photo_caption' => 'Keterangan']);

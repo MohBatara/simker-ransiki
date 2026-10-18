@@ -49,17 +49,17 @@ test('antrean OPD hanya berisi laporan diajukan milik binaan, yang paling lama m
     MonthlyReport::factory()->for($this->ours)->status(ReportStatus::Verified)->create(['period' => '2026-07-01', 'submitted_at' => now()]);
     submittedReport($this->foreign, '2026-09-01', '2026-10-01 09:00:00');
 
-    $response = $this->actingAs($this->reviewer)->get('/opd/verifikasi')->assertOk();
+    $response = $this->actingAs($this->reviewer)->get('/opd/laporan/verifikasi')->assertOk();
 
     expect($response->viewData('reports')->pluck('id')->all())->toBe([$older->id, $newer->id, $resubmitted->id]);
     $response->assertSee('14 hari')
         ->assertSee('Diajukan ulang')
         ->assertDontSee('KUB Bukan Binaan')
-        ->assertSee('aria-label="Verifikasi Laporan"', false);
+        ->assertSee('<title>Perlu diverifikasi · Laporan', false);
 });
 
 test('antrean kosong menampilkan penjelasan', function () {
-    $this->actingAs($this->reviewer)->get('/opd/verifikasi')->assertOk()->assertSee('Tidak ada laporan yang menunggu verifikasi');
+    $this->actingAs($this->reviewer)->get('/opd/laporan/verifikasi')->assertOk()->assertSee('Tidak ada laporan yang menunggu verifikasi');
 });
 
 test('semua laporan OPD: draf tampil sebagai "Draf, belum diajukan" tanpa tautan', function () {
@@ -112,10 +112,10 @@ test('tab laporan di detail kelompok bisa diklik admin, kecuali draf yang belum 
 
 test('peran lain tidak bisa membuka daftar laporan peninjau', function () {
     $this->actingAs(User::factory()->kelompok($this->ours)->create());
-    $this->get('/opd/verifikasi')->assertForbidden();
+    $this->get('/opd/laporan/verifikasi')->assertForbidden();
     $this->get('/opd/laporan')->assertForbidden();
     $this->get('/admin/laporan')->assertForbidden();
 
     $this->actingAs($this->reviewer)->get('/admin/laporan')->assertForbidden();
-    $this->actingAs(User::factory()->admin()->create())->get('/opd/verifikasi')->assertForbidden();
+    $this->actingAs(User::factory()->admin()->create())->get('/opd/laporan/verifikasi')->assertForbidden();
 });

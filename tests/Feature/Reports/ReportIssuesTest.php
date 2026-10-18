@@ -35,15 +35,15 @@ test('OPD hanya melihat masalah dan kebutuhan dari laporan binaan yang diajukan 
     issueOn($this->foreign, ReportStatus::Verified, '2026-09-01', IssueKind::Problem, 'modal', 'Masalah kelompok lain');
 
     $this->actingAs(User::factory()->opd($this->opd)->create())
-        ->get('/opd/masalah')
+        ->get('/opd/laporan/masalah')
         ->assertOk()
         ->assertSeeInOrder(['Modal kerja terbatas', 'Pelatihan pengemasan'])
         ->assertSee('Bahan baku')
-        ->assertSee("/opd/masalah/{$submitted->issues->first()->id}")
+        ->assertSee("/opd/laporan/masalah/{$submitted->issues->first()->id}")
         ->assertDontSee('Isi draf rahasia')
         ->assertDontSee('Isi revisi rahasia')
         ->assertDontSee('Masalah kelompok lain')
-        ->assertSee('aria-label="Masalah &amp; Kebutuhan"', false);
+        ->assertSee('<title>Masalah &amp; kebutuhan · Laporan', false);
 });
 
 test('filter jenis, kategori, dan periode', function () {
@@ -52,7 +52,7 @@ test('filter jenis, kategori, dan periode', function () {
     issueOn($this->ours, ReportStatus::Verified, '2026-08-01', IssueKind::Problem, 'pemasaran', 'Pasar jauh');
     $this->actingAs(User::factory()->opd($this->opd)->create());
 
-    $descriptions = fn (string $query) => $this->get('/opd/masalah?'.$query)->viewData('issues')->pluck('description')->all();
+    $descriptions = fn (string $query) => $this->get('/opd/laporan/masalah?'.$query)->viewData('issues')->pluck('description')->all();
 
     expect($descriptions('kind=support'))->toBe(['Butuh pinjaman modal'])
         ->and($descriptions('category=modal'))->toEqualCanonicalizing(['Modal kerja terbatas', 'Butuh pinjaman modal'])
@@ -60,7 +60,7 @@ test('filter jenis, kategori, dan periode', function () {
         ->and($descriptions('period=2026-08'))->toBe(['Pasar jauh']);
 
     // Pilihan kategori mengikuti jenis yang dipilih.
-    $this->get('/opd/masalah?kind=support')->assertSee('Bantuan alat')->assertDontSee('Bahan baku');
+    $this->get('/opd/laporan/masalah?kind=support')->assertSee('Bantuan alat')->assertDontSee('Bahan baku');
 });
 
 test('admin melihat seluruh distrik dan bisa menyaring per OPD', function () {
@@ -68,21 +68,21 @@ test('admin melihat seluruh distrik dan bisa menyaring per OPD', function () {
     $foreign = issueOn($this->foreign, ReportStatus::Verified, '2026-09-01', IssueKind::Problem, 'modal', 'Masalah kelompok lain');
     $this->actingAs(User::factory()->admin()->create());
 
-    $this->get('/admin/masalah')->assertOk()->assertSee('Modal kerja terbatas')->assertSee('Masalah kelompok lain')
-        ->assertSee("/admin/masalah/{$foreign->issues->first()->id}")
-        ->assertSee('aria-label="Masalah &amp; Kebutuhan"', false);
-    expect($this->get("/admin/masalah?opd={$this->otherOpd->id}")->viewData('issues')->pluck('description')->all())->toBe(['Masalah kelompok lain']);
+    $this->get('/admin/laporan/masalah')->assertOk()->assertSee('Modal kerja terbatas')->assertSee('Masalah kelompok lain')
+        ->assertSee("/admin/laporan/masalah/{$foreign->issues->first()->id}")
+        ->assertSee('<title>Masalah &amp; kebutuhan · Laporan', false);
+    expect($this->get("/admin/laporan/masalah?opd={$this->otherOpd->id}")->viewData('issues')->pluck('description')->all())->toBe(['Masalah kelompok lain']);
 });
 
 test('keadaan kosong dijelaskan', function () {
-    $this->actingAs(User::factory()->opd($this->opd)->create())->get('/opd/masalah')->assertOk()->assertSee('Belum ada masalah atau kebutuhan');
+    $this->actingAs(User::factory()->opd($this->opd)->create())->get('/opd/laporan/masalah')->assertOk()->assertSee('Belum ada masalah atau kebutuhan');
 });
 
 test('peran lain ditolak 403', function () {
     $this->actingAs(User::factory()->kelompok($this->ours)->create());
-    $this->get('/opd/masalah')->assertForbidden();
-    $this->get('/admin/masalah')->assertForbidden();
+    $this->get('/opd/laporan/masalah')->assertForbidden();
+    $this->get('/admin/laporan/masalah')->assertForbidden();
 
-    $this->actingAs(User::factory()->opd($this->opd)->create())->get('/admin/masalah')->assertForbidden();
-    $this->actingAs(User::factory()->admin()->create())->get('/opd/masalah')->assertForbidden();
+    $this->actingAs(User::factory()->opd($this->opd)->create())->get('/admin/laporan/masalah')->assertForbidden();
+    $this->actingAs(User::factory()->admin()->create())->get('/opd/laporan/masalah')->assertForbidden();
 });

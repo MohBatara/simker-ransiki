@@ -23,7 +23,7 @@ class MonthlyReportController extends Controller
 {
     private const NOTE_RULES = ['required', 'string', 'min:10', 'max:2000'];
 
-    /** "Semua Laporan": semua status, termasuk draf (isinya baru bisa dibuka setelah diajukan). */
+    /** Laporan › "Semua laporan": semua status, termasuk draf (isinya baru bisa dibuka setelah diajukan). */
     public function index(Request $request): View
     {
         $filters = $request->only(['q', 'status', 'period', 'opd', 'menunggu']);
@@ -50,9 +50,7 @@ class MonthlyReportController extends Controller
         $user = $request->user();
         $filters = $request->only(['q', 'period']);
 
-        $reports = MonthlyReport::visibleTo($user)
-            ->where('monthly_reports.status', ReportStatus::Submitted)
-            ->when($user->isAdmin(), fn ($query) => $query->needsAdminVerification())
+        $reports = MonthlyReport::verificationQueue($user)
             ->filter($filters)
             ->withSubmissionInfo()
             ->when(MonthlyReport::separatesDuties(), fn ($query) => $query->withHandledBy($user))
@@ -93,21 +91,23 @@ class MonthlyReportController extends Controller
 
         return match ($this->originKey($request, $area)) {
             'kelompok' => [route($area.'.organizations.reports', $report->organization), [
-                ['label' => $area === 'opd' ? 'Kelompok Binaan' : 'Semua Kelompok', 'href' => route($area.'.organizations.index')],
+                ['label' => $area === 'opd' ? 'Kelompok binaan' : 'Kelompok', 'href' => route($area.'.organizations.index')],
                 ['label' => $report->organization->name, 'href' => route($area.'.organizations.show', $report->organization)],
                 ['label' => 'Laporan', 'href' => route($area.'.organizations.reports', $report->organization)],
                 $current,
             ]],
             'antrean' => [route($area.'.verifications.index'), [
-                ['label' => 'Verifikasi Laporan', 'href' => route($area.'.verifications.index')],
+                ['label' => 'Laporan', 'href' => route($area.'.reports.index')],
+                ['label' => 'Perlu diverifikasi', 'href' => route($area.'.verifications.index')],
                 $current,
             ]],
             'masalah' => [route($area.'.issues.index'), [
-                ['label' => 'Masalah & Kebutuhan', 'href' => route($area.'.issues.index')],
+                ['label' => 'Laporan', 'href' => route($area.'.reports.index')],
+                ['label' => 'Masalah & kebutuhan', 'href' => route($area.'.issues.index')],
                 $current,
             ]],
             default => [route($area.'.reports.index'), [
-                ['label' => 'Semua Laporan', 'href' => route($area.'.reports.index')],
+                ['label' => 'Laporan', 'href' => route($area.'.reports.index')],
                 $current,
             ]],
         };

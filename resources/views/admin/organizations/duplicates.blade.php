@@ -9,8 +9,8 @@
 <x-layouts.app
     title="Kemungkinan data ganda"
     description="Pasangan kelompok dengan nama mirip. Buka kedua kelompok lalu putuskan sendiri, misalnya tutup salah satu dengan alasan."
-    :back="route('admin.organizations.index')"
-    :breadcrumbs="[['label' => 'Semua Kelompok', 'href' => route('admin.organizations.index')], ['label' => 'Kemungkinan data ganda']]"
+    section="kelompok"
+    tab="ganda"
 >
     <div class="space-y-4">
         @if ($pairs->total() > 0)

@@ -6,7 +6,7 @@
     $tabs = collect(\App\Enums\MasterDataType::cases());
 @endphp
 
-<x-layouts.app title="Data Master" description="Daftar pilihan yang dipakai di profil kelompok dan akun OPD.">
+<x-layouts.app title="Data master" description="Daftar pilihan yang dipakai di profil kelompok dan akun OPD." section="pengaturan" tab="master">
     <x-slot:actions>
         <x-button icon="plus" x-data x-on:click="$dispatch('master-create')">Tambah {{ $type->noun() }}</x-button>
     </x-slot:actions>

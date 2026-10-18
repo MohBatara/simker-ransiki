@@ -38,11 +38,11 @@ function followUpPayload(array $overrides = []): array
 }
 
 test('OPD pembina mengubah status dengan catatan; riwayat dan status terkini tersimpan', function () {
-    $this->actingAs($this->officer)->get("/opd/masalah/{$this->issue->id}")
+    $this->actingAs($this->officer)->get("/opd/laporan/masalah/{$this->issue->id}")
         ->assertOk()->assertSee('Pelatihan pengemasan')->assertSee('Ubah status tindak lanjut')->assertSee('Belum ada tindak lanjut');
 
-    $this->post("/opd/masalah/{$this->issue->id}/tindak-lanjut", followUpPayload(['opd_id' => Opd::factory()->create()->id]))
-        ->assertRedirect("/opd/masalah/{$this->issue->id}")
+    $this->post("/opd/laporan/masalah/{$this->issue->id}/tindak-lanjut", followUpPayload(['opd_id' => Opd::factory()->create()->id]))
+        ->assertRedirect("/opd/laporan/masalah/{$this->issue->id}")
         ->assertSessionHas('status', 'Status diubah menjadi direncanakan. Kelompok mendapat notifikasi.');
 
     $issue = $this->issue->fresh();
@@ -56,14 +56,14 @@ test('OPD pembina mengubah status dengan catatan; riwayat dan status terkini ter
         ->and($history->to_status)->toBe(FollowUpStatus::Planned)
         ->and($history->acted_on->format('Y-m-d'))->toBe('2026-10-12');
 
-    $this->get("/opd/masalah/{$this->issue->id}")->assertSee('Direncanakan')->assertSee('Petugas Contoh (Contoh)')->assertSee('Pelatihan dijadwalkan November.');
+    $this->get("/opd/laporan/masalah/{$this->issue->id}")->assertSee('Direncanakan')->assertSee('Petugas Contoh (Contoh)')->assertSee('Pelatihan dijadwalkan November.');
 });
 
 test('catatan tindakan wajib dan tanggal tidak boleh setelah hari ini', function (array $payload, string $field) {
     $this->actingAs($this->officer)
-        ->from("/opd/masalah/{$this->issue->id}")
-        ->post("/opd/masalah/{$this->issue->id}/tindak-lanjut", followUpPayload($payload))
-        ->assertRedirect("/opd/masalah/{$this->issue->id}")
+        ->from("/opd/laporan/masalah/{$this->issue->id}")
+        ->post("/opd/laporan/masalah/{$this->issue->id}/tindak-lanjut", followUpPayload($payload))
+        ->assertRedirect("/opd/laporan/masalah/{$this->issue->id}")
         ->assertSessionHasErrors($field);
 
     expect($this->issue->fresh()->follow_up_status)->toBe(FollowUpStatus::New)
@@ -79,25 +79,25 @@ test('notifikasi ke semua akun aktif kelompok, sekali per perubahan status', fun
     Notification::fake();
     $this->actingAs($this->officer);
 
-    $this->post("/opd/masalah/{$this->issue->id}/tindak-lanjut", followUpPayload());
+    $this->post("/opd/laporan/masalah/{$this->issue->id}/tindak-lanjut", followUpPayload());
     Notification::assertSentTo($this->members, IssueFollowUpUpdated::class);
     Notification::assertNotSentTo($this->inactiveMember, IssueFollowUpUpdated::class);
     Notification::assertNotSentTo($this->officer, IssueFollowUpUpdated::class);
     Notification::assertSentTimes(IssueFollowUpUpdated::class, 2);
 
     // Status sama (catatan tambahan, atau kirim ganda): riwayat bertambah, tanpa notifikasi baru.
-    $this->post("/opd/masalah/{$this->issue->id}/tindak-lanjut", followUpPayload(['note' => 'Peserta sudah didata.']))
+    $this->post("/opd/laporan/masalah/{$this->issue->id}/tindak-lanjut", followUpPayload(['note' => 'Peserta sudah didata.']))
         ->assertSessionHas('status', 'Catatan tindakan disimpan.');
     Notification::assertSentTimes(IssueFollowUpUpdated::class, 2);
     expect(IssueFollowUp::count())->toBe(2);
 
-    $this->post("/opd/masalah/{$this->issue->id}/tindak-lanjut", followUpPayload(['status' => 'done', 'note' => 'Pelatihan selesai.']));
+    $this->post("/opd/laporan/masalah/{$this->issue->id}/tindak-lanjut", followUpPayload(['status' => 'done', 'note' => 'Pelatihan selesai.']));
     Notification::assertSentTimes(IssueFollowUpUpdated::class, 4);
 });
 
 test('teks notifikasi kelompok dan tujuannya ke detail laporan', function () {
     $member = $this->members->first();
-    $this->actingAs($this->officer)->post("/opd/masalah/{$this->issue->id}/tindak-lanjut", followUpPayload(['status' => 'in_progress']));
+    $this->actingAs($this->officer)->post("/opd/laporan/masalah/{$this->issue->id}/tindak-lanjut", followUpPayload(['status' => 'in_progress']));
 
     $this->actingAs($member)->get('/notifikasi')
         ->assertSee('Kebutuhan &quot;Pelatihan&quot; dari laporan September 2026: sedang ditindaklanjuti.', false)
@@ -110,8 +110,8 @@ test('teks notifikasi kelompok dan tujuannya ke detail laporan', function () {
 test('OPD non-binaan tidak bisa melihat atau mengubah tindak lanjut (404)', function () {
     $this->actingAs(User::factory()->opd(Opd::factory()->create())->create());
 
-    $this->get("/opd/masalah/{$this->issue->id}")->assertNotFound();
-    $this->post("/opd/masalah/{$this->issue->id}/tindak-lanjut", followUpPayload())->assertNotFound();
+    $this->get("/opd/laporan/masalah/{$this->issue->id}")->assertNotFound();
+    $this->post("/opd/laporan/masalah/{$this->issue->id}/tindak-lanjut", followUpPayload())->assertNotFound();
 
     expect($this->issue->fresh()->follow_up_status)->toBe(FollowUpStatus::New)
         ->and(IssueFollowUp::count())->toBe(0);
@@ -120,17 +120,17 @@ test('OPD non-binaan tidak bisa melihat atau mengubah tindak lanjut (404)', func
 test('isian dari draf atau laporan yang sedang direvisi tidak bisa ditindaklanjuti peninjau', function (ReportStatus $status) {
     $this->report->update(['status' => $status]);
 
-    $this->actingAs($this->officer)->get("/opd/masalah/{$this->issue->id}")->assertNotFound();
-    $this->post("/opd/masalah/{$this->issue->id}/tindak-lanjut", followUpPayload())->assertNotFound();
+    $this->actingAs($this->officer)->get("/opd/laporan/masalah/{$this->issue->id}")->assertNotFound();
+    $this->post("/opd/laporan/masalah/{$this->issue->id}/tindak-lanjut", followUpPayload())->assertNotFound();
 })->with([ReportStatus::Draft, ReportStatus::Revision]);
 
 test('kelompok hanya bisa melihat: tidak bisa mengubah status, termasuk lewat Policy langsung', function () {
-    $this->actingAs($this->officer)->post("/opd/masalah/{$this->issue->id}/tindak-lanjut", followUpPayload());
+    $this->actingAs($this->officer)->post("/opd/laporan/masalah/{$this->issue->id}/tindak-lanjut", followUpPayload());
     $member = $this->members->first();
     $this->actingAs($member);
 
-    $this->post("/opd/masalah/{$this->issue->id}/tindak-lanjut", followUpPayload(['status' => 'done']))->assertForbidden();
-    $this->post("/admin/masalah/{$this->issue->id}/tindak-lanjut", followUpPayload(['status' => 'done']))->assertForbidden();
+    $this->post("/opd/laporan/masalah/{$this->issue->id}/tindak-lanjut", followUpPayload(['status' => 'done']))->assertForbidden();
+    $this->post("/admin/laporan/masalah/{$this->issue->id}/tindak-lanjut", followUpPayload(['status' => 'done']))->assertForbidden();
     expect($member->can('view', $this->issue))->toBeTrue()
         ->and($member->can('followUp', $this->issue))->toBeFalse()
         ->and($this->issue->fresh()->follow_up_status)->toBe(FollowUpStatus::Planned);
@@ -145,14 +145,14 @@ test('kelompok hanya bisa melihat: tidak bisa mengubah status, termasuk lewat Po
 test('admin mengubah status kelompok mana pun dan memilih OPD penanggung jawab', function () {
     $admin = User::factory()->admin()->create();
 
-    $this->actingAs($admin)->post("/admin/masalah/{$this->issue->id}/tindak-lanjut", followUpPayload(['status' => 'unable', 'opd_id' => $this->opd->id, 'note' => 'Anggaran tahun ini habis.']))
-        ->assertRedirect("/admin/masalah/{$this->issue->id}");
+    $this->actingAs($admin)->post("/admin/laporan/masalah/{$this->issue->id}/tindak-lanjut", followUpPayload(['status' => 'unable', 'opd_id' => $this->opd->id, 'note' => 'Anggaran tahun ini habis.']))
+        ->assertRedirect("/admin/laporan/masalah/{$this->issue->id}");
 
     expect($this->issue->fresh()->only(['follow_up_status', 'follow_up_opd_id']))->toBe(['follow_up_status' => FollowUpStatus::Unable, 'follow_up_opd_id' => $this->opd->id]);
 });
 
 test('riwayat tindak lanjut tetap tersambung saat laporan direvisi dan disimpan ulang', function () {
-    $this->actingAs($this->officer)->post("/opd/masalah/{$this->issue->id}/tindak-lanjut", followUpPayload(['status' => 'reviewed']));
+    $this->actingAs($this->officer)->post("/opd/laporan/masalah/{$this->issue->id}/tindak-lanjut", followUpPayload(['status' => 'reviewed']));
     $this->report->update(['status' => ReportStatus::Revision]);
 
     $this->actingAs($this->members->first())->patchJson("/kelompok/laporan/{$this->report->id}/draf", [
@@ -182,19 +182,19 @@ test('filter status, kampung, dan kebutuhan yang belum ditindaklanjuti; kartu da
     $doneLongAgo->forceFill(['follow_up_status' => FollowUpStatus::Done, 'follow_up_at' => '2026-08-10 09:00:00'])->save();
 
     $this->actingAs($this->officer);
-    $descriptions = fn (string $query) => $this->get('/opd/masalah?'.$query)->viewData('issues')->pluck('description')->sort()->values()->all();
+    $descriptions = fn (string $query) => $this->get('/opd/laporan/masalah?'.$query)->viewData('issues')->pluck('description')->sort()->values()->all();
 
     expect($descriptions('status=done'))->toBe(['Sudah selesai'])
         ->and($descriptions("village={$this->village->id}"))->toBe(['Pelatihan pengemasan'])
         ->and($descriptions('kind=support&lama=30'))->toBe(['Modal kerja lama']);
 
-    $this->get('/opd/masalah?kind=support&lama=30')->assertSee('Belum ditindaklanjuti lebih dari 30 hari');
+    $this->get('/opd/laporan/masalah?kind=support&lama=30')->assertSee('Belum ditindaklanjuti lebih dari 30 hari');
 
-    $dashboard = $this->get('/opd')->assertOk()->assertSee('Kebutuhan belum ditindaklanjuti')->assertSee('/opd/masalah?kind=support&amp;lama=30', false);
+    $dashboard = $this->get('/opd')->assertOk()->assertSee('Kebutuhan belum ditindaklanjuti')->assertSee('/opd/laporan/masalah?kind=support&amp;lama=30', false);
     expect($dashboard->viewData('staleNeeds'))->toBe(1);
 
     // Status Ditinjau yang diubah baru-baru ini tidak dihitung tertunda lagi.
-    $this->post("/opd/masalah/{$staleNeed->id}/tindak-lanjut", followUpPayload(['status' => 'reviewed']));
+    $this->post("/opd/laporan/masalah/{$staleNeed->id}/tindak-lanjut", followUpPayload(['status' => 'reviewed']));
     expect($this->get('/opd')->viewData('staleNeeds'))->toBe(0);
     expect($recentNeed->fresh()->follow_up_status)->toBe(FollowUpStatus::New);
 });
@@ -204,10 +204,10 @@ test('unduh Excel: isi sama dengan daftar yang terlihat, termasuk status tindak 
     $foreign->opds()->attach(Opd::factory()->create());
     MonthlyReport::factory()->for($foreign)->status(ReportStatus::Verified)->create(['submitted_at' => now()])
         ->issues()->create(['kind' => IssueKind::Problem, 'category' => 'modal', 'description' => 'Rahasia kelompok lain']);
-    $this->actingAs($this->officer)->post("/opd/masalah/{$this->issue->id}/tindak-lanjut", followUpPayload());
+    $this->actingAs($this->officer)->post("/opd/laporan/masalah/{$this->issue->id}/tindak-lanjut", followUpPayload());
 
-    $this->get('/opd/masalah')->assertSee('/opd/masalah/unduh', false);
-    $response = $this->get('/opd/masalah/unduh')->assertOk()->assertDownload('masalah-kebutuhan-2026-10-12.xlsx');
+    $this->get('/opd/laporan/masalah')->assertSee('/opd/laporan/masalah/unduh', false);
+    $response = $this->get('/opd/laporan/masalah/unduh')->assertOk()->assertDownload('masalah-kebutuhan-2026-10-12.xlsx');
     $rows = SimpleExcelReader::create($response->baseResponse->getFile()->getPathname(), 'xlsx')->noHeaderRow()->getRows()->all();
 
     expect($rows)->toHaveCount(2)
@@ -217,15 +217,15 @@ test('unduh Excel: isi sama dengan daftar yang terlihat, termasuk status tindak 
             'Direncanakan', 'Contoh', 'Pelatihan dijadwalkan November.',
         ]);
 
-    $this->actingAs($this->members->first())->get('/opd/masalah/unduh')->assertForbidden();
+    $this->actingAs($this->members->first())->get('/opd/laporan/masalah/unduh')->assertForbidden();
 });
 
 test('OPD tidak bisa dihapus dari data master selama dipakai sebagai penanggung jawab tindak lanjut', function () {
     $responsible = Opd::factory()->create(['name' => 'OPD Penanggung Jawab']);
     $this->actingAs(User::factory()->admin()->create())
-        ->post("/admin/masalah/{$this->issue->id}/tindak-lanjut", followUpPayload(['opd_id' => $responsible->id]));
+        ->post("/admin/laporan/masalah/{$this->issue->id}/tindak-lanjut", followUpPayload(['opd_id' => $responsible->id]));
 
-    $this->from('/admin/data-master/opd')->delete("/admin/data-master/opd/{$responsible->id}")
+    $this->from('/admin/pengaturan/data-master/opd')->delete("/admin/pengaturan/data-master/opd/{$responsible->id}")
         ->assertSessionHas('error', fn (string $message) => str_contains($message, '1 tindak lanjut'));
     expect(Opd::whereKey($responsible->id)->exists())->toBeTrue();
 });

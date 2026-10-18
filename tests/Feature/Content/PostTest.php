@@ -40,7 +40,7 @@ test('Markdown berbahaya dibersihkan: script, HTML mentah, dan tautan javascript
         ->toContain('href="https://contoh.test"');
 
     $this->actingAs($this->admin)
-        ->postJson('/admin/berita/pratinjau', ['body' => "<script>alert(1)</script>\n\n[x](javascript:alert(1))"])
+        ->postJson('/admin/website/berita/pratinjau', ['body' => "<script>alert(1)</script>\n\n[x](javascript:alert(1))"])
         ->assertOk()
         ->assertDontSee('<script>', false)
         ->assertDontSee('javascript:', false);
@@ -74,8 +74,8 @@ test('Admin membuat, mengubah, dan menghapus berita; slug dibuat dari judul', fu
     $organization = Organization::factory()->public()->create();
     $this->actingAs($this->admin);
 
-    $this->get('/admin/berita/tambah')->assertOk();
-    $this->post('/admin/berita', [
+    $this->get('/admin/website/berita/tambah')->assertOk();
+    $this->post('/admin/website/berita', [
         'title' => 'Panen Raya Kakao 2026', 'category' => 'kegiatan', 'body' => 'Isi.',
         'status' => 'published', 'organizations' => [$organization->id],
     ])->assertSessionHasNoErrors();
@@ -85,30 +85,30 @@ test('Admin membuat, mengubah, dan menghapus berita; slug dibuat dari judul', fu
         ->and($post->published_at)->not->toBeNull()
         ->and($post->organizations->pluck('id')->all())->toBe([$organization->id]);
 
-    $this->get('/admin/berita')->assertOk()->assertSee('Panen Raya Kakao 2026');
-    $this->put("/admin/berita/{$post->id}", [
+    $this->get('/admin/website/berita')->assertOk()->assertSee('Panen Raya Kakao 2026');
+    $this->put("/admin/website/berita/{$post->id}", [
         'title' => 'Panen Raya', 'slug' => 'panen-raya', 'category' => 'berita', 'body' => 'Isi baru.',
         'status' => 'draft', 'published_at' => '',
     ])->assertSessionHasNoErrors();
     expect($post->fresh())->slug->toBe('panen-raya')->published_at->toBeNull()
         ->and($post->organizations()->count())->toBe(0);
 
-    $this->delete("/admin/berita/{$post->id}")->assertRedirect('/admin/berita');
+    $this->delete("/admin/website/berita/{$post->id}")->assertRedirect('/admin/website/berita');
     expect(Post::count())->toBe(0);
 });
 
 test('OPD dan kelompok tidak bisa membuka pengelolaan berita', function () {
     $post = Post::factory()->create();
 
-    $this->actingAs(User::factory()->opd()->create())->get('/admin/berita')->assertForbidden();
+    $this->actingAs(User::factory()->opd()->create())->get('/admin/website/berita')->assertForbidden();
     $this->actingAs(User::factory()->kelompok(Organization::factory()->create())->create())
-        ->put("/admin/berita/{$post->id}", ['title' => 'x'])->assertForbidden();
+        ->put("/admin/website/berita/{$post->id}", ['title' => 'x'])->assertForbidden();
 });
 
 test('foto sampul diunggah Admin; foto berita draf tidak bisa dibuka tamu', function () {
     $post = Post::factory()->draft()->create();
     $this->actingAs($this->admin)
-        ->post("/admin/berita/{$post->id}/foto", ['file' => realUpload('sampul.jpg', imageBytes(1200, 800))])
+        ->post("/admin/website/berita/{$post->id}/foto", ['file' => realUpload('sampul.jpg', imageBytes(1200, 800))])
         ->assertCreated();
 
     expect($post->fresh()->cover_photo_path)->toStartWith('posts/');
@@ -124,16 +124,16 @@ test('foto sampul diunggah Admin; foto berita draf tidak bisa dibuka tamu', func
 test('tanggal kegiatan: diisi Admin hanya untuk kategori Kegiatan, kategori lain dikosongkan; OPD tidak bisa', function () {
     $payload = ['title' => 'Pelatihan contoh', 'body' => 'Isi.', 'status' => 'published'];
 
-    $this->actingAs($this->admin)->get('/admin/berita/tambah')->assertOk()->assertSee('Tanggal kegiatan')->assertSee('name="event_date"', false);
+    $this->actingAs($this->admin)->get('/admin/website/berita/tambah')->assertOk()->assertSee('Tanggal kegiatan')->assertSee('name="event_date"', false);
 
-    $this->post('/admin/berita', [...$payload, 'category' => 'kegiatan', 'event_date' => '2026-11-12'])->assertSessionHasNoErrors();
+    $this->post('/admin/website/berita', [...$payload, 'category' => 'kegiatan', 'event_date' => '2026-11-12'])->assertSessionHasNoErrors();
     $post = Post::where('title', 'Pelatihan contoh')->first();
     expect($post->event_date->toDateString())->toBe('2026-11-12');
 
-    $this->put("/admin/berita/{$post->id}", [...$payload, 'category' => 'kegiatan', 'event_date' => 'bukan-tanggal'])->assertSessionHasErrors('event_date');
+    $this->put("/admin/website/berita/{$post->id}", [...$payload, 'category' => 'kegiatan', 'event_date' => 'bukan-tanggal'])->assertSessionHasErrors('event_date');
     // Pindah ke kategori Berita: tanggal kegiatan diabaikan dan dikosongkan.
-    $this->put("/admin/berita/{$post->id}", [...$payload, 'category' => 'berita', 'event_date' => '2026-12-01'])->assertSessionHasNoErrors();
+    $this->put("/admin/website/berita/{$post->id}", [...$payload, 'category' => 'berita', 'event_date' => '2026-12-01'])->assertSessionHasNoErrors();
     expect($post->fresh()->event_date)->toBeNull();
 
-    $this->actingAs(User::factory()->opd()->create())->put("/admin/berita/{$post->id}", [...$payload, 'category' => 'kegiatan', 'event_date' => '2026-11-12'])->assertForbidden();
+    $this->actingAs(User::factory()->opd()->create())->put("/admin/website/berita/{$post->id}", [...$payload, 'category' => 'kegiatan', 'event_date' => '2026-11-12'])->assertForbidden();
 });

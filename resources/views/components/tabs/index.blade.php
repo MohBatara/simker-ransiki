@@ -5,6 +5,10 @@
     'links' => null,
     // [key => ikon Heroicons] untuk tab bertautan (mis. detail kelompok).
     'icons' => [],
+    // [key => angka] kecil di tab bertautan (mis. jumlah menunggu); null = tanpa angka, 0 tetap tampil.
+    'counts' => [],
+    // Nama navigasi tab bertautan untuk pembaca layar (mis. "Laporan").
+    'label' => null,
 ])
 
 @php
@@ -18,7 +22,7 @@
 
 @if ($links)
     <div x-data="{!! $scroller !!}" x-init="check()" x-on:resize.window="check()" {{ $attributes->class('relative') }}>
-    <nav x-ref="scroller" x-on:scroll.passive="check()" class="{{ $navClasses }}">
+    <nav x-ref="scroller" x-on:scroll.passive="check()" class="{{ $navClasses }}" @if ($label) aria-label="{{ $label }}" @endif>
         @foreach ($tabs as $key => $label)
             <a
                 href="{{ $links[$key] }}"
@@ -33,6 +37,9 @@
                     <x-dynamic-component :component="'heroicon-o-'.$icons[$key]" @class(['size-5 shrink-0', 'text-brand' => $key === $active, 'text-ink-muted' => $key !== $active]) aria-hidden="true" />
                 @endif
                 {{ $label }}
+                @if (($counts[$key] ?? null) !== null)
+                    <span @class(['rounded-full px-2 text-caption tabular-nums', 'bg-brand-tint text-brand' => $key === $active, 'bg-subtle text-ink-soft' => $key !== $active])>{{ \App\Support\Format::number($counts[$key]) }}</span>
+                @endif
             </a>
         @endforeach
     </nav>

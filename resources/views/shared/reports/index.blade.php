@@ -1,5 +1,5 @@
 {{--
-    Daftar laporan untuk peninjau. $mode: 'queue' (antrean verifikasi OPD/Admin) atau 'all' (Semua Laporan).
+    Daftar laporan untuk peninjau (menu Laporan). $mode: 'queue' (tab Perlu diverifikasi) atau 'all' (tab Semua laporan).
     Variabel: $area, $reports, $filters, $periods, $opds (Admin saja).
 --}}
 @use('App\Support\Format')
@@ -21,7 +21,7 @@
     $summary = $queue
         ? $reports->total().' laporan menunggu verifikasi'
         : collect([$reports->total().' laporan', $submittedCount ? $submittedCount.' menunggu verifikasi' : null])->filter()->join(' · ');
-    $title = $queue ? 'Verifikasi Laporan' : 'Semua Laporan';
+    $title = $queue ? 'Perlu diverifikasi' : 'Semua laporan';
     $description = match (true) {
         $queue && $area === 'admin' => 'Laporan yang hanya bisa diverifikasi Admin: kelompok tanpa OPD pembina, atau semua petugas OPD-nya ikut mengisi atau mengajukan.',
         $queue => 'Laporan yang diajukan kelompok binaan. Yang paling lama menunggu ada di atas.',
@@ -30,7 +30,7 @@
     };
 @endphp
 
-<x-layouts.app :title="$title" :description="$description">
+<x-layouts.app :title="$title" :description="$description" section="laporan" :tab="$queue ? 'verifikasi' : 'semua'">
     @unless ($queue)
         <x-slot:actions>
             <x-button variant="secondary" icon="arrow-down-tray" x-data x-on:click="$dispatch('open-modal', 'report-recap')">Unduh rekap</x-button>

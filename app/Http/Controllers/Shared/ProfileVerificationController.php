@@ -2,8 +2,6 @@
 
 namespace App\Http\Controllers\Shared;
 
-use App\Enums\OrganizationStatus;
-use App\Enums\ProfileStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Organization;
 use Illuminate\Http\Request;
@@ -17,9 +15,7 @@ class ProfileVerificationController extends Controller
 {
     public function index(Request $request): View
     {
-        $organizations = Organization::visibleTo($request->user())
-            ->where('profile_status', ProfileStatus::NeedsReview)
-            ->where('status', '!=', OrganizationStatus::Closed)
+        $organizations = Organization::profileReviewQueue($request->user())
             ->with(['village:id,name', 'institutionType:id,name'])
             ->orderBy('profile_changed_at')
             ->paginate(20);

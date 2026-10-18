@@ -20,7 +20,7 @@
     focus
     :back="route('admin.organizations.import.create')"
     :breadcrumbs="[
-        ['label' => 'Semua Kelompok', 'href' => route('admin.organizations.index')],
+        ['label' => 'Kelompok', 'href' => route('admin.organizations.index')],
         ['label' => 'Impor', 'href' => route('admin.organizations.import.create')],
         ['label' => 'Pratinjau'],
     ]"

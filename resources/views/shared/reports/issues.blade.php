@@ -27,7 +27,9 @@
 @endphp
 
 <x-layouts.app
-    title="Masalah & Kebutuhan"
+    title="Masalah & kebutuhan"
+    section="laporan"
+    tab="masalah"
     :description="($area === 'opd' ? 'Dari laporan kelompok binaan' : 'Dari laporan seluruh kelompok').' yang sudah diajukan atau terverifikasi.'"
 >
     <x-slot:actions>

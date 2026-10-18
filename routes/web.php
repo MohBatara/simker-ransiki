@@ -82,7 +82,7 @@ $organizationRoutes = function () {
     });
 
     // Antrean "Profil menunggu verifikasi": kelompok yang terlihat pengguna (visibleTo) dengan profil berubah.
-    Route::get('/verifikasi-profil', [Shared\ProfileVerificationController::class, 'index'])->name('profile-verifications.index')
+    Route::get('/kelompok/verifikasi-profil', [Shared\ProfileVerificationController::class, 'index'])->name('profile-verifications.index')
         ->can('viewAny', Organization::class);
 
     // scopeBindings: produk/izin harus milik kelompok di URL, jika tidak 404. Hak dicek di Form Request/Policy.
@@ -125,7 +125,7 @@ $reportRoutes = function () {
     // Rekap per periode; isinya dibatasi kelompok yang terlihat pengguna (visibleTo).
     Route::get('/laporan/rekap', [Shared\ReportExportController::class, 'recap'])->name('reports.recap');
     // Masalah & kebutuhan + tindak lanjutnya; isi dibatasi ReportIssue::reviewableBy, hak per baris ReportIssuePolicy.
-    Route::controller(Shared\ReportIssueController::class)->prefix('masalah')->name('issues.')->group(function () {
+    Route::controller(Shared\ReportIssueController::class)->prefix('laporan/masalah')->name('issues.')->group(function () {
         Route::get('/', 'index')->name('index');
         Route::get('/unduh', 'export')->name('export');
         Route::get('/{issue}', 'show')->name('show')->whereNumber('issue')->can('view', 'issue');
@@ -133,13 +133,31 @@ $reportRoutes = function () {
     });
     Route::get('/cari', [Shared\SearchController::class, 'index'])->name('search');
 
-    // Statistik ekonomi dan legalitas; angka dibatasi kelompok yang terlihat pengguna (visibleTo).
-    Route::controller(Shared\StatisticsController::class)->prefix('statistik')->name('statistics.')->group(function () {
-        Route::get('/', 'economy')->name('economy');
+    // Statistik ekonomi dan legalitas (tab menu Dasbor); angka dibatasi kelompok yang terlihat pengguna (visibleTo).
+    Route::controller(Shared\StatisticsController::class)->prefix('dasbor')->name('statistics.')->group(function () {
+        Route::get('/ekonomi', 'economy')->name('economy');
         Route::get('/legalitas', 'legal')->name('legal');
         Route::get('/legalitas/unduh', 'legalExport')->name('legal.export');
     });
 };
+
+/**
+ * URL lama Admin/OPD (sebelum menu digabung menjadi tab) → 301 ke URL baru, termasuk tautan di notifikasi dan
+ * markah lama. Tanpa middleware: hak akses diperiksa di URL tujuan.
+ */
+Route::controller(App\Http\Controllers\LegacyRedirectController::class)->group(function () {
+    $legacy = fn (string $from, string $to, array $areas = ['admin', 'opd'], ?string $index = null) => Route::get('/{area}'.$from.'/{rest?}', '__invoke')
+        ->whereIn('area', $areas)->where('rest', '.*')->defaults('to', $to)->defaults('index', $index ?? $to);
+
+    $legacy('/statistik', '/dasbor', index: '/dasbor/ekonomi');
+    $legacy('/verifikasi-profil', '/kelompok/verifikasi-profil');
+    $legacy('/verifikasi', '/laporan/verifikasi');
+    $legacy('/masalah', '/laporan/masalah');
+    $legacy('/konten', '/website', ['admin']);
+    $legacy('/berita', '/website/berita', ['admin']);
+    $legacy('/pengguna', '/pengaturan/pengguna', ['admin']);
+    $legacy('/data-master', '/pengaturan/data-master', ['admin']);
+});
 
 Route::middleware('auth')->group(function () use ($organizationRoutes, $reportRoutes) {
     Route::post('/logout', [LoginController::class, 'destroy'])->name('logout');
@@ -200,9 +218,10 @@ Route::middleware('auth')->group(function () use ($organizationRoutes, $reportRo
                 Route::post('/laporan/{report}/buka-kembali', [Shared\MonthlyReportController::class, 'reopen'])
                     ->name('reports.reopen')->whereNumber('report');
                 // Antrean Admin: laporan yang tidak bisa diverifikasi petugas OPD (tanpa OPD pembina / pemisahan tugas).
-                Route::get('/verifikasi', [Shared\MonthlyReportController::class, 'queue'])->name('verifications.index');
+                Route::get('/laporan/verifikasi', [Shared\MonthlyReportController::class, 'queue'])->name('verifications.index');
 
-                Route::controller(Admin\UserController::class)->prefix('pengguna')->name('users.')->group(function () {
+                Route::redirect('/pengaturan', '/admin/pengaturan/pengguna', 301);
+                Route::controller(Admin\UserController::class)->prefix('pengaturan/pengguna')->name('users.')->group(function () {
                     Route::get('/', 'index')->name('index')->can('viewAny', User::class);
                     Route::get('/tambah', 'create')->name('create')->can('create', User::class);
                     Route::post('/', 'store')->name('store')->can('create', User::class);
@@ -218,7 +237,7 @@ Route::middleware('auth')->group(function () use ($organizationRoutes, $reportRo
                     });
                 });
 
-                Route::controller(Admin\SiteContentController::class)->prefix('konten')->name('content.')->group(function () {
+                Route::controller(Admin\SiteContentController::class)->prefix('website')->name('content.')->group(function () {
                     Route::get('/', 'edit')->name('edit');
                     Route::get('/halaman', 'editPages')->name('pages');
                     Route::get('/profil', 'editProfile')->name('profile');
@@ -229,17 +248,17 @@ Route::middleware('auth')->group(function () use ($organizationRoutes, $reportRo
                     Route::delete('/foto-bidang/{sector}', 'destroySectorPhoto')->name('sector-photo.destroy')->whereNumber('sector');
                 });
 
-                Route::controller(Admin\PotentialBlockController::class)->prefix('konten/potensi/{n}')->name('potential-blocks.')->whereIn('n', ['1', '2', '3'])->group(function () {
+                Route::controller(Admin\PotentialBlockController::class)->prefix('website/potensi/{n}')->name('potential-blocks.')->whereIn('n', ['1', '2', '3'])->group(function () {
                     Route::post('/', 'update')->name('update')->middleware('throttle:uploads');
                     Route::delete('/foto', 'destroyPhoto')->name('photo.destroy');
                 });
 
-                Route::controller(Admin\AboutCardController::class)->prefix('konten/kartu/{n}')->name('about-cards.')->whereIn('n', ['1', '2', '3'])->group(function () {
+                Route::controller(Admin\AboutCardController::class)->prefix('website/kartu/{n}')->name('about-cards.')->whereIn('n', ['1', '2', '3'])->group(function () {
                     Route::post('/', 'update')->name('update')->middleware('throttle:uploads');
                     Route::delete('/foto', 'destroyPhoto')->name('photo.destroy');
                 });
 
-                Route::controller(Admin\HeroSlideController::class)->prefix('konten/slide')->name('hero-slides.')->group(function () {
+                Route::controller(Admin\HeroSlideController::class)->prefix('website/slide')->name('hero-slides.')->group(function () {
                     Route::post('/', 'store')->name('store')->can('create', HeroSlide::class)->middleware('throttle:uploads');
                     Route::whereNumber('slide')->group(function () {
                         Route::post('/{slide}', 'update')->name('update')->can('update', 'slide')->middleware('throttle:uploads');
@@ -248,7 +267,7 @@ Route::middleware('auth')->group(function () use ($organizationRoutes, $reportRo
                     });
                 });
 
-                Route::controller(Admin\PostController::class)->prefix('berita')->name('posts.')->group(function () {
+                Route::controller(Admin\PostController::class)->prefix('website/berita')->name('posts.')->group(function () {
                     Route::get('/', 'index')->name('index');
                     Route::get('/tambah', 'create')->name('create');
                     Route::post('/', 'store')->name('store');
@@ -262,13 +281,13 @@ Route::middleware('auth')->group(function () use ($organizationRoutes, $reportRo
                     });
                 });
 
-                Route::controller(Admin\InstitutionTypePhotoController::class)->prefix('data-master/jenis-kelembagaan/{institutionType}/foto')->name('master.type-photo.')->whereNumber('institutionType')->group(function () {
+                Route::controller(Admin\InstitutionTypePhotoController::class)->prefix('pengaturan/data-master/jenis-kelembagaan/{institutionType}/foto')->name('master.type-photo.')->whereNumber('institutionType')->group(function () {
                     Route::get('/', 'edit')->name('edit');
                     Route::post('/', 'store')->name('store')->middleware('throttle:uploads');
                     Route::delete('/', 'destroy')->name('destroy');
                 });
 
-                Route::controller(Admin\MasterDataController::class)->prefix('data-master')->name('master.')->group(function () {
+                Route::controller(Admin\MasterDataController::class)->prefix('pengaturan/data-master')->name('master.')->group(function () {
                     Route::get('/', 'index')->name('index');
                     Route::get('/{type}', 'items')->name('items');
                     Route::post('/{type}', 'store')->name('store');
@@ -281,7 +300,7 @@ Route::middleware('auth')->group(function () use ($organizationRoutes, $reportRo
                 Route::get('/', Opd\DashboardController::class)->name('dashboard');
                 $organizationRoutes();
                 $reportRoutes();
-                Route::get('/verifikasi', [Shared\MonthlyReportController::class, 'queue'])->name('verifications.index');
+                Route::get('/laporan/verifikasi', [Shared\MonthlyReportController::class, 'queue'])->name('verifications.index');
             });
 
             Route::prefix('kelompok')->name('kelompok.')->middleware('role:kelompok')->group(function () {

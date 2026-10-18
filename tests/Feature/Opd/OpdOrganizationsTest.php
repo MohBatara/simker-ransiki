@@ -22,7 +22,7 @@ beforeEach(function () {
 test('daftar kelompok binaan hanya berisi kelompok yang dibina OPD itu', function () {
     $this->get('/opd/kelompok')
         ->assertOk()
-        ->assertSee('Kelompok Binaan')
+        ->assertSee('Kelompok binaan')
         ->assertSee('KUB Contoh Binaan')
         ->assertDontSee('KUB Contoh Bukan Binaan')
         ->assertDontSee('name="opd"', false);
