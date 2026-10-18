@@ -46,11 +46,13 @@
     $configs = collect($panels)->map(fn (array $panel) => collect($panel)->only(['type', 'format', 'labels', 'datasets', 'legend', 'yTitle']))->all();
     $id = 'grafik-'.\Illuminate\Support\Str::slug($title);
     $numeric = $table['numeric'] ?? [];
+    // Admin/OPD: kartu pola baru (x-admin.card); peran Kelompok: kartu lama.
+    $cardComponent = auth()->user()?->isAdmin() || auth()->user()?->isOpd() ? 'admin.card' : 'card';
     $optional = $table['optional'] ?? [];
 @endphp
 
 <div {{ $attributes->class('min-w-0') }} @unless ($empty) x-data="chart(@js($configs))" @endunless>
-    <x-card :title="$title" :description="$source" stretch class="h-full">
+    <x-dynamic-component :component="$cardComponent" :title="$title" :description="$source" stretch class="h-full">
         @unless ($empty)
             <x-slot:actions>
                 <x-button variant="ghost" icon="table-cells" class="-my-2 print:hidden" x-on:click="showTable = ! showTable" x-bind:aria-expanded="showTable" aria-controls="{{ $id }}-tabel">
@@ -113,5 +115,5 @@
                 </x-table>
             </div>
         @endif
-    </x-card>
+    </x-dynamic-component>
 </div>

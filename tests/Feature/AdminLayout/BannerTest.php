@@ -39,46 +39,47 @@ test('foto produk tidak pernah dipakai sebagai latar banner', function () {
         ->not->toContain('/foto-produk/');
 });
 
-test('pita forest di halaman biasa mulai tablet, bukan di halaman form', function () {
+test('Admin/OPD: header halaman terang (x-admin.page-header), tanpa pita forest, juga di halaman form', function () {
     $this->actingAs(User::factory()->admin()->create());
 
-    $this->get('/admin/kelompok')->assertSee('app-band md:overflow-hidden md:rounded-card md:bg-forest', false);
-    $this->get('/admin/kelompok/tambah')->assertDontSee('app-band md:overflow-hidden', false);
+    foreach (['/admin/kelompok', '/admin/kelompok/tambah', '/admin/laporan'] as $url) {
+        $this->get($url)->assertOk()->assertDontSee('app-band md:', false)->assertSee('text-admin-title font-semibold', false);
+    }
 });
 
-test('dasbor memakai banner foto sampul bila ada, dengan varian WebP', function () {
+test('dasbor Admin/OPD: kartu sapaan forest kecil, tanpa banner foto walau ada foto sampul', function () {
+    SiteSetting::put(['cover_photo_path' => 'site/sampul.jpg']);
+    Carbon\CarbonImmutable::setTestNow(Carbon\CarbonImmutable::parse('2026-10-18 09:00', 'Asia/Jayapura'));
+
+    $this->actingAs(User::factory()->opd(Opd::factory()->create())->create(['name' => 'Yosias Kafiar']))->get('/opd')
+        ->assertOk()
+        ->assertSee('Selamat pagi, Yosias')
+        ->assertSee('rounded-tile bg-forest', false)
+        ->assertDontSee('app-band-photo max-md:relative', false)
+        ->assertDontSee('overlay-forest', false);
+
+    Carbon\CarbonImmutable::setTestNow();
+});
+
+test('peran Kelompok tetap memakai banner foto lama', function () {
     SiteSetting::put(['cover_photo_path' => 'site/sampul.jpg']);
 
-    $this->actingAs(User::factory()->opd(Opd::factory()->create())->create())->get('/opd')
+    $this->actingAs(User::factory()->kelompok($this->organization)->create())->get('/kelompok/profil')
         ->assertOk()
         ->assertSee('app-band-photo max-md:relative', false)
-        ->assertSee('overlay-forest', false)
-        ->assertSee('fetchpriority="high"', false)
-        ->assertSee('format=webp', false);
+        ->assertSee('overlay-forest', false);
 });
 
-test('dasbor tanpa foto sampul memakai pita polos', function () {
-    $this->actingAs(User::factory()->admin()->create())->get('/admin')
-        ->assertOk()
-        ->assertDontSee('app-band-photo max-md:relative', false)
-        ->assertSee('app-band md:overflow-hidden', false);
-});
-
-test('banner detail kelompok di HP: foto hanya di blok judul, tag dan aksi di bawahnya', function () {
-    SiteSetting::put(['cover_photo_path' => 'site/sampul.jpg']);
+test('detail kelompok Admin: judul, status, tag, lalu aksi; Ubah profil sebagai aksi sekunder (menu … di HP)', function () {
     $this->organization->update(['name' => 'KUB Banner']);
 
     $html = $this->actingAs(User::factory()->admin()->create())
         ->get('/admin/kelompok/'.$this->organization->id)->assertOk()->getContent();
 
-    $header = substr($html, strpos($html, 'app-band md:relative'));
-    $photoBlock = substr($header, 0, strpos($header, 'aria-label="Jenis dan bidang usaha"'));
-
-    expect($photoBlock)->toContain('app-band-photo max-md:relative')
-        ->toContain('overlay-forest')
-        ->toContain('KUB Banner')
-        // Tag dan tombol Ubah profil berada setelah blok foto, bukan di dalamnya.
-        ->and(strpos($header, 'Ubah profil'))->toBeGreaterThan(strpos($header, 'aria-label="Jenis dan bidang usaha"'));
+    expect($html)->not->toContain('app-band-photo max-md:relative')
+        ->toMatch('#<h1[^>]*>KUB Banner</h1>\s*<div[^>]*>\s*<span data-tone="success"#')
+        ->toContain('aria-label="Menu tindakan"')
+        ->and(strpos($html, 'Ubah profil'))->toBeGreaterThan(strpos($html, 'aria-label="Jenis dan bidang usaha"'));
 });
 
 test('tab detail kelompok di HP diberi penanda geser di tepi kanan', function () {
@@ -88,16 +89,10 @@ test('tab detail kelompok di HP diberi penanda geser di tepi kanan', function ()
         ->assertSee('bg-linear-to-l from-canvas to-transparent md:hidden', false);
 });
 
-test('detail kelompok di HP: header atas "Detail kelompok", banner lebih pendek; dasbor tidak berubah', function () {
-    SiteSetting::put(['cover_photo_path' => 'site/sampul.jpg']);
+test('detail kelompok di HP: header atas "Detail kelompok", judul halaman tetap nama kelompok', function () {
     $this->organization->update(['name' => 'KUB Judul']);
-    $this->actingAs(User::factory()->admin()->create());
 
-    $this->get('/admin/kelompok/'.$this->organization->id)->assertOk()
+    $this->actingAs(User::factory()->admin()->create())->get('/admin/kelompok/'.$this->organization->id)->assertOk()
         ->assertSee('truncate text-ui font-semibold text-ink">Detail kelompok</p>', false)
-        ->assertSee('<title>KUB Judul', false)
-        ->assertSee('max-md:min-h-24 max-md:py-4', false)
-        ->assertDontSee('max-md:min-h-32', false);
-
-    $this->get('/admin')->assertOk()->assertSee('max-md:min-h-32 max-md:py-5', false);
+        ->assertSee('<title>KUB Judul', false);
 });

@@ -8,8 +8,6 @@
 @php
     $queue = $mode === 'queue';
     $url = $queue ? route($area.'.verifications.index') : route($area.'.reports.index');
-    $selects = $queue ? ['period', 'opd'] : ['status', 'period', 'opd'];
-    $active = collect($filters)->only($selects)->filter(fn ($value) => filled($value))->count();
     $chips = \App\Support\FilterChips::from($filters, [
         'q' => [null, null],
         'status' => ['Status', ReportStatus::reviewerOptions()],
@@ -33,56 +31,58 @@
 
 <x-layouts.app :title="$title" :description="$description" section="laporan" :tab="$queue ? 'verifikasi' : 'semua'">
     @unless ($queue)
-        <x-slot:actions>
+        <x-slot:secondary>
             <x-button variant="secondary" icon="arrow-down-tray" x-data x-on:click="$dispatch('open-modal', 'report-recap')">Unduh rekap</x-button>
-        </x-slot:actions>
+        </x-slot:secondary>
     @endunless
 
-    <div class="space-y-4">
-        <x-filter-bar
+    @php
+        $toolbarFilters = array_values(array_filter([
+            $queue ? null : ['name' => 'status', 'label' => 'Status', 'options' => ReportStatus::reviewerOptions(), 'selected' => $filters['status'] ?? null, 'placeholder' => 'Semua status'],
+            ['name' => 'period', 'label' => 'Periode', 'options' => $periods, 'selected' => $filters['period'] ?? null, 'placeholder' => 'Semua periode'],
+            $opds ? ['name' => 'opd', 'label' => 'OPD pembina', 'options' => ['none' => 'Tanpa OPD pembina'] + $opds, 'selected' => $filters['opd'] ?? null, 'placeholder' => 'Semua OPD'] : null,
+        ]));
+    @endphp
+
+    <div class="space-y-6">
+        <x-admin.toolbar
             :action="$url"
             search-label="Cari nama kelompok"
             :search="$filters['q'] ?? ''"
-            :active="$active"
+            :filters="$toolbarFilters"
             :keep="collect($filters)->only(['menunggu', 'hanya'])->all()"
-        >
-            @unless ($queue)
-                <x-select size="sm" name="status" :options="ReportStatus::reviewerOptions()" :selected="$filters['status'] ?? null" placeholder="Semua status" x-on:change="$el.form.requestSubmit()" aria-label="Status laporan" />
-            @endunless
-            <x-select size="sm" name="period" :options="$periods" :selected="$filters['period'] ?? null" placeholder="Semua periode" x-on:change="$el.form.requestSubmit()" aria-label="Periode" />
-            @if ($opds)
-                <x-select size="sm" name="opd" :options="['none' => 'Tanpa OPD pembina'] + $opds" :selected="$filters['opd'] ?? null" placeholder="Semua OPD" x-on:change="$el.form.requestSubmit()" aria-label="OPD pembina" />
-            @endif
-        </x-filter-bar>
+            :chips="$chips"
+            :summary="$summary"
+            :clear-url="$hasFilters ? $url : null"
+        />
 
-        <x-filter-summary :summary="$summary" :chips="$chips" :clear-url="$url" />
+        {{-- Ditukar oleh x-admin.toolbar saat filter berubah. --}}
+        <div data-swap="laporan">
 
         @if ($reports->isEmpty())
             @if ($hasFilters)
-                <x-empty-state title="Tidak ada laporan yang cocok" description="Ubah kata pencarian atau hapus filter.">
+                <x-admin.empty icon="magnifying-glass" title="Tidak ada laporan yang cocok" description="Ubah kata pencarian atau hapus filter.">
                     <x-button variant="secondary" :href="$url">Hapus filter</x-button>
-                </x-empty-state>
+                </x-admin.empty>
             @elseif ($queue)
-                <x-empty-state title="Tidak ada laporan yang menunggu verifikasi" :description="$area === 'admin' ? 'Laporan yang diajukan kelompok akan muncul di sini.' : 'Laporan yang diajukan kelompok binaan akan muncul di sini.'">
+                <x-admin.empty icon="clipboard-document-check" title="Tidak ada laporan yang menunggu verifikasi" :description="$area === 'admin' ? 'Laporan yang diajukan kelompok akan muncul di sini.' : 'Laporan yang diajukan kelompok binaan akan muncul di sini.'">
                     <x-button variant="secondary" :href="route($area.'.reports.index')">Lihat semua laporan</x-button>
-                </x-empty-state>
+                </x-admin.empty>
             @else
-                <x-empty-state title="Belum ada laporan" description="Laporan muncul di sini setelah kelompok mulai mengisi laporan bulanan." />
+                <x-admin.empty icon="document-text" title="Belum ada laporan" description="Laporan muncul di sini setelah kelompok mulai mengisi laporan bulanan." />
             @endif
         @else
-            <x-table clickable>
+            <x-admin.table clickable>
                 <x-slot:head>
-                    <x-table.heading>Kelompok</x-table.heading>
-                    <x-table.heading>Periode</x-table.heading>
-                    @unless ($queue)
-                        <x-table.heading>Status</x-table.heading>
-                    @endunless
+                    <x-admin.table.heading>Kelompok</x-admin.table.heading>
+                    <x-admin.table.heading>Periode</x-admin.table.heading>
+                    <x-admin.table.heading>Status</x-admin.table.heading>
                     @if ($queue)
-                        <x-table.heading>Diajukan</x-table.heading>
-                        <x-table.heading>Menunggu</x-table.heading>
+                        <x-admin.table.heading>Diajukan</x-admin.table.heading>
+                        <x-admin.table.heading>Menunggu</x-admin.table.heading>
                     @else
-                        <x-table.heading optional>Diajukan</x-table.heading>
-                        <x-table.heading numeric optional>Laba</x-table.heading>
+                        <x-admin.table.heading optional>Diajukan</x-admin.table.heading>
+                        <x-admin.table.heading numeric optional>Laba</x-admin.table.heading>
                     @endif
                 </x-slot:head>
 
@@ -90,47 +90,48 @@
                     {{-- Draf kelompok yang belum pernah diajukan tidak bisa dibuka peninjau (404), jadi barisnya tanpa tautan. --}}
                     @php $viewable = auth()->user()->can('view', $report); @endphp
                     {{-- Draf yang belum bisa dibuka tampil redup (ink-soft, tetap 7:1) dan tanpa tautan. --}}
-                    <x-table.row :href="$viewable ? route($area.'.reports.show', $queue ? [$report, 'dari' => 'antrean'] : $report) : null" :class="$viewable ? null : 'text-ink-soft'" :data-draft="$viewable ? null : 'true'">
-                        <x-table.cell primary>{{ $report->organization->name }}</x-table.cell>
-                        <x-table.cell subtitle>
+                    <x-admin.table.row :href="$viewable ? route($area.'.reports.show', $queue ? [$report, 'dari' => 'antrean'] : $report) : null" :class="$viewable ? null : 'text-ink-soft'" :data-draft="$viewable ? null : 'true'">
+                        <x-admin.table.cell primary>{{ $report->organization->name }}</x-admin.table.cell>
+                        <x-admin.table.cell subtitle>
                             {{ Format::month($report->period) }}
                             @if ($report->handled_by_me)
                                 <span class="block text-caption text-ink-soft">Diisi oleh Anda, perlu pemverifikasi lain</span>
                             @endif
-                        </x-table.cell>
-                        <x-table.cell badge>
-                            {{-- Di antrean semuanya "Diajukan"; yang ditandai hanya pengajuan ulang. --}}
+                        </x-admin.table.cell>
+                        <x-admin.table.cell badge>
+                            {{-- Di antrean semuanya menunggu; pengajuan ulang diberi label sendiri. --}}
                             @if (! $queue)
                                 <span class="inline-flex flex-wrap items-center justify-end gap-1.5 md:justify-start">
-                                    <x-badge :tone="$report->status->badgeColor()">{{ $report->status->reviewerLabel() }}</x-badge>
+                                    <x-admin.badge-status :status="$report->status" :label="$report->status->reviewerLabel()" />
                                     @if ($report->isOverdue())
-                                        <x-badge tone="fix">Terlambat</x-badge>
+                                        <x-admin.badge-status tone="danger" label="Terlambat" />
                                     @endif
                                 </span>
-                            @elseif ($report->resubmitted)
-                                <x-badge tone="wait">Diajukan ulang</x-badge>
+                            @else
+                                <x-admin.badge-status :status="$report->status" :label="$report->resubmitted ? 'Diajukan ulang' : 'Menunggu'" />
                             @endif
-                        </x-table.cell>
+                        </x-admin.table.cell>
                         @if ($queue)
-                            <x-table.cell label="Diajukan">{{ Format::date($report->last_submitted_at) }}</x-table.cell>
-                            <x-table.cell label="Menunggu" @class(['font-semibold text-ink' => $report->last_submitted_at?->lt(now()->subDays(App\Support\Dashboards\DistrictStats::WAITING_DAYS))])>{{ Format::waitingSince($report->last_submitted_at) }}</x-table.cell>
+                            <x-admin.table.cell label="Diajukan">{{ Format::date($report->last_submitted_at) }}</x-admin.table.cell>
+                            <x-admin.table.cell label="Menunggu" @class(['font-semibold text-ink' => $report->last_submitted_at?->lt(now()->subDays(App\Support\Dashboards\DistrictStats::WAITING_DAYS))])>{{ Format::waitingSince($report->last_submitted_at) }}</x-admin.table.cell>
                         @else
-                            <x-table.cell label="Diajukan" optional>
+                            <x-admin.table.cell label="Diajukan" optional>
                                 {{ Format::date($report->submitted_at) }}
                                 @if ($report->wasSubmittedLate())
                                     <span class="block text-caption text-ink-soft">Diajukan terlambat</span>
                                 @endif
-                            </x-table.cell>
-                            <x-table.cell label="Laba" numeric optional>{{ Format::rupiah($report->profit) }}</x-table.cell>
+                            </x-admin.table.cell>
+                            <x-admin.table.cell label="Laba" numeric optional>{{ Format::rupiah($report->profit) }}</x-admin.table.cell>
                         @endif
-                    </x-table.row>
+                    </x-admin.table.row>
                 @endforeach
 
-                @if ($reports->hasPages())
-                    <x-slot:footer>{{ $reports->links() }}</x-slot:footer>
-                @endif
-            </x-table>
+                <x-slot:footer>
+                    <x-admin.pagination :paginator="$reports" noun="laporan" />
+                </x-slot:footer>
+            </x-admin.table>
         @endif
+        </div>
     </div>
 
     @unless ($queue)

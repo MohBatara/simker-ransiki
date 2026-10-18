@@ -555,15 +555,19 @@ draft ──ajukan──▶ submitted ──verifikasi──▶ verified ──b
   (wajib lapor + lewat tenggat + belum pernah diajukan). Dipakai `ReportingStats::overdue()`, daftar laporan,
   filter `?laporan=terlambat&periode=Y-m` di daftar kelompok, dan notifikasi tenggat. Badge "Terlambat"
   (`fix`) di daftar laporan; kelompok `closed` tidak ditandai terlambat.
-- Dasbor Admin & OPD: kartu ringkasan "Terlambat melapor {bulan}" (`shared.dashboards.overdue-stat`) dan
-  "Kebutuhan belum ditindaklanjuti" (`shared.dashboards.stale-needs-stat`: kebutuhan berstatus Baru/Ditinjau yang
-  tidak berubah > `simker.follow_up.stale_days` (30) hari, dihitung dari `follow_up_at` atau pengajuan pertama,
-  `ReportIssue::stale`). Admin "Perlu perhatian": laporan menunggu verifikasi, kelompok tanpa OPD pembina, "laporan
-  yang hanya bisa diverifikasi Admin" (→ `?hanya=admin`), menunggu lebih dari 7 hari, kelompok aktif tanpa akun.
-  Tab Ringkasan (Admin & OPD): di bawah "Perlu perhatian"/"Perlu tindakan" dua grafik ringkas berdampingan (HP
-  bertumpuk, tinggi 220px, tanpa filter, tautan "Lihat statistik lengkap" ke tab Ekonomi): tren pendapatan 12 bulan
-  (aturan bulan sementara) dan kepatuhan pelaporan 6 bulan, dari `Statistics::overview()` (service yang sama dengan
-  tab Ekonomi; `shared.dashboards.charts`). Banner foto dasbor 180px di tablet/desktop (`short-banner`).
+- Dasbor Admin & OPD, tab Ringkasan (judul halaman "Dasbor"): kartu sapaan forest kecil (`x-admin.greeting`:
+  "Selamat pagi/siang/sore/malam, <nama depan>" menurut jam WIT, tanggal, instansi, pemilih periode) → "Perlu
+  dikerjakan" (`shared.dashboards.tasks`): tugas berprioritas, HANYA yang jumlahnya > 0, dengan tombol aksi langsung
+  (teratas tombol utama): verifikasi N laporan (+ "menunggu lebih dari 7 hari", "hanya bisa diverifikasi Admin" →
+  `?hanya=admin`), kelompok terlambat melapor (→ `#belum-melapor`, salin pesan pengingat), kebutuhan belum
+  ditindaklanjuti (Baru/Ditinjau tidak berubah > `simker.follow_up.stale_days` (30) hari, `ReportIssue::stale`),
+  profil menunggu verifikasi, dan khusus Admin kelompok aktif tanpa akun ("Buat akun N kelompok") serta kelompok
+  tanpa OPD pembina; kosong = "Tidak ada yang perlu dikerjakan sekarang." → 4 `x-admin.stat`
+  (`shared.dashboards.stats`, dari `ReportingStats::progress/overdue`): wajib lapor, sudah mengajukan,
+  terverifikasi, terlambat melapor → dua grafik ringkas berdampingan (HP bertumpuk, 220px, tanpa filter, tautan
+  "Lihat statistik lengkap" ke tab Ekonomi): tren pendapatan 12 bulan (aturan bulan sementara) dan kepatuhan
+  pelaporan 6 bulan, dari `Statistics::overview()` (`shared.dashboards.charts`) → Admin: pelaporan per OPD, belum
+  mengajukan, Kelompok, Ekonomi; OPD: belum mengajukan, masalah & kebutuhan. Tanpa banner foto.
   Setelah tenggat, daftar "Belum mengajukan" berjudul "Terlambat melapor {bulan}" dengan badge "Terlambat".
   Dasbor Kelompok: "Tenggat {tanggal} · N hari lagi". "Diajukan terlambat" (`wasSubmittedLate()`, informasi saja):
   `submitted_at` melewati tenggat periodenya.
@@ -897,18 +901,59 @@ Halaman tidak boleh menulis ulang gaya tombol/kartu/tautan/baris daftar sendiri.
 ### Header halaman
 - Judul + keterangan + aksi di `x-layouts.app`. Badge status di samping judul lewat slot `badge`;
   isi tambahan di bawah keterangan (mis. tag detail kelompok) lewat slot `meta`.
-- Dasbor: keterangan kecil "Dasbor" (`eyebrow`) di atas nama (Distrik Ransiki / nama OPD / nama kelompok).
+- Dasbor Kelompok: keterangan kecil "Dasbor" (`eyebrow`) di atas nama kelompok. Dasbor Admin/OPD: judul "Dasbor" +
+  kartu sapaan (lihat Bagian 5).
 - Halaman bertingkat memakai remah (`breadcrumbs`, desktop) dan tombol kembali di header HP. Detail
   laporan Admin/OPD membawa `?dari=kelompok|antrean|masalah` (divalidasi) agar "Kembali" dan remah
   mengikuti asal halaman, termasuk setelah verifikasi/minta revisi.
 - Tombol "Tambah ..." selalu di aksi header; daftar dengan modal (`recordForm`) mendengarkan event
   (`product-create`, `license-create`, `master-create`).
-- Badge status kelompok hanya untuk status selain Aktif.
+- Admin/OPD: status kelompok selalu tampil sebagai `x-admin.badge-status` (kolom Status daftar, samping judul detail),
+  termasuk "Aktif" (hijau). Peran Kelompok: badge hanya untuk status selain Aktif.
 - Halaman error (403/404/419/429/500/503) memakai `layouts.guest` dengan "Kembali" + tujuan utama
   (dasbor bila login); 419 mengajak kembali lalu masuk lagi, 500/503 "Muat ulang".
 
-### Pita dan banner area aplikasi
-Pengecualian dari Larangan untuk area Admin/OPD/Kelompok (menyesuaikan referensi tampilan admin):
+### Pola halaman Admin/OPD (Tahap 1 redesain, `resources/views/components/admin/`)
+SATU pola di setiap halaman Admin/OPD. Layout `x-layouts.app` memilih otomatis untuk akun Admin/OPD; peran Kelompok
+masih memakai pita/banner lama (bagian berikutnya) sampai Tahap 2.
+- Token khusus pola ini (atas permintaan pengguna): judul halaman `text-admin-title` 26px semibold, kartu/stat/tabel
+  sudut 16px (`rounded-tile`), warna status `orange` #A14A12 di atas `orange-bg` #FDEEE3 (5,28:1), lebar konten 1280px
+  (`max-w-app`), padding 16px HP / 24px tablet / 32px desktop, jarak antarsection 24px (`space-y-6`).
+- `x-admin.page-header` (dirender layout): latar terang (tanpa pita/banner forest), remah kecil, judul 26px, satu
+  kalimat penjelas `ink-soft`, slot `badge`/`meta`. Slot `actions` = aksi utama (selalu terlihat, tombol brand); slot
+  `secondary` = tombol bergaris sebaris di tablet/desktop dan masuk menu "…" (`aria-label="Menu tindakan"`) di HP.
+  Bila header HP memakai `phone-title` lain, h1 tetap tampil di HP.
+- `x-admin.tabs`: tab bertautan (menu bertab dan tab detail kelompok), garis bawah brand, angka kecil (pil) bila ada.
+- `x-admin.toolbar`: cari + maks 3 filter sebaris + "Filter lain" (drawer kanan desktop, bottom sheet HP; di HP panel
+  berisi semua filter), langsung diterapkan tanpa Terapkan/Reset: Alpine `adminToolbar` (`resources/js/admin-toolbar.js`)
+  memuat ulang lewat fetch (cari: jeda 300 ms), menukar setiap `[data-swap="kunci"]` (hasil, ringkasan + pil, tautan
+  unduh yang ikut filter, tab menu), pushState. Pil filter aktif (`FilterChips`) + "Hapus semua". Tanpa JS: form GET.
+- `x-admin.stat` (ikon dalam lingkaran tint, angka 28px, label, keterangan, tautan opsional seluruh kartu),
+  `x-admin.card` (putih, 16px, judul 16px semibold + aksi kecil kanan), `x-admin.empty` (ikon, judul, kalimat, aksi),
+  `x-admin.pagination` ("Menampilkan 1 sampai 20 dari N <kata benda>").
+- `x-admin.table` (+ `.row`, `.cell`, `.heading`, `.actions`): kepala kecil kapital `ink-muted` yang menempel di bawah
+  bilah atas (tidak menempel bila tabel diberi `label` karena wadahnya bergulir), baris 56px hover tint, angka rata
+  kanan tabular, kolom aksi "…" (dropdown), baris bisa diklik; HP otomatis kartu berlabel.
+- `x-admin.badge-status`: SATU peta warna untuk semua status (`App\Support\StatusTone`): success (terverifikasi, aktif,
+  terbit, selesai), warning (menunggu/diajukan, diproses, perlu verifikasi ulang, ditinjau/direncanakan/sedang
+  ditindaklanjuti), orange (perlu revisi, perlu perbaikan), danger (terlambat, ditutup, tidak dapat ditindaklanjuti),
+  neutral (draf, belum ada, tidak aktif sementara, baru). Pil kecil dengan titik warna. Status baru wajib masuk peta itu.
+- `x-admin.toasts` (dirender layout untuk SEMUA peran, menggantikan alert pesan sistem): pojok kanan bawah (HP di atas
+  navigasi bawah), hilang otomatis 4 detik, berhenti saat disorot/difokuskan, bisa ditutup.
+- `x-admin.confirm`: dialog konfirmasi seragam untuk aksi berisiko (hapus kelompok/produk/izin, ubah status kelompok,
+  verifikasi, minta revisi, buka kembali); tombol `danger-solid` (putih di atas `fix` 6,6:1) atau brand.
+- `x-admin.action-bar`: bar aksi menempel di bawah layar di semua ukuran; detail laporan: Minta revisi + Verifikasi
+  (atau Verifikasi nonaktif bila pemisahan tugas).
+- `x-admin.greeting`: kartu sapaan forest kecil dasbor (pengecualian token forest, dijaga `PublicStyleTest`).
+- Sidebar: grup kecil tanpa judul dipisah garis (`group` di `Navigation::sections`), item aktif `brand-tint` + garis kiri
+  3px `brand`, badge rata kanan, kartu profil kecil di bawah (nama, peran, tombol Keluar). Bilah atas: cari ringkas di
+  kiri, lonceng, avatar.
+- `x-chart` otomatis memakai `x-admin.card` untuk akun Admin/OPD.
+- Partial detail kelompok (`_overview`, `products`, `licenses`, `license-detail`) dan detail laporan (`shared.reports.show`)
+  dipakai juga oleh peran Kelompok, jadi halaman itu ikut memakai kartu/tabel/badge baru.
+
+### Pita dan banner area aplikasi (peran Kelompok)
+Pengecualian dari Larangan untuk area Kelompok (Admin/OPD memakai pola di atas):
 - Header halaman biasa: pita `forest` polos mulai tablet (di HP tetap putih); halaman form (mode form)
   tetap putih. Banner foto + `.overlay-forest` HANYA di dasbor, detail kelompok, dan Profil Kelompok,
   di semua ukuran. Semua lewat `x-page-header` (prop `band` dari layout, `image` = prop `banner`).
@@ -926,17 +971,18 @@ Pengecualian dari Larangan untuk area Admin/OPD/Kelompok (menyesuaikan referensi
 - Label pil (`x-tag`) untuk jenis dan bidang usaha di banner detail kelompok.
 
 ### Daftar dan detail kelompok
-- Daftar (Admin/OPD): 4 kartu ringkasan (total kelompok, kampung, bidang usaha, total anggota + "diisi X
-  dari Y kelompok") yang mengikuti filter aktif dengan keterangan "sesuai filter"; kartu filter berlabel
-  dengan Terapkan/Reset (tidak langsung diterapkan), dua baris di tablet/desktop (cari lebar, jenis, kampung /
-  bidang usaha, OPD, status, Terapkan/Reset rata kanan), di HP tanpa kartu: cari sebaris dengan "Filter (n)"; chip filter aktif; tabel + panel detail di kanan
-  pada ≥ 1280px (saat panel tampil, kolom Bidang usaha disembunyikan; nama kelompok dan kampung satu baris,
-  nama terpotong dengan `title`, jenis di baris kedua). Baris pertama atau `?pilih=id` dirender di server; klik baris memuat
-  `/{area}/kelompok/{id}/ringkas` (Policy `view`). Layar lebih kecil membuka halaman detail.
-- Detail: remah → banner (status bila tidak aktif, nama, lokasi, tag, Ubah profil, menu "…" Admin untuk
-  ubah status dengan alasan/hapus) → tab berikon → tab Profil: Ringkasan, Informasi umum, Lokasi (tombol "Buka di
-  Google Maps" dari pencarian alamat, tanpa peta tertanam), Deskripsi, Foto (foto produk lalu lampiran
-  gambar), Publikasi & pelaporan, Dokumen. Tidak menambah kolom baru tanpa persetujuan.
+- Daftar (Admin/OPD): `x-admin.toolbar` (cari nama; sebaris kampung, jenis, status; "Filter lain": bidang usaha, OPD
+  [Admin]; langsung diterapkan) → 4 `x-admin.stat` (total kelompok, kampung, bidang usaha, total anggota + "diisi X dari
+  Y kelompok") yang mengikuti filter aktif ("sesuai filter") → `x-admin.table` + panel detail di kanan pada ≥ 1280px
+  (saat panel tampil, kolom Bidang usaha dan Anggota disembunyikan; nama terpotong dengan `title`, jenis di baris
+  kedua; kolom Status berisi badge). Baris pertama atau `?pilih=id` dirender di server; klik baris memuat
+  `/{area}/kelompok/{id}/ringkas` (Policy `view`). Layar lebih kecil membuka halaman detail. Aksi: Tambah kelompok
+  (utama, Admin), Unduh Excel + Impor (sekunder).
+- Detail: remah → judul + badge status → lokasi → tag → aksi (Ubah profil sekunder; tombol tambah sesuai tab dan menu
+  "…" Admin untuk ubah status dengan alasan/hapus lewat `x-admin.confirm`) → `x-admin.tabs` berikon dengan angka
+  (Produk, Izin, Laporan, Akun) → tab Profil: Ringkasan, Informasi umum, Lokasi (tombol "Buka di Google Maps" dari
+  pencarian alamat, tanpa peta tertanam), Deskripsi, Foto (foto produk lalu lampiran gambar), Publikasi & pelaporan,
+  Dokumen. Tidak menambah kolom baru tanpa persetujuan.
 
 ### Tabel dan kartu daftar
 - Tidak ada tombol "Buka" per baris. Baris yang punya halaman detail bisa diklik seluruhnya:

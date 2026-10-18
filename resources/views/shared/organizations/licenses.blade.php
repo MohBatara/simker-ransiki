@@ -34,45 +34,45 @@
     class="space-y-4"
 >
     @if ($licenses->isEmpty())
-        <x-empty-state title="Belum ada izin" description="Catat izin usaha kelompok, termasuk yang masih dalam proses.">
+        <x-admin.empty title="Belum ada izin" description="Catat izin usaha kelompok, termasuk yang masih dalam proses.">
             @if ($canManage)
                 <x-button icon="plus" x-on:click="create(); record.status = 'none'">Tambah izin</x-button>
             @endif
-        </x-empty-state>
+        </x-admin.empty>
     @else
-        <x-table clickable>
+        <x-admin.table clickable>
             <x-slot:head>
-                <x-table.heading>Jenis izin</x-table.heading>
-                <x-table.heading>Nomor</x-table.heading>
-                <x-table.heading>Status</x-table.heading>
-                <x-table.heading optional>Diajukan</x-table.heading>
-                <x-table.heading>Terbit</x-table.heading>
-                <x-table.heading numeric optional>Lampiran</x-table.heading>
+                <x-admin.table.heading>Jenis izin</x-admin.table.heading>
+                <x-admin.table.heading>Nomor</x-admin.table.heading>
+                <x-admin.table.heading>Status</x-admin.table.heading>
+                <x-admin.table.heading optional>Diajukan</x-admin.table.heading>
+                <x-admin.table.heading>Terbit</x-admin.table.heading>
+                <x-admin.table.heading numeric optional>Lampiran</x-admin.table.heading>
                 @if ($canManage)
-                    <x-table.heading><span class="sr-only">Aksi</span></x-table.heading>
+                    <x-admin.table.heading><span class="sr-only">Aksi</span></x-admin.table.heading>
                 @endif
             </x-slot:head>
 
             @foreach ($licenses as $license)
-                <x-table.row :href="str_replace('__ID__', $license->id, $licenseUrl)">
-                    <x-table.cell primary>{{ $license->type }}</x-table.cell>
-                    <x-table.cell label="Nomor">{{ $license->number ?? '—' }}</x-table.cell>
-                    <x-table.cell badge><x-badge :tone="$license->status->badgeColor()">{{ $license->status->label() }}</x-badge></x-table.cell>
-                    <x-table.cell label="Diajukan" optional>{{ Format::date($license->submitted_on) }}</x-table.cell>
-                    <x-table.cell label="Terbit">{{ Format::date($license->issued_on) }}</x-table.cell>
-                    <x-table.cell label="Lampiran" numeric optional>{{ Format::number($license->attachments_count) }}</x-table.cell>
+                <x-admin.table.row :href="str_replace('__ID__', $license->id, $licenseUrl)">
+                    <x-admin.table.cell primary>{{ $license->type }}</x-admin.table.cell>
+                    <x-admin.table.cell label="Nomor">{{ $license->number ?? '—' }}</x-admin.table.cell>
+                    <x-admin.table.cell badge><x-admin.badge-status :status="$license->status" /></x-admin.table.cell>
+                    <x-admin.table.cell label="Diajukan" optional>{{ Format::date($license->submitted_on) }}</x-admin.table.cell>
+                    <x-admin.table.cell label="Terbit">{{ Format::date($license->issued_on) }}</x-admin.table.cell>
+                    <x-admin.table.cell label="Lampiran" numeric optional>{{ Format::number($license->attachments_count) }}</x-admin.table.cell>
                     @if ($canManage)
-                        <x-table.cell actions>
+                        <x-admin.table.cell actions>
                             {{-- relative z-10: tombol tetap bisa diklik di atas tautan baris. --}}
                             <div class="relative z-10 inline-flex items-center justify-end gap-2 max-md:w-full">
                                 <x-button variant="ghost" x-on:click="remove({{ Js::from(['id' => $license->id, 'name' => $license->type]) }})">Hapus</x-button>
                                 <x-button variant="secondary" x-on:click="edit({{ Js::from($toRecord($license)) }})">Ubah</x-button>
                             </div>
-                        </x-table.cell>
+                        </x-admin.table.cell>
                     @endif
-                </x-table.row>
+                </x-admin.table.row>
             @endforeach
-        </x-table>
+        </x-admin.table>
     @endif
 
     @if ($canManage)
@@ -123,16 +123,8 @@
             </x-slot:footer>
         </x-modal>
 
-        <x-modal name="record-delete" title="Hapus izin">
+        <x-admin.confirm name="record-delete" title="Hapus izin" bind-action="deleteAction" method="DELETE" confirm="Hapus" processing="Menghapus…">
             <p>Hapus izin <strong class="text-ink" x-text="deleting.name"></strong>? Data yang dihapus tidak bisa dikembalikan.</p>
-            <x-slot:footer>
-                <x-button variant="ghost" x-on:click="$dispatch('close-modal', 'record-delete')">Batal</x-button>
-                <form method="POST" x-bind:action="deleteAction">
-                    @csrf
-                    @method('DELETE')
-                    <x-button variant="danger" type="submit" processing="Menghapus…">Hapus</x-button>
-                </form>
-            </x-slot:footer>
-        </x-modal>
+        </x-admin.confirm>
     @endif
 </div>

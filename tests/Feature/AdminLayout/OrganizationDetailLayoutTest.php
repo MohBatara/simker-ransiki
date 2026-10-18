@@ -19,12 +19,12 @@ beforeEach(function () {
     $this->admin = User::factory()->admin()->create();
 });
 
-test('banner: tag jenis dan bidang usaha, lokasi, remah, dan tab berikon', function () {
+test('header: tag jenis dan bidang usaha, lokasi, remah, dan tab berikon dengan angka', function () {
     $this->actingAs($this->admin)->get("/admin/kelompok/{$this->organization->id}")->assertOk()
         ->assertSee('Kampung Contoh 3, Distrik Ransiki')
         ->assertSeeInOrder(['aria-label="Jenis dan bidang usaha"', $this->organization->institutionType->name, 'Perkebunan'], false)
         ->assertSeeInOrder(['Kelompok', $this->organization->name], false)
-        ->assertSee('Akun (0)');
+        ->assertSeeInOrder(['Akun', '<span class="rounded-full px-2 text-caption tabular-nums bg-subtle text-ink-soft">0</span>'], false);
 });
 
 test('tautan Google Maps dibentuk dari alamat dan ter-encode', function () {

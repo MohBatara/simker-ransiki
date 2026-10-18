@@ -59,7 +59,7 @@
                         </x-table.cell>
                         <x-table.cell label="Login terakhir" optional>{{ $user->last_login_at ? Format::date($user->last_login_at) : 'Belum pernah' }}</x-table.cell>
                         <x-table.cell badge>
-                            <x-badge :tone="$user->is_active ? 'ok' : 'idle'">{{ $user->is_active ? 'Aktif' : 'Nonaktif' }}</x-badge>
+                            <x-admin.badge-status :tone="$user->is_active ? 'success' : 'neutral'" :label="$user->is_active ? 'Aktif' : 'Nonaktif'" />
                         </x-table.cell>
                     </x-table.row>
                 @endforeach

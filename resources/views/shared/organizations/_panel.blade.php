@@ -4,14 +4,13 @@
     Variabel: $panel (App\Support\OrganizationPanel::data), $area.
 --}}
 @use('App\Support\Format')
-@use('App\Enums\OrganizationStatus')
 
 @php
     $organization = $panel['organization'];
     $text = fn ($value) => filled($value) ? $value : '—';
 @endphp
 
-<section class="overflow-hidden rounded-card border border-line bg-paper" aria-labelledby="panel-judul" data-panel-id="{{ $organization->id }}">
+<section class="overflow-hidden rounded-tile border border-line bg-paper" aria-labelledby="panel-judul" data-panel-id="{{ $organization->id }}">
     <div class="relative aspect-[2/1] bg-subtle">
         @if ($panel['image'])
             <x-public.picture :image="$panel['image']" alt="" sizes="400px" width="800" height="400" frame="block size-full" class="size-full object-cover" />
@@ -27,9 +26,7 @@
         <div>
             <div class="flex flex-wrap items-center gap-2">
                 <h2 id="panel-judul" tabindex="-1" class="text-card-title font-semibold text-ink focus:outline-none">{{ $organization->name }}</h2>
-                @if ($organization->status !== OrganizationStatus::Active)
-                    <x-badge :tone="$organization->status->badgeColor()">{{ $organization->status->label() }}</x-badge>
-                @endif
+                <x-admin.badge-status :status="$organization->status" />
             </div>
             <p class="text-ui text-ink-soft">{{ $organization->village->name }}, Distrik Ransiki</p>
         </div>
@@ -44,7 +41,7 @@
                     <x-info-item label="Bidang usaha" icon="squares-2x2" class="sm:col-span-2">{{ $text($organization->sectors->pluck('name')->join(', ')) }}</x-info-item>
                     <x-info-item label="OPD pembina" icon="briefcase" class="sm:col-span-2">
                         @if ($organization->opds->isEmpty())
-                            <x-badge tone="wait">Belum ada OPD pembina</x-badge>
+                            <x-admin.badge-status tone="warning" label="Belum ada OPD pembina" />
                         @else
                             {{ $organization->opds->map(fn ($opd) => $opd->short_name ?: $opd->name)->join(', ') }}
                         @endif
@@ -86,7 +83,7 @@
                         @foreach ($panel['reports'] as $report)
                             <x-list.item :href="auth()->user()->can('view', $report) ? route($area.'.reports.show', [$report, 'dari' => 'kelompok']) : null">
                                 <span class="min-w-0 flex-1 text-ink">{{ Format::month($report->period) }}</span>
-                                <x-badge :tone="$report->status->badgeColor()">{{ $report->status->reviewerLabel() }}</x-badge>
+                                <x-admin.badge-status :status="$report->status" :label="$report->status->reviewerLabel()" />
                             </x-list.item>
                         @endforeach
                     </x-list>

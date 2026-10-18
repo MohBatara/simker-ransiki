@@ -59,11 +59,11 @@ test('tombol Tambah produk dan izin ada di header halaman', function () {
         ->get("/admin/kelompok/{$this->organization->id}/produk")->assertSee("\$dispatch('product-create')", false);
 });
 
-test('judul dasbor seragam: keterangan Dasbor di atas nama', function () {
+test('judul dasbor seragam: judul "Dasbor", lalu kartu sapaan dengan nama instansi', function () {
     $this->actingAs($this->reviewer)->get('/opd')
-        ->assertSeeInOrder(['>Dasbor</p>', '>Dinas Contoh</h1>'], false);
+        ->assertSeeInOrder(['>Dasbor</h1>', 'Dinas Contoh', 'Selamat'], false);
     $this->actingAs(User::factory()->admin()->create())->get('/admin')
-        ->assertSeeInOrder(['>Dasbor</p>', '>Distrik Ransiki</h1>'], false);
+        ->assertSeeInOrder(['>Dasbor</h1>', 'Distrik Ransiki', 'Selamat'], false);
 });
 
 test('form panjang menampilkan ringkasan error dengan tautan ke isian', function () {

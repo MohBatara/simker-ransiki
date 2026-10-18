@@ -34,17 +34,17 @@ class Navigation
                 'ringkasan' => ['label' => 'Ringkasan', 'route' => "{$area}.dashboard"],
                 'ekonomi' => ['label' => 'Ekonomi', 'route' => "{$area}.statistics.economy"],
                 'legalitas' => ['label' => 'Legalitas', 'route' => "{$area}.statistics.legal"],
-            ], ["{$area}.dashboard", "{$area}.statistics.*"]),
+            ], ["{$area}.dashboard", "{$area}.statistics.*"], group: 1),
             'kelompok' => self::section($isAdmin ? 'Kelompok' : 'Kelompok binaan', 'user-group', array_filter([
                 ($isAdmin ? 'semua' : 'daftar') => ['label' => $isAdmin ? 'Semua kelompok' : 'Daftar', 'route' => "{$area}.organizations.index"],
                 'profil' => ['label' => 'Menunggu verifikasi profil', 'route' => "{$area}.profile-verifications.index", 'badge' => 'profiles'],
                 'ganda' => $isAdmin ? ['label' => 'Kemungkinan data ganda', 'route' => 'admin.organizations.duplicates.index'] : null,
-            ]), ["{$area}.organizations.*", "{$area}.profile-verifications.*"], short: 'Kelompok', badge: 'profiles'),
+            ]), ["{$area}.organizations.*", "{$area}.profile-verifications.*"], short: 'Kelompok', badge: 'profiles', group: 2),
             'laporan' => self::section('Laporan', 'document-text', [
                 'semua' => ['label' => 'Semua laporan', 'route' => "{$area}.reports.index"],
                 'verifikasi' => ['label' => 'Perlu diverifikasi', 'route' => "{$area}.verifications.index", 'badge' => 'reports'],
                 'masalah' => ['label' => 'Masalah & kebutuhan', 'route' => "{$area}.issues.index"],
-            ], ["{$area}.reports.*", "{$area}.verifications.*", "{$area}.issues.*"], badge: 'reports'),
+            ], ["{$area}.reports.*", "{$area}.verifications.*", "{$area}.issues.*"], badge: 'reports', group: 2),
         ];
 
         if ($isAdmin) {
@@ -53,11 +53,11 @@ class Navigation
                 'profil' => ['label' => 'Profil Ransiki', 'route' => 'admin.content.profile'],
                 'halaman' => ['label' => 'Halaman & kontak', 'route' => 'admin.content.pages'],
                 'berita' => ['label' => 'Berita & kegiatan', 'route' => 'admin.posts.index'],
-            ], ['admin.content.*', 'admin.posts.*']);
+            ], ['admin.content.*', 'admin.posts.*'], group: 3);
             $sections['pengaturan'] = self::section('Pengaturan', 'cog-6-tooth', [
                 'pengguna' => ['label' => 'Pengguna', 'route' => 'admin.users.index'],
                 'master' => ['label' => 'Data master', 'route' => 'admin.master.index'],
-            ], ['admin.users.*', 'admin.master.*'], primary: false);
+            ], ['admin.users.*', 'admin.master.*'], primary: false, group: 3);
         }
 
         return $sections;
@@ -92,6 +92,7 @@ class Navigation
             'active' => $section['active'],
             'badge' => $section['badge'],
             'sidebar' => true,
+            'group' => $section['group'],
         ])->values()->all();
 
         // Akun Saya tidak di sidebar (ada di menu profil bilah atas), hanya di navigasi bawah HP.
@@ -165,9 +166,10 @@ class Navigation
         return $attributes->get($key);
     }
 
-    private static function section(string $label, string $icon, array $tabs, array $active, ?string $short = null, bool $primary = true, ?string $badge = null): array
+    /** $group: menu sidebar dikelompokkan tanpa judul (garis pemisah antar-grup). */
+    private static function section(string $label, string $icon, array $tabs, array $active, ?string $short = null, bool $primary = true, ?string $badge = null, int $group = 1): array
     {
-        return compact('label', 'short', 'icon', 'primary', 'badge', 'active', 'tabs');
+        return compact('label', 'short', 'icon', 'primary', 'badge', 'active', 'tabs', 'group');
     }
 
     private static function item(string $label, string $route, string $icon, ?string $short = null, bool $primary = false, ?string $active = null): array
@@ -181,6 +183,7 @@ class Navigation
             'active' => [$active ?? $route],
             'badge' => null,
             'sidebar' => true,
+            'group' => 1,
         ];
     }
 }

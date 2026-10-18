@@ -18,19 +18,22 @@
     tab="legalitas"
     :tab-urls="['ekonomi' => route($area.'.statistics.economy', $filters), 'legalitas' => route($area.'.statistics.legal', $filters)]"
 >
-    <x-slot:actions>
-        <x-button variant="secondary" icon="arrow-down-tray" :href="route($area.'.statistics.legal.export', $filters)">Unduh Excel</x-button>
-    </x-slot:actions>
+    <x-slot:secondary>
+        <x-button variant="secondary" icon="arrow-down-tray" :href="route($area.'.statistics.legal.export', $filters)" data-swap="unduh-legalitas">Unduh Excel</x-button>
+    </x-slot:secondary>
 
-    <div class="space-y-5">
+    <div class="space-y-6">
         @include('shared.statistics._header', ['tab' => 'legal', 'summaryText' => Format::number($legal['total']).' kelompok'])
 
+        {{-- Ditukar oleh x-admin.toolbar saat filter berubah. --}}
+        <div data-swap="statistik" class="space-y-6">
+
         <div>
-            <div class="grid grid-cols-2 gap-3 md:gap-4 xl:grid-cols-4">
-                <x-stat label="Punya izin terbit" :value="Format::number($legal['issued'])" :hint="$of" tone="ok" />
-                <x-stat label="Izin sedang diproses" :value="Format::number($legal['in_process'])" :hint="$of" tone="wait" />
-                <x-stat label="Izin perlu perbaikan" :value="Format::number($legal['needs_fix'])" :hint="$of" tone="fix" href="#perlu-perbaikan" />
-                <x-stat label="Belum punya izin" :value="Format::number($legal['without'])" :hint="$of" tone="idle" href="#belum-punya-izin" />
+            <div class="grid grid-cols-2 gap-4 xl:grid-cols-4">
+                <x-admin.stat icon="document-check" label="Punya izin terbit" :value="Format::number($legal['issued'])" :hint="$of" tone="success" />
+                <x-admin.stat icon="arrow-path" label="Izin sedang diproses" :value="Format::number($legal['in_process'])" :hint="$of" tone="warning" />
+                <x-admin.stat icon="wrench-screwdriver" label="Izin perlu perbaikan" :value="Format::number($legal['needs_fix'])" :hint="$of" tone="orange" href="#perlu-perbaikan" />
+                <x-admin.stat icon="document-minus" label="Belum punya izin" :value="Format::number($legal['without'])" :hint="$of" href="#belum-punya-izin" />
             </div>
             <p class="mt-2 text-caption text-ink-soft">
                 Satu kelompok dihitung sekali per kartu, tetapi bisa masuk lebih dari satu kartu bila punya beberapa izin.
@@ -38,7 +41,7 @@
             </p>
         </div>
 
-        <x-card :title="'Akan habis dalam '.Statistics::EXPIRING_DAYS.' hari'" description="Izin terbit yang tanggal berlakunya diisi. Izin tanpa tanggal tidak dianggap habis." flush>
+        <x-admin.card :title="'Akan habis dalam '.Statistics::EXPIRING_DAYS.' hari'" description="Izin terbit yang tanggal berlakunya diisi. Izin tanpa tanggal tidak dianggap habis." flush>
             @if ($expiring->isEmpty())
                 <p class="px-4 py-4 text-ink-soft md:px-5">Tidak ada izin yang akan habis dalam {{ Statistics::EXPIRING_DAYS }} hari.</p>
             @else
@@ -50,15 +53,15 @@
                                 <span class="block font-semibold text-ink">{{ $license->organization->name }}</span>
                                 <span class="block text-caption text-ink-soft">{{ $license->type }} · berlaku sampai {{ Format::date($license->expires_on) }}</span>
                             </span>
-                            <x-badge :tone="$days <= 14 ? 'fix' : 'wait'">{{ $days === 0 ? 'Habis hari ini' : $days.' hari lagi' }}</x-badge>
+                            <x-admin.badge-status :tone="$days <= 14 ? 'danger' : 'warning'" :label="$days === 0 ? 'Habis hari ini' : $days.' hari lagi'" />
                         </x-list.item>
                     @endforeach
                 </x-list>
             @endif
-        </x-card>
+        </x-admin.card>
 
-        <div class="grid grid-cols-1 gap-5 lg:grid-cols-2 lg:items-start">
-            <x-card id="perlu-perbaikan" title="Izin perlu perbaikan" :description="Format::number($needsFix->count()).' kelompok'" flush>
+        <div class="grid grid-cols-1 gap-6 lg:grid-cols-2 lg:items-start">
+            <x-admin.card id="perlu-perbaikan" title="Izin perlu perbaikan" :description="Format::number($needsFix->count()).' kelompok'" flush>
                 @if ($needsFix->isEmpty())
                     <p class="px-4 py-4 text-ink-soft md:px-5">Tidak ada izin yang perlu diperbaiki.</p>
                 @else
@@ -73,9 +76,9 @@
                         @endforeach
                     </x-list>
                 @endif
-            </x-card>
+            </x-admin.card>
 
-            <x-card id="belum-punya-izin" title="Belum punya izin" :description="Format::number($without->count()).' kelompok'" flush>
+            <x-admin.card id="belum-punya-izin" title="Belum punya izin" :description="Format::number($without->count()).' kelompok'" flush>
                 @if ($without->isEmpty())
                     <p class="px-4 py-4 text-ink-soft md:px-5">Semua kelompok sudah punya atau sedang mengurus izin.</p>
                 @else
@@ -90,32 +93,33 @@
                         @endforeach
                     </x-list>
                 @endif
-            </x-card>
+            </x-admin.card>
         </div>
 
         @foreach (['Per jenis kelembagaan' => [$byType, 'Jenis kelembagaan'], 'Per kampung' => [$byVillage, 'Kampung']] as $title => [$rows, $first])
-            <x-card :title="$title" description="Jumlah kelompok unik." flush>
+            <x-admin.card :title="$title" description="Jumlah kelompok unik." flush>
                 @if ($rows->isEmpty())
                     <p class="px-4 py-4 text-ink-soft md:px-5">Belum ada kelompok.</p>
                 @else
-                    <x-table bare :label="'Legalitas '.mb_strtolower($title)" class="max-md:p-4">
+                    <x-admin.table bare :label="'Legalitas '.mb_strtolower($title)" class="max-md:p-4">
                         <x-slot:head>
-                            <x-table.heading wrap>{{ $first }}</x-table.heading>
+                            <x-admin.table.heading wrap>{{ $first }}</x-admin.table.heading>
                             @foreach ($columns as $label)
-                                <x-table.heading numeric wrap>{{ $label }}</x-table.heading>
+                                <x-admin.table.heading numeric wrap>{{ $label }}</x-admin.table.heading>
                             @endforeach
                         </x-slot:head>
                         @foreach ($rows as $row)
-                            <x-table.row>
-                                <x-table.cell primary>{{ $row['label'] }}</x-table.cell>
+                            <x-admin.table.row>
+                                <x-admin.table.cell primary>{{ $row['label'] }}</x-admin.table.cell>
                                 @foreach ($columns as $key => $label)
-                                    <x-table.cell :label="$label" numeric>{{ Format::number($row[$key]) }}</x-table.cell>
+                                    <x-admin.table.cell :label="$label" numeric>{{ Format::number($row[$key]) }}</x-admin.table.cell>
                                 @endforeach
-                            </x-table.row>
+                            </x-admin.table.row>
                         @endforeach
-                    </x-table>
+                    </x-admin.table>
                 @endif
-            </x-card>
+            </x-admin.card>
         @endforeach
+        </div>
     </div>
 </x-layouts.app>

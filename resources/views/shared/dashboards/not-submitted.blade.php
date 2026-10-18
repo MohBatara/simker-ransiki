@@ -13,7 +13,7 @@
     $late = $overdue['past_deadline'];
 @endphp
 
-<x-card
+<x-admin.card
     :title="($late ? 'Terlambat melapor ' : 'Belum mengajukan ').Format::month($period)"
     :description="'Tenggat '.Format::date($deadline).' · '.ReportingPeriod::deadlineDistance($deadline)"
     id="belum-melapor"
@@ -38,12 +38,12 @@
                     </div>
                     <span class="inline-flex items-center gap-1.5">
                         @if ($row['report'])
-                            <x-badge tone="idle">Draf</x-badge>
+                            <x-admin.badge-status :status="App\Enums\ReportStatus::Draft" label="Draf" />
                         @else
-                            <span class="text-ink-muted">Belum dibuat</span>
+                            <x-admin.badge-status tone="neutral" label="Belum dibuat" />
                         @endif
                         @if ($row['state'] === App\Enums\ReportingState::Overdue)
-                            <x-badge tone="fix">Terlambat</x-badge>
+                            <x-admin.badge-status :status="$row['state']" />
                         @endif
                     </span>
                     <div x-data="copyText(@js(ReminderMessage::for($organization, $period, $row['report'], auth()->user())))" class="max-sm:w-full">
@@ -61,4 +61,4 @@
             </x-link>
         @endif
     @endif
-</x-card>
+</x-admin.card>

@@ -190,7 +190,7 @@ test('filter status, kampung, dan kebutuhan yang belum ditindaklanjuti; kartu da
 
     $this->get('/opd/laporan/masalah?kind=support&lama=30')->assertSee('Belum ditindaklanjuti lebih dari 30 hari');
 
-    $dashboard = $this->get('/opd')->assertOk()->assertSee('Kebutuhan belum ditindaklanjuti')->assertSee('/opd/laporan/masalah?kind=support&amp;lama=30', false);
+    $dashboard = $this->get('/opd')->assertOk()->assertSee('1 kebutuhan belum ditindaklanjuti')->assertSee('/opd/laporan/masalah?kind=support&amp;lama=30', false);
     expect($dashboard->viewData('staleNeeds'))->toBe(1);
 
     // Status Ditinjau yang diubah baru-baru ini tidak dihitung tertunda lagi.

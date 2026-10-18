@@ -26,24 +26,19 @@
     :back="$back"
     :breadcrumbs="$breadcrumbs ?? null"
 >
-    <x-slot:actions>
-        @if ($editUrl)
+    @if ($editUrl)
+        <x-slot:actions>
             <x-button :href="$editUrl" icon="pencil-square">{{ $report->status === App\Enums\ReportStatus::Revision ? 'Perbaiki laporan' : 'Lanjutkan mengisi' }}</x-button>
-        @endif
-        @if ($canVerify)
-            <x-button variant="secondary" x-data x-on:click="$dispatch('open-modal', 'report-revision')">Minta revisi</x-button>
-            <x-button x-data x-on:click="$dispatch('open-modal', 'report-verify')">Verifikasi</x-button>
-        @elseif ($handledByMe)
-            {{-- Pemisahan tugas: tombol tetap terlihat tetapi nonaktif; Policy verify tetap menolak di server (403). --}}
-            <x-button disabled aria-describedby="alasan-verifikasi" title="Diisi oleh Anda, perlu pemverifikasi lain">Verifikasi</x-button>
-        @endif
+        </x-slot:actions>
+    @endif
+    <x-slot:secondary>
         @if ($canReopen)
             <x-button variant="secondary" x-data x-on:click="$dispatch('open-modal', 'report-reopen')">Buka kembali untuk revisi</x-button>
         @endif
         <x-button variant="secondary" icon="arrow-down-tray" :href="$pdfUrl">Unduh PDF</x-button>
-    </x-slot:actions>
+    </x-slot:secondary>
 
-    <div class="space-y-5">
+    <div class="space-y-6">
         @include('shared.reports.revision-note', ['fixHint' => (bool) $editUrl])
 
         @if ($handledByMe)
@@ -52,9 +47,9 @@
             </x-alert>
         @endif
 
-        <div class="space-y-5 xl:grid xl:grid-cols-[minmax(0,1fr)_320px] xl:items-start xl:gap-5 xl:space-y-0">
-            <div class="min-w-0 space-y-5">
-                <x-card title="A. Aktivitas">
+        <div class="space-y-6 xl:grid xl:grid-cols-[minmax(0,1fr)_320px] xl:items-start xl:gap-6 xl:space-y-0">
+            <div class="min-w-0 space-y-6">
+                <x-admin.card title="A. Aktivitas">
                     @if ($report->no_activity)
                         <p class="mb-4 text-ink-soft">Tidak ada aktivitas bulan ini.</p>
                     @endif
@@ -72,34 +67,34 @@
                             <dd class="mt-0.5 whitespace-pre-line text-ink break-words">{{ $text($report->achievements) }}</dd>
                         </div>
                     </dl>
-                </x-card>
+                </x-admin.card>
 
                 <section class="space-y-3">
                     <h2 class="text-card-title font-semibold text-ink">B. Produksi & penjualan</h2>
                     @if ($report->items->isEmpty())
-                        <x-empty-state title="Tidak ada produk yang dilaporkan" />
+                        <x-admin.empty title="Tidak ada produk yang dilaporkan" />
                     @else
-                        <x-table>
+                        <x-admin.table>
                             <x-slot:head>
-                                <x-table.heading>Produk</x-table.heading>
-                                <x-table.heading numeric>Produksi</x-table.heading>
-                                <x-table.heading numeric>Terjual</x-table.heading>
-                                <x-table.heading numeric>Pendapatan</x-table.heading>
+                                <x-admin.table.heading>Produk</x-admin.table.heading>
+                                <x-admin.table.heading numeric>Produksi</x-admin.table.heading>
+                                <x-admin.table.heading numeric>Terjual</x-admin.table.heading>
+                                <x-admin.table.heading numeric>Pendapatan</x-admin.table.heading>
                             </x-slot:head>
                             @foreach ($report->items->sortBy('id') as $item)
-                                <x-table.row>
-                                    <x-table.cell primary>{{ $item->product_name ?? Format::EMPTY }}</x-table.cell>
-                                    <x-table.cell label="Produksi" numeric>{{ Format::quantity($item->production_qty) }} {{ $item->production_qty !== null ? $item->production_unit : '' }}</x-table.cell>
-                                    <x-table.cell label="Terjual" numeric>{{ Format::quantity($item->sales_qty) }} {{ $item->sales_qty !== null ? $item->sales_unit : '' }}</x-table.cell>
-                                    <x-table.cell label="Pendapatan" numeric>{{ Format::rupiah($item->revenue) }}</x-table.cell>
-                                </x-table.row>
+                                <x-admin.table.row>
+                                    <x-admin.table.cell primary>{{ $item->product_name ?? Format::EMPTY }}</x-admin.table.cell>
+                                    <x-admin.table.cell label="Produksi" numeric>{{ Format::quantity($item->production_qty) }} {{ $item->production_qty !== null ? $item->production_unit : '' }}</x-admin.table.cell>
+                                    <x-admin.table.cell label="Terjual" numeric>{{ Format::quantity($item->sales_qty) }} {{ $item->sales_qty !== null ? $item->sales_unit : '' }}</x-admin.table.cell>
+                                    <x-admin.table.cell label="Pendapatan" numeric>{{ Format::rupiah($item->revenue) }}</x-admin.table.cell>
+                                </x-admin.table.row>
                             @endforeach
-                        </x-table>
+                        </x-admin.table>
                     @endif
                 </section>
 
                 <div class="grid gap-5 md:grid-cols-2">
-                    <x-card title="C. Sumber daya manusia">
+                    <x-admin.card title="C. Sumber daya manusia">
                         <dl class="divide-y divide-line">
                             @foreach (['Anggota aktif' => Format::number($report->members_active), 'Tenaga kerja' => Format::number($report->workforce_count), 'Perubahan anggota' => $report->members_change > 0 ? '+'.Format::number($report->members_change) : Format::number($report->members_change)] as $label => $value)
                                 <div class="flex justify-between gap-4 py-2 first:pt-0 last:pb-0">
@@ -108,9 +103,9 @@
                                 </div>
                             @endforeach
                         </dl>
-                    </x-card>
+                    </x-admin.card>
 
-                    <x-card title="D. Keuangan">
+                    <x-admin.card title="D. Keuangan">
                         <dl class="divide-y divide-line">
                             @foreach (['Pendapatan penjualan' => $report->income_sales, 'Pendapatan lain' => $report->income_other, 'Biaya' => $report->costs] as $label => $value)
                                 <div class="flex justify-between gap-4 py-2 first:pt-0">
@@ -126,12 +121,12 @@
                         @if ($report->profit === null)
                             <p class="mt-2 text-caption text-ink-muted">Laba tidak dihitung karena ada angka yang kosong.</p>
                         @endif
-                    </x-card>
+                    </x-admin.card>
                 </div>
 
                 <div class="grid gap-5 md:grid-cols-2">
                     @foreach (['E. Permasalahan' => [$problems, 'Tidak ada masalah yang dicatat.'], 'F. Kebutuhan dukungan' => [$supports, 'Tidak ada kebutuhan yang dicatat.']] as $title => [$rows, $empty])
-                        <x-card :title="$title">
+                        <x-admin.card :title="$title">
                             @if ($rows->isEmpty())
                                 <p class="text-ink-soft">{{ $empty }}</p>
                             @else
@@ -142,7 +137,7 @@
                                                 <p class="font-semibold text-ink">{{ $row->category ? $row->categoryLabel() : 'Tanpa kategori' }}</p>
                                                 {{-- Tindak lanjut baru berjalan setelah laporan diajukan. --}}
                                                 @if ($report->submitted_at)
-                                                    <x-badge :tone="$row->follow_up_status->badgeColor()">{{ $row->follow_up_status->label() }}</x-badge>
+                                                    <x-admin.badge-status :status="$row->follow_up_status" />
                                                 @endif
                                             </div>
                                             @if (filled($row->description))
@@ -161,7 +156,7 @@
                                     @endforeach
                                 </ul>
                             @endif
-                        </x-card>
+                        </x-admin.card>
                     @endforeach
                 </div>
 
@@ -172,12 +167,12 @@
                 ])
             </div>
 
-            <div class="space-y-5">
-                <x-card title="Ringkasan">
+            <div class="space-y-6">
+                <x-admin.card title="Ringkasan">
                     <dl class="divide-y divide-line">
                         <div class="flex justify-between gap-4 py-2 first:pt-0">
                             <dt class="text-ink-soft">Status</dt>
-                            <dd><x-badge :tone="$report->status->badgeColor()">{{ $report->status->label() }}</x-badge></dd>
+                            <dd><x-admin.badge-status :status="$report->status" /></dd>
                         </div>
                         @if ($report->isEnteredOnBehalf())
                             <div class="flex justify-between gap-4 py-2">
@@ -196,7 +191,7 @@
                                 @if ($report->wasSubmittedLate())
                                     <span class="block text-caption text-ink-soft">Diajukan terlambat</span>
                                 @elseif ($report->isOverdue())
-                                    <span class="block"><x-badge tone="fix">Terlambat</x-badge></span>
+                                    <span class="block"><x-admin.badge-status tone="danger" label="Terlambat" /></span>
                                 @endif
                             </dd>
                         </div>
@@ -210,9 +205,9 @@
                             </dd>
                         </div>
                     </dl>
-                </x-card>
+                </x-admin.card>
 
-                <x-card title="Riwayat">
+                <x-admin.card title="Riwayat">
                     <ol class="space-y-3">
                         <li>
                             <p class="text-ink">Laporan dibuat</p>
@@ -228,10 +223,23 @@
                             </li>
                         @endforeach
                     </ol>
-                </x-card>
+                </x-admin.card>
             </div>
         </div>
     </div>
+
+    @if ($canVerify || $handledByMe)
+        {{-- Tindakan peninjau di bar bawah yang menempel. --}}
+        <x-admin.action-bar :note="'Laporan '.Format::month($report->period).' menunggu verifikasi.'">
+            @if ($canVerify)
+                <x-button variant="secondary" x-data x-on:click="$dispatch('open-modal', 'report-revision')">Minta revisi</x-button>
+                <x-button icon="check" x-data x-on:click="$dispatch('open-modal', 'report-verify')">Verifikasi</x-button>
+            @else
+                {{-- Pemisahan tugas: tombol tetap terlihat tetapi nonaktif; Policy verify tetap menolak di server (403). --}}
+                <x-button icon="check" disabled aria-describedby="alasan-verifikasi" title="Diisi oleh Anda, perlu pemverifikasi lain">Verifikasi</x-button>
+            @endif
+        </x-admin.action-bar>
+    @endif
 
     @if ($canVerify || $canReopen)
         @include('shared.reports.review')

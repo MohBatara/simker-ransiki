@@ -51,9 +51,9 @@
                         <x-table.cell label="Tanggal terbit">{{ $post->published_at ? Format::dateTime($post->published_at) : Format::EMPTY }}</x-table.cell>
                         <x-table.cell badge>
                             @if ($post->isScheduled())
-                                <x-badge tone="wait">Terjadwal</x-badge>
+                                <x-admin.badge-status tone="warning" label="Terjadwal" />
                             @else
-                                <x-badge :tone="$post->status->badgeColor()">{{ $post->status->label() }}</x-badge>
+                                <x-admin.badge-status :status="$post->status" />
                             @endif
                         </x-table.cell>
                     </x-table.row>

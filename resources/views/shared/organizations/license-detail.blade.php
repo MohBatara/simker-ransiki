@@ -3,7 +3,7 @@
 
 <x-layouts.app :title="$license->type" :description="$organization->name" :back="$backUrl" :breadcrumbs="$breadcrumbs ?? null">
     <div class="max-w-2xl space-y-5">
-        <x-card title="Data izin">
+        <x-admin.card title="Data izin">
             <dl class="divide-y divide-line">
                 @foreach ([
                     'Status' => null,
@@ -17,7 +17,7 @@
                         <dt class="text-ink-soft">{{ $label }}</dt>
                         <dd class="whitespace-pre-line break-words">
                             @if ($label === 'Status')
-                                <x-badge :tone="$license->status->badgeColor()">{{ $license->status->label() }}</x-badge>
+                                <x-admin.badge-status :status="$license->status" />
                             @else
                                 {{ $value }}
                             @endif
@@ -25,7 +25,7 @@
                     </div>
                 @endforeach
             </dl>
-        </x-card>
+        </x-admin.card>
 
         @include('shared.attachments', [
             'title' => 'Lampiran izin',

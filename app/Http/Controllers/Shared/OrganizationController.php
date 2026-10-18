@@ -9,7 +9,6 @@ use App\Http\Requests\Organizations\OrganizationRequest;
 use App\Models\License;
 use App\Models\MonthlyReport;
 use App\Models\Organization;
-use App\Support\BannerImage;
 use App\Support\DuplicateAlert;
 use App\Support\DuplicateCandidates;
 use App\Support\Exports\OrganizationList;
@@ -211,7 +210,6 @@ class OrganizationController extends Controller
         return view('shared.organizations.detail', [
             'area' => $this->area($request),
             'organization' => $organization,
-            'banner' => BannerImage::forOrganization($organization),
             'overview' => $tab === 'profil' ? OrganizationOverview::data($organization, withStatusHistory: true) : null,
             'tab' => $tab,
             ...$data,

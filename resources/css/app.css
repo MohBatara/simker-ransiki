@@ -37,6 +37,8 @@
     --text-title-sm--line-height: 1.75rem;
     --text-page-title: 1.375rem; /* 22px judul halaman */
     --text-page-title--line-height: 1.875rem;
+    --text-admin-title: 1.625rem; /* 26px judul halaman Admin/OPD (x-admin.page-header) */
+    --text-admin-title--line-height: 2.125rem;
     --text-headline: 1.5rem; /* 24px judul berita utama di Beranda (HP dan tablet) */
     --text-headline--line-height: 2rem;
     --text-title-lg: 2.5rem; /* 40px judul halaman detail berita (desktop) */
@@ -77,6 +79,9 @@
     --color-fix-bg: #f9e7e4;
     --color-idle: #5c625f;
     --color-idle-bg: #eeefec;
+    /* Oranye: perlu revisi / perlu perbaikan (x-admin.badge-status), 5,28:1 di atas latarnya. */
+    --color-orange: #a14a12;
+    --color-orange-bg: #fdeee3;
 
     /* Khusus website publik (CLAUDE.md Bagian 7 "Gaya website publik"). */
     --color-forest: #0f2e22;
@@ -120,7 +125,7 @@
     --spacing-section-head-sm: 1.75rem; /* 28px HP */
     --spacing-section-head-lg: 2.5rem; /* 40px desktop */
 
-    --container-app: 75rem; /* 1200px */
+    --container-app: 80rem; /* 1280px */
     --container-public: 67.5rem; /* 1080px */
 
     --default-transition-duration: 150ms;

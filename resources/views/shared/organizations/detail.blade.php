@@ -2,12 +2,13 @@
 @php
     $tabs = [
         'profil' => 'Profil',
-        'produk' => 'Produk ('.$organization->products_count.')',
-        'izin' => 'Izin ('.$organization->licenses_count.')',
-        'laporan' => 'Laporan ('.$organization->monthly_reports_count.')',
+        'produk' => 'Produk',
+        'izin' => 'Izin',
+        'laporan' => 'Laporan',
         'riwayat' => 'Riwayat',
-        'akun' => 'Akun ('.$organization->users_count.')',
+        'akun' => 'Akun',
     ];
+    $counts = ['produk' => $organization->products_count, 'izin' => $organization->licenses_count, 'laporan' => $organization->monthly_reports_count, 'akun' => $organization->users_count];
     if ($area !== 'admin') {
         unset($tabs['akun']);
     }
@@ -38,15 +39,15 @@
         ['label' => $area === 'opd' ? 'Kelompok binaan' : 'Kelompok', 'href' => route($area.'.organizations.index')],
         ['label' => $organization->name],
     ]"
-    :banner="$banner"
-    compact-banner
     phone-title="Detail kelompok"
 >
-    @if (auth()->user()->can('update', $organization) || $canAddProduct || $canAddLicense || $canAddUser || $canEnterReport || $canManage)
+    @can('update', $organization)
+        <x-slot:secondary>
+            <x-button variant="secondary" icon="pencil-square" :href="route($area.'.organizations.edit', $organization)">Ubah profil</x-button>
+        </x-slot:secondary>
+    @endcan
+    @if ($canAddProduct || $canAddLicense || $canAddUser || $canEnterReport || $canManage)
         <x-slot:actions>
-            @can('update', $organization)
-                <x-button variant="secondary" icon="pencil-square" :href="route($area.'.organizations.edit', $organization)">Ubah profil</x-button>
-            @endcan
             {{-- Tambah di tab Produk/Izin: tombol header membuka modal milik daftar di bawahnya. --}}
             @if ($canAddProduct)
                 <x-button icon="plus" x-data x-on:click="$dispatch('product-create')">Tambah produk</x-button>
@@ -71,11 +72,9 @@
         </x-slot:actions>
     @endif
 
-    @if ($organization->status !== App\Enums\OrganizationStatus::Active)
-        <x-slot:badge>
-            <x-badge :tone="$organization->status->badgeColor()">{{ $organization->status->label() }}</x-badge>
-        </x-slot:badge>
-    @endif
+    <x-slot:badge>
+        <x-admin.badge-status :status="$organization->status" />
+    </x-slot:badge>
 
     <x-slot:meta>
         <ul class="flex flex-wrap gap-2" aria-label="Jenis dan bidang usaha">
@@ -86,7 +85,7 @@
         </ul>
     </x-slot:meta>
 
-    <div class="space-y-5">
+    <div class="space-y-6">
         @if ($area === 'admin' && $organization->users_count === 0)
             <x-alert tone="wait">
                 Kelompok ini belum punya akun, jadi belum bisa mengisi laporan.
@@ -98,7 +97,7 @@
             @include('shared.organizations._duplicates', ['candidates' => session('duplicates'), 'confirm' => false])
         @endif
 
-        <x-tabs :tabs="$tabs" :links="$links" :icons="$icons" :active="$tab" />
+        <x-admin.tabs :tabs="collect($tabs)->map(fn ($label, $key) => ['label' => $label, 'href' => $links[$key], 'icon' => $icons[$key], 'count' => $counts[$key] ?? null])->all()" :active="$tab" label="Bagian detail kelompok" />
 
         @switch($tab)
             @case('profil')

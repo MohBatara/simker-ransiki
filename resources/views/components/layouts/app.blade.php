@@ -10,8 +10,6 @@
     'banner' => null,
     // Banner foto lebih pendek di HP (detail kelompok), agar kartu pertama terlihat tanpa menggulir.
     'compactBanner' => false,
-    // Banner foto 180px di tablet/desktop (dasbor).
-    'shortBanner' => false,
     // Judul header atas HP bila berbeda dari judul halaman (mis. "Detail kelompok"; nama sudah di banner).
     'phoneTitle' => null,
     // Item: ['label', 'href', 'icon' (Heroicons outline), 'short' (label ringkas), 'active', 'primary' (tampil di navigasi bawah HP)]
@@ -51,7 +49,12 @@
         $headTitle = $title === $sectionTabs['label'] ? $title : $title.' · '.$sectionTabs['label'];
     }
 
+    // Admin dan OPD memakai pola halaman baru (x-admin.*): header terang, tab x-admin.tabs, tanpa banner foto.
+    $isStaff = $user && ($user->isAdmin() || $user->isOpd());
     $navigation = collect($navigation);
+    $sidebarGroups = $navigation
+        ->reject(fn ($item) => ($item['route'] ?? null) === 'notifications.index' || ! ($item['sidebar'] ?? true))
+        ->groupBy(fn ($item) => $item['group'] ?? 1);
     if ($navigation->count() <= 5) {
         $bottomNav = $navigation;
         $moreNav = collect();
@@ -94,46 +97,71 @@
             <span class="sr-only xl:hidden">SIM-KER Distrik Ransiki</span>
         </div>
 
-        {{-- Di tablet nav tidak di-scroll agar tooltip tidak terpotong oleh tepi sidebar. --}}
+        {{-- Di tablet nav tidak di-scroll agar tooltip tidak terpotong oleh tepi sidebar. Grup kecil tanpa judul, dipisah garis. --}}
         <nav aria-label="Menu utama" class="flex-1 px-1 py-3 xl:overflow-y-auto xl:px-3">
-            <ul class="space-y-1">
-                {{-- Notifikasi tidak di sidebar: lonceng ada di bilah atas (tablet dan desktop); Akun Saya ada di menu profil. --}}
-                @foreach ($navigation->reject(fn ($item) => ($item['route'] ?? null) === 'notifications.index' || ! ($item['sidebar'] ?? true)) as $item)
-                    @php
-                        $active = $item['active'] ?? false;
-                        $navCount = $item['count'] ?? 0;
-                    @endphp
-                    <li>
-                        <a
-                            href="{{ $item['href'] }}"
-                            aria-label="{{ $item['label'] }}{{ $navCount > 0 ? ', '.$navCount.' menunggu verifikasi' : '' }}"
-                            @if ($active) aria-current="page" @endif
-                            @class([
-                                'group relative flex flex-col items-center gap-1 rounded-control px-1 py-2 transition-colors xl:flex-row xl:gap-3 xl:px-3',
-                                'bg-brand-tint font-semibold text-brand' => $active,
-                                'text-ink-soft hover:bg-subtle hover:text-ink' => ! $active,
-                            ])
-                        >
-                            <x-dynamic-component :component="'heroicon-o-'.$item['icon']" class="size-5 shrink-0" />
-                            <span class="w-full truncate text-center text-micro xl:hidden" aria-hidden="true">{{ $item['short'] ?? $item['label'] }}</span>
-                            <span class="hidden truncate text-ui xl:inline" aria-hidden="true">{{ $item['label'] }}</span>
-                            <x-nav-badge :count="$navCount" class="absolute top-1 left-1/2 ml-1.5 xl:static xl:ml-auto" />
-                            <span aria-hidden="true" class="pointer-events-none absolute left-full top-1/2 z-30 ml-2 -translate-y-1/2 whitespace-nowrap rounded-control bg-ink px-2 py-1 text-caption font-normal text-paper opacity-0 shadow-float transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100 xl:hidden">
-                                {{ $item['label'] }}
-                            </span>
-                        </a>
-                    </li>
-                @endforeach
-            </ul>
+            {{-- Notifikasi tidak di sidebar: lonceng ada di bilah atas (tablet dan desktop); Akun Saya ada di menu profil. --}}
+            @foreach ($sidebarGroups as $items)
+                <ul @class(['space-y-1', 'mt-3 border-t border-line pt-3' => ! $loop->first])>
+                    @foreach ($items as $item)
+                        @php
+                            $active = $item['active'] ?? false;
+                            $navCount = $item['count'] ?? 0;
+                        @endphp
+                        <li>
+                            <a
+                                href="{{ $item['href'] }}"
+                                aria-label="{{ $item['label'] }}{{ $navCount > 0 ? ', '.$navCount.' menunggu verifikasi' : '' }}"
+                                @if ($active) aria-current="page" @endif
+                                @class([
+                                    'group relative flex flex-col items-center gap-1 rounded-control px-1 py-2 transition-colors xl:min-h-10 xl:flex-row xl:gap-3 xl:px-3',
+                                    // Aktif: latar brand-tint + garis kiri 3px brand.
+                                    'bg-brand-tint font-semibold text-brand before:absolute before:inset-y-2 before:left-0 before:w-[3px] before:rounded-r-full before:bg-brand' => $active,
+                                    'text-ink-soft hover:bg-subtle hover:text-ink' => ! $active,
+                                ])
+                            >
+                                <x-dynamic-component :component="'heroicon-o-'.$item['icon']" class="size-5 shrink-0" />
+                                <span class="w-full truncate text-center text-micro xl:hidden" aria-hidden="true">{{ $item['short'] ?? $item['label'] }}</span>
+                                <span class="hidden truncate text-ui xl:inline" aria-hidden="true">{{ $item['label'] }}</span>
+                                <x-nav-badge :count="$navCount" class="absolute top-1 left-1/2 ml-1.5 xl:static xl:ml-auto" />
+                                <span aria-hidden="true" class="pointer-events-none absolute left-full top-1/2 z-30 ml-2 -translate-y-1/2 whitespace-nowrap rounded-control bg-ink px-2 py-1 text-caption font-normal text-paper opacity-0 shadow-float transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100 xl:hidden">
+                                    {{ $item['label'] }}
+                                </span>
+                            </a>
+                        </li>
+                    @endforeach
+                </ul>
+            @endforeach
         </nav>
 
+        {{-- Kartu profil kecil di bawah sidebar (desktop): nama, peran, tombol keluar. --}}
+        @if ($userName)
+            <div class="hidden shrink-0 border-t border-line p-3 xl:block" data-sidebar-profile>
+                <div class="flex items-center gap-3 rounded-control px-2 py-1.5">
+                    <x-avatar :name="$userName" size="sm" />
+                    <a href="{{ $accountUrl ?? '#' }}" class="min-w-0 flex-1 leading-tight hover:underline">
+                        <span class="block truncate text-ui font-semibold text-ink">{{ $userName }}</span>
+                        @if ($userRole)
+                            <span class="block truncate text-caption text-ink-muted">{{ $userRole }}</span>
+                        @endif
+                    </a>
+                    @if (Route::has('logout'))
+                        <form method="POST" action="{{ route('logout') }}" data-logout data-no-processing>
+                            @csrf
+                            <button type="submit" class="flex size-9 items-center justify-center rounded-control text-ink-soft transition-colors hover:bg-subtle hover:text-ink" aria-label="Keluar" title="Keluar">
+                                <x-heroicon-o-arrow-right-start-on-rectangle class="size-5" />
+                            </button>
+                        </form>
+                    @endif
+                </div>
+            </div>
+        @endif
     </aside>
 
     <div class="md:pl-[72px] xl:pl-[248px]">
         {{-- Bilah atas tablet/desktop: cari global (Admin, OPD), lonceng, menu profil. --}}
         <header class="sticky top-0 z-20 hidden h-16 items-center gap-3 border-b border-line bg-paper px-6 md:flex xl:px-8">
             @if ($searchUrl)
-                <form method="GET" action="{{ $searchUrl }}" role="search" class="min-w-0 max-w-lg flex-1">
+                <form method="GET" action="{{ $searchUrl }}" role="search" class="min-w-0 max-w-sm flex-1">
                     <x-search-input label="Cari kelompok, ketua, kampung, atau produk" :value="request()->routeIs('*.search') ? request('q') : null" />
                 </form>
             @else
@@ -211,10 +239,15 @@
             'pb-24' => ! $focus,
             'pb-8' => $focus,
         ])>
-            <div class="flex items-start gap-3">
-                <x-page-header class="min-w-0 flex-1" :title="$title" :description="$description" :eyebrow="$eyebrow" :back="$back" :breadcrumbs="$breadcrumbs" :band="! $focus" :image="$banner" :compact="$compactBanner" :short="$shortBanner" condensed>
+            @if ($isStaff)
+                {{-- Admin/OPD: header terang seragam (x-admin.page-header); aksi sekunder masuk menu "…" di HP. --}}
+                {{-- condensed: di HP judul sudah ada di header atas; bila header atas memakai judul lain (phoneTitle), h1 tetap tampil. --}}
+                <x-admin.page-header :title="$title" :description="$description" :eyebrow="$eyebrow" :breadcrumbs="$breadcrumbs" :condensed="! $phoneTitle">
                     @isset($actions)
                         <x-slot:actions>{{ $actions }}</x-slot:actions>
+                    @endisset
+                    @isset($secondary)
+                        <x-slot:secondary>{{ $secondary }}</x-slot:secondary>
                     @endisset
                     @isset($badge)
                         <x-slot:badge>{{ $badge }}</x-slot:badge>
@@ -222,34 +255,41 @@
                     @isset($meta)
                         <x-slot:meta>{{ $meta }}</x-slot:meta>
                     @endisset
-                </x-page-header>
-            </div>
+                </x-admin.page-header>
+            @else
+                <div class="flex items-start gap-3">
+                    <x-page-header class="min-w-0 flex-1" :title="$title" :description="$description" :eyebrow="$eyebrow" :back="$back" :breadcrumbs="$breadcrumbs" :band="! $focus" :image="$banner" :compact="$compactBanner" condensed>
+                        @if (isset($actions) || isset($secondary))
+                            <x-slot:actions>{{ $secondary ?? '' }}{{ $actions ?? '' }}</x-slot:actions>
+                        @endif
+                        @isset($badge)
+                            <x-slot:badge>{{ $badge }}</x-slot:badge>
+                        @endisset
+                        @isset($meta)
+                            <x-slot:meta>{{ $meta }}</x-slot:meta>
+                        @endisset
+                    </x-page-header>
+                </div>
+            @endif
 
             @if ($sectionTabs)
-                <x-tabs
-                    class="mt-5 md:mt-6"
-                    :tabs="collect($sectionTabs['tabs'])->map(fn ($item) => $item['label'])->all()"
-                    :links="collect($sectionTabs['tabs'])->map(fn ($item, $key) => $tabUrls[$key] ?? $item['href'])->all()"
-                    :counts="collect($sectionTabs['tabs'])->map(fn ($item) => $item['count'])->all()"
+                {{-- data-swap: URL tab ikut filter yang baru diterapkan x-admin.toolbar (mis. Ekonomi ⇄ Legalitas). --}}
+                <x-admin.tabs
+                    data-swap="section-tabs"
+                    class="mt-6"
+                    :tabs="collect($sectionTabs['tabs'])->map(fn ($item, $key) => ['label' => $item['label'], 'href' => $tabUrls[$key] ?? $item['href'], 'count' => $item['count']])->all()"
                     :active="$tab"
                     :label="$sectionTabs['label']"
                 />
             @endif
 
-            @if (session('status'))
-                <x-alert tone="ok" class="mt-5" dismissible>{{ session('status') }}</x-alert>
-            @endif
-            @if (session('warning'))
-                <x-alert tone="wait" class="mt-5" dismissible>{{ session('warning') }}</x-alert>
-            @endif
-            @if (session('error'))
-                <x-alert tone="fix" class="mt-5" dismissible>{{ session('error') }}</x-alert>
-            @endif
-
-            <div class="mt-5 md:mt-6">
+            <div class="mt-6">
                 {{ $slot }}
             </div>
         </main>
+
+        {{-- Pesan sistem (sukses, peringatan, gagal) sebagai toast seragam. --}}
+        <x-admin.toasts />
     </div>
 
     {{-- Navigasi bawah HP: maksimal 5 menu, sisanya di "Lainnya" --}}

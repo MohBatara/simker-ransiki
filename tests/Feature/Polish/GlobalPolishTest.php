@@ -9,7 +9,7 @@ use App\Models\Organization;
 use App\Models\User;
 use App\Notifications\ReportReviewed;
 
-test('bilah atas: lonceng dan menu profil; sidebar tanpa lonceng dan menu Notifikasi', function () {
+test('bilah atas: lonceng dan menu profil; sidebar tanpa lonceng, dengan kartu profil + Keluar di bawah', function () {
     $organization = Organization::factory()->create();
     $user = User::factory()->kelompok($organization)->create();
     $user->notify(new ReportReviewed(MonthlyReport::factory()->for($organization)->create(), ReviewAction::Verified, null));
@@ -17,7 +17,8 @@ test('bilah atas: lonceng dan menu profil; sidebar tanpa lonceng dan menu Notifi
     $html = $this->actingAs($user)->get('/kelompok')->assertOk()->getContent();
     $sidebar = substr($html, strpos($html, '<aside'), strpos($html, '</aside>') - strpos($html, '<aside'));
 
-    expect($sidebar)->not->toContain('data-bell')->not->toContain('/notifikasi')->not->toContain('Keluar')
+    expect($sidebar)->not->toContain('data-bell')->not->toContain('/notifikasi')
+        ->toContain('data-sidebar-profile')->toContain('aria-label="Keluar"')
         ->and($html)->toContain('data-bell="desktop"')->toContain('Notifikasi, 1 belum dibaca')
         ->toContain('Menu akun')->toContain('data-logout');
 
@@ -48,14 +49,13 @@ test('daftar kelompok: kotak cari berikon, filter ringkas, chip yang bisa dihapu
         ->assertSee('type="search"', false)
         ->assertSee('enterkeyhint="search"', false)
         ->assertSee('Filter (1)')
-        ->assertSee('Terapkan')
-        ->assertSee('Reset')
+        ->assertSee('x-data="adminToolbar"', false)
         ->assertSee('aria-label="Hapus filter Jenis: KUB"', false)
         ->assertSee('Hapus semua')
         ->assertSee('1 kelompok · 1 tidak aktif');
 });
 
-test('daftar kelompok: avatar + nama + jenis · kampung; badge status hanya bila bukan Aktif', function () {
+test('daftar kelompok: avatar + nama + jenis · kampung; kolom status dengan badge berwarna (Aktif hijau, Ditutup merah)', function () {
     $active = Organization::factory()->create(['name' => 'KUB Aktif Contoh']);
     $closed = Organization::factory()->create(['name' => 'KUB Tutup Contoh', 'status' => OrganizationStatus::Closed]);
 
@@ -64,8 +64,8 @@ test('daftar kelompok: avatar + nama + jenis · kampung; badge status hanya bila
         ->assertSee($active->village->name)
         ->getContent();
 
-    expect(substr_count($html, '>Aktif</span>'))->toBe(0)
-        ->and($html)->toContain('>Ditutup</span>');
+    expect($html)->toMatch('#<span data-tone="success"[^>]*><span[^>]*></span>Aktif</span>#')
+        ->toMatch('#<span data-tone="danger"[^>]*><span[^>]*></span>Ditutup</span>#');
 });
 
 test('scroll-padding untuk header dan bar aksi yang menempel', function () {

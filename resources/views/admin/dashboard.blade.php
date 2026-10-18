@@ -1,18 +1,29 @@
 @use('App\Support\Format')
 @use('App\Enums\OrganizationStatus')
 @use('App\Support\Dashboards\DistrictStats')
+@use('App\Support\Dashboards\ReportingPeriod')
 @use('App\Support\Dashboards\ReportingStats')
 
+{{--
+    Dasbor Admin, tab Ringkasan: sapaan + pemilih periode → Perlu dikerjakan (tugas berprioritas dengan tombol aksi)
+    → 4 kartu angka → 2 grafik ringkas → pelaporan per OPD → belum mengajukan → kelompok dan ekonomi.
+--}}
 @php
     $month = $period->format('Y-m');
     $verifiedUrl = route('admin.reports.index', ['status' => 'verified', 'period' => $month]);
-    $attentionRows = [
-        ['value' => $attention['waiting_total'], 'label' => 'laporan menunggu verifikasi', 'href' => route('admin.verifications.index')],
-        ['value' => $attention['without_opd'], 'label' => 'kelompok tanpa OPD pembina', 'href' => route('admin.organizations.index', ['opd' => 'none'])],
-        ['value' => $attention['admin_queue'], 'label' => 'laporan yang hanya bisa diverifikasi Admin', 'href' => route('admin.verifications.index', ['hanya' => 'admin'])],
-        ['value' => $attention['waiting'], 'label' => 'laporan menunggu verifikasi lebih dari '.DistrictStats::WAITING_DAYS.' hari', 'href' => route('admin.verifications.index', ['menunggu' => DistrictStats::WAITING_DAYS])],
-        ['value' => $attention['active_without_account'], 'label' => 'kelompok aktif tanpa akun', 'href' => route('admin.organizations.index', ['status' => 'active', 'akun' => 'tidak-ada'])],
-    ];
+    $staleDays = config('simker.follow_up.stale_days');
+    $waitingHint = collect([
+        $attention['waiting'] ? Format::number($attention['waiting']).' menunggu lebih dari '.DistrictStats::WAITING_DAYS.' hari' : null,
+        $attention['admin_queue'] ? Format::number($attention['admin_queue']).' hanya bisa diverifikasi Admin' : null,
+    ])->filter()->join(', ') ?: 'Yang paling lama menunggu ada di atas antrean.';
+    $tasks = array_values(array_filter([
+        $attention['waiting_total'] ? ['icon' => 'clipboard-document-check', 'title' => Format::number($attention['waiting_total']).' laporan menunggu verifikasi', 'hint' => $waitingHint, 'action' => 'Verifikasi '.Format::number($attention['waiting_total']).' laporan', 'href' => route('admin.verifications.index')] : null,
+        $overdue['past_deadline'] && $overdue['total'] ? ['icon' => 'clock', 'title' => Format::number($overdue['total']).' kelompok terlambat melapor '.Format::month($period), 'hint' => 'Tenggat '.Format::date($overdue['deadline']).', '.ReportingPeriod::deadlineDistance($overdue['deadline']).'. Salin pesan pengingat di daftar bawah.', 'action' => 'Ingatkan kelompok', 'href' => '#belum-melapor'] : null,
+        $staleNeeds ? ['icon' => 'inbox-stack', 'title' => Format::number($staleNeeds).' kebutuhan belum ditindaklanjuti', 'hint' => 'Berstatus baru atau ditinjau lebih dari '.$staleDays.' hari.', 'action' => 'Tindak lanjuti', 'href' => route('admin.issues.index', ['kind' => 'support', 'lama' => $staleDays])] : null,
+        $profileQueue ? ['icon' => 'identification', 'title' => Format::number($profileQueue).' profil menunggu verifikasi', 'hint' => 'Kelompok mengubah data penting setelah profilnya diverifikasi.', 'action' => 'Periksa '.Format::number($profileQueue).' profil', 'href' => route('admin.profile-verifications.index')] : null,
+        $attention['active_without_account'] ? ['icon' => 'user-plus', 'title' => Format::number($attention['active_without_account']).' kelompok aktif belum punya akun', 'hint' => 'Tanpa akun, kelompok belum bisa mengisi laporan sendiri.', 'action' => 'Buat akun '.Format::number($attention['active_without_account']).' kelompok', 'href' => route('admin.organizations.index', ['status' => 'active', 'akun' => 'tidak-ada'])] : null,
+        $attention['without_opd'] ? ['icon' => 'building-office-2', 'title' => Format::number($attention['without_opd']).' kelompok belum punya OPD pembina', 'hint' => 'Laporannya hanya bisa diverifikasi Admin.', 'action' => 'Tetapkan OPD', 'href' => route('admin.organizations.index', ['opd' => 'none'])] : null,
+    ]));
     $moneyRows = [
         'income_sales' => 'Pendapatan penjualan',
         'income_other' => 'Pendapatan lain',
@@ -21,44 +32,28 @@
     ];
 @endphp
 
-<x-layouts.app title="Distrik Ransiki" eyebrow="Dasbor" :banner="$banner" section="dasbor" tab="ringkasan" :breadcrumbs="[]" short-banner>
-    <x-slot:actions>
-        @include('shared.dashboards.period-picker')
-    </x-slot:actions>
+<x-layouts.app title="Dasbor" description="Ringkasan pelaporan dan kelompok di Distrik Ransiki." section="dasbor" tab="ringkasan" :breadcrumbs="[]">
+    <div class="space-y-6">
+        <x-admin.greeting :name="auth()->user()->name" subtitle="Distrik Ransiki">
+            @include('shared.dashboards.period-picker')
+        </x-admin.greeting>
 
-    <div class="space-y-5">
-        <div class="grid gap-5 lg:grid-cols-3 lg:items-start">
-            <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-1">
-                @include('shared.dashboards.overdue-stat', ['area' => 'admin'])
-                @include('shared.dashboards.stale-needs-stat', ['area' => 'admin'])
-            </div>
+        @include('shared.dashboards.tasks')
 
-            <x-card title="Perlu perhatian" class="lg:col-span-2 lg:col-start-1 lg:row-start-1">
-                <x-list>
-                    @foreach ($attentionRows as $row)
-                        <x-list.item :href="$row['href']">
-                                <span @class(['w-12 shrink-0 text-right text-card-title font-semibold tabular-nums', 'text-ink' => $row['value'] > 0, 'text-ink-muted' => $row['value'] === 0])>{{ Format::number($row['value']) }}</span>
-                                <span class="flex-1 text-ink">{{ ucfirst($row['label']) }}</span>
-                        </x-list.item>
-                    @endforeach
-                </x-list>
-            </x-card>
-        </div>
+        @include('shared.dashboards.stats', ['area' => 'admin'])
 
         @include('shared.dashboards.charts', ['area' => 'admin'])
 
-        @include('shared.dashboards.progress', ['area' => 'admin'])
-
-        <x-card title="Pelaporan per OPD" description="Kelompok dengan beberapa OPD dihitung di setiap OPD-nya; total distrik di atas dihitung unik." flush>
-            <x-table bare class="max-md:p-4">
+        <x-admin.card title="Pelaporan per OPD" :description="'Periode '.Format::month($period).'. Kelompok dengan beberapa OPD dihitung di setiap OPD-nya.'" flush>
+            <x-admin.table bare>
                 <x-slot:head>
-                    <x-table.heading>OPD</x-table.heading>
-                    <x-table.heading numeric>Wajib lapor</x-table.heading>
-                    <x-table.heading numeric>Terverifikasi</x-table.heading>
-                    <x-table.heading numeric optional>Menunggu</x-table.heading>
-                    <x-table.heading numeric optional>Revisi</x-table.heading>
-                    <x-table.heading numeric>Belum diajukan</x-table.heading>
-                    <x-table.heading><span class="sr-only">Progres</span></x-table.heading>
+                    <x-admin.table.heading>OPD</x-admin.table.heading>
+                    <x-admin.table.heading numeric>Wajib lapor</x-admin.table.heading>
+                    <x-admin.table.heading numeric>Terverifikasi</x-admin.table.heading>
+                    <x-admin.table.heading numeric optional>Menunggu</x-admin.table.heading>
+                    <x-admin.table.heading numeric optional>Revisi</x-admin.table.heading>
+                    <x-admin.table.heading numeric>Belum diajukan</x-admin.table.heading>
+                    <x-admin.table.heading><span class="sr-only">Progres</span></x-admin.table.heading>
                 </x-slot:head>
                 @foreach ($perOpd as $row)
                     @php
@@ -73,39 +68,42 @@
                         ];
                     @endphp
                     @continue(! $row['opd'] && $counts['total'] === 0)
-                    <x-table.row>
-                        <x-table.cell primary>{{ $row['opd']?->short_name ?: ($row['opd']?->name ?? 'Tanpa OPD pembina') }}</x-table.cell>
-                        <x-table.cell label="Wajib lapor" numeric>
-                            <a href="{{ route('admin.organizations.index', ['opd' => $opdFilter]) }}" class="inline-flex min-h-11 items-center md:min-h-0 rounded-control hover:underline">{{ Format::number($counts['total']) }}</a>
-                        </x-table.cell>
+                    <x-admin.table.row>
+                        <x-admin.table.cell primary>{{ $row['opd']?->short_name ?: ($row['opd']?->name ?? 'Tanpa OPD pembina') }}</x-admin.table.cell>
+                        <x-admin.table.cell label="Wajib lapor" numeric>
+                            <a href="{{ route('admin.organizations.index', ['opd' => $opdFilter]) }}" class="inline-flex min-h-11 items-center rounded-control hover:underline md:min-h-0">{{ Format::number($counts['total']) }}</a>
+                        </x-admin.table.cell>
                         @foreach ($cells as [$label, $value, $href, $optional])
-                            <x-table.cell :label="$label" numeric :optional="$optional">
-                                <a href="{{ $href }}" class="inline-flex min-h-11 items-center md:min-h-0 rounded-control hover:underline">{{ Format::number($value) }}</a>
-                            </x-table.cell>
+                            <x-admin.table.cell :label="$label" numeric :optional="$optional">
+                                <a href="{{ $href }}" class="inline-flex min-h-11 items-center rounded-control hover:underline md:min-h-0">{{ Format::number($value) }}</a>
+                            </x-admin.table.cell>
                         @endforeach
-                        <x-table.cell class="md:w-40 max-md:col-span-2 max-md:pt-2">
+                        <x-admin.table.cell class="md:w-40 max-md:col-span-2 max-md:pt-2">
                             <x-stacked-bar size="sm" :legend="false" :label="'Pelaporan '.($row['opd']?->name ?? 'kelompok tanpa OPD')" :segments="ReportingStats::segments($counts, 'admin', $period)" />
-                        </x-table.cell>
-                    </x-table.row>
+                        </x-admin.table.cell>
+                    </x-admin.table.row>
                 @endforeach
-            </x-table>
-        </x-card>
+            </x-admin.table>
+        </x-admin.card>
 
         @include('shared.dashboards.not-submitted', ['area' => 'admin'])
 
-        <div class="grid gap-5 lg:grid-cols-2 lg:items-start">
-            <x-card title="Kelompok">
+        <div class="grid grid-cols-1 gap-6 lg:grid-cols-2 lg:items-start">
+            <x-admin.card title="Kelompok">
+                <x-slot:actions>
+                    <x-link :href="route('admin.organizations.index')">Lihat semua</x-link>
+                </x-slot:actions>
                 <div class="space-y-6">
                     <div>
-                        <a href="{{ route('admin.organizations.index') }}" class="rounded-control hover:underline">
-                            <span class="text-page-title font-semibold tabular-nums text-ink">{{ Format::number($organizations['total']) }}</span>
+                        <p>
+                            <span class="text-display-sm font-semibold tabular-nums text-ink">{{ Format::number($organizations['total']) }}</span>
                             <span class="text-ink-soft">kelompok terdaftar</span>
-                        </a>
+                        </p>
                         <ul class="mt-2 flex flex-wrap gap-2">
                             @foreach (OrganizationStatus::cases() as $status)
                                 <li>
-                                    <a href="{{ route('admin.organizations.index', ['status' => $status->value]) }}" class="inline-flex min-h-11 items-center md:min-h-0 rounded-control">
-                                        <x-badge :tone="$status->badgeColor()">{{ $status->label() }} · {{ $organizations['statuses'][$status->value] }}</x-badge>
+                                    <a href="{{ route('admin.organizations.index', ['status' => $status->value]) }}" class="inline-flex min-h-11 items-center rounded-full md:min-h-0">
+                                        <x-admin.badge-status :status="$status" :label="$status->label().' · '.$organizations['statuses'][$status->value]" />
                                     </a>
                                 </li>
                             @endforeach
@@ -123,14 +121,14 @@
                         <x-bar-list :items="$organizations['sectors']->map(fn ($row) => [...$row, 'href' => route('admin.organizations.index', ['sector' => $row['id']])])" />
                     </section>
                 </div>
-            </x-card>
+            </x-admin.card>
 
-            <x-card :title="'Ekonomi '.Format::month($period)" description="Hanya dari laporan terverifikasi. Angka kosong tidak dihitung sebagai nol.">
+            <x-admin.card :title="'Ekonomi '.Format::month($period)" description="Hanya dari laporan terverifikasi. Angka kosong tidak dihitung sebagai nol.">
                 @if ($economy['reports'] === 0)
                     <p class="text-ink-soft">Belum ada laporan terverifikasi untuk bulan ini.</p>
                 @else
                     <p class="text-ink-soft">
-                        <a href="{{ $verifiedUrl }}" class="inline-flex min-h-11 items-center md:min-h-0 font-semibold tabular-nums text-ink hover:underline">{{ $economy['reports'] }} dari {{ $economy['obligated'] }}</a>
+                        <a href="{{ $verifiedUrl }}" class="inline-flex min-h-11 items-center font-semibold tabular-nums text-ink hover:underline md:min-h-0">{{ $economy['reports'] }} dari {{ $economy['obligated'] }}</a>
                         kelompok wajib lapor sudah terverifikasi.
                     </p>
 
@@ -149,7 +147,7 @@
                                     </span>
                                 </dt>
                                 <dd class="text-right">
-                                    <a href="{{ $verifiedUrl }}" class="inline-flex min-h-11 items-center md:min-h-0 font-semibold tabular-nums text-ink hover:underline">{{ Format::rupiah($total['sum']) }}</a>
+                                    <a href="{{ $verifiedUrl }}" class="inline-flex min-h-11 items-center font-semibold tabular-nums text-ink hover:underline md:min-h-0">{{ Format::rupiah($total['sum']) }}</a>
                                 </dd>
                             </div>
                         @endforeach
@@ -161,16 +159,16 @@
                     @if ($production->isEmpty())
                         <p class="text-ink-soft">Belum ada produksi yang dilaporkan.</p>
                     @else
-                        <x-table bare class="md:-mx-4">
+                        <x-admin.table bare label="Produksi per produk">
                             <x-slot:head>
-                                <x-table.heading>Produk</x-table.heading>
-                                <x-table.heading numeric>Produksi</x-table.heading>
-                                <x-table.heading numeric>Kelompok</x-table.heading>
+                                <x-admin.table.heading>Produk</x-admin.table.heading>
+                                <x-admin.table.heading numeric>Produksi</x-admin.table.heading>
+                                <x-admin.table.heading numeric>Kelompok</x-admin.table.heading>
                             </x-slot:head>
                             @foreach ($production as $row)
-                                <x-table.row>
-                                    <x-table.cell primary>{{ $row['product'] }}</x-table.cell>
-                                    <x-table.cell label="Produksi" numeric>
+                                <x-admin.table.row>
+                                    <x-admin.table.cell primary>{{ $row['product'] }}</x-admin.table.cell>
+                                    <x-admin.table.cell label="Produksi" numeric>
                                         @if ($row['quantity'] === null)
                                             <span class="text-ink-muted">Tidak diisi</span>
                                         @else
@@ -179,14 +177,14 @@
                                                 <span class="block text-caption text-ink-muted">diisi {{ $row['filled'] }} dari {{ $row['organizations'] }} kelompok</span>
                                             @endif
                                         @endif
-                                    </x-table.cell>
-                                    <x-table.cell label="Kelompok" numeric>{{ $row['organizations'] }}</x-table.cell>
-                                </x-table.row>
+                                    </x-admin.table.cell>
+                                    <x-admin.table.cell label="Kelompok" numeric>{{ $row['organizations'] }}</x-admin.table.cell>
+                                </x-admin.table.row>
                             @endforeach
-                        </x-table>
+                        </x-admin.table>
                     @endif
                 @endif
-            </x-card>
+            </x-admin.card>
         </div>
     </div>
 </x-layouts.app>

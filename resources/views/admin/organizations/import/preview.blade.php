@@ -7,9 +7,9 @@
 
 @php
     $statuses = [
-        OrganizationImport::READY => ['Siap', 'ok'],
-        OrganizationImport::WARNING => ['Peringatan', 'wait'],
-        OrganizationImport::FAILED => ['Gagal', 'fix'],
+        OrganizationImport::READY => ['Siap', 'success'],
+        OrganizationImport::WARNING => ['Peringatan', 'warning'],
+        OrganizationImport::FAILED => ['Gagal', 'danger'],
     ];
     $ready = $counts[OrganizationImport::READY];
 @endphp
@@ -50,7 +50,7 @@
                 <x-table.row>
                     <x-table.cell primary class="break-words">{{ $row['values']['name'] ?? '(nama kosong)' }}</x-table.cell>
                     <x-table.cell subtitle class="whitespace-nowrap">Baris {{ $row['line'] }}</x-table.cell>
-                    <x-table.cell badge><x-badge :tone="$statuses[$row['status']][1]">{{ $statuses[$row['status']][0] }}</x-badge></x-table.cell>
+                    <x-table.cell badge><x-admin.badge-status :tone="$statuses[$row['status']][1]" :label="$statuses[$row['status']][0]" /></x-table.cell>
                     <x-table.cell label="Kampung" optional>{{ $row['values']['village'] ?? '' }}</x-table.cell>
                     <x-table.cell label="Keterangan" class="max-md:items-start">
                         @if ($row['messages'])

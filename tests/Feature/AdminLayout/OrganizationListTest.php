@@ -96,27 +96,32 @@ test('jumlah query daftar terbatas (tanpa N+1)', function () {
     expect(count(DB::getQueryLog()))->toBeLessThan(30);
 });
 
-test('kartu filter: cari sebaris dengan tombol Filter di HP, dua baris di desktop', function () {
+test('bilah alat: cari + 3 filter sebaris, sisanya di panel "Filter lain", langsung diterapkan tanpa Terapkan/Reset', function () {
     $html = $this->actingAs($this->admin)->get('/admin/kelompok?sector='.$this->sectorA->id.'&village='.$this->villageA->id)->assertOk()
-        ->assertDontSee('Cari dan saring')
+        ->assertSee('x-data="adminToolbar"', false)
         ->assertSee('Filter (2)')
+        ->assertSee('Filter lain (1)')
+        ->assertDontSee('Terapkan</span>', false)
+        ->assertDontSee('>Reset<', false)
         ->getContent();
 
-    $search = strpos($html, 'name="q"');
-    $panel = strpos($html, 'id="panel-filter-kelompok"');
+    $panel = strpos($html, 'id="panel-filter"');
 
-    // Kotak cari berada di luar panel yang disembunyikan di HP; urutan baris 2: bidang usaha, OPD, status, tombol.
-    expect($search)->toBeLessThan($panel)
-        ->and(strpos($html, 'name="type"'))->toBeGreaterThan($panel)
-        ->and(strpos($html, 'name="sector"'))->toBeLessThan(strpos($html, 'name="opd"'))
-        ->and(strpos($html, 'name="opd"'))->toBeLessThan(strpos($html, 'name="status"'))
-        ->and(strpos($html, 'name="status"'))->toBeLessThan(strpos($html, 'Terapkan'))
-        ->and($html)->toContain('md:col-start-4 md:justify-end');
+    // Sebaris (sebelum panel): kampung, jenis, status. Di panel: bidang usaha dan OPD (plus salinan filter utama untuk HP).
+    expect(strpos($html, 'id="village-inline"'))->toBeLessThan($panel)
+        ->and(strpos($html, 'id="type-inline"'))->toBeLessThan($panel)
+        ->and(strpos($html, 'id="status-inline"'))->toBeLessThan($panel)
+        ->and($html)->not->toContain('id="sector-inline"')
+        ->and(strpos($html, 'id="sector-panel"'))->toBeGreaterThan($panel)
+        ->and(strpos($html, 'id="opd-panel"'))->toBeGreaterThan($panel)
+        // Hasil yang ditukar saat filter berubah.
+        ->and($html)->toContain('data-swap="kelompok"')->toContain('data-swap="toolbar-summary"');
 });
 
 test('dengan panel detail (≥ 1280px): kolom bidang usaha disembunyikan, nama satu baris dengan title', function () {
     $this->actingAs($this->admin)->get('/admin/kelompok')->assertOk()
-        ->assertSee('<th scope="col" class="h-10 whitespace-nowrap align-middle text-caption font-semibold text-ink-soft px-4 text-left md:max-xl:hidden xl:hidden">Bidang usaha</th>', false)
+        ->assertSee('px-4 text-left md:max-xl:hidden xl:hidden">Bidang usaha</th>', false)
+        ->assertSee('sticky top-16 z-10', false)
         ->assertSee('class="block xl:truncate" title="Alfa Contoh"', false)
         ->assertSee('xl:whitespace-nowrap', false);
 });

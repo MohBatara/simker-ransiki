@@ -44,7 +44,7 @@ test('judul kolom angka dan selnya memakai padding dan perataan yang sama', func
         ->and($td[1])->toContain('pl-4 pr-4 md:pr-8')->toContain('md:text-right')->not->toMatch('/(^|\s)px-4(\s|$)/');
 });
 
-test('perlu perhatian: angka 0 redup tanpa tambahan teks; per OPD di dalam kartu', function () {
+test('perlu dikerjakan: hanya tugas yang ada (tanpa baris angka 0); per OPD di dalam kartu', function () {
     Carbon::setTestNow(Carbon::parse('2026-10-20 12:00:00', 'Asia/Jayapura'));
     $organization = Organization::factory()->create(['reporting_starts_on' => '2026-07-01']);
     $organization->opds()->attach(Opd::factory()->create());
@@ -53,8 +53,9 @@ test('perlu perhatian: angka 0 redup tanpa tambahan teks; per OPD di dalam kartu
 
     $this->actingAs(User::factory()->admin()->create())->get('/admin')
         ->assertOk()
-        ->assertSee('text-ink-muted">0</span>', false)
-        ->assertSee('Kelompok tanpa OPD pembina</span>', false)
-        ->assertDontSee('tidak ada</span>', false)
+        ->assertSee('Perlu dikerjakan')
+        ->assertSee('Tidak ada yang perlu dikerjakan sekarang.')
+        ->assertDontSee('belum punya OPD pembina')
+        ->assertDontSee('belum punya akun')
         ->assertSee('Pelaporan per OPD');
 });

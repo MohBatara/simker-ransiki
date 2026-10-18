@@ -18,7 +18,7 @@
                                 <div class="min-w-0 flex-1 space-y-1">
                                     <div class="flex flex-wrap items-center gap-2">
                                         <p class="font-semibold text-ink">Slide {{ $loop->iteration }}</p>
-                                        <x-badge :tone="$slide->is_active ? 'ok' : 'idle'">{{ $slide->is_active ? 'Tampil' : 'Disembunyikan' }}</x-badge>
+                                        <x-admin.badge-status :tone="$slide->is_active ? 'success' : 'neutral'" :label="$slide->is_active ? 'Tampil' : 'Disembunyikan'" />
                                     </div>
                                     <p class="text-ui text-ink">{{ $slide->caption ?? 'Tanpa keterangan' }}</p>
                                     <p class="text-caption text-ink-soft">Teks alternatif: {{ $slide->alt_text }}</p>

@@ -1,37 +1,37 @@
 @use('App\Support\Format')
 
 @if ($reports->isEmpty())
-    <x-empty-state title="Belum ada laporan" :description="'Laporan bulanan dibuat oleh akun kelompok mulai '.(Format::month($organization->reporting_starts_on)).'. Bila kelompok tidak punya HP atau akun, pilih Isi laporan.'" />
+    <x-admin.empty title="Belum ada laporan" :description="'Laporan bulanan dibuat oleh akun kelompok mulai '.(Format::month($organization->reporting_starts_on)).'. Bila kelompok tidak punya HP atau akun, pilih Isi laporan.'" />
 @else
-    <x-table clickable>
+    <x-admin.table clickable>
         <x-slot:head>
-            <x-table.heading>Periode</x-table.heading>
-            <x-table.heading>Status</x-table.heading>
-            <x-table.heading>Diajukan</x-table.heading>
-            <x-table.heading numeric>Laba</x-table.heading>
+            <x-admin.table.heading>Periode</x-admin.table.heading>
+            <x-admin.table.heading>Status</x-admin.table.heading>
+            <x-admin.table.heading>Diajukan</x-admin.table.heading>
+            <x-admin.table.heading numeric>Laba</x-admin.table.heading>
         </x-slot:head>
 
         @foreach ($reports as $report)
             {{-- Draf kelompok yang belum pernah diajukan tidak bisa dibuka peninjau. --}}
-            <x-table.row :href="auth()->user()->can('view', $report) ? route($area.'.reports.show', [$report, 'dari' => 'kelompok']) : null">
-                <x-table.cell primary>{{ Format::month($report->period) }}</x-table.cell>
-                <x-table.cell badge>
+            <x-admin.table.row :href="auth()->user()->can('view', $report) ? route($area.'.reports.show', [$report, 'dari' => 'kelompok']) : null">
+                <x-admin.table.cell primary>{{ Format::month($report->period) }}</x-admin.table.cell>
+                <x-admin.table.cell badge>
                     <span class="inline-flex flex-wrap items-center justify-end gap-1.5 md:justify-start">
-                        <x-badge :tone="$report->status->badgeColor()">{{ $report->status->reviewerLabel() }}</x-badge>
+                        <x-admin.badge-status :status="$report->status" :label="$report->status->reviewerLabel()" />
                         @if ($report->isOverdue())
-                            <x-badge tone="fix">Terlambat</x-badge>
+                            <x-admin.badge-status tone="danger" label="Terlambat" />
                         @endif
                     </span>
-                </x-table.cell>
-                <x-table.cell label="Diajukan">{{ Format::date($report->submitted_at) }}</x-table.cell>
-                <x-table.cell label="Laba" numeric>{{ Format::rupiah($report->profit) }}</x-table.cell>
-            </x-table.row>
+                </x-admin.table.cell>
+                <x-admin.table.cell label="Diajukan">{{ Format::date($report->submitted_at) }}</x-admin.table.cell>
+                <x-admin.table.cell label="Laba" numeric>{{ Format::rupiah($report->profit) }}</x-admin.table.cell>
+            </x-admin.table.row>
         @endforeach
 
         @if ($reports->hasPages())
-            <x-slot:footer>{{ $reports->links() }}</x-slot:footer>
+            <x-slot:footer><x-admin.pagination :paginator="$reports" noun="laporan" /></x-slot:footer>
         @endif
-    </x-table>
+    </x-admin.table>
 @endif
 
 @if (! empty($entryPeriods))

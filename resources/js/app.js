@@ -5,6 +5,7 @@ import heroSlider from './hero-slider';
 import scrollDots from './scroll-dots';
 import sectionNav from './section-nav';
 import directory from './directory';
+import adminToolbar from './admin-toolbar';
 import { productGallery, scrollRow, stickyCta } from './products';
 import readingProgress from './reading-progress';
 import registerMotion from './motion';
@@ -260,6 +261,46 @@ Alpine.data('heroSlider', heroSlider);
 Alpine.data('scrollDots', scrollDots);
 Alpine.data('sectionNav', sectionNav);
 Alpine.data('directory', directory);
+Alpine.data('adminToolbar', adminToolbar);
+
+/**
+ * Toast pesan sistem (x-admin.toasts): hilang otomatis setelah 4 detik, berhenti saat disorot/difokuskan.
+ */
+Alpine.data('toasts', (initial = []) => ({
+    items: [],
+    next: 0,
+
+    init() {
+        initial.forEach((toast) => this.push(toast));
+    },
+
+    push({ tone = 'ok', message }) {
+        if (!message) {
+            return;
+        }
+        const toast = { id: this.next++, tone, message, visible: true, remaining: 4000, started: 0, timer: null };
+        this.items.push(toast);
+        this.resume(toast);
+    },
+
+    pause(toast) {
+        clearTimeout(toast.timer);
+        toast.remaining -= Date.now() - toast.started;
+    },
+
+    resume(toast) {
+        toast.started = Date.now();
+        toast.timer = setTimeout(() => this.dismiss(toast), Math.max(toast.remaining, 1000));
+    },
+
+    dismiss(toast) {
+        clearTimeout(toast.timer);
+        toast.visible = false;
+        setTimeout(() => {
+            this.items = this.items.filter((item) => item.id !== toast.id);
+        }, 200);
+    },
+}));
 Alpine.data('scrollRow', scrollRow);
 Alpine.data('productGallery', productGallery);
 Alpine.data('stickyCta', stickyCta);

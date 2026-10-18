@@ -157,5 +157,5 @@ test('admin bisa menambah akun kedua dari detail kelompok', function () {
     ])->assertSessionHasNoErrors();
 
     expect($organization->users()->count())->toBe(2);
-    $this->get("/admin/kelompok/{$organization->id}/akun")->assertSee('Bendahara Contoh')->assertSee('Akun (2)');
+    $this->get("/admin/kelompok/{$organization->id}/akun")->assertSee('Bendahara Contoh')->assertSeeInOrder(['Akun', '<span class="rounded-full px-2 text-caption tabular-nums bg-brand-tint text-brand">2</span>'], false);
 });

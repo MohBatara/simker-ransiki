@@ -16,7 +16,7 @@ beforeEach(function () {
 
 afterEach(fn () => Carbon::setTestNow());
 
-test('dasbor admin: perhatian, progres per OPD, kelompok, dan ekonomi resmi', function () {
+test('dasbor admin: perlu dikerjakan, kartu angka, progres per OPD, kelompok, dan ekonomi resmi', function () {
     $opd = Opd::factory()->create(['name' => 'Dinas Contoh', 'short_name' => 'DC']);
     $withOpd = Organization::factory()->create(['name' => 'KUB Satu', 'reporting_starts_on' => '2026-07-01']);
     $withOpd->opds()->attach($opd);
@@ -35,12 +35,14 @@ test('dasbor admin: perhatian, progres per OPD, kelompok, dan ekonomi resmi', fu
     $queries = count(DB::getQueryLog());
 
     $response->assertOk()
-        ->assertSee('Perlu perhatian')
+        ->assertSee('Perlu dikerjakan')
+        ->assertSee('2 kelompok belum punya OPD pembina')
         ->assertSee('/admin/kelompok?opd=none', false)
+        ->assertSee('Buat akun 1 kelompok')
         ->assertSee('/admin/kelompok?status=active&amp;akun=tidak-ada', false)
-        ->assertSee('/admin/laporan/verifikasi?menunggu=7', false)
-        ->assertSee('/admin/laporan/verifikasi?hanya=admin', false)
-        ->assertSee('Pelaporan September 2026')
+        // Tanpa laporan menunggu: tugas verifikasi tidak muncul.
+        ->assertDontSee('laporan menunggu verifikasi')
+        ->assertSee('Wajib lapor September 2026')
         ->assertSee('1 dari 2')
         ->assertSee('DC')
         ->assertSee('Tanpa OPD pembina')

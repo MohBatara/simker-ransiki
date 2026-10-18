@@ -17,6 +17,8 @@
             'secondary' => 'border-line-strong bg-paper text-ink hover:bg-subtle md:in-[.app-band]:border-paper/60 md:in-[.app-band]:bg-transparent md:in-[.app-band]:text-paper md:in-[.app-band]:hover:bg-paper/10 in-[.app-band-photo]:border-paper/60 in-[.app-band-photo]:bg-transparent in-[.app-band-photo]:text-paper in-[.app-band-photo]:hover:bg-paper/10',
             'ghost' => 'border-transparent bg-transparent text-ink-soft hover:bg-subtle hover:text-ink md:in-[.app-band]:text-paper md:in-[.app-band]:hover:bg-paper/10 in-[.app-band-photo]:text-paper in-[.app-band-photo]:hover:bg-paper/10',
             'danger' => 'border-line-strong bg-paper text-fix hover:bg-fix-bg',
+            // Tombol konfirmasi aksi berisiko (x-admin.confirm): putih di atas fix 6,6:1.
+            'danger-solid' => 'border-fix bg-fix text-paper hover:bg-fix/90',
         },
     ];
 @endphp

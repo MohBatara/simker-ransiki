@@ -3,33 +3,33 @@
 @use('App\Support\ChangeLogger')
 
 @if ($logs->isEmpty())
-    <x-empty-state title="Belum ada riwayat perubahan" description="Setiap perubahan profil, produk, dan izin kelompok ini akan tercatat di sini." />
+    <x-admin.empty title="Belum ada riwayat perubahan" description="Setiap perubahan profil, produk, dan izin kelompok ini akan tercatat di sini." />
 @else
-    <x-table label="Riwayat perubahan">
+    <x-admin.table label="Riwayat perubahan">
         <x-slot:head>
-            <x-table.heading>Perubahan</x-table.heading>
-            <x-table.heading>Data</x-table.heading>
-            <x-table.heading wrap>Sebelum</x-table.heading>
-            <x-table.heading wrap>Sesudah</x-table.heading>
-            <x-table.heading>Oleh</x-table.heading>
-            <x-table.heading>Waktu</x-table.heading>
+            <x-admin.table.heading>Perubahan</x-admin.table.heading>
+            <x-admin.table.heading>Data</x-admin.table.heading>
+            <x-admin.table.heading wrap>Sebelum</x-admin.table.heading>
+            <x-admin.table.heading wrap>Sesudah</x-admin.table.heading>
+            <x-admin.table.heading>Oleh</x-admin.table.heading>
+            <x-admin.table.heading>Waktu</x-admin.table.heading>
         </x-slot:head>
 
         @foreach ($logs as $log)
-            <x-table.row>
-                <x-table.cell primary>
+            <x-admin.table.row>
+                <x-admin.table.cell primary>
                     {{ $log->field ? ChangeLogger::label($log->loggable_type, $log->field) : $log->action->label() }}
-                </x-table.cell>
-                <x-table.cell subtitle>{{ $log->subject }}</x-table.cell>
-                <x-table.cell label="Sebelum" class="max-w-xs break-words whitespace-pre-line text-ink-soft">{{ $log->field ? ($log->old_value ?? Format::EMPTY) : '' }}</x-table.cell>
-                <x-table.cell label="Sesudah" class="max-w-xs break-words whitespace-pre-line">{{ $log->field ? ($log->new_value ?? Format::EMPTY) : '' }}</x-table.cell>
-                <x-table.cell label="Oleh">{{ $log->user?->nameWithAgency() ?? 'Sistem' }}</x-table.cell>
-                <x-table.cell label="Waktu" class="whitespace-nowrap">{{ Format::relativeDateTime($log->created_at) }}</x-table.cell>
-            </x-table.row>
+                </x-admin.table.cell>
+                <x-admin.table.cell subtitle>{{ $log->subject }}</x-admin.table.cell>
+                <x-admin.table.cell label="Sebelum" class="max-w-xs break-words whitespace-pre-line text-ink-soft">{{ $log->field ? ($log->old_value ?? Format::EMPTY) : '' }}</x-admin.table.cell>
+                <x-admin.table.cell label="Sesudah" class="max-w-xs break-words whitespace-pre-line">{{ $log->field ? ($log->new_value ?? Format::EMPTY) : '' }}</x-admin.table.cell>
+                <x-admin.table.cell label="Oleh">{{ $log->user?->nameWithAgency() ?? 'Sistem' }}</x-admin.table.cell>
+                <x-admin.table.cell label="Waktu" class="whitespace-nowrap">{{ Format::relativeDateTime($log->created_at) }}</x-admin.table.cell>
+            </x-admin.table.row>
         @endforeach
 
         @if ($logs->hasPages())
-            <x-slot:footer>{{ $logs->links() }}</x-slot:footer>
+            <x-slot:footer><x-admin.pagination :paginator="$logs" noun="perubahan" /></x-slot:footer>
         @endif
-    </x-table>
+    </x-admin.table>
 @endif

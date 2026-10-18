@@ -18,12 +18,12 @@
     :breadcrumbs="[['label' => 'Laporan', 'href' => route($area.'.reports.index')], ['label' => 'Masalah & kebutuhan', 'href' => $back], ['label' => $issue->kind->label().': '.$title]]"
 >
     <x-slot:badge>
-        <x-badge :tone="$issue->follow_up_status->badgeColor()">{{ $issue->follow_up_status->label() }}</x-badge>
+        <x-admin.badge-status :status="$issue->follow_up_status" />
     </x-slot:badge>
 
-    <div class="space-y-5 xl:grid xl:grid-cols-[minmax(0,1fr)_360px] xl:items-start xl:gap-5 xl:space-y-0">
-        <div class="min-w-0 space-y-5">
-            <x-card :title="$issue->kind->label()">
+    <div class="space-y-6 xl:grid xl:grid-cols-[minmax(0,1fr)_360px] xl:items-start xl:gap-6 xl:space-y-0">
+        <div class="min-w-0 space-y-6">
+            <x-admin.card :title="$issue->kind->label()">
                 <dl class="space-y-4">
                     <div>
                         <dt class="text-ink-soft">Uraian</dt>
@@ -48,14 +48,14 @@
                         </div>
                     </div>
                 </dl>
-            </x-card>
+            </x-admin.card>
 
             @if ($canFollowUp)
-                <x-card title="Ubah status tindak lanjut" description="Catatan tindakan tampil untuk kelompok. Kelompok mendapat notifikasi bila statusnya berubah.">
-                    <form method="POST" action="{{ route($area.'.issues.follow-up', $issue) }}" class="space-y-5">
+                <x-admin.card title="Ubah status tindak lanjut" description="Catatan tindakan tampil untuk kelompok. Kelompok mendapat notifikasi bila statusnya berubah.">
+                    <form method="POST" action="{{ route($area.'.issues.follow-up', $issue) }}" class="space-y-6">
                         @csrf
                         <x-form-errors />
-                        <div class="grid gap-5 md:grid-cols-2">
+                        <div class="grid gap-6 md:grid-cols-2">
                             <x-field label="Status" for="status">
                                 <x-select name="status" :options="FollowUpStatus::options()" :selected="$issue->follow_up_status->value" required />
                             </x-field>
@@ -75,16 +75,16 @@
                             <x-button type="submit" processing="Menyimpan…">Simpan</x-button>
                         </x-form-actions>
                     </form>
-                </x-card>
+                </x-admin.card>
             @endif
         </div>
 
-        <x-card title="Riwayat tindak lanjut">
+        <x-admin.card title="Riwayat tindak lanjut">
             @if ($issue->followUps->isEmpty())
                 <p class="text-ink-soft">Belum ada tindak lanjut. Status awal: Baru.</p>
             @else
                 @include('shared.reports._follow-ups', ['followUps' => $issue->followUps])
             @endif
-        </x-card>
+        </x-admin.card>
     </div>
 </x-layouts.app>

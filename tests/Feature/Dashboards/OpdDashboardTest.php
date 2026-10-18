@@ -35,25 +35,27 @@ beforeEach(function () {
 
 afterEach(fn () => Carbon::setTestNow());
 
-test('perlu tindakan, progres, belum mengajukan, masalah, dan tren hanya untuk binaan', function () {
+test('perlu dikerjakan, kartu angka, belum mengajukan, masalah, dan grafik hanya untuk binaan', function () {
     DB::enableQueryLog();
     $response = $this->get('/opd');
     $queries = count(DB::getQueryLog());
 
     $response->assertOk()
-        ->assertSee('Perlu tindakan')
-        ->assertSee('laporan menunggu verifikasi')
+        ->assertSee('Perlu dikerjakan')
+        ->assertSee('1 laporan menunggu verifikasi')
+        ->assertSee('Verifikasi 1 laporan')
         ->assertSee('KUB Menunggu, September 2026')
         ->assertSee('12 hari')
-        ->assertSee('Menunggu lebih dari 7 hari')
-        ->assertSee('Pelaporan September 2026')
-        ->assertSee('1 dari 2')
+        ->assertSee('1 menunggu lebih dari 7 hari')
+        ->assertSee('Wajib lapor September 2026')
+        ->assertSee('dari 2 kelompok wajib lapor')
+        ->assertSee('1 kelompok binaan terlambat melapor September 2026')
         // Tenggat sudah lewat: daftar "Belum mengajukan" menjadi daftar terlambat.
         ->assertSee('Terlambat melapor September 2026')
         ->assertSee('Tenggat 10 Oktober 2026 · lewat 10 hari')
         ->assertSee('KUB Belum Lapor')
         ->assertSee('/opd/laporan/masalah?kind=problem&amp;category=modal&amp;period=2026-09', false)
-        ->assertSee('/opd/kelompok?laporan=belum-dibuat&amp;periode=2026-09', false)
+        ->assertSee('/opd/kelompok?laporan=terlambat&amp;periode=2026-09', false)
         ->assertSee('Tren pendapatan, 12 bulan')->assertSee('Kepatuhan pelaporan, 6 bulan')->assertSee('Lihat statistik lengkap')
         ->assertDontSee('KUB OPD Lain');
 
@@ -67,13 +69,13 @@ test('pemilih bulan: bulan lain bisa dipilih, nilai tidak sah kembali ke bulan w
         ->and($this->get('/opd?periode=2026-10')->viewData('period')->format('Y-m'))->toBe('2026-09')
         ->and($this->get('/opd?periode=salah')->viewData('period')->format('Y-m'))->toBe('2026-09');
 
-    $this->get('/opd?periode=2026-08')->assertSee('Pelaporan Agustus 2026')->assertSee('0 dari 2');
+    $this->get('/opd?periode=2026-08')->assertSee('Wajib lapor Agustus 2026')->assertSee('Terlambat melapor Agustus 2026');
 });
 
 test('tanpa laporan menunggu', function () {
     $this->report->forceFill(['status' => ReportStatus::Verified])->save();
 
-    $this->get('/opd')->assertOk()->assertSee('Tidak ada laporan yang menunggu verifikasi.');
+    $this->get('/opd')->assertOk()->assertSee('Perlu dikerjakan')->assertDontSee('laporan menunggu verifikasi')->assertDontSee('Verifikasi 1 laporan');
 });
 
 test('peran lain tidak bisa membuka dasbor OPD', function () {
@@ -111,9 +113,9 @@ test('query string tautan dasbor terbaca benar (tidak di-escape ganda)', functio
     expect($hrefs)->not->toBeEmpty()
         ->and(collect($hrefs)->filter(fn ($href) => str_contains($href, '&amp;'))->all())->toBe([]);
 
-    $link = collect($hrefs)->first(fn ($href) => str_contains($href, 'laporan=belum-dibuat'));
+    $link = collect($hrefs)->first(fn ($href) => str_contains($href, 'laporan=terlambat'));
     parse_str((string) parse_url($link, PHP_URL_QUERY), $query);
 
-    expect($query)->toBe(['laporan' => 'belum-dibuat', 'periode' => '2026-09'])
+    expect($query)->toBe(['laporan' => 'terlambat', 'periode' => '2026-09'])
         ->and($this->get($link)->viewData('organizations')->pluck('name')->all())->toBe(['KUB Belum Lapor']);
 });

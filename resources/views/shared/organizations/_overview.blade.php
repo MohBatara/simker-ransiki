@@ -39,7 +39,7 @@
 
 <div class="grid gap-5 lg:grid-cols-12 lg:items-start">
     {{-- Ringkasan: paling atas di HP, kolom samping di desktop. --}}
-    <x-card title="Ringkasan" icon="chart-bar-square" class="max-lg:order-first lg:col-span-5 lg:col-start-8 lg:row-start-2">
+    <x-admin.card title="Ringkasan" icon="chart-bar-square" class="max-lg:order-first lg:col-span-5 lg:col-start-8 lg:row-start-2">
         <div class="grid gap-4 sm:grid-cols-2">
             <x-info-item label="Jumlah anggota" icon="user-group">
                 {{ $organization->members_count === null ? '—' : Format::number($organization->members_count).' orang' }}
@@ -55,7 +55,7 @@
                         @else
                             {{ Format::month($latestReport->period) }}
                         @endif
-                        <x-badge :tone="$latestReport->status->badgeColor()">{{ $area === 'kelompok' ? $latestReport->status->label() : $latestReport->status->reviewerLabel() }}</x-badge>
+                        <x-admin.badge-status :status="$latestReport->status" :label="$area === 'kelompok' ? $latestReport->status->label() : $latestReport->status->reviewerLabel()" />
                     </span>
                 @else
                     Belum ada laporan
@@ -63,15 +63,15 @@
             </x-info-item>
             <x-info-item label="OPD pembina" icon="briefcase">
                 @if ($organization->opds->isEmpty())
-                    <x-badge tone="wait">Belum ada OPD pembina</x-badge>
+                    <x-admin.badge-status tone="warning" label="Belum ada OPD pembina" />
                 @else
                     {{ $organization->opds->map(fn ($opd) => $opd->short_name ?: $opd->name)->join(', ') }}
                 @endif
             </x-info-item>
         </div>
-    </x-card>
+    </x-admin.card>
 
-    <x-card title="Informasi umum" icon="identification" class="lg:col-span-7 lg:row-span-3 lg:row-start-1">
+    <x-admin.card title="Informasi umum" icon="identification" class="lg:col-span-7 lg:row-span-3 lg:row-start-1">
         <dl class="divide-y divide-line">
             @foreach ($info as $label => $value)
                 <div class="grid gap-1 py-3 first:pt-0 last:pb-0 sm:grid-cols-[minmax(0,11rem)_1fr] sm:gap-4">
@@ -80,9 +80,9 @@
                 </div>
             @endforeach
         </dl>
-    </x-card>
+    </x-admin.card>
 
-    <x-card title="Lokasi" icon="map-pin" class="lg:col-span-5 lg:col-start-8 lg:row-start-1">
+    <x-admin.card title="Lokasi" icon="map-pin" class="lg:col-span-5 lg:col-start-8 lg:row-start-1">
         <dl class="space-y-3">
             <div>
                 <dt class="text-caption text-ink-muted">Kampung</dt>
@@ -99,17 +99,17 @@
         </dl>
         <x-button variant="secondary" icon="arrow-top-right-on-square" :href="$overview['mapsUrl']" target="_blank" rel="noopener" class="mt-4 max-sm:w-full">Buka di Google Maps</x-button>
         <p class="mt-2 text-caption text-ink-muted">Dicari dari alamat; titik lokasi kelompok belum tercatat.</p>
-    </x-card>
+    </x-admin.card>
 
-    <x-card title="Deskripsi" icon="document-text" class="lg:col-span-5 lg:col-start-8 lg:row-start-3">
+    <x-admin.card title="Deskripsi" icon="document-text" class="lg:col-span-5 lg:col-start-8 lg:row-start-3">
         @if (filled($organization->description))
             <p class="whitespace-pre-line break-words text-ink">{{ $organization->description }}</p>
         @else
             <p class="text-ink-soft">Belum ada deskripsi kegiatan kelompok.</p>
         @endif
-    </x-card>
+    </x-admin.card>
 
-    <x-card title="Foto" icon="photo" class="lg:col-span-7">
+    <x-admin.card title="Foto" icon="photo" class="lg:col-span-7">
         @if ($overview['photos']->isNotEmpty())
             <x-slot:actions>
                 <x-link :href="$productsUrl">Lihat semua</x-link>
@@ -124,14 +124,14 @@
         @else
             <p class="text-ink-soft">Belum ada foto. Foto produk dan lampiran gambar kelompok akan tampil di sini.</p>
         @endif
-    </x-card>
+    </x-admin.card>
 
-    <x-card title="Publikasi & pelaporan" icon="globe-alt" class="lg:col-span-5">
+    <x-admin.card title="Publikasi & pelaporan" icon="globe-alt" class="lg:col-span-5">
         <dl class="space-y-3">
             <div>
                 <dt class="text-caption text-ink-muted">Verifikasi profil</dt>
                 <dd class="mt-0.5 space-y-1.5">
-                    <x-badge :tone="$organization->profile_status->badgeColor()">{{ $organization->profile_status->label() }}</x-badge>
+                    <x-admin.badge-status :status="$organization->profile_status" />
                     @if ($organization->profile_verified_at)
                         <p class="text-caption text-ink-soft">
                             Diverifikasi {{ Format::date($organization->profile_verified_at) }}@if ($organization->profileVerifier) oleh {{ $organization->profileVerifier->nameWithAgency() }}@endif
@@ -183,7 +183,7 @@
                 <dd class="text-ink">{{ Format::date($organization->updated_at) }}@if ($organization->updater) oleh {{ $organization->updater->name }}@endif</dd>
             </div>
         </dl>
-    </x-card>
+    </x-admin.card>
 
     <div class="lg:col-span-12">
         @include('shared.attachments', $documents + ['icon' => 'paper-clip'])

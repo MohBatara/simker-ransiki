@@ -21,49 +21,50 @@
         @endif
 
         @if ($pairs->isEmpty())
-            <x-empty-state
+            <x-admin.empty
+                icon="document-duplicate"
                 title="Tidak ada kemungkinan data ganda"
                 description="Pasangan kelompok dengan nama mirip akan muncul di sini. Pasangan yang ditandai bukan data ganda tidak muncul lagi."
             />
         @else
-            <x-table>
+            <x-admin.table>
                 <x-slot:head>
-                    <x-table.heading>Kelompok</x-table.heading>
-                    <x-table.heading>Peringatan</x-table.heading>
-                    <x-table.heading>Mirip dengan</x-table.heading>
-                    <x-table.heading><span class="sr-only">Aksi</span></x-table.heading>
+                    <x-admin.table.heading>Kelompok</x-admin.table.heading>
+                    <x-admin.table.heading>Peringatan</x-admin.table.heading>
+                    <x-admin.table.heading>Mirip dengan</x-admin.table.heading>
+                    <x-admin.table.heading><span class="sr-only">Aksi</span></x-admin.table.heading>
                 </x-slot:head>
 
                 @foreach ($pairs as $pair)
-                    <x-table.row>
-                        <x-table.cell primary>
+                    <x-admin.table.row>
+                        <x-admin.table.cell primary>
                             <x-link :href="route('admin.organizations.show', $pair['first']['id'])" inline>{{ $pair['first']['name'] }}</x-link>
                             <span class="block text-caption font-normal text-ink-soft">{{ $detail($pair['first']) }}</span>
-                        </x-table.cell>
-                        <x-table.cell badge>
-                            <x-badge :tone="$pair['strong'] ? 'wait' : 'idle'">{{ $pair['strong'] ? 'Kampung sama' : 'Kampung lain' }}</x-badge>
-                        </x-table.cell>
-                        <x-table.cell label="Mirip dengan" class="max-md:items-start!">
+                        </x-admin.table.cell>
+                        <x-admin.table.cell badge>
+                            <x-admin.badge-status :tone="$pair['strong'] ? 'warning' : 'neutral'" :label="$pair['strong'] ? 'Kampung sama' : 'Kampung lain'" />
+                        </x-admin.table.cell>
+                        <x-admin.table.cell label="Mirip dengan" class="max-md:items-start!">
                             <span class="max-md:text-right">
                                 <x-link :href="route('admin.organizations.show', $pair['second']['id'])" inline>{{ $pair['second']['name'] }}</x-link>
                                 <span class="block text-caption text-ink-soft">{{ $detail($pair['second']) }}</span>
                             </span>
-                        </x-table.cell>
-                        <x-table.cell actions>
+                        </x-admin.table.cell>
+                        <x-admin.table.cell actions>
                             <form method="POST" action="{{ route('admin.organizations.duplicates.dismiss') }}" class="max-md:w-full">
                                 @csrf
                                 <input type="hidden" name="first" value="{{ $pair['first']['id'] }}">
                                 <input type="hidden" name="second" value="{{ $pair['second']['id'] }}">
                                 <x-button type="submit" variant="secondary" processing="Menyimpan…" class="max-md:w-full">Bukan data ganda</x-button>
                             </form>
-                        </x-table.cell>
-                    </x-table.row>
+                        </x-admin.table.cell>
+                    </x-admin.table.row>
                 @endforeach
 
-                @if ($pairs->hasPages())
-                    <x-slot:footer>{{ $pairs->links() }}</x-slot:footer>
-                @endif
-            </x-table>
+                <x-slot:footer>
+                    <x-admin.pagination :paginator="$pairs" noun="pasangan" />
+                </x-slot:footer>
+            </x-admin.table>
         @endif
     </div>
 </x-layouts.app>

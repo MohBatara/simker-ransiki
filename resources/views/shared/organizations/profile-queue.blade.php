@@ -12,29 +12,31 @@
 >
     <div class="space-y-4">
         @if ($organizations->isEmpty())
-            <x-empty-state title="Tidak ada profil yang menunggu verifikasi" description="Profil yang diubah kelompok setelah diverifikasi akan muncul di sini." />
+            <x-admin.empty icon="identification" title="Tidak ada profil yang menunggu verifikasi" description="Profil yang diubah kelompok setelah diverifikasi akan muncul di sini." />
         @else
-            <p class="text-ink-soft">{{ $organizations->total() }} profil menunggu verifikasi</p>
-            <x-table clickable>
+            <p class="text-ui text-ink-soft tabular-nums" role="status">{{ Format::number($organizations->total()) }} profil menunggu verifikasi</p>
+            <x-admin.table clickable>
                 <x-slot:head>
-                    <x-table.heading>Kelompok</x-table.heading>
-                    <x-table.heading>Field yang berubah</x-table.heading>
-                    <x-table.heading>Diubah</x-table.heading>
+                    <x-admin.table.heading>Kelompok</x-admin.table.heading>
+                    <x-admin.table.heading>Field yang berubah</x-admin.table.heading>
+                    <x-admin.table.heading>Diubah</x-admin.table.heading>
+                    <x-admin.table.heading>Status</x-admin.table.heading>
                 </x-slot:head>
 
                 @foreach ($organizations as $organization)
-                    <x-table.row :href="route($area.'.organizations.history', $organization)">
-                        <x-table.cell primary>{{ $organization->name }}</x-table.cell>
-                        <x-table.cell subtitle class="md:hidden">{{ $organization->institutionType->name }} · {{ $organization->village->name }}</x-table.cell>
-                        <x-table.cell label="Field yang berubah">{{ implode(', ', ProfileReview::changedLabels($organization)) }}</x-table.cell>
-                        <x-table.cell label="Diubah" class="whitespace-nowrap">{{ Format::relativeDateTime($organization->profile_changed_at) }}</x-table.cell>
-                    </x-table.row>
+                    <x-admin.table.row :href="route($area.'.organizations.history', $organization)">
+                        <x-admin.table.cell primary>{{ $organization->name }}</x-admin.table.cell>
+                        <x-admin.table.cell subtitle class="md:hidden">{{ $organization->institutionType->name }} · {{ $organization->village->name }}</x-admin.table.cell>
+                        <x-admin.table.cell label="Field yang berubah">{{ implode(', ', ProfileReview::changedLabels($organization)) }}</x-admin.table.cell>
+                        <x-admin.table.cell label="Diubah" class="whitespace-nowrap">{{ Format::relativeDateTime($organization->profile_changed_at) }}</x-admin.table.cell>
+                        <x-admin.table.cell badge><x-admin.badge-status :status="$organization->profile_status" /></x-admin.table.cell>
+                    </x-admin.table.row>
                 @endforeach
 
-                @if ($organizations->hasPages())
-                    <x-slot:footer>{{ $organizations->links() }}</x-slot:footer>
-                @endif
-            </x-table>
+                <x-slot:footer>
+                    <x-admin.pagination :paginator="$organizations" noun="profil" />
+                </x-slot:footer>
+            </x-admin.table>
         @endif
     </div>
 </x-layouts.app>

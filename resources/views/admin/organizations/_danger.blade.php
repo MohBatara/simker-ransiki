@@ -1,5 +1,5 @@
 {{--
-    Ubah status dan hapus kelompok (Admin). $part = 'menu' (item di menu "…" banner) atau 'modals' (konfirmasi).
+    Ubah status dan hapus kelompok (Admin). $part = 'menu' (item di menu "…" header) atau 'modals' (x-admin.confirm).
     Kelompok yang punya laporan atau akun tidak bisa dihapus, hanya ditandai ditutup.
 --}}
 @use('App\Enums\OrganizationStatus')
@@ -27,11 +27,8 @@
     @endcan
 @else
     @can('administer', $organization)
-        <x-modal name="organization-status" title="Ubah status kelompok" :show="$statusFailed">
-            <form method="POST" action="{{ route('admin.organizations.status', $organization) }}" id="organization-status-form" class="space-y-4"
-                  x-data="{ status: @js(old('status', array_key_first($statusOptions))) }">
-                @csrf
-                @method('PATCH')
+        <x-admin.confirm name="organization-status" title="Ubah status kelompok" :action="route('admin.organizations.status', $organization)" method="PATCH" form="organization-status-form" confirm="Ubah status" :tone="'brand'" processing="Menyimpan…" :show="$statusFailed">
+            <div class="space-y-4" x-data="{ status: @js(old('status', array_key_first($statusOptions))) }">
                 <p>Status saat ini: <strong class="text-ink">{{ $organization->status->label() }}</strong>.</p>
                 @if ($usage)
                     <p>Kelompok ini punya {{ $usage }}, jadi tidak bisa dihapus. Bila sudah berhenti, tandai ditutup.</p>
@@ -47,26 +44,14 @@
                 <x-field label="Alasan" for="reason" hint="Contoh: pengurus menyatakan kelompok berhenti beroperasi sejak Agustus.">
                     <x-textarea name="reason" rows="3" required minlength="5" maxlength="500" />
                 </x-field>
-            </form>
-            <x-slot:footer>
-                <x-button variant="ghost" x-on:click="$dispatch('close-modal', 'organization-status')">Batal</x-button>
-                <x-button type="submit" form="organization-status-form">Ubah status</x-button>
-            </x-slot:footer>
-        </x-modal>
+            </div>
+        </x-admin.confirm>
     @endcan
     @can('delete', $organization)
         @if (! $usage)
-            <x-modal name="delete-organization" title="Hapus kelompok">
+            <x-admin.confirm name="delete-organization" title="Hapus kelompok" :action="route('admin.organizations.destroy', $organization)" method="DELETE" confirm="Hapus" processing="Menghapus…">
                 <p>Hapus <strong class="text-ink">{{ $organization->name }}</strong> beserta produk, izin, dan lampirannya? Data yang dihapus tidak bisa dikembalikan.</p>
-                <x-slot:footer>
-                    <x-button variant="ghost" x-on:click="$dispatch('close-modal', 'delete-organization')">Batal</x-button>
-                    <form method="POST" action="{{ route('admin.organizations.destroy', $organization) }}">
-                        @csrf
-                        @method('DELETE')
-                        <x-button variant="danger" type="submit" processing="Menghapus…">Hapus</x-button>
-                    </form>
-                </x-slot:footer>
-            </x-modal>
+            </x-admin.confirm>
         @endif
     @endcan
 @endif

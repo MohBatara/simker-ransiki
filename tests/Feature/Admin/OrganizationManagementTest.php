@@ -56,7 +56,7 @@ test('daftar menampilkan kelompok beserta jenis, kampung, dan status', function 
         ->assertSee('KUB')
         ->assertSee('Kampung Contoh 1')
         ->assertSee('Belum ada OPD pembina')
-        ->assertSee('Menampilkan 1–1 dari 1 kelompok');
+        ->assertSee('Menampilkan 1 sampai 1 dari 1 kelompok');
 });
 
 test('filter daftar kelompok', function (string $query, array $visible) {

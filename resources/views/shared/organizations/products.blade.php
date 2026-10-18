@@ -22,27 +22,27 @@
     class="space-y-4"
 >
     @if ($products->isEmpty())
-        <x-empty-state title="Belum ada produk" description="Tambahkan produk yang dihasilkan kelompok ini agar bisa dicatat di laporan bulanan.">
+        <x-admin.empty title="Belum ada produk" description="Tambahkan produk yang dihasilkan kelompok ini agar bisa dicatat di laporan bulanan.">
             @if ($canManage)
                 <x-button icon="plus" x-on:click="create()">Tambah produk</x-button>
             @endif
-        </x-empty-state>
+        </x-admin.empty>
     @else
-        <x-table>
+        <x-admin.table>
             <x-slot:head>
-                <x-table.heading>Nama</x-table.heading>
-                <x-table.heading>Satuan</x-table.heading>
-                <x-table.heading optional>Kapasitas</x-table.heading>
-                <x-table.heading>Tampil publik</x-table.heading>
-                <x-table.heading>Unggulan</x-table.heading>
+                <x-admin.table.heading>Nama</x-admin.table.heading>
+                <x-admin.table.heading>Satuan</x-admin.table.heading>
+                <x-admin.table.heading optional>Kapasitas</x-admin.table.heading>
+                <x-admin.table.heading>Tampil publik</x-admin.table.heading>
+                <x-admin.table.heading>Unggulan</x-admin.table.heading>
                 @if ($canManage)
-                    <x-table.heading><span class="sr-only">Aksi</span></x-table.heading>
+                    <x-admin.table.heading><span class="sr-only">Aksi</span></x-admin.table.heading>
                 @endif
             </x-slot:head>
 
             @foreach ($products as $product)
-                <x-table.row>
-                    <x-table.cell primary>
+                <x-admin.table.row>
+                    <x-admin.table.cell primary>
                         <span class="flex items-center gap-3">
                             @if ($product->photo_path)
                                 <img src="{{ $product->photoUrl(thumbnail: true) }}" alt="" loading="lazy" class="size-10 shrink-0 rounded-control border border-line object-cover">
@@ -53,13 +53,13 @@
                             @endif
                             <span>{{ $product->name }}</span>
                         </span>
-                    </x-table.cell>
-                    <x-table.cell label="Satuan">{{ $product->unit ?? '—' }}</x-table.cell>
-                    <x-table.cell label="Kapasitas" optional>{{ $product->capacity ?? '—' }}</x-table.cell>
-                    <x-table.cell label="Tampil publik">{{ $product->is_public ? 'Ya' : 'Tidak' }}</x-table.cell>
-                    <x-table.cell label="Unggulan">{{ $product->is_featured ? 'Ya' : 'Tidak' }}</x-table.cell>
+                    </x-admin.table.cell>
+                    <x-admin.table.cell label="Satuan">{{ $product->unit ?? '—' }}</x-admin.table.cell>
+                    <x-admin.table.cell label="Kapasitas" optional>{{ $product->capacity ?? '—' }}</x-admin.table.cell>
+                    <x-admin.table.cell label="Tampil publik">{{ $product->is_public ? 'Ya' : 'Tidak' }}</x-admin.table.cell>
+                    <x-admin.table.cell label="Unggulan">{{ $product->is_featured ? 'Ya' : 'Tidak' }}</x-admin.table.cell>
                     @if ($canManage)
-                        <x-table.cell actions>
+                        <x-admin.table.cell actions>
                             <div class="inline-flex items-center justify-end gap-2 max-md:w-full">
                                 @if ($canPhoto ?? false)
                                     <x-button variant="ghost" icon="camera" x-on:click="$dispatch('product-photo', {{ Js::from([
@@ -72,11 +72,11 @@
                                 <x-button variant="ghost" x-on:click="remove({{ Js::from(['id' => $product->id, 'name' => $product->name]) }})">Hapus</x-button>
                                 <x-button variant="secondary" x-on:click="edit({{ Js::from($product->only(['id', ...$fields])) }})">Ubah</x-button>
                             </div>
-                        </x-table.cell>
+                        </x-admin.table.cell>
                     @endif
-                </x-table.row>
+                </x-admin.table.row>
             @endforeach
-        </x-table>
+        </x-admin.table>
     @endif
 
     @if ($canManage)
@@ -147,16 +147,8 @@
             </div>
         @endif
 
-        <x-modal name="record-delete" title="Hapus produk">
+        <x-admin.confirm name="record-delete" title="Hapus produk" bind-action="deleteAction" method="DELETE" confirm="Hapus" processing="Menghapus…">
             <p>Hapus <strong class="text-ink" x-text="deleting.name"></strong>? Laporan lama yang mencatat produk ini tetap menyimpan namanya.</p>
-            <x-slot:footer>
-                <x-button variant="ghost" x-on:click="$dispatch('close-modal', 'record-delete')">Batal</x-button>
-                <form method="POST" x-bind:action="deleteAction">
-                    @csrf
-                    @method('DELETE')
-                    <x-button variant="danger" type="submit" processing="Menghapus…">Hapus</x-button>
-                </form>
-            </x-slot:footer>
-        </x-modal>
+        </x-admin.confirm>
     @endif
 </div>
