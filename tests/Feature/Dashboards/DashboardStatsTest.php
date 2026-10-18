@@ -106,17 +106,6 @@ test('masalah terbanyak dihitung per kelompok unik, hanya dari laporan diajukan/
         ->and($top['support']->map(fn ($row) => [$row['label'], $row['organizations']])->all())->toBe([['Pelatihan', 1]]);
 });
 
-test('tren terverifikasi 6 bulan dibandingkan dengan jumlah wajib lapor', function () {
-    MonthlyReport::factory()->for($this->o1)->status(ReportStatus::Verified)->create(['period' => '2026-08-01', 'submitted_at' => now()]);
-
-    $trend = (new ReportingStats($this->opdUser, $this->period))->verifiedTrend();
-
-    expect($trend->map(fn ($row) => [$row['period']->format('Y-m'), $row['verified'], $row['obligated']])->all())->toBe([
-        ['2026-04', 0, 0], ['2026-05', 0, 0], ['2026-06', 0, 0],
-        ['2026-07', 0, 5], ['2026-08', 1, 5], ['2026-09', 1, 5],
-    ]);
-});
-
 test('ekonomi hanya dari laporan terverifikasi; NULL tidak dihitung sebagai nol', function () {
     $economy = (new DistrictStats)->economy($this->period);
 
@@ -157,7 +146,7 @@ test('jumlah kelompok per status, jenis, dan bidang; daftar perhatian', function
     expect($organizations['total'])->toBe(9)
         ->and($organizations['statuses']->all())->toBe(['active' => 7, 'inactive' => 1, 'closed' => 1])
         ->and($organizations['types']->sum('value'))->toBe(9)
-        ->and($stats->attention())->toBe(['without_opd' => 1, 'admin_queue' => 0, 'waiting' => 1, 'active_without_account' => 6]);
+        ->and($stats->attention(User::factory()->admin()->create()))->toMatchArray(['without_opd' => 1, 'admin_queue' => 0, 'waiting' => 1, 'active_without_account' => 6]);
 });
 
 test('pilihan bulan: bulan lalu sebagai default; nilai tidak sah atau di luar rentang kembali ke default', function () {

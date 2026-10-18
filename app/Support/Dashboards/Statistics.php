@@ -84,6 +84,24 @@ class Statistics
         return [$from, $to];
     }
 
+    /**
+     * Grafik ringkas tab Ringkasan dasbor Admin/OPD (tanpa filter): tren pendapatan 12 bulan dan kepatuhan pelaporan
+     * 6 bulan terakhir, keduanya sampai bulan wajib lapor dan dipotong di kewajiban lapor paling awal. Angkanya sama
+     * dengan tab Ekonomi untuk bulan yang sama.
+     *
+     * @return array{incomeTrend: Collection, compliance: Collection}
+     */
+    public static function overview(User $user, ?CarbonImmutable $earliest): array
+    {
+        [$from, $to] = self::resolveRange(null, null, $earliest);
+        $recentFrom = $to->subMonthsNoOverflow(5);
+
+        return [
+            'incomeTrend' => (new self($user, [], $from, $to))->incomeTrend(),
+            'compliance' => (new self($user, [], $recentFrom->max($from), $to))->compliance(),
+        ];
+    }
+
     public function filters(): array
     {
         return $this->filters;

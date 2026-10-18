@@ -10,6 +10,7 @@ use App\Support\BannerImage;
 use App\Support\Dashboards\DistrictStats;
 use App\Support\Dashboards\ReportingPeriod;
 use App\Support\Dashboards\ReportingStats;
+use App\Support\Dashboards\Statistics;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -27,7 +28,7 @@ class DashboardController extends Controller
             'banner' => BannerImage::cover(),
             'period' => $period,
             'periods' => ReportingPeriod::options($earliest),
-            'attention' => $district->attention(),
+            'attention' => $district->attention($request->user()),
             'progress' => $stats->progress(),
             'perOpd' => $stats->progressPerOpd(),
             'notSubmitted' => $stats->notSubmitted(),
@@ -36,6 +37,7 @@ class DashboardController extends Controller
             'organizations' => $district->organizations(),
             'economy' => $district->economy($period),
             'production' => $district->production($period),
+            'overview' => Statistics::overview($request->user(), $earliest),
         ]);
     }
 }

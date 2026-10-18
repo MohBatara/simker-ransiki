@@ -7,9 +7,10 @@
     $month = $period->format('Y-m');
     $verifiedUrl = route('admin.reports.index', ['status' => 'verified', 'period' => $month]);
     $attentionRows = [
+        ['value' => $attention['waiting_total'], 'label' => 'laporan menunggu verifikasi', 'href' => route('admin.verifications.index')],
         ['value' => $attention['without_opd'], 'label' => 'kelompok tanpa OPD pembina', 'href' => route('admin.organizations.index', ['opd' => 'none'])],
-        ['value' => $attention['admin_queue'], 'label' => 'laporan yang hanya bisa diverifikasi Admin', 'href' => route('admin.verifications.index')],
-        ['value' => $attention['waiting'], 'label' => 'laporan menunggu verifikasi lebih dari '.DistrictStats::WAITING_DAYS.' hari', 'href' => route('admin.reports.index', ['status' => 'submitted', 'menunggu' => DistrictStats::WAITING_DAYS])],
+        ['value' => $attention['admin_queue'], 'label' => 'laporan yang hanya bisa diverifikasi Admin', 'href' => route('admin.verifications.index', ['hanya' => 'admin'])],
+        ['value' => $attention['waiting'], 'label' => 'laporan menunggu verifikasi lebih dari '.DistrictStats::WAITING_DAYS.' hari', 'href' => route('admin.verifications.index', ['menunggu' => DistrictStats::WAITING_DAYS])],
         ['value' => $attention['active_without_account'], 'label' => 'kelompok aktif tanpa akun', 'href' => route('admin.organizations.index', ['status' => 'active', 'akun' => 'tidak-ada'])],
     ];
     $moneyRows = [
@@ -20,7 +21,7 @@
     ];
 @endphp
 
-<x-layouts.app title="Distrik Ransiki" eyebrow="Dasbor" :banner="$banner" section="dasbor" tab="ringkasan" :breadcrumbs="[]">
+<x-layouts.app title="Distrik Ransiki" eyebrow="Dasbor" :banner="$banner" section="dasbor" tab="ringkasan" :breadcrumbs="[]" short-banner>
     <x-slot:actions>
         @include('shared.dashboards.period-picker')
     </x-slot:actions>
@@ -43,6 +44,8 @@
                 </x-list>
             </x-card>
         </div>
+
+        @include('shared.dashboards.charts', ['area' => 'admin'])
 
         @include('shared.dashboards.progress', ['area' => 'admin'])
 

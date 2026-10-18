@@ -1,7 +1,7 @@
 @use('App\Support\Format')
 @use('App\Support\Dashboards\ReportingPeriod')
 
-<x-layouts.app :title="$user->opd->name" eyebrow="Dasbor" :banner="$banner" section="dasbor" tab="ringkasan" :breadcrumbs="[]">
+<x-layouts.app :title="$user->opd->name" eyebrow="Dasbor" :banner="$banner" section="dasbor" tab="ringkasan" :breadcrumbs="[]" short-banner>
     <x-slot:actions>
         @include('shared.dashboards.period-picker')
     </x-slot:actions>
@@ -48,6 +48,8 @@
             </x-card>
         </div>
 
+        @include('shared.dashboards.charts', ['area' => 'opd'])
+
         @include('shared.dashboards.progress', ['area' => 'opd'])
 
         <div class="grid gap-5 lg:grid-cols-2 lg:items-start">
@@ -72,7 +74,5 @@
                 </div>
             </x-card>
         </div>
-
-        @include('shared.dashboards.trend', ['area' => 'opd'])
     </div>
 </x-layouts.app>

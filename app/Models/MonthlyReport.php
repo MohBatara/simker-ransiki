@@ -144,6 +144,23 @@ class MonthlyReport extends Model
             ->when((int) ($filters['menunggu'] ?? 0), fn ($query, $days) => $query->waitingLongerThan($days));
     }
 
+    /**
+     * Urutan bawaan "Semua laporan" peninjau: menunggu verifikasi (pengajuan terakhir paling lama dulu), perlu revisi,
+     * terverifikasi (terbaru dulu), lalu draf. Butuh withSubmissionInfo (last_submitted_at).
+     */
+    public function scopeReviewerOrder(Builder $query): void
+    {
+        $query
+            ->orderByRaw('CASE monthly_reports.status WHEN ? THEN 0 WHEN ? THEN 1 WHEN ? THEN 2 ELSE 3 END', [
+                ReportStatus::Submitted->value, ReportStatus::Revision->value, ReportStatus::Verified->value,
+            ])
+            ->orderByRaw('CASE WHEN monthly_reports.status = ? THEN last_submitted_at END', [ReportStatus::Submitted->value])
+            ->orderByRaw('CASE WHEN monthly_reports.status = ? THEN monthly_reports.verified_at END DESC', [ReportStatus::Verified->value])
+            ->orderByDesc('monthly_reports.period')
+            ->orderBy(Organization::select('name')->whereColumn('organizations.id', 'monthly_reports.organization_id'))
+            ->orderBy('monthly_reports.id');
+    }
+
     /** Laporan diajukan yang pengajuan terakhirnya lebih dari N hari lalu. */
     public function scopeWaitingLongerThan(Builder $query, int $days): void
     {
@@ -202,14 +219,14 @@ class MonthlyReport extends Model
     }
 
     /**
-     * Antrean "Perlu diverifikasi": laporan diajukan yang terlihat pengguna. Admin: hanya yang tidak bisa diverifikasi
-     * petugas OPD mana pun. Dipakai daftar antrean dan badge menu Laporan (App\Support\Navigation).
+     * SATU definisi "menunggu verifikasi": semua laporan diajukan dalam cakupan pengguna (Admin: seluruh distrik, OPD:
+     * kelompok binaan), termasuk yang tidak boleh ia verifikasi sendiri (pemisahan tugas; ditandai di daftar).
+     * Dipakai tab Perlu diverifikasi, badge menu Laporan, teks "menunggu verifikasi" di Semua laporan, dan kartu
+     * dasbor (turunannya: waitingLongerThan, needsAdminVerification).
      */
     public static function verificationQueue(User $user): Builder
     {
-        return static::visibleTo($user)
-            ->where('monthly_reports.status', ReportStatus::Submitted)
-            ->when($user->isAdmin(), fn (Builder $query) => $query->needsAdminVerification());
+        return static::visibleTo($user)->where('monthly_reports.status', ReportStatus::Submitted);
     }
 
     /**

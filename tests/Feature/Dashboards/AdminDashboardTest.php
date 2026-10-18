@@ -38,7 +38,8 @@ test('dasbor admin: perhatian, progres per OPD, kelompok, dan ekonomi resmi', fu
         ->assertSee('Perlu perhatian')
         ->assertSee('/admin/kelompok?opd=none', false)
         ->assertSee('/admin/kelompok?status=active&amp;akun=tidak-ada', false)
-        ->assertSee('/admin/laporan?status=submitted&amp;menunggu=7', false)
+        ->assertSee('/admin/laporan/verifikasi?menunggu=7', false)
+        ->assertSee('/admin/laporan/verifikasi?hanya=admin', false)
         ->assertSee('Pelaporan September 2026')
         ->assertSee('1 dari 2')
         ->assertSee('DC')
@@ -51,7 +52,7 @@ test('dasbor admin: perhatian, progres per OPD, kelompok, dan ekonomi resmi', fu
         ->assertSee('Kakao kering')
         ->assertSee('12,5 kg');
 
-    expect($response->viewData('attention'))->toBe(['without_opd' => 2, 'admin_queue' => 0, 'waiting' => 0, 'active_without_account' => 1])
+    expect($response->viewData('attention'))->toMatchArray(['without_opd' => 2, 'admin_queue' => 0, 'waiting' => 0, 'active_without_account' => 1])
         ->and($response->viewData('economy')['totals']['profit'])->toBe(['sum' => null, 'filled' => 0])
         ->and($queries)->toBeLessThan(35);
 });

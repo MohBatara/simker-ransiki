@@ -54,7 +54,7 @@ test('perlu tindakan, progres, belum mengajukan, masalah, dan tren hanya untuk b
         ->assertSee('KUB Belum Lapor')
         ->assertSee('/opd/laporan/masalah?kind=problem&amp;category=modal&amp;period=2026-09', false)
         ->assertSee('/opd/kelompok?laporan=belum-dibuat&amp;periode=2026-09', false)
-        ->assertSee('Laporan terverifikasi, 6 bulan')
+        ->assertSee('Tren pendapatan, 12 bulan')->assertSee('Kepatuhan pelaporan, 6 bulan')->assertSee('Lihat statistik lengkap')
         ->assertDontSee('KUB OPD Lain');
 
     expect($response->viewData('waitingCount'))->toBe(1)

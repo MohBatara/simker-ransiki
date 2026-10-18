@@ -130,39 +130,6 @@ class ReportingStats
     }
 
     /**
-     * Laporan terverifikasi per bulan untuk N bulan sampai periode terpilih, dibandingkan dengan
-     * jumlah kelompok wajib lapor bulan itu (status kelompok saat ini).
-     *
-     * @return Collection<int, array{period: CarbonImmutable, verified: int, obligated: int}>
-     */
-    public function verifiedTrend(int $months = 6): Collection
-    {
-        $first = $this->period->subMonthsNoOverflow($months - 1);
-
-        $verified = MonthlyReport::visibleTo($this->user)
-            ->where('status', ReportStatus::Verified)
-            ->whereBetween('period', [$first->format('Y-m-d'), $this->period->format('Y-m-d')])
-            ->groupBy('period')
-            ->selectRaw('period, COUNT(DISTINCT organization_id) as total')
-            ->get()
-            ->mapWithKeys(fn ($row) => [$row->period->format('Y-m') => (int) $row->total]);
-
-        $starts = Organization::visibleTo($this->user)
-            ->obligatedFor($this->period)
-            ->pluck('reporting_starts_on');
-
-        return collect(range(0, $months - 1))->map(function (int $offset) use ($first, $verified, $starts) {
-            $period = $first->addMonthsNoOverflow($offset);
-
-            return [
-                'period' => $period,
-                'verified' => $verified[$period->format('Y-m')] ?? 0,
-                'obligated' => $starts->filter(fn ($start) => $start->lte($period))->count(),
-            ];
-        });
-    }
-
-    /**
      * Segmen untuk x-stacked-bar; setiap angka menuju daftar yang sudah tersaring.
      *
      * @param  array  $extra  filter tambahan untuk tautan, mis. ['opd' => 3] di tabel per OPD

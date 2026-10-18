@@ -8,6 +8,7 @@ use App\Models\BusinessSector;
 use App\Models\InstitutionType;
 use App\Models\MonthlyReport;
 use App\Models\Organization;
+use App\Models\User;
 use App\Models\ReportItem;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Collection;
@@ -48,13 +49,19 @@ class DistrictStats
         ];
     }
 
-    /** @return array{without_opd: int, admin_queue: int, waiting: int, active_without_account: int} */
-    public function attention(): array
+    /**
+     * "Perlu perhatian" dasbor Admin. Angka laporan diturunkan dari MonthlyReport::verificationQueue (sama dengan tab
+     * Perlu diverifikasi dan badge menu Laporan).
+     *
+     * @return array{waiting_total: int, without_opd: int, admin_queue: int, waiting: int, active_without_account: int}
+     */
+    public function attention(User $user): array
     {
         return [
+            'waiting_total' => MonthlyReport::verificationQueue($user)->count(),
             'without_opd' => Organization::doesntHave('opds')->count(),
-            'admin_queue' => MonthlyReport::needsAdminVerification()->count(),
-            'waiting' => MonthlyReport::waitingLongerThan(self::WAITING_DAYS)->count(),
+            'admin_queue' => MonthlyReport::verificationQueue($user)->needsAdminVerification()->count(),
+            'waiting' => MonthlyReport::verificationQueue($user)->waitingLongerThan(self::WAITING_DAYS)->count(),
             'active_without_account' => Organization::where('status', OrganizationStatus::Active)->doesntHave('users')->count(),
         ];
     }

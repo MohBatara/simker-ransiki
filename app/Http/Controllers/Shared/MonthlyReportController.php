@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Shared;
 
 use App\Actions\Reports\ReviewReport;
-use App\Enums\ReportStatus;
 use App\Http\Controllers\Controller;
 use App\Models\MonthlyReport;
 use App\Models\Opd;
@@ -23,18 +22,22 @@ class MonthlyReportController extends Controller
 {
     private const NOTE_RULES = ['required', 'string', 'min:10', 'max:2000'];
 
-    /** Laporan › "Semua laporan": semua status, termasuk draf (isinya baru bisa dibuka setelah diajukan). */
+    /**
+     * Laporan › "Semua laporan": semua status, termasuk draf (isinya baru bisa dibuka setelah diajukan). Urutan:
+     * menunggu verifikasi, perlu revisi, terverifikasi, draf (MonthlyReport::scopeReviewerOrder).
+     */
     public function index(Request $request): View
     {
+        $user = $request->user();
         $filters = $request->only(['q', 'status', 'period', 'opd', 'menunggu']);
+        // "N menunggu verifikasi" = antrean yang sama dengan tab Perlu diverifikasi, dengan filter yang sedang aktif.
+        $submittedCount = MonthlyReport::verificationQueue($user)->filter($filters)->count();
 
-        $query = MonthlyReport::visibleTo($request->user())->filter($filters);
-        $submittedCount = (clone $query)->where('monthly_reports.status', ReportStatus::Submitted)->count();
-
-        $reports = $query
+        $reports = MonthlyReport::visibleTo($user)
+            ->filter($filters)
+            ->withSubmissionInfo()
             ->with(['organization:id,name', 'enterer:id,role'])
-            ->orderByDesc('period')
-            ->orderBy(Organization::select('name')->whereColumn('organizations.id', 'monthly_reports.organization_id'))
+            ->reviewerOrder()
             ->paginate(20)
             ->withQueryString();
 
@@ -42,16 +45,25 @@ class MonthlyReportController extends Controller
     }
 
     /**
-     * Antrean verifikasi: laporan diajukan, yang paling lama menunggu di atas. OPD: kelompok binaan (laporan
-     * yang ia isi/ajukan sendiri ditandai). Admin: laporan yang tidak bisa diverifikasi petugas OPD mana pun.
+     * Antrean "Perlu diverifikasi": MonthlyReport::verificationQueue (semua laporan diajukan dalam cakupan), yang paling
+     * lama menunggu di atas. Laporan yang ia isi/ajukan sendiri tetap tampil dan ditandai (pemisahan tugas).
+     * Admin bisa menyaring ?hanya=admin: laporan yang tidak bisa diverifikasi petugas OPD mana pun.
      */
     public function queue(Request $request): View
     {
         $user = $request->user();
-        $filters = $request->only(['q', 'period']);
+        $filters = $request->only(['q', 'period', 'opd', 'menunggu', 'hanya']);
+        $adminOnly = $user->isAdmin() && ($filters['hanya'] ?? null) === 'admin';
+        if (! $adminOnly) {
+            unset($filters['hanya']);
+        }
+        if (! $user->isAdmin()) {
+            unset($filters['opd']);
+        }
 
         $reports = MonthlyReport::verificationQueue($user)
             ->filter($filters)
+            ->when($adminOnly, fn ($query) => $query->needsAdminVerification())
             ->withSubmissionInfo()
             ->when(MonthlyReport::separatesDuties(), fn ($query) => $query->withHandledBy($user))
             ->with(['organization:id,name', 'enterer:id,role'])

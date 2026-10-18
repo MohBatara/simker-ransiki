@@ -497,11 +497,15 @@ draft ──ajukan──▶ submitted ──verifikasi──▶ verified ──b
 - Pemisahan tugas (`simker.verification.separate_duties`, default true): akun yang membuat (`entered_by`), mengisi
   atas nama (`entered`), atau mengajukan (`submitted`) laporan TIDAK boleh memverifikasi / meminta revisi laporan
   itu (`MonthlyReport::wasHandledBy`, dicek di Policy `verify` → 403). Verifikasi oleh petugas OPD lain yang
-  terhubung atau Admin. Penginput melihat "Perlu diverifikasi oleh Admin atau petugas OPD lain" (detail + antrean).
-  Antrean verifikasi Admin (`/admin/laporan/verifikasi`, menu Laporan > tab "Perlu diverifikasi"): laporan `submitted` yang tidak bisa
-  diverifikasi akun OPD aktif mana pun (`MonthlyReport::needsAdminVerification`: tanpa OPD pembina, atau semua
-  petugasnya ikut mengisi/mengajukan). Notifikasi pengajuan tidak dikirim ke penginput; bila tidak ada petugas OPD
-  yang berhak, ke Admin.
+  terhubung atau Admin. Laporan itu TETAP tampil di antrean penginput dengan label "Diisi oleh Anda, perlu
+  pemverifikasi lain"; di detail tombol "Verifikasi" tampil nonaktif + alert penjelasan.
+  Antrean "Perlu diverifikasi" (`/{area}/laporan/verifikasi`) = SATU definisi `MonthlyReport::verificationQueue($user)`:
+  semua laporan `submitted` dalam cakupan (Admin seluruh distrik, OPD kelompok binaan). Badge menu Laporan, angka tab,
+  "N menunggu verifikasi" di Semua laporan, dan kartu dasbor (termasuk "menunggu lebih dari 7 hari" =
+  `->waitingLongerThan(7)`) diturunkan dari query itu (dijaga `VerificationCountsTest`). Admin bisa menyaring
+  `?hanya=admin` = laporan yang tidak bisa diverifikasi akun OPD aktif mana pun (`needsAdminVerification`: tanpa OPD
+  pembina, atau semua petugasnya ikut mengisi/mengajukan). Notifikasi pengajuan tidak dikirim ke penginput; bila tidak
+  ada petugas OPD yang berhak, ke Admin.
 - Laporan `verified` tidak bisa diubah (tahap inti). Lampiran laporan berstatus `verified` tidak
   boleh dihapus siapa pun, termasuk Admin.
 - OPD yang boleh memverifikasi: OPD mana pun yang terhubung dengan kelompok tersebut.
@@ -514,8 +518,10 @@ draft ──ajukan──▶ submitted ──verifikasi──▶ verified ──b
   hak lihat (404), lalu status, lalu hak tindakan. Bila peninjau lain bertindak lebih dulu, yang kedua
   mendapat pesan "Laporan ini sudah ditinjau oleh …" tanpa baris riwayat ganda.
 - Draf kelompok yang belum pernah diajukan (`submitted_at` kosong) tampil di daftar Admin/OPD sebagai
-  "Draf, belum diajukan" tanpa tautan; isinya (termasuk lampiran) 404 bagi Admin/OPD. Pengecualian: draf yang
-  dibuat OPD/Admin atas nama kelompok (tautan baris memakai Policy `view`).
+  "Draf, belum diajukan" tanpa tautan, baris redup (`text-ink-soft`, bukan opacity); isinya (termasuk lampiran) 404
+  bagi Admin/OPD. Pengecualian: draf yang dibuat OPD/Admin atas nama kelompok (tautan baris memakai Policy `view`).
+- Urutan bawaan "Semua laporan" (`MonthlyReport::scopeReviewerOrder`): menunggu verifikasi (pengajuan terakhir paling
+  lama dulu), perlu revisi, terverifikasi (terbaru dulu), lalu draf. Filter status tetap bisa memilih Draf.
 - Antrean verifikasi OPD (`/opd/laporan/verifikasi`): laporan `submitted`, urut dari pengajuan TERAKHIR yang
   paling lama (dari `report_reviews`), dengan penanda "Diajukan ulang".
 - "Masalah & kebutuhan" (`/opd/laporan/masalah`, `/admin/laporan/masalah`, tab menu Laporan): isian bagian E/F hanya dari laporan
@@ -552,7 +558,12 @@ draft ──ajukan──▶ submitted ──verifikasi──▶ verified ──b
 - Dasbor Admin & OPD: kartu ringkasan "Terlambat melapor {bulan}" (`shared.dashboards.overdue-stat`) dan
   "Kebutuhan belum ditindaklanjuti" (`shared.dashboards.stale-needs-stat`: kebutuhan berstatus Baru/Ditinjau yang
   tidak berubah > `simker.follow_up.stale_days` (30) hari, dihitung dari `follow_up_at` atau pengajuan pertama,
-  `ReportIssue::stale`). Admin "Perlu perhatian" juga memuat "laporan yang hanya bisa diverifikasi Admin".
+  `ReportIssue::stale`). Admin "Perlu perhatian": laporan menunggu verifikasi, kelompok tanpa OPD pembina, "laporan
+  yang hanya bisa diverifikasi Admin" (→ `?hanya=admin`), menunggu lebih dari 7 hari, kelompok aktif tanpa akun.
+  Tab Ringkasan (Admin & OPD): di bawah "Perlu perhatian"/"Perlu tindakan" dua grafik ringkas berdampingan (HP
+  bertumpuk, tinggi 220px, tanpa filter, tautan "Lihat statistik lengkap" ke tab Ekonomi): tren pendapatan 12 bulan
+  (aturan bulan sementara) dan kepatuhan pelaporan 6 bulan, dari `Statistics::overview()` (service yang sama dengan
+  tab Ekonomi; `shared.dashboards.charts`). Banner foto dasbor 180px di tablet/desktop (`short-banner`).
   Setelah tenggat, daftar "Belum mengajukan" berjudul "Terlambat melapor {bulan}" dengan badge "Terlambat".
   Dasbor Kelompok: "Tenggat {tanggal} · N hari lagi". "Diajukan terlambat" (`wasSubmittedLate()`, informasi saja):
   `submitted_at` melewati tenggat periodenya.
@@ -644,7 +655,7 @@ verifikasi profil) · Laporan (Semua laporan · Perlu diverifikasi · Masalah & 
   ada di navigasi bawah).
 - Badge (`x-nav-badge`, pil `sun` berteks `ink` 9,0:1, maks "99+", tidak tampil bila 0) di sidebar dan navigasi bawah:
   menu Laporan = laporan menunggu verifikasi, menu Kelompok = profil menunggu verifikasi. Angkanya SAMA dengan isi tab
-  antreannya: `MonthlyReport::verificationQueue($user)` (Admin: hanya yang tidak bisa diverifikasi OPD) dan
+  antreannya: `MonthlyReport::verificationQueue($user)` (semua laporan diajukan dalam cakupan) dan
   `Organization::profileReviewQueue($user)`, dihitung sekali per request (`Navigation::counts`). PENGECUALIAN Bagian 7:
   token `sun` di area aplikasi hanya untuk badge ini (atas permintaan; dijaga `PublicStyleTest`).
 - URL lama (`/{area}/statistik`, `/{area}/verifikasi`, `/{area}/verifikasi-profil`, `/{area}/masalah`, `/admin/konten`,
@@ -865,8 +876,8 @@ informasi), `tag` (label pil di banner detail kelompok),
 `layouts.app` (area login), `layouts.public` (website publik), `layouts.auth` (halaman masuk),
 `layouts.guest` (halaman error, ganti kata sandi wajib).
 
-Grafik ringkas di dasbor Admin/OPD dibuat dengan CSS/SVG di server. Grafik interaktif (Statistik, dasbor
-Kelompok) memakai komponen `chart` (Chart.js, dimuat lewat `import()` dinamis di `Alpine.data('chart')`,
+Bilah status di dasbor Admin/OPD dibuat dengan CSS/SVG di server. Grafik interaktif (tab Ekonomi, grafik ringkas
+tab Ringkasan, dasbor Kelompok) memakai komponen `chart` (prop `more` untuk tautan di bawah grafik) (Chart.js, dimuat lewat `import()` dinamis di `Alpine.data('chart')`,
 `resources/js/charts.js`): judul, sumber ("Dari laporan terverifikasi."), tombol "Lihat tabel" dengan angka yang
 sama (ikut tercetak), `aria-label` yang membacakan isinya, pesan bila belum ada data (bukan grafik kosong).
 Tanpa animasi, gradasi, atau bayangan; grid `line`; Public Sans. Warna status hanya untuk segmen status

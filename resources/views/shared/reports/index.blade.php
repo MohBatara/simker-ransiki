@@ -8,7 +8,7 @@
 @php
     $queue = $mode === 'queue';
     $url = $queue ? route($area.'.verifications.index') : route($area.'.reports.index');
-    $selects = $queue ? ['period'] : ['status', 'period', 'opd'];
+    $selects = $queue ? ['period', 'opd'] : ['status', 'period', 'opd'];
     $active = collect($filters)->only($selects)->filter(fn ($value) => filled($value))->count();
     $chips = \App\Support\FilterChips::from($filters, [
         'q' => [null, null],
@@ -16,6 +16,7 @@
         'period' => ['Periode', $periods],
         'opd' => ['OPD', ['none' => 'Tanpa OPD pembina'] + $opds],
         'menunggu' => [null, ['7' => 'Menunggu lebih dari 7 hari']],
+        'hanya' => [null, ['admin' => 'Hanya bisa diverifikasi Admin']],
     ]);
     $hasFilters = $chips !== [];
     $summary = $queue
@@ -23,7 +24,7 @@
         : collect([$reports->total().' laporan', $submittedCount ? $submittedCount.' menunggu verifikasi' : null])->filter()->join(' · ');
     $title = $queue ? 'Perlu diverifikasi' : 'Semua laporan';
     $description = match (true) {
-        $queue && $area === 'admin' => 'Laporan yang hanya bisa diverifikasi Admin: kelompok tanpa OPD pembina, atau semua petugas OPD-nya ikut mengisi atau mengajukan.',
+        $queue && $area === 'admin' => 'Semua laporan yang diajukan kelompok dan belum ditinjau. Yang paling lama menunggu ada di atas.',
         $queue => 'Laporan yang diajukan kelompok binaan. Yang paling lama menunggu ada di atas.',
         $area === 'opd' => 'Laporan kelompok binaan. Draf baru bisa dibuka setelah diajukan.',
         default => 'Laporan seluruh kelompok di distrik. Draf baru bisa dibuka setelah diajukan.',
@@ -43,7 +44,7 @@
             search-label="Cari nama kelompok"
             :search="$filters['q'] ?? ''"
             :active="$active"
-            :keep="collect($filters)->only(['menunggu'])->all()"
+            :keep="collect($filters)->only(['menunggu', 'hanya'])->all()"
         >
             @unless ($queue)
                 <x-select size="sm" name="status" :options="ReportStatus::reviewerOptions()" :selected="$filters['status'] ?? null" placeholder="Semua status" x-on:change="$el.form.requestSubmit()" aria-label="Status laporan" />
@@ -62,7 +63,7 @@
                     <x-button variant="secondary" :href="$url">Hapus filter</x-button>
                 </x-empty-state>
             @elseif ($queue)
-                <x-empty-state title="Tidak ada laporan yang menunggu verifikasi" :description="$area === 'admin' ? 'Laporan yang tidak bisa diverifikasi petugas OPD akan muncul di sini.' : 'Laporan yang diajukan kelompok binaan akan muncul di sini.'">
+                <x-empty-state title="Tidak ada laporan yang menunggu verifikasi" :description="$area === 'admin' ? 'Laporan yang diajukan kelompok akan muncul di sini.' : 'Laporan yang diajukan kelompok binaan akan muncul di sini.'">
                     <x-button variant="secondary" :href="route($area.'.reports.index')">Lihat semua laporan</x-button>
                 </x-empty-state>
             @else
@@ -87,12 +88,14 @@
 
                 @foreach ($reports as $report)
                     {{-- Draf kelompok yang belum pernah diajukan tidak bisa dibuka peninjau (404), jadi barisnya tanpa tautan. --}}
-                    <x-table.row :href="auth()->user()->can('view', $report) ? route($area.'.reports.show', $queue ? [$report, 'dari' => 'antrean'] : $report) : null">
+                    @php $viewable = auth()->user()->can('view', $report); @endphp
+                    {{-- Draf yang belum bisa dibuka tampil redup (ink-soft, tetap 7:1) dan tanpa tautan. --}}
+                    <x-table.row :href="$viewable ? route($area.'.reports.show', $queue ? [$report, 'dari' => 'antrean'] : $report) : null" :class="$viewable ? null : 'text-ink-soft'" :data-draft="$viewable ? null : 'true'">
                         <x-table.cell primary>{{ $report->organization->name }}</x-table.cell>
                         <x-table.cell subtitle>
                             {{ Format::month($report->period) }}
                             @if ($report->handled_by_me)
-                                <span class="block text-caption text-ink-soft">Perlu diverifikasi oleh Admin atau petugas OPD lain</span>
+                                <span class="block text-caption text-ink-soft">Diisi oleh Anda, perlu pemverifikasi lain</span>
                             @endif
                         </x-table.cell>
                         <x-table.cell badge>

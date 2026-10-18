@@ -27,6 +27,8 @@
     'panels' => null,
     // Hasil App\Support\Dashboards\StatisticsCharts::*; kuncinya mengisi prop di atas.
     'chart' => null,
+    // Tautan di bawah grafik: ['href' => ..., 'label' => ...] (mis. grafik ringkas di dasbor → tab Ekonomi).
+    'more' => null,
 ])
 
 {{--
@@ -73,13 +75,16 @@
                 @endforeach
             </div>
 
-            @if ($note || $footnote)
+            @if ($note || $footnote || $more)
                 <div class="mt-auto space-y-1 pt-3 text-caption text-ink-soft">
                     @if ($footnote)
                         <p>{{ $footnote }}</p>
                     @endif
                     @if ($note)
                         <p>{{ $note }}</p>
+                    @endif
+                    @if ($more)
+                        <x-link :href="$more['href']" class="text-ui">{{ $more['label'] }}</x-link>
                     @endif
                 </div>
             @endif

@@ -94,10 +94,12 @@ test('draf yang sedang diisi kelompok tetap tertutup bagi OPD', function () {
 test('penginput tidak bisa memverifikasi atau meminta revisi, termasuk lewat request langsung', function () {
     $report = enterOnBehalf($this);
 
-    $this->get("/opd/laporan/{$report->id}")->assertOk()
-        ->assertSee('Perlu diverifikasi oleh Admin atau petugas OPD lain')
-        ->assertDontSee('id="form-verify"', false);
-    $this->get('/opd/laporan/verifikasi')->assertSee('Perlu diverifikasi oleh Admin atau petugas OPD lain');
+    $html = $this->get("/opd/laporan/{$report->id}")->assertOk()
+        ->assertSee('Diisi oleh Anda, perlu pemverifikasi lain')
+        ->assertDontSee('id="form-verify"', false)->getContent();
+    // Tombol Verifikasi tetap terlihat tetapi nonaktif.
+    expect($html)->toMatch('#<button[^>]*disabled[^>]*aria-describedby="alasan-verifikasi"#');
+    $this->get('/opd/laporan/verifikasi')->assertSee('Diisi oleh Anda, perlu pemverifikasi lain');
 
     $this->post("/opd/laporan/{$report->id}/verifikasi", ['verify_note' => ''])->assertForbidden();
     $this->post("/opd/laporan/{$report->id}/minta-revisi", ['revision_note' => 'Mohon diperbaiki angkanya.'])->assertForbidden();
@@ -137,20 +139,23 @@ test('OPD dengan satu petugas: laporan masuk antrean verifikasi Admin dan notifi
     Notification::assertSentTo($this->admin, ReportSubmitted::class);
     Notification::assertNotSentTo($this->inputter, ReportSubmitted::class);
 
-    $queue = $this->actingAs($this->admin)->get('/admin/laporan/verifikasi')->assertOk()->assertSee('KUB Tanpa HP')->viewData('reports');
-    expect($queue->pluck('id')->all())->toBe([$report->id])
-        ->and($queue->pluck('id')->all())->not->toContain($normal->id);
+    // Tab Perlu diverifikasi Admin berisi SEMUA laporan diajukan; ?hanya=admin menyaring yang tidak bisa diverifikasi OPD.
+    $all = $this->actingAs($this->admin)->get('/admin/laporan/verifikasi')->assertOk()->viewData('reports');
+    expect($all->pluck('id')->sort()->values()->all())->toBe(collect([$report->id, $normal->id])->sort()->values()->all());
+    $queue = $this->get('/admin/laporan/verifikasi?hanya=admin')->assertOk()->assertSee('KUB Tanpa HP')->assertSee('Hanya bisa diverifikasi Admin')->viewData('reports');
+    expect($queue->pluck('id')->all())->toBe([$report->id]);
 
-    // Begitu ada petugas OPD lain, laporan tidak lagi menunggu Admin.
+    // Begitu ada petugas OPD lain, laporan tidak lagi hanya menunggu Admin.
     User::factory()->opd($this->opd)->create();
-    expect($this->get('/admin/laporan/verifikasi')->viewData('reports')->total())->toBe(0);
+    expect($this->get('/admin/laporan/verifikasi?hanya=admin')->viewData('reports')->total())->toBe(0)
+        ->and($this->get('/admin/laporan/verifikasi')->viewData('reports')->total())->toBe(2);
 });
 
 test('aturan bisa dimatikan lewat config', function () {
     config(['simker.verification.separate_duties' => false]);
     $report = enterOnBehalf($this);
 
-    $this->get("/opd/laporan/{$report->id}")->assertDontSee('Perlu diverifikasi oleh Admin atau petugas OPD lain');
+    $this->get("/opd/laporan/{$report->id}")->assertDontSee('Diisi oleh Anda, perlu pemverifikasi lain');
     $this->post("/opd/laporan/{$report->id}/verifikasi", ['verify_note' => ''])->assertSessionHas('status', 'Laporan diverifikasi.');
 
     expect($report->fresh()->status)->toBe(ReportStatus::Verified);

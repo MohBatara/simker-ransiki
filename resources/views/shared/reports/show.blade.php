@@ -33,6 +33,9 @@
         @if ($canVerify)
             <x-button variant="secondary" x-data x-on:click="$dispatch('open-modal', 'report-revision')">Minta revisi</x-button>
             <x-button x-data x-on:click="$dispatch('open-modal', 'report-verify')">Verifikasi</x-button>
+        @elseif ($handledByMe)
+            {{-- Pemisahan tugas: tombol tetap terlihat tetapi nonaktif; Policy verify tetap menolak di server (403). --}}
+            <x-button disabled aria-describedby="alasan-verifikasi" title="Diisi oleh Anda, perlu pemverifikasi lain">Verifikasi</x-button>
         @endif
         @if ($canReopen)
             <x-button variant="secondary" x-data x-on:click="$dispatch('open-modal', 'report-reopen')">Buka kembali untuk revisi</x-button>
@@ -44,8 +47,8 @@
         @include('shared.reports.revision-note', ['fixHint' => (bool) $editUrl])
 
         @if ($handledByMe)
-            <x-alert tone="wait" title="Perlu diverifikasi oleh Admin atau petugas OPD lain">
-                Anda ikut mengisi atau mengajukan laporan ini, jadi tidak bisa memverifikasinya sendiri.
+            <x-alert tone="wait" title="Diisi oleh Anda, perlu pemverifikasi lain" id="alasan-verifikasi">
+                Anda ikut mengisi atau mengajukan laporan ini, jadi tidak bisa memverifikasinya sendiri. Verifikasi oleh Admin atau petugas OPD lain.
             </x-alert>
         @endif
 

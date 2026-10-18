@@ -70,8 +70,8 @@ test('badge menunggu verifikasi mengikuti cakupan data tiap peran', function () 
 
     $this->actingAs($this->opdUser);
     expect(Navigation::counts($this->opdUser))->toBe(['reports' => 2, 'profiles' => 1]);
-    // Admin: hanya laporan yang tidak bisa diverifikasi petugas OPD (sama dengan isi tab Perlu diverifikasi).
-    expect(Navigation::counts($this->admin))->toBe(['reports' => 1, 'profiles' => 2])
+    // Admin: semua laporan diajukan di distrik (sama dengan isi tab Perlu diverifikasi).
+    expect(Navigation::counts($this->admin))->toBe(['reports' => 4, 'profiles' => 2])
         ->and(Navigation::counts($this->otherOpdUser))->toBe(['reports' => 1, 'profiles' => 0]);
 
     $html = $this->get('/opd')->assertOk()->getContent();
@@ -83,7 +83,8 @@ test('badge menunggu verifikasi mengikuti cakupan data tiap peran', function () 
     expect($this->get('/opd/laporan/verifikasi')->viewData('reports')->total())->toBe(2)
         ->and($this->get('/opd/kelompok/verifikasi-profil')->viewData('organizations')->total())->toBe(1);
     $this->actingAs($this->admin);
-    expect($this->get('/admin/laporan/verifikasi')->viewData('reports')->total())->toBe(1);
+    expect($this->get('/admin/laporan/verifikasi')->viewData('reports')->total())->toBe(4)
+        ->and($this->get('/admin/laporan/verifikasi?hanya=admin')->viewData('reports')->total())->toBe(1);
 });
 
 test('badge tidak tampil bila tidak ada yang menunggu', function () {

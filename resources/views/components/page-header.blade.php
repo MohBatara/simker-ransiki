@@ -13,6 +13,8 @@
     'image' => null,
     // Banner foto di HP sekitar 25% lebih pendek (detail kelompok); desktop tidak berubah.
     'compact' => false,
+    // Banner foto lebih pendek di tablet/desktop (180px, dasbor) agar ringkasan dan grafik cepat terlihat.
+    'short' => false,
 ])
 
 {{--
@@ -44,7 +46,9 @@
     'md:items-end' => $mode !== 'photo',
     'max-md:hidden' => $hideOnPhone && ! $description && ! isset($actions) && ! isset($badge) && ! isset($meta),
     'app-band md:overflow-hidden md:rounded-card md:bg-forest md:px-6 md:py-6 xl:px-8' => $mode === 'band',
-    'app-band md:relative md:isolate md:min-h-52 md:items-start md:overflow-hidden md:rounded-card md:bg-forest md:px-6 md:py-8 xl:px-8' => $mode === 'photo',
+    'app-band md:relative md:isolate md:items-start md:overflow-hidden md:rounded-card md:bg-forest md:px-6 xl:px-8' => $mode === 'photo',
+    'md:min-h-52 md:py-8' => $mode === 'photo' && ! $short,
+    'md:min-h-45 md:py-6' => $mode === 'photo' && $short,
 ]) }}>
     <div class="min-w-0 md:max-w-[60%]">
         <div @class([
