@@ -62,10 +62,12 @@ test('panel detail dirender bersama halaman untuk baris pertama, atau ?pilih=id'
     expect($first->viewData('panel')['organization']->id)->toBe($this->alpha->id);
     $first->assertSee('data-panel-id="'.$this->alpha->id.'"', false)
         ->assertDontSee('data-selected="true"', false)
-        ->assertSee('Lihat detail');
+        ->assertDontSee('data-modal="organization-preview" data-open-on-load', false)
+        ->assertSee('Buka detail');
 
-    // ?pilih=id: laci terbuka sejak awal dengan baris itu ditandai.
+    // ?pilih=id: popup pratinjau terbuka sejak awal dengan baris itu ditandai.
     $this->get('/admin/kelompok?pilih='.$this->beta->id)
+        ->assertSee('data-modal="organization-preview" data-open-on-load', false)
         ->assertSee('data-panel-id="'.$this->beta->id.'"', false)
         ->assertSee('data-id="'.$this->beta->id.'" data-selected="true"', false)
         ->assertSee('Produk Panel Beta')
@@ -98,31 +100,34 @@ test('jumlah query daftar terbatas (tanpa N+1)', function () {
     expect(count(DB::getQueryLog()))->toBeLessThan(30);
 });
 
-test('kepala kartu daftar: judul, cari kecil, dan tombol Filter berisi semua filter, langsung diterapkan tanpa Terapkan/Reset', function () {
+test('kepala kartu daftar: judul, cari kecil, dan tombol Filter membuka popup berisi semua filter dengan Terapkan dan Atur ulang', function () {
     $html = $this->actingAs($this->admin)->get('/admin/kelompok?sector='.$this->sectorA->id.'&village='.$this->villageA->id)->assertOk()
         ->assertSee('x-data="adminToolbar"', false)
         ->assertSee('Daftar kelompok')
         ->assertSee('Filter (2)')
-        ->assertDontSee('Terapkan</span>', false)
-        ->assertDontSee('>Reset<', false)
+        ->assertSee('aria-haspopup="dialog" aria-controls="panel-filter"', false)
+        ->assertSee('Terapkan</span>', false)
+        ->assertSee('Atur ulang</span>', false)
         ->getContent();
 
     $panel = strpos($html, 'id="panel-filter"');
 
-    // Semua filter ada di panel Filter (laci kanan desktop, bottom sheet HP), tanpa select sebaris.
+    // Semua filter ada di popup Filter (x-admin.modal md), tanpa select sebaris; tidak ada lagi laci samping.
     expect($html)->not->toContain('-inline"')
         ->and(strpos($html, 'id="village-panel"'))->toBeGreaterThan($panel)
         ->and(strpos($html, 'id="sector-panel"'))->toBeGreaterThan($panel)
         ->and(strpos($html, 'id="opd-panel"'))->toBeGreaterThan($panel)
         // Hasil yang ditukar saat filter berubah.
-        ->and($html)->toContain('data-swap="kelompok"')->toContain('data-swap="toolbar-summary"');
+        ->and($html)->toContain('data-swap="kelompok"')->toContain('data-swap="toolbar-summary"')
+        ->and($html)->toMatch('#<dialog[^>]*id="panel-filter"#')->not->toContain('translate-x-full');
 });
 
-test('ringkasan kelompok di laci kanan, tabel tetap lebar: jenis sebagai chip, kepala tabel menempel', function () {
+test('pratinjau kelompok berupa popup lg di tengah, tabel tetap lebar: jenis sebagai chip, kepala tabel menempel', function () {
     $this->actingAs($this->admin)->get('/admin/kelompok')->assertOk()
         ->assertSee('>Bidang usaha</th>', false)
         ->assertSee('md:sticky md:top-0 md:z-10', false)
-        ->assertSee('aria-label="Ringkasan kelompok"', false)
-        ->assertSee('fixed inset-y-0 right-0 z-50', false)
+        ->assertSee('data-modal="organization-preview"', false)
+        ->assertSee('md:max-w-[760px]', false)
+        ->assertDontSee('fixed inset-y-0 right-0 z-50', false)
         ->assertSee('rounded-pill border border-line bg-panel', false);
 });

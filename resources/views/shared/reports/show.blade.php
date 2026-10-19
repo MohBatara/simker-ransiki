@@ -150,7 +150,7 @@
                                                 </details>
                                             @endif
                                             @if ($area && $report->submitted_at && auth()->user()->can('followUp', $row))
-                                                <x-link :href="route($area.'.issues.show', $row)">Ubah status tindak lanjut</x-link>
+                                                <x-link :href="route($area.'.issues.show', [$row, 'ubah' => 1])">Ubah status tindak lanjut</x-link>
                                             @endif
                                         </li>
                                     @endforeach

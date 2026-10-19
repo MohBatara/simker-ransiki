@@ -42,7 +42,7 @@ test('detail kelompok: badge status (pil lembut) di samping judul, tag, ringkasa
         ->assertSee("/admin/laporan/{$report->id}?dari=kelompok", false)
         ->assertSeeInOrder(['Produk', '2', 'produk terdaftar'])
         ->assertSee('belum punya akun')
-        ->assertSee('/admin/pengaturan/pengguna/tambah?kelompok='.$organization->id, false)
+        ->assertSee("\$dispatch('open-modal', 'user-create')", false)
         ->getContent();
 
     expect($html)->toMatch('/<h1[^>]*>.*?<\/h1>.*?aria-label="Status kelompok">\s*<span data-tone="neutral"[^>]*>Tidak aktif sementara<\/span>/s');

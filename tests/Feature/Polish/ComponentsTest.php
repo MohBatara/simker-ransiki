@@ -28,7 +28,7 @@ test('x-breadcrumbs: halaman terakhir ditandai, hanya di layar lebar', function 
 
 test('tombol tutup alert dan modal setinggi 44px di HP', function () {
     expect(Blade::render('<x-alert dismissible>Tersimpan.</x-alert>'))->toContain('size-11')
-        ->and(Blade::render('<x-modal name="m" title="Judul">Isi</x-modal>'))->toContain('size-11');
+        ->and(Blade::render('<x-admin.modal name="m" title="Judul">Isi</x-admin.modal>'))->toContain('size-11');
 });
 
 test('kontrol form menerima invalid-if untuk form Alpine', function () {

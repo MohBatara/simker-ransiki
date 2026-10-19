@@ -22,10 +22,12 @@ test('form tambah/ubah: kalimat kolom wajib, tanpa label (opsional), remah form'
         ->assertSee('placeholder="08xx xxxx xxxx"', false)
         ->assertSee('placeholder="2016"', false);
 
-    $this->get('/admin/pengaturan/pengguna/tambah')->assertOk()
+    // Tambah akun kini popup di daftar Pengguna; alamat lama dialihkan dengan popup terbuka.
+    $this->get('/admin/pengaturan/pengguna/tambah')->assertRedirect('/admin/pengaturan/pengguna?tambah=1');
+    $this->get('/admin/pengaturan/pengguna?tambah=1')->assertOk()
+        ->assertSee('data-modal="user-create" data-open-on-load', false)
         ->assertSee('wajib diisi.')
-        ->assertDontSee('(opsional)')
-        ->assertSeeInOrder(['aria-label="Remah"', 'Pengguna', 'Tambah akun'], false);
+        ->assertDontSee('(opsional)');
 });
 
 test('form panjang (lebih dari 3 section) memakai daftar section yang menempel; form pendek tidak', function () {
@@ -36,7 +38,7 @@ test('form panjang (lebih dari 3 section) memakai daftar section yang menempel; 
         ->assertSee('aria-label="Bagian form"', false)
         ->assertSee('data-form-section data-title="Identitas"', false);
 
-    $this->get('/admin/pengaturan/pengguna/tambah')->assertOk()->assertDontSee('x-data="formNav"', false);
+    $this->get('/admin/pengaturan/pengguna?tambah=1')->assertOk()->assertDontSee('x-data="formNav"', false);
     $this->get('/admin/website/berita/tambah')->assertOk()->assertDontSee('x-data="formNav"', false);
 });
 
@@ -92,6 +94,6 @@ test('pesan validasi berbahasa Indonesia dengan nama isian yang ramah; isian pil
     $this->from('/admin/website/berita/tambah')->post('/admin/website/berita', [])
         ->assertSessionHasErrors(['title' => 'Judul wajib diisi.', 'body' => 'Isi berita wajib diisi.']);
 
-    $this->from('/admin/pengaturan/pengguna/tambah')->post('/admin/pengaturan/pengguna', [])
+    $this->from('/admin/pengaturan/pengguna?tambah=1')->post('/admin/pengaturan/pengguna', [])
         ->assertSessionHasErrors(['name' => 'Nama wajib diisi.', 'role' => 'Peran wajib dipilih.']);
 });

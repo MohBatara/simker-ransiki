@@ -66,8 +66,8 @@
             <x-admin.stat compact icon="users" label="Total anggota" :value="Format::number($totals['members'])" :hint="$membersHint" />
         </div>
 
-        {{-- Klik baris (≥ 1280px) membuka laci ringkasan dari kanan di atas konten; layar lebih kecil membuka halaman detail. --}}
-        <div x-data="organizationPanel(@js(request()->filled('pilih')))" x-on:keydown.escape.window="close()">
+        {{-- Klik baris (≥ 1280px) membuka popup pratinjau; layar lebih kecil membuka halaman detail. --}}
+        <div x-data="organizationPanel">
             <x-admin.card flush>
                 <x-admin.toolbar
                     :title="$isOpd ? 'Daftar kelompok binaan' : 'Daftar kelompok'"
@@ -135,26 +135,14 @@
                 </div>
             </x-admin.card>
 
-            {{-- Laci ringkasan (≥ 1280px): di atas konten, tabel tetap selebar kartu. --}}
-            <div x-cloak x-show="open" x-on:click="close()" class="fixed inset-0 z-40 hidden bg-ink/20 xl:block" aria-hidden="true"></div>
-            <aside
-                x-cloak
-                x-show="open"
-                x-transition:enter="transition-transform duration-150"
-                x-transition:enter-start="translate-x-full"
-                x-transition:leave="transition-transform duration-150"
-                x-transition:leave-end="translate-x-full"
-                class="fixed inset-y-0 right-0 z-50 hidden w-[26rem] overflow-y-auto border-l border-line bg-panel shadow-float xl:block"
-                aria-live="polite"
-                aria-label="Ringkasan kelompok"
-                x-bind:aria-busy="loading"
-            >
-                <div x-ref="panel" x-bind:class="loading && 'opacity-60'" class="transition-opacity">
+            {{-- Pratinjau kelompok (≥ 1280px): popup lg di tengah layar berisi ringkasan dan tombol "Buka detail". --}}
+            <x-admin.modal name="organization-preview" title="Ringkasan kelompok" size="lg" :show="(bool) ($panel && request()->filled('pilih'))" :guard="false" x-on:modal-closed="closed()">
+                <div x-ref="panel" x-bind:class="loading && 'opacity-60'" x-bind:aria-busy="loading" aria-live="polite" class="transition-opacity">
                     @if ($panel)
                         @include('shared.organizations._panel')
                     @endif
                 </div>
-            </aside>
+            </x-admin.modal>
         </div>
     </div>
 </x-layouts.app>

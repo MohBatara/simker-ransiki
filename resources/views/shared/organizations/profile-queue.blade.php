@@ -18,6 +18,7 @@
     tab="profil"
     :description="($area === 'opd' ? 'Profil kelompok binaan' : 'Profil kelompok').' yang belum terverifikasi: perubahan dari akun kelompok dan profil yang belum pernah diperiksa.'"
 >
+    <div x-data="{ verifying: { url: '', name: '' } }">
     <x-admin.card flush>
         <div class="flex flex-wrap items-center justify-between gap-3 px-4 pb-4 pt-4 md:px-5 md:pt-5">
             <h2 class="text-card-head font-semibold text-ink">Antrean verifikasi profil</h2>
@@ -76,4 +77,10 @@
             </x-admin.table>
         @endif
     </x-admin.card>
+
+    {{-- Menu titik tiga "Tandai terverifikasi" membuka konfirmasi ini (form mengikuti baris yang dipilih). --}}
+    <x-admin.confirm name="verify-profile" title="Tandai profil terverifikasi" bind-action="verifying.url" confirm="Tandai terverifikasi" tone="brand" processing="Menyimpan…">
+        <p>Tandai profil <strong class="text-ink" x-text="verifying.name"></strong> terverifikasi? Pastikan data pentingnya sudah sesuai.</p>
+    </x-admin.confirm>
+    </div>
 </x-layouts.app>

@@ -47,6 +47,6 @@ test('username nomor HP yang sudah dipakai ditolak meski ditulis dengan format l
 });
 
 test('teks bantuan username di form pengguna menyebut nomor HP', function () {
-    $this->actingAs(User::factory()->admin()->create())->get('/admin/pengaturan/pengguna/tambah')->assertOk()
+    $this->actingAs(User::factory()->admin()->create())->get('/admin/pengaturan/pengguna?tambah=1')->assertOk()
         ->assertSee('Boleh nama singkat atau nomor HP.');
 });

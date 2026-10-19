@@ -1,5 +1,5 @@
 {{--
-    Panel detail di samping daftar kelompok (desktop ≥ 1280px). Dirender bersama halaman untuk kelompok
+    Isi popup pratinjau kelompok di daftar kelompok (desktop ≥ 1280px). Dirender bersama halaman untuk kelompok
     terpilih, atau diambil lewat /{area}/kelompok/{id}/ringkas saat baris diklik.
     Variabel: $panel (App\Support\OrganizationPanel::data), $area.
 --}}
@@ -11,15 +11,12 @@
 @endphp
 
 <section class="bg-panel" aria-labelledby="panel-judul" data-panel-id="{{ $organization->id }}">
-    <div class="relative aspect-[2/1] bg-subtle">
+    <div class="relative aspect-[3/1] overflow-hidden rounded-control bg-subtle">
         @if ($panel['image'])
             <x-public.picture :image="$panel['image']" alt="" sizes="400px" width="800" height="400" frame="block size-full" class="size-full object-cover" />
         @else
             <span class="flex size-full items-center justify-center text-page-title font-semibold text-ink-muted" aria-hidden="true">{{ App\Support\Initials::of($organization->name) }}</span>
         @endif
-        <button type="button" x-on:click="close()" class="absolute right-3 top-3 flex size-10 items-center justify-center rounded-control border border-line bg-paper text-ink-soft hover:text-ink" aria-label="Tutup panel">
-            <x-heroicon-o-x-mark class="size-5" />
-        </button>
     </div>
 
     <div class="space-y-4 p-5">
@@ -96,7 +93,7 @@
             @can('update', $organization)
                 <x-button variant="secondary" icon="pencil-square" :href="route($area.'.organizations.edit', $organization)">Ubah</x-button>
             @endcan
-            <x-button :href="route($area.'.organizations.show', $organization)" class="flex-1">Lihat detail</x-button>
+            <x-button :href="route($area.'.organizations.show', $organization)" class="flex-1">Buka detail</x-button>
         </div>
     </div>
 </section>

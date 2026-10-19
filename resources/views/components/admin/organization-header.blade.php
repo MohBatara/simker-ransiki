@@ -43,13 +43,10 @@
                     <x-admin.badge-status :status="$organization->status" />
                     <x-admin.badge-status :status="$organization->profile_status" />
                     @if ($canVerify)
-                        <form novalidate method="POST" action="{{ route($user->role->area().'.organizations.verify-profile', $organization) }}">
-                            @csrf
-                            <button type="submit" data-processing="Menyimpan…" class="inline-flex h-11 items-center gap-1 rounded-pill px-1.5 text-label font-medium text-brand underline underline-offset-4 hover:text-brand-hover md:h-6">
-                                <x-heroicon-o-check-badge class="size-4" aria-hidden="true" />
-                                <span data-button-label>Tandai terverifikasi</span>
-                            </button>
-                        </form>
+                        <button type="button" x-data x-on:click="$dispatch('open-modal', 'verify-profile')" class="inline-flex h-11 items-center gap-1 rounded-pill px-1.5 text-label font-medium text-brand underline underline-offset-4 hover:text-brand-hover md:h-6">
+                            <x-heroicon-o-check-badge class="size-4" aria-hidden="true" />
+                            Tandai terverifikasi
+                        </button>
                     @endif
                 </div>
             </div>
@@ -71,6 +68,12 @@
             </div>
         @endif
     </header>
+
+    @if ($canVerify)
+        <x-admin.confirm name="verify-profile" title="Tandai profil terverifikasi" :description="$organization->name" :action="route($user->role->area().'.organizations.verify-profile', $organization)" confirm="Tandai terverifikasi" tone="brand" processing="Menyimpan…">
+            <p>Pastikan data penting profil (nama, jenis, kampung, ketua, kontak, alamat, deskripsi, bidang usaha) sudah sesuai. Status menjadi <strong class="text-ink">Profil terverifikasi</strong>.</p>
+        </x-admin.confirm>
+    @endif
 
     @if ($stats)
         <div class="grid grid-cols-2 gap-4 xl:grid-cols-4">

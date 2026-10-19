@@ -27,13 +27,13 @@
     @endcan
 @else
     @can('administer', $organization)
-        <x-admin.confirm name="organization-status" title="Ubah status kelompok" :action="route('admin.organizations.status', $organization)" method="PATCH" form="organization-status-form" confirm="Ubah status" :tone="'brand'" processing="Menyimpan…" :show="$statusFailed">
+        <x-admin.confirm name="organization-status" title="Ubah status kelompok" :action="route('admin.organizations.status', $organization)" method="PATCH" form="organization-status-form" confirm="Ubah status" :tone="'brand'" processing="Menyimpan…" :show="$statusFailed" size="md" description="Perubahan status dicatat di riwayat beserta alasannya.">
             <div class="space-y-4" x-data="{ status: @js(old('status', array_key_first($statusOptions))) }">
                 <p>Status saat ini: <strong class="text-ink">{{ $organization->status->label() }}</strong>.</p>
                 @if ($usage)
                     <p>Kelompok ini punya {{ $usage }}, jadi tidak bisa dihapus. Bila sudah berhenti, tandai ditutup.</p>
                 @endif
-                <x-field label="Status baru" for="status">
+                <x-field label="Status baru" for="status" required>
                     <x-select name="status" :options="$statusOptions" :selected="old('status', array_key_first($statusOptions))" x-model="status" required />
                 </x-field>
                 @foreach ($statusOptions as $value => $label)
@@ -41,7 +41,7 @@
                         {{ OrganizationStatus::from($value)->description() }}
                     </p>
                 @endforeach
-                <x-field label="Alasan" for="reason" hint="Contoh: pengurus menyatakan kelompok berhenti beroperasi sejak Agustus.">
+                <x-field label="Alasan" for="reason" hint="Contoh: pengurus menyatakan kelompok berhenti beroperasi sejak Agustus." required>
                     <x-textarea name="reason" rows="3" required minlength="5" maxlength="500" />
                 </x-field>
             </div>

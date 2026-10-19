@@ -399,13 +399,12 @@ document.addEventListener('click', openRowLink);
 document.addEventListener('auxclick', (event) => event.button === 1 && openRowLink(event));
 
 /**
- * Laci ringkasan kelompok dari kanan di atas daftar (layar ≥ 1280px). Klik baris memuat potongan HTML panel
- * (route .../ringkas, dicek Policy) tanpa pindah halaman; layar lebih kecil, klik dengan Ctrl/Cmd, atau
- * permintaan yang gagal tetap membuka halaman detail. ?pilih=id membuka laci sejak awal.
+ * Popup pratinjau kelompok di daftar (layar ≥ 1280px, x-admin.modal "organization-preview"). Klik baris memuat potongan
+ * HTML ringkasan (route .../ringkas, dicek Policy) tanpa pindah halaman; layar lebih kecil, klik dengan Ctrl/Cmd, atau
+ * permintaan yang gagal tetap membuka halaman detail. ?pilih=id membuka popup sejak awal.
  */
-Alpine.data('organizationPanel', (initiallyOpen = false) => ({
+Alpine.data('organizationPanel', () => ({
     loading: false,
-    open: initiallyOpen && window.matchMedia('(min-width: 80rem)').matches,
 
     async select(event) {
         const link = event.target.closest('a');
@@ -420,7 +419,6 @@ Alpine.data('organizationPanel', (initiallyOpen = false) => ({
 
         event.preventDefault();
         this.loading = true;
-        this.open = true;
 
         try {
             const response = await fetch(row.dataset.panelUrl, { headers: { Accept: 'text/html', 'X-Requested-With': 'XMLHttpRequest' } });
@@ -429,11 +427,11 @@ Alpine.data('organizationPanel', (initiallyOpen = false) => ({
             }
             this.$refs.panel.innerHTML = await response.text();
             this.markSelected(row);
+            this.$dispatch('open-modal', 'organization-preview');
 
             const url = new URL(window.location.href);
             url.searchParams.set('pilih', row.dataset.id);
             window.history.replaceState(null, '', url);
-            this.$nextTick(() => document.getElementById('panel-judul')?.focus());
         } catch {
             window.location.assign(link.href);
         } finally {
@@ -447,16 +445,82 @@ Alpine.data('organizationPanel', (initiallyOpen = false) => ({
         }
     },
 
-    close() {
-        if (!this.open) {
-            return;
-        }
-        this.open = false;
+    closed() {
         this.markSelected(null);
-
         const url = new URL(window.location.href);
         url.searchParams.delete('pilih');
         window.history.replaceState(null, '', url);
+    },
+}));
+
+/**
+ * Popup area aplikasi (x-admin.modal) di atas <dialog> bawaan: showModal() mengunci fokus di dalam popup dan membuat
+ * halaman belakang inert; halaman tidak bisa digulir (kelas di <html>); fokus kembali ke pemicu setelah ditutup.
+ * Isian yang diubah (kecuali [data-no-dirty]) membuat penutupan meminta konfirmasi "Buang perubahan?".
+ */
+Alpine.data('adminModal', (name, show = false, guard = true) => ({
+    name,
+    dirty: false,
+    confirming: false,
+    trigger: null,
+
+    init() {
+        if (show) {
+            this.$nextTick(() => this.open());
+        }
+    },
+
+    open() {
+        if (this.$el.open) {
+            return;
+        }
+        this.trigger = document.activeElement;
+        this.dirty = false;
+        this.confirming = false;
+        this.$el.showModal();
+        document.documentElement.classList.add('modal-open');
+        // Fokus awal ke isian pertama (form pendek); popup tanpa isian tetap pada tombol pertama.
+        this.$el.querySelector('[autofocus], form input:not([type=hidden]):not([disabled]), form select:not([disabled]), form textarea:not([disabled])')?.focus();
+    },
+
+    markDirty(event) {
+        if (guard && !event.target.closest('[data-no-dirty]')) {
+            this.dirty = true;
+        }
+    },
+
+    requestClose() {
+        if (this.dirty && !this.confirming) {
+            this.confirming = true;
+            this.$nextTick(() => this.$refs.keep?.focus());
+            return;
+        }
+        if (!this.confirming) {
+            this.close();
+        }
+    },
+
+    discard() {
+        this.dirty = false;
+        this.close();
+    },
+
+    close() {
+        this.confirming = false;
+        if (this.$el.open) {
+            this.$el.close();
+        }
+    },
+
+    restoreFocus() {
+        if (!document.querySelector('dialog[open]')) {
+            document.documentElement.classList.remove('modal-open');
+        }
+        if (this.trigger && document.contains(this.trigger)) {
+            this.trigger.focus({ preventScroll: true });
+        }
+        this.trigger = null;
+        this.$dispatch('modal-closed', this.name);
     },
 }));
 
