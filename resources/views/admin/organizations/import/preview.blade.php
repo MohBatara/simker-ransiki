@@ -25,7 +25,7 @@
         ['label' => 'Pratinjau'],
     ]"
 >
-    <form method="POST" action="{{ route('admin.organizations.import.run', $token) }}" class="space-y-6" x-data="{ ready: {{ $ready }}, picked: [] }">
+    <form novalidate method="POST" action="{{ route('admin.organizations.import.run', $token) }}" class="space-y-6" x-data="{ ready: {{ $ready }}, picked: [] }">
         @csrf
 
         <p class="text-ui text-ink-soft">Data belum disimpan. Periksa setiap baris, centang baris peringatan yang tetap ingin diimpor, lalu tekan Impor.</p>

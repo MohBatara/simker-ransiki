@@ -18,7 +18,7 @@
         : [['label' => 'Pengguna', 'href' => route('admin.users.index')], ['label' => 'Tambah akun']]"
     focus
 >
-    <form method="POST" action="{{ $editing ? route('admin.users.update', $user) : route('admin.users.store') }}" x-data="{ role: @js($role), email: @js((string) old('email', $user->email)) }" class="space-y-6">
+    <form novalidate method="POST" action="{{ $editing ? route('admin.users.update', $user) : route('admin.users.store') }}" x-data="{ role: @js($role), email: @js((string) old('email', $user->email)) }" class="space-y-6">
         @csrf
         @if ($editing)
             @method('PUT')

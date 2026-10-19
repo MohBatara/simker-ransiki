@@ -6,7 +6,7 @@
     @endcan
 
     <div class="space-y-6">
-        <form method="POST" action="{{ route('kelompok.legal.update') }}" class="space-y-4">
+        <form novalidate method="POST" action="{{ route('kelompok.legal.update') }}" class="space-y-4">
             @csrf
             @method('PATCH')
             <x-admin.form-intro />

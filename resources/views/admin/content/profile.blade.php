@@ -18,7 +18,7 @@
             <x-admin.form-section :title="$title" :description="$description">
                 @if ($path)
                     <img src="{{ route('public.site-photo', ['slot' => $slot, 'ukuran' => 960, 'format' => 'webp', 'v' => substr(md5($path), 0, 8)]) }}" alt="{{ $title }} saat ini" class="aspect-[4/3] w-full rounded-tile object-cover md:aspect-[21/9]">
-                    <form method="POST" action="{{ route('admin.content.photo.destroy', $slot) }}">
+                    <form novalidate method="POST" action="{{ route('admin.content.photo.destroy', $slot) }}">
                         @csrf
                         @method('DELETE')
                         <x-button variant="danger" type="submit" processing="Menghapus…">Hapus foto</x-button>
@@ -28,7 +28,7 @@
             </x-admin.form-section>
         @endforeach
 
-        <form method="POST" action="{{ route('admin.content.update') }}" class="space-y-6">
+        <form novalidate method="POST" action="{{ route('admin.content.update') }}" class="space-y-6">
             @csrf
             @method('PUT')
 
@@ -76,7 +76,7 @@
                         $current = PotentialBlocks::photo($n, $settings);
                         $blockErrors = collect($errors->getMessages())->filter(fn ($messages, $key) => str_starts_with($key, $p.'.'));
                     @endphp
-                    <form
+                    <form novalidate
                         method="POST"
                         action="{{ route('admin.potential-blocks.update', $n) }}"
                         enctype="multipart/form-data"
@@ -115,7 +115,7 @@
             </div>
             @foreach (range(1, PotentialBlocks::COUNT) as $n)
                 @if ($settings['potential_'.$n.'_photo_path'])
-                    <form id="hapus-foto-blok-{{ $n }}" method="POST" action="{{ route('admin.potential-blocks.photo.destroy', $n) }}" class="hidden">
+                    <form novalidate id="hapus-foto-blok-{{ $n }}" method="POST" action="{{ route('admin.potential-blocks.photo.destroy', $n) }}" class="hidden">
                         @csrf
                         @method('DELETE')
                     </form>

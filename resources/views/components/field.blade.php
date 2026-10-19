@@ -47,7 +47,7 @@
             <p class="[font-size:var(--hint-text)] text-ink-muted">{{ $hint }}</p>
         @endif
         @if ($error)
-            <p id="{{ $id }}-error" class="[font-size:var(--hint-text)] text-fix">{{ $error }}</p>
+            <p id="{{ $id }}-error" data-field-error class="[font-size:var(--hint-text)] text-fix">{{ $error }}</p>
         @endif
     @endif
 </div>

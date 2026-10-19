@@ -1,5 +1,5 @@
 <x-layouts.guest title="Contoh layout masuk" heading="Masuk" description="Gunakan username atau email.">
-    <form class="space-y-4" x-on:submit.prevent>
+    <form novalidate class="space-y-4" x-on:submit.prevent>
         <x-field label="Username atau email" for="login">
             <x-input name="login" autocomplete="username" />
         </x-field>

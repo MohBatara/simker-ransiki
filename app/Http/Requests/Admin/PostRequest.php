@@ -68,7 +68,7 @@ class PostRequest extends FormRequest
             'summary' => 'ringkasan',
             'photo_alt' => 'teks alternatif foto',
             'photo_caption' => 'keterangan foto',
-            'body' => 'isi',
+            'body' => 'isi berita',
             'published_at' => 'tanggal terbit',
             'event_date' => 'tanggal kegiatan',
         ];

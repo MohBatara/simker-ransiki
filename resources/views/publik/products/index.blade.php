@@ -13,7 +13,7 @@
 @endphp
 
 <x-layouts.public :title="$search->title()" :description="$search->description($found)" :canonical="$search->canonical($products->currentPage())">
-<form
+<form novalidate
     method="GET"
     action="{{ route('public.products') }}"
     role="search"

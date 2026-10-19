@@ -57,7 +57,7 @@
 
 <x-admin.form-section title="Bidang usaha dan OPD" description="Bidang usaha dipakai di direktori dan statistik; OPD pembina memverifikasi laporan.">
     <div class="space-y-6">
-        <x-checkbox-group label="Bidang usaha" name="sectors" hint="Pilih semua yang sesuai.">
+        <x-checkbox-group label="Bidang usaha" name="sectors" hint="Pilih semua yang sesuai." required>
             @foreach ($options['sectors'] as $id => $name)
                 <x-checkbox name="sectors[]" :value="$id" :checked="in_array($id, $sectorIds)">{{ $name }}</x-checkbox>
             @endforeach

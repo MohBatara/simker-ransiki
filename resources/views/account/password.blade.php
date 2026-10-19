@@ -27,7 +27,7 @@
         @include('account._password-form', ['page' => true])
 
         <x-admin.form-section title="Keluar" description="Keluar dari akun ini di perangkat yang sedang dipakai.">
-            <form method="POST" action="{{ route('logout') }}" data-logout>
+            <form novalidate method="POST" action="{{ route('logout') }}" data-logout>
                 @csrf
                 <x-button variant="secondary" type="submit" icon="arrow-right-start-on-rectangle" processing="Keluar…">Keluar</x-button>
             </form>

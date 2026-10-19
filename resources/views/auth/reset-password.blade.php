@@ -6,7 +6,7 @@
         <x-alert tone="wait" class="mt-6">Browser ini sedang masuk sebagai {{ $current->name }}. Saat kata sandi disimpan, akun itu dikeluarkan.</x-alert>
     @endif
 
-    <form method="POST" action="{{ route('password.update') }}" class="mt-6 space-y-4">
+    <form novalidate method="POST" action="{{ route('password.update') }}" class="mt-6 space-y-4">
         @csrf
         <input type="hidden" name="token" value="{{ $token }}">
         <x-form-errors />

@@ -148,7 +148,7 @@
     @unless ($queue)
         {{-- Rekap satu bulan: status laporan tiap kelompok + angka dari laporan terverifikasi. --}}
         <x-modal name="report-recap" title="Unduh rekap laporan">
-            <form id="form-rekap" method="GET" action="{{ route($area.'.reports.recap') }}" class="space-y-4">
+            <form novalidate id="form-rekap" method="GET" action="{{ route($area.'.reports.recap') }}" class="space-y-4">
                 <p>Status laporan setiap kelompok wajib lapor, lalu ringkasan angka dari laporan terverifikasi saja.</p>
                 <x-field label="Bulan" for="recap-periode">
                     <x-select id="recap-periode" name="periode" :options="$recapPeriods" :selected="array_key_exists($filters['period'] ?? '', $recapPeriods) ? $filters['period'] : array_key_first($recapPeriods)" />

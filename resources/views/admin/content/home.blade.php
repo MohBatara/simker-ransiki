@@ -32,7 +32,7 @@
                                 </div>
                                 <div class="flex flex-wrap gap-2">
                                     @foreach (['naik' => ['arrow-up', 'Naikkan', $loop->first], 'turun' => ['arrow-down', 'Turunkan', $loop->last]] as $direction => [$icon, $label, $disabled])
-                                        <form method="POST" action="{{ route('admin.hero-slides.move', [$slide, $direction]) }}">
+                                        <form novalidate method="POST" action="{{ route('admin.hero-slides.move', [$slide, $direction]) }}">
                                             @csrf
                                             @method('PATCH')
                                             <x-button variant="secondary" type="submit" :icon="$icon" :disabled="$disabled" aria-label="{{ $label }} slide {{ $loop->parent->iteration }}" data-no-processing />
@@ -72,7 +72,7 @@
                         $current = App\Support\AboutCards::photo($n, $settings);
                         $cardErrors = collect($errors->getMessages())->filter(fn ($messages, $key) => str_starts_with($key, $p.'.'));
                     @endphp
-                    <form
+                    <form novalidate
                         method="POST"
                         action="{{ route('admin.about-cards.update', $n) }}"
                         enctype="multipart/form-data"
@@ -111,7 +111,7 @@
             </div>
             @foreach (range(1, App\Support\AboutCards::COUNT) as $n)
                 @if ($settings['about_card_'.$n.'_photo_path'])
-                    <form id="hapus-foto-kartu-{{ $n }}" method="POST" action="{{ route('admin.about-cards.photo.destroy', $n) }}" class="hidden">
+                    <form novalidate id="hapus-foto-kartu-{{ $n }}" method="POST" action="{{ route('admin.about-cards.photo.destroy', $n) }}" class="hidden">
                         @csrf
                         @method('DELETE')
                     </form>
@@ -120,7 +120,7 @@
         </x-admin.form-section>
 
         {{-- Teks beranda: satu form untuk judul dan alur pendaftaran, bar simpan menempel. --}}
-        <form method="POST" action="{{ route('admin.content.update') }}" class="space-y-6">
+        <form novalidate method="POST" action="{{ route('admin.content.update') }}" class="space-y-6">
             @csrf
             @method('PUT')
 

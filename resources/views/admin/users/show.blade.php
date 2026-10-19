@@ -42,7 +42,7 @@
 
     @if ($user->hasPendingInvitation())
         @can('invite', $user)
-            <form id="form-invitation" method="POST" action="{{ route('admin.users.invitation', $user) }}" class="hidden">@csrf</form>
+            <form novalidate id="form-invitation" method="POST" action="{{ route('admin.users.invitation', $user) }}" class="hidden">@csrf</form>
         @endcan
     @endif
 
@@ -100,7 +100,7 @@
                     <x-button variant="danger" class="mt-4" x-data x-on:click="$dispatch('open-modal', 'deactivate-user')">Nonaktifkan akun</x-button>
                 @else
                     <p class="text-ui text-ink-soft">Akun ini nonaktif dan tidak bisa masuk.</p>
-                    <form method="POST" action="{{ route('admin.users.activate', $user) }}" class="mt-4">
+                    <form novalidate method="POST" action="{{ route('admin.users.activate', $user) }}" class="mt-4">
                         @csrf
                         @method('PATCH')
                         <x-button variant="secondary" type="submit">Aktifkan akun</x-button>

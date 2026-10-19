@@ -61,7 +61,7 @@
                         @endif
                         @can('verifyProfile', $organization)
                             <x-slot:menu>
-                                <form method="POST" action="{{ route($area.'.organizations.verify-profile', $organization) }}" data-no-processing>
+                                <form novalidate method="POST" action="{{ route($area.'.organizations.verify-profile', $organization) }}" data-no-processing>
                                     @csrf
                                     <x-dropdown.item type="submit" icon="check-badge">Tandai terverifikasi</x-dropdown.item>
                                 </form>

@@ -26,7 +26,7 @@
 
 <x-modal :name="$name" :title="$title" :show="$show">
     @if ($action || $bindAction)
-        <form id="{{ $formId }}" method="POST" @if ($action) action="{{ $action }}" @endif @if ($bindAction) x-bind:action="{{ $bindAction }}" @endif class="space-y-4">
+        <form novalidate id="{{ $formId }}" method="POST" @if ($action) action="{{ $action }}" @endif @if ($bindAction) x-bind:action="{{ $bindAction }}" @endif class="space-y-4">
             @csrf
             @unless (strtoupper($method) === 'POST')
                 @method($method)

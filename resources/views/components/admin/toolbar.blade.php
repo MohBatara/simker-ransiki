@@ -42,7 +42,7 @@
     elemen [data-swap]. Tanpa JS tetap form GET biasa. Pil filter aktif bisa dihapus satu per satu, plus "Hapus semua".
 --}}
 <div x-data="adminToolbar" {{ $attributes->class(['space-y-3', 'px-4 pb-4 pt-4 md:px-5 md:pt-5' => $title]) }}>
-    <form x-ref="form" method="GET" action="{{ $action }}" role="search" x-on:submit.prevent="apply()" x-on:change="apply()" class="flex flex-wrap items-center gap-2">
+    <form novalidate x-ref="form" method="GET" action="{{ $action }}" role="search" x-on:submit.prevent="apply()" x-on:change="apply()" class="flex flex-wrap items-center gap-2">
         @if ($title)
             <h2 class="mr-auto min-h-8 py-1 text-card-head font-semibold text-ink max-sm:w-full">{{ $title }}</h2>
         @endif

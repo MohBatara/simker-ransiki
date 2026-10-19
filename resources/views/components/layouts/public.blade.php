@@ -123,7 +123,7 @@
 
         {{-- Pencarian direktori dari header (semua ukuran layar). --}}
         <div id="cari-publik" x-cloak x-show="search" class="border-t border-line bg-paper">
-            <form method="GET" action="{{ route('public.directory') }}" role="search" class="mx-auto flex max-w-public gap-2 px-4 py-3 md:px-6">
+            <form novalidate method="GET" action="{{ route('public.directory') }}" role="search" class="mx-auto flex max-w-public gap-2 px-4 py-3 md:px-6">
                 <label for="cari-header" class="sr-only">Cari nama kelompok atau produk</label>
                 <x-input id="cari-header" name="q" x-ref="q" placeholder="Cari nama kelompok atau produk" class="min-w-0 flex-1" />
                 <x-public.button type="submit" variant="brand" icon="magnifying-glass">Cari</x-public.button>

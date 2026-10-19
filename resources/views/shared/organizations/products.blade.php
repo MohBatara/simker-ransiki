@@ -83,7 +83,7 @@
                 <span x-text="mode === 'edit' ? 'Ubah produk' : 'Tambah produk'">Tambah produk</span>
             </x-slot:title>
 
-            <form method="POST" x-bind:action="action" id="product-form" class="space-y-4 text-ink">
+            <form novalidate method="POST" x-bind:action="action" id="product-form" class="space-y-4 text-ink">
                 @csrf
                 <p class="text-label text-ink-3">Kolom bertanda <span class="text-fix" aria-hidden="true">*</span><span class="sr-only">bintang</span> wajib diisi.</p>
                 <input type="hidden" name="_method" x-bind:value="mode === 'edit' ? 'PUT' : 'POST'">
@@ -135,7 +135,7 @@
                         />
                     </div>
                     <x-slot:footer>
-                        <form method="POST" x-bind:action="photo.deleteUrl" x-show="photo.url" class="mr-auto">
+                        <form novalidate method="POST" x-bind:action="photo.deleteUrl" x-show="photo.url" class="mr-auto">
                             @csrf
                             @method('DELETE')
                             <x-button variant="danger" type="submit" processing="Menghapus…">Hapus foto</x-button>

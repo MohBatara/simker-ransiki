@@ -471,7 +471,12 @@ Alpine.data('formNav', () => ({
 
     init() {
         const elements = [...this.$root.querySelectorAll('[data-form-section]')];
-        this.sections = elements.map((element) => ({ id: element.id, title: element.dataset.title }));
+        // Section yang berisi isian bermasalah diberi titik merah di daftar.
+        this.sections = elements.map((element) => ({
+            id: element.id,
+            title: element.dataset.title,
+            error: element.querySelector('[aria-invalid="true"], [data-field-error]') !== null,
+        }));
         this.active = this.sections[0]?.id ?? null;
 
         this.observer = new IntersectionObserver((entries) => {
@@ -577,12 +582,35 @@ document.addEventListener('submit', (event) => {
     });
 });
 
+/**
+ * Gulir ke isian yang salah (di tengah layar) lalu fokus. Pesan error grup centang ([data-field-error] di luar x-field)
+ * mengarah ke fieldset-nya.
+ */
+function focusField(element) {
+    if (!element) {
+        return;
+    }
+    const target = element.matches('[data-field-error]')
+        ? (document.getElementById(element.id.replace(/-error$/, '')) ?? element)
+        : element;
+    target.scrollIntoView({ block: 'center' });
+    target.focus({ preventScroll: true });
+}
+
+// Butir ringkasan error: klik menggulir dan memfokuskan isian terkait.
+document.addEventListener('click', (event) => {
+    const link = event.target.closest('[data-form-errors] a[href^="#"]');
+    const target = link && document.getElementById(link.getAttribute('href').slice(1));
+    if (target) {
+        event.preventDefault();
+        focusField(target);
+    }
+});
+
 // Form yang gagal divalidasi: fokus ke isian pertama yang salah (ringkasan x-form-errors ada di atasnya).
 document.addEventListener('DOMContentLoaded', () => {
     if (document.querySelector('[data-form-errors]')) {
-        const first = document.querySelector('[aria-invalid="true"]');
-        first?.focus({ preventScroll: true });
-        first?.scrollIntoView({ block: 'center' });
+        focusField(document.querySelector('[aria-invalid="true"], [data-field-error]'));
     }
 });
 

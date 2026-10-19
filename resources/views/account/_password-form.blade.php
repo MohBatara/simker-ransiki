@@ -1,5 +1,5 @@
 {{-- Ganti kata sandi. $page = true di Akun Saya (bar simpan menempel); di halaman wajib ganti (layout guest) tombol penuh. --}}
-<form method="POST" action="{{ route('account.password.update') }}" class="space-y-4">
+<form novalidate method="POST" action="{{ route('account.password.update') }}" class="space-y-4">
     @csrf
     @method('PUT')
     @if ($page ?? false)

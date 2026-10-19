@@ -100,7 +100,7 @@ test('akun OPD wajib memilih OPD dan akun kelompok wajib memilih kelompok', func
 })->with([
     'OPD tanpa OPD' => [['role' => 'opd'], 'opd_id', 'Pilih OPD untuk akun OPD.'],
     'kelompok tanpa kelompok' => [['role' => 'kelompok'], 'organization_id', 'Pilih kelompok untuk akun kelompok.'],
-    'tanpa peran' => [[], 'role', 'Peran wajib diisi.'],
+    'tanpa peran' => [[], 'role', 'Peran wajib dipilih.'],
 ]);
 
 test('OPD dan kelompok hanya disimpan sesuai peran', function () {

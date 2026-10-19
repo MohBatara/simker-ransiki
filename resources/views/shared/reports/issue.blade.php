@@ -52,7 +52,7 @@
 
             @if ($canFollowUp)
                 <x-admin.card title="Ubah status tindak lanjut" description="Catatan tindakan tampil untuk kelompok. Kelompok mendapat notifikasi bila statusnya berubah.">
-                    <form method="POST" action="{{ route($area.'.issues.follow-up', $issue) }}" class="space-y-6">
+                    <form novalidate method="POST" action="{{ route($area.'.issues.follow-up', $issue) }}" class="space-y-6">
                         @csrf
                         <x-admin.form-intro />
                         <div class="grid gap-6 md:grid-cols-2">

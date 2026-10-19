@@ -13,7 +13,7 @@
     $formErrors = collect($errors->getMessages())->filter(fn ($messages, $key) => str_starts_with($key, $p.'.'));
 @endphp
 
-<form
+<form novalidate
     method="POST"
     action="{{ $slide ? route('admin.hero-slides.update', $slide) : route('admin.hero-slides.store') }}"
     enctype="multipart/form-data"

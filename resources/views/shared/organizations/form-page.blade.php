@@ -23,7 +23,7 @@
     :breadcrumbs="$breadcrumbs"
     focus
 >
-    <form method="POST" action="{{ $action }}" class="space-y-6">
+    <form novalidate method="POST" action="{{ $action }}" class="space-y-6">
         @csrf
         @if ($editing)
             @method('PUT')

@@ -6,7 +6,7 @@
         <x-alert tone="ok" class="mt-6">{{ session('status') }}</x-alert>
     @endif
 
-    <form method="POST" action="{{ route('password.email') }}" class="mt-6 space-y-4">
+    <form novalidate method="POST" action="{{ route('password.email') }}" class="mt-6 space-y-4">
         @csrf
         <x-field label="Email" for="email">
             <x-input name="email" type="email" autocomplete="email" autocapitalize="none" spellcheck="false" maxlength="255" required autofocus />

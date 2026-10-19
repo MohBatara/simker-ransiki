@@ -43,7 +43,7 @@
                     <x-admin.badge-status :status="$organization->status" />
                     <x-admin.badge-status :status="$organization->profile_status" />
                     @if ($canVerify)
-                        <form method="POST" action="{{ route($user->role->area().'.organizations.verify-profile', $organization) }}">
+                        <form novalidate method="POST" action="{{ route($user->role->area().'.organizations.verify-profile', $organization) }}">
                             @csrf
                             <button type="submit" data-processing="Menyimpan…" class="inline-flex h-11 items-center gap-1 rounded-pill px-1.5 text-label font-medium text-brand underline underline-offset-4 hover:text-brand-hover md:h-6">
                                 <x-heroicon-o-check-badge class="size-4" aria-hidden="true" />

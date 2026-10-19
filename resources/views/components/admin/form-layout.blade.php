@@ -11,10 +11,14 @@
             <ol class="space-y-0.5 border-l border-line">
                 <template x-for="section in sections" :key="section.id">
                     <li>
-                        <a :href="'#' + section.id" x-on:click="go($event, section.id)" x-text="section.title"
+                        <a :href="'#' + section.id" x-on:click="go($event, section.id)"
                            :aria-current="active === section.id ? 'true' : null"
                            :class="active === section.id ? 'border-brand font-semibold text-brand' : 'border-transparent text-ink-2 hover:text-ink'"
-                           class="-ml-px block border-l-2 py-1.5 pl-3 text-caption transition-colors"></a>
+                           class="-ml-px flex items-center gap-2 border-l-2 py-1.5 pl-3 text-caption transition-colors">
+                            <span x-text="section.title"></span>
+                            <span x-show="section.error" class="size-2 shrink-0 rounded-full bg-fix" aria-hidden="true"></span>
+                            <span x-show="section.error" class="sr-only">(ada isian yang perlu diperbaiki)</span>
+                        </a>
                     </li>
                 </template>
             </ol>

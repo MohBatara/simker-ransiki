@@ -58,7 +58,7 @@
                 </ul>
             </nav>
 
-            <form method="GET" action="{{ route('public.posts') }}" role="search" class="flex gap-2 md:w-88">
+            <form novalidate method="GET" action="{{ route('public.posts') }}" role="search" class="flex gap-2 md:w-88">
                 @if ($listing->category)
                     <input type="hidden" name="kategori" value="{{ $listing->category->value }}">
                 @endif

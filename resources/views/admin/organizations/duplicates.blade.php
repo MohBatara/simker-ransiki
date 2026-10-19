@@ -51,7 +51,7 @@
                             </span>
                         </x-admin.table.cell>
                         <x-admin.table.cell actions>
-                            <form method="POST" action="{{ route('admin.organizations.duplicates.dismiss') }}" class="max-md:w-full">
+                            <form novalidate method="POST" action="{{ route('admin.organizations.duplicates.dismiss') }}" class="max-md:w-full">
                                 @csrf
                                 <input type="hidden" name="first" value="{{ $pair['first']['id'] }}">
                                 <input type="hidden" name="second" value="{{ $pair['second']['id'] }}">

@@ -19,7 +19,7 @@
     @endphp
     <x-button :variant="$variant" :href="$url" :class="$class">{{ $label }}</x-button>
 @elseif ($canCreate)
-    <form method="POST" action="{{ route('kelompok.reports.store') }}" class="inline-flex {{ $class }}">
+    <form novalidate method="POST" action="{{ route('kelompok.reports.store') }}" class="inline-flex {{ $class }}">
         @csrf
         <input type="hidden" name="period" value="{{ $period->format('Y-m') }}">
         <x-button type="submit" :variant="$variant" processing="Membuat…">Buat laporan</x-button>

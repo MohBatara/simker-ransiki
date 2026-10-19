@@ -7,7 +7,7 @@
 >
     @if ($unreadCount > 0)
         <x-slot:actions>
-            <form method="POST" action="{{ route('notifications.read-all') }}">
+            <form novalidate method="POST" action="{{ route('notifications.read-all') }}">
                 @csrf
                 <x-button type="submit" variant="secondary" icon="check">Tandai semua dibaca</x-button>
             </form>

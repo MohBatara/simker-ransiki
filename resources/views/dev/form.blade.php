@@ -8,7 +8,7 @@
     user-role="Kelompok"
     focus
 >
-    <form class="space-y-6" x-on:submit.prevent>
+    <form novalidate class="space-y-6" x-on:submit.prevent>
         <x-admin.form-section title="Aktivitas" description="Contoh section form dengan bar aksi yang menempel.">
             <div class="grid gap-5 md:grid-cols-2">
             <x-field label="Jumlah kegiatan" for="activity_count" optional>

@@ -116,7 +116,7 @@
             </div>
         </x-admin.card>
 
-        <form class="space-y-6" x-on:submit.prevent>
+        <form novalidate class="space-y-6" x-on:submit.prevent>
             <x-admin.form-section title="Form" description="Kartu section: judul dan petunjuk di kiri, isian di kanan. Label di atas, tanda wajib, bantuan dan error di bawah isian.">
                 <div class="grid gap-5 md:grid-cols-2">
                     <x-field label="Nama kelompok" for="nama" required>

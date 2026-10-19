@@ -163,7 +163,7 @@
                             <x-dropdown.item :href="$accountUrl" icon="user-circle">Akun saya</x-dropdown.item>
                         @endif
                         @if (Route::has('logout'))
-                            <form method="POST" action="{{ route('logout') }}" data-logout data-no-processing>
+                            <form novalidate method="POST" action="{{ route('logout') }}" data-logout data-no-processing>
                                 @csrf
                                 <x-dropdown.item type="submit" icon="arrow-right-start-on-rectangle">Keluar</x-dropdown.item>
                             </form>

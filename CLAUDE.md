@@ -1090,6 +1090,13 @@ atau banner foto di area aplikasi. `x-tabs` hanya untuk tab dalam halaman (panel
   label-nilai. Seluruh kartu bisa diketuk, chevron di kanan.
 
 ### Form
+- SEMUA `<form>` (admin, OPD, kelompok, login, publik) memakai `novalidate`: tidak ada pesan bawaan browser; atribut
+  `required` tetap dipasang untuk aksesibilitas, validasi selalu di server (dijaga `FormPatternTest`). Pesan validasi
+  dari `lang/id/validation.php` + `attributes()` Form Request (nama ramah, mis. "Nama kelompok wajib diisi."); isian
+  pilihan (jenis, kampung, status, peran, kategori, bulan, dll., daftar di `custom`) memakai "wajib dipilih". Saat gagal:
+  ringkasan `x-form-errors` (butir menggulir + memfokuskan isian terkait), isian berbingkai merah + pesan di bawahnya
+  (`data-field-error`; grup centang `x-checkbox-group` ber-id nama isian dan berbingkai merah), halaman menggulir ke error
+  pertama, old input dipertahankan, dan section yang berisi error diberi titik merah di daftar section (`formNav`).
 - Setiap form selain GET mencegah kirim ganda (resources/js/app.js): tombol kirim dinonaktifkan,
   `aria-busy`, label diganti teks `processing` pada `x-button` (bawaan "Memproses…", mis. "Menyimpan…",
   "Menghapus…"). Kecualikan dengan `data-no-processing`.

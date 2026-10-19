@@ -158,7 +158,13 @@ return [
     'ulid' => ':Attribute harus berupa ULID yang valid.',
     'uuid' => ':Attribute harus berupa UUID yang valid.',
 
-    'custom' => [],
+    // Isian pilihan (select, radio, pilihan bulan): "wajib dipilih", bukan "wajib diisi". Nama isian memakai attributes
+    // di Form Request masing-masing (mis. "Jenis kelembagaan wajib dipilih.").
+    'custom' => collect([
+        'institution_type_id', 'village_id', 'legal_status', 'status', 'role', 'opd_id', 'organization_id', 'category',
+        'reporting_month', 'reporting_year', 'period', 'access', 'unit',
+    ])->mapWithKeys(fn (string $field) => [$field => ['required' => ':Attribute wajib dipilih.']])
+        ->all(),
 
     // Nama kolom yang tampil di pesan error. Tambahkan di sini setiap ada field form baru.
     'attributes' => [
@@ -170,6 +176,17 @@ return [
         'password_confirmation' => 'ulangi kata sandi',
         'name' => 'nama',
         'phone' => 'nomor telepon',
+        'status' => 'status',
+        'category' => 'kategori',
+        'role' => 'peran',
+        'period' => 'bulan laporan',
+        'access' => 'cara masuk',
+        'unit' => 'satuan',
+        'photo' => 'foto',
+        'type' => 'jenis izin',
+        'reason' => 'alasan',
+        'note' => 'catatan',
+        'acted_on' => 'tanggal tindakan',
     ],
 
 ];

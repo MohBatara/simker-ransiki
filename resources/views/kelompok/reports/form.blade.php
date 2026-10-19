@@ -129,7 +129,7 @@
             </x-modal>
         @endif
 
-        <form id="report-submit-form" method="POST" action="{{ $urls['submit'] }}" class="hidden">
+        <form novalidate id="report-submit-form" method="POST" action="{{ $urls['submit'] }}" class="hidden">
             @csrf
         </form>
     </div>

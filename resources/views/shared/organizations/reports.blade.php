@@ -41,7 +41,7 @@
 @if (! empty($entryPeriods))
     {{-- "Isi laporan" atas nama kelompok (OPD pembina/Admin), dibuka dari tombol di aksi header. --}}
     <x-modal name="report-entry" title="Isi laporan atas nama kelompok" :show="$errors->has('period')">
-        <form id="form-report-entry" method="POST" action="{{ route($area.'.reports.store', $organization) }}" class="space-y-4">
+        <form novalidate id="form-report-entry" method="POST" action="{{ route($area.'.reports.store', $organization) }}" class="space-y-4">
             @csrf
             <p class="text-label text-ink-3">Kolom bertanda <span class="text-fix" aria-hidden="true">*</span><span class="sr-only">bintang</span> wajib diisi.</p>
             <p>Untuk kelompok yang tidak punya HP atau akun. Nama Anda tercatat sebagai pengisi di riwayat laporan.</p>

@@ -3,7 +3,7 @@
     'cancel' => null,
     'submit' => 'Simpan',
     'processing' => 'Menyimpan…',
-    // Id form bila bar berada di luar elemen <form>.
+    // Id form bila bar berada di luar elemen <form novalidate>.
     'form' => null,
     // Form dibuka ulang dengan isian lama (validasi gagal): perubahan belum tersimpan sejak awal.
     'dirty' => null,

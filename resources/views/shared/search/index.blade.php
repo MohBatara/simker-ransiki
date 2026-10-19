@@ -3,7 +3,7 @@
 
 <x-layouts.app title="Cari" :description="$searching ? 'Hasil untuk “'.$query.'”' : 'Cari kelompok, ketua, kampung, atau produk.'">
     <div class="space-y-6">
-        <form method="GET" action="{{ route($area.'.search') }}" role="search" class="flex flex-wrap items-center gap-2">
+        <form novalidate method="GET" action="{{ route($area.'.search') }}" role="search" class="flex flex-wrap items-center gap-2">
             <x-search-input :value="$query" label="Cari kelompok, ketua, kampung, atau produk" class="flex-1 md:max-w-lg" />
             <x-button variant="secondary" type="submit">Cari</x-button>
         </form>

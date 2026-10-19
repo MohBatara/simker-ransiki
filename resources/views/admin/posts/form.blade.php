@@ -25,7 +25,7 @@
 
     {{-- Daftar section hanya untuk form panjang (lebih dari 3 section: Foto sampul baru ada setelah berita disimpan). --}}
     <x-admin.form-layout :nav="$editing">
-        <form id="form-post" method="POST" action="{{ $editing ? route('admin.posts.update', $post) : route('admin.posts.store') }}" class="space-y-6">
+        <form novalidate id="form-post" method="POST" action="{{ $editing ? route('admin.posts.update', $post) : route('admin.posts.store') }}" class="space-y-6">
             @csrf
             @if ($editing)
                 @method('PUT')
@@ -122,7 +122,7 @@
             <x-admin.form-section title="Foto sampul" description="Tampil di atas berita dan sebagai gambar pratinjau tautan. Tersimpan langsung saat diunggah.">
                 @if ($sources = $post->coverSources())
                     <img src="{{ $sources['webp'][960] ?? $sources['fallback'] }}" alt="Foto sampul saat ini" class="aspect-[4/3] w-full rounded-tile object-cover md:aspect-[21/9]">
-                    <form method="POST" action="{{ route('admin.posts.cover.destroy', $post) }}">
+                    <form novalidate method="POST" action="{{ route('admin.posts.cover.destroy', $post) }}">
                         @csrf
                         @method('DELETE')
                         <x-button variant="danger" type="submit" processing="Menghapus…">Hapus foto</x-button>

@@ -13,7 +13,7 @@
             <x-admin.form-section :title="$title" :description="$description">
                 @if ($path)
                     <img src="{{ route('public.site-photo', ['slot' => $slot, 'ukuran' => 960, 'format' => 'webp', 'v' => substr(md5($path), 0, 8)]) }}" alt="{{ $title }} saat ini" class="aspect-[4/3] w-full rounded-tile object-cover md:aspect-[21/9]">
-                    <form method="POST" action="{{ route('admin.content.photo.destroy', $slot) }}">
+                    <form novalidate method="POST" action="{{ route('admin.content.photo.destroy', $slot) }}">
                         @csrf
                         @method('DELETE')
                         <x-button variant="danger" type="submit" processing="Menghapus…">Hapus foto</x-button>
@@ -35,7 +35,7 @@
                             @endif
                             <p class="min-w-0 flex-1 font-semibold">{{ $sector->name }}</p>
                             @if ($sector->photo_path)
-                                <form method="POST" action="{{ route('admin.content.sector-photo.destroy', $sector) }}">
+                                <form novalidate method="POST" action="{{ route('admin.content.sector-photo.destroy', $sector) }}">
                                     @csrf
                                     @method('DELETE')
                                     <x-button variant="danger" type="submit" processing="Menghapus…">Hapus</x-button>
@@ -51,7 +51,7 @@
             </ul>
         </x-admin.form-section>
 
-        <form method="POST" action="{{ route('admin.content.update') }}" class="space-y-6">
+        <form novalidate method="POST" action="{{ route('admin.content.update') }}" class="space-y-6">
             @csrf
             @method('PUT')
 

@@ -13,7 +13,7 @@
         <x-button variant="secondary" icon="arrow-down-tray" :href="route('admin.organizations.import.template')">Unduh template</x-button>
     </x-slot:secondary>
 
-    <form method="POST" action="{{ route('admin.organizations.import.store') }}" enctype="multipart/form-data" class="space-y-6">
+    <form novalidate method="POST" action="{{ route('admin.organizations.import.store') }}" enctype="multipart/form-data" class="space-y-6">
         @csrf
         <x-admin.form-intro />
 

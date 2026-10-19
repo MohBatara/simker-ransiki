@@ -7,7 +7,7 @@
     :breadcrumbs="[['label' => 'Pengaturan', 'href' => route('admin.users.index')], ['label' => 'Data master', 'href' => route('admin.master.items', 'jenis-kelembagaan')], ['label' => 'Foto '.$type->name]]"
     focus
 >
-    <form
+    <form novalidate
         method="POST"
         action="{{ route('admin.master.type-photo.store', $type) }}"
         enctype="multipart/form-data"
