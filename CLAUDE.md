@@ -1087,10 +1087,17 @@ atau banner foto di area aplikasi. `x-tabs` hanya untuk tab dalam halaman (panel
   bidang usaha, total anggota + "diisi X dari Y kelompok") yang mengikuti filter aktif ("sesuai filter") → kartu "Daftar
   kelompok" (`x-admin.toolbar title`: cari nama + Filter berisi kampung, jenis, status, bidang usaha, OPD [Admin];
   langsung diterapkan) berisi `x-admin.table` selebar kartu (kolom Kelompok, Jenis sebagai chip, Kampung, Bidang usaha,
-  Anggota, Status, titik tiga Lihat/Ubah). Mulai 1280px klik baris membuka popup pratinjau lg (Alpine `organizationPanel`,
-  memuat `/{area}/kelompok/{id}/ringkas`, Policy `view`): foto utama 16:9 (maks 220px, sudut 10px; tanpa foto: kotak
-  `brand-50` berinisial + "Belum ada foto"), nama, jenis · kampung, pil status dan verifikasi profil, ringkasan bertab,
-  kaki menempel "Ubah" + "Buka detail"; `?pilih=id` membuka popup sejak awal.
+  Anggota, Status, titik tiga Buka detail/Ubah). Klik di mana saja pada baris (semua ukuran layar) membuka popup pratinjau
+  lg tanpa pindah halaman (Alpine `organizationPanel` + `shared.organizations._preview-modal`, memuat
+  `/{area}/kelompok/{id}/ringkas`, Policy `view`); nama tetap `<a href>` ke detail sehingga Ctrl/Cmd/klik tengah membuka
+  tab baru. Isi (`_panel`, tanpa tab): foto utama 16:9 (maks 240px, sudut 10px; tanpa foto: kotak `brand-50` berinisial +
+  "Belum ada foto"), nama, jenis · kampung, pil status dan verifikasi profil, ringkasan angka (anggota, produk, izin terbit,
+  laporan terverifikasi), ketua, telepon, email, tahun berdiri, bidang usaha, OPD pembina, alamat, produk, laporan
+  terakhir. Kaki: panah sebelumnya/berikutnya (juga tombol ← →), "Tutup", "Ubah profil", "Buka detail". URL `?pratinjau=ID`
+  (alias lama `?pilih`): membuka = pushState sehingga Back menutup popup, pindah ← → = replaceState; membuka URL itu
+  langsung menampilkan popup (dirender server di daftar, dimuat saat init di tab lain). Pola yang sama di tab Verifikasi
+  profil (klik baris) dan Kemungkinan data ganda (klik nama kelompok mana pun). Dari dalam popup, `$refs`/`$root` milik
+  daftar tidak terjangkau: `organizationPanel` menyimpan elemen pembungkusnya sendiri.
 - Foto utama kelompok: SATU tempat `App\Support\OrganizationPhoto` (belum ada kolom foto profil): foto produk terbaru
   (`product-photos.show`, Policy) → lampiran gambar kelompok (`attachments.show`, Policy) → foto bidang usaha → tidak ada.
   Dipakai popup pratinjau dan kepala detail kelompok (56px; tanpa foto: inisial). Gambar di dalam popup tidak memakai

@@ -53,9 +53,9 @@ class OrganizationController extends Controller
             ->paginate(20)
             ->withQueryString();
 
-        // Panel desktop dirender bersama halaman: ?pilih=id (bila terlihat pengguna) atau baris pertama.
-        $selected = ($request->integer('pilih') ? Organization::visibleTo($request->user())->find($request->integer('pilih')) : null)
-            ?? $organizations->first();
+        // Popup pratinjau dirender bersama halaman untuk ?pratinjau=id (alias lama ?pilih=id), hanya bila terlihat pengguna.
+        $previewId = $request->integer('pratinjau') ?: $request->integer('pilih');
+        $selected = $previewId ? Organization::visibleTo($request->user())->find($previewId) : null;
 
         return view('shared.organizations.index', [
             'area' => $this->area($request),

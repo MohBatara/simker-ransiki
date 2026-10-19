@@ -66,8 +66,8 @@
             <x-admin.stat compact icon="users" label="Total anggota" :value="Format::number($totals['members'])" :hint="$membersHint" />
         </div>
 
-        {{-- Klik baris (≥ 1280px) membuka popup pratinjau; layar lebih kecil membuka halaman detail. --}}
-        <div x-data="organizationPanel">
+        {{-- Klik baris membuka popup pratinjau tanpa pindah halaman (Ctrl/Cmd + klik nama: detail di tab baru). --}}
+        <div x-data="organizationPanel(@js(route($area.'.organizations.summary', ['organization' => '__ID__'])))" x-on:click="select($event)">
             <x-admin.card flush>
                 <x-admin.toolbar
                     :title="$isOpd ? 'Daftar kelompok binaan' : 'Daftar kelompok'"
@@ -94,7 +94,7 @@
                             </x-admin.empty>
                         @endif
                     @else
-                        <x-admin.table bare clickable id="daftar-kelompok" x-on:click="select($event)" class="min-w-0">
+                        <x-admin.table bare clickable id="daftar-kelompok" class="min-w-0">
                             <x-slot:head>
                                 <x-admin.table.heading>Kelompok</x-admin.table.heading>
                                 <x-admin.table.heading fit>Jenis</x-admin.table.heading>
@@ -109,10 +109,10 @@
                                     :href="route($area.'.organizations.show', $organization)"
                                     :edit="route($area.'.organizations.edit', $organization)"
                                     :for="$organization->name"
-                                    :data-panel-url="route($area.'.organizations.summary', $organization)"
-                                    :data-id="$organization->id"
-                                    :data-selected="$panel && request()->filled('pilih') && $panel['organization']->is($organization) ? 'true' : null"
-                                    class="xl:data-[selected]:bg-brand-50"
+                                    view-label="Buka detail"
+                                    :data-preview-id="$organization->id"
+                                    :data-selected="$panel && $panel['organization']->is($organization) ? 'true' : null"
+                                    class="data-[selected]:bg-brand-50"
                                 >
                                     <x-admin.table.cell primary>
                                         <x-admin.identity :name="$organization->name" :subtitle="$organization->leader_name ? 'Ketua: '.$organization->leader_name : null" />
@@ -135,18 +135,7 @@
                 </div>
             </x-admin.card>
 
-            {{-- Pratinjau kelompok (≥ 1280px): popup lg di tengah layar berisi ringkasan dan tombol "Buka detail". --}}
-            <x-admin.modal name="organization-preview" title="Ringkasan kelompok" size="lg" :show="(bool) ($panel && request()->filled('pilih'))" :guard="false" x-on:modal-closed="closed()">
-                <div x-ref="panel" x-bind:class="loading && 'opacity-60'" x-bind:aria-busy="loading" aria-live="polite" class="transition-opacity">
-                    @if ($panel)
-                        @include('shared.organizations._panel')
-                    @endif
-                </div>
-                <x-slot:footer>
-                    <x-button variant="secondary" icon="pencil-square" x-show="editUrl" x-bind:href="editUrl" :href="$panel ? route($area.'.organizations.edit', $panel['organization']) : '#'">Ubah</x-button>
-                    <x-button x-bind:href="detailUrl" :href="$panel ? route($area.'.organizations.show', $panel['organization']) : '#'">Buka detail</x-button>
-                </x-slot:footer>
-            </x-admin.modal>
+            @include('shared.organizations._preview-modal')
         </div>
     </div>
 </x-layouts.app>

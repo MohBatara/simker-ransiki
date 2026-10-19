@@ -41,7 +41,7 @@ test('popup pratinjau berisi URL foto utama yang benar, dan URL itu bisa dibuka 
     $url = $product->photoUrl();
 
     $admin = User::factory()->admin()->create();
-    $html = $this->actingAs($admin)->get('/admin/kelompok?pilih='.$this->organization->id)->assertOk()->getContent();
+    $html = $this->actingAs($admin)->get('/admin/kelompok?pratinjau='.$this->organization->id)->assertOk()->getContent();
     preg_match('#<dialog[^>]*data-modal="organization-preview".*?</dialog>#s', $html, $dialog);
 
     // Dimuat langsung (tanpa lazy) karena popup awalnya tersembunyi.

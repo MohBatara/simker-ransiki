@@ -12,7 +12,8 @@
     section="kelompok"
     tab="ganda"
 >
-    <div class="space-y-4">
+    {{-- Klik nama kelompok membuka popup pratinjau tanpa pindah halaman. --}}
+    <div class="space-y-4" x-data="organizationPanel(@js(route('admin.organizations.summary', ['organization' => '__ID__'])))" x-on:click="select($event)">
         @if ($pairs->total() > 0)
             <p class="text-ui text-ink-soft">
                 {{ $pairs->total() }} pasangan · {{ $strongCount }} di kampung yang sama.
@@ -38,7 +39,7 @@
                 @foreach ($pairs as $pair)
                     <x-admin.table.row>
                         <x-admin.table.cell primary>
-                            <x-link :href="route('admin.organizations.show', $pair['first']['id'])" inline>{{ $pair['first']['name'] }}</x-link>
+                            <x-link :href="route('admin.organizations.show', $pair['first']['id'])" inline :data-preview-id="$pair['first']['id']">{{ $pair['first']['name'] }}</x-link>
                             <span class="block text-caption font-normal text-ink-soft">{{ $detail($pair['first']) }}</span>
                         </x-admin.table.cell>
                         <x-admin.table.cell badge>
@@ -46,7 +47,7 @@
                         </x-admin.table.cell>
                         <x-admin.table.cell label="Mirip dengan" class="max-md:items-start!">
                             <span class="max-md:text-right">
-                                <x-link :href="route('admin.organizations.show', $pair['second']['id'])" inline>{{ $pair['second']['name'] }}</x-link>
+                                <x-link :href="route('admin.organizations.show', $pair['second']['id'])" inline :data-preview-id="$pair['second']['id']">{{ $pair['second']['name'] }}</x-link>
                                 <span class="block text-caption text-ink-soft">{{ $detail($pair['second']) }}</span>
                             </span>
                         </x-admin.table.cell>
@@ -66,5 +67,7 @@
                 </x-slot:footer>
             </x-admin.table>
         @endif
+
+        @include('shared.organizations._preview-modal', ['panel' => null, 'area' => 'admin'])
     </div>
 </x-layouts.app>

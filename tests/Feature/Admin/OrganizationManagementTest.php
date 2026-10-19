@@ -47,7 +47,7 @@ test('hanya admin yang bisa membuka pengelolaan kelompok', function (string $rol
 })->with(['opd', 'kelompok']);
 
 test('daftar menampilkan kelompok beserta jenis, kampung, dan status', function () {
-    Organization::factory()->create(['name' => 'KUB Contoh Kakao', 'institution_type_id' => $this->type->id, 'village_id' => $this->village->id]);
+    $organization = Organization::factory()->create(['name' => 'KUB Contoh Kakao', 'institution_type_id' => $this->type->id, 'village_id' => $this->village->id]);
 
     $this->actingAs($this->admin)
         ->get('/admin/kelompok')
@@ -55,8 +55,10 @@ test('daftar menampilkan kelompok beserta jenis, kampung, dan status', function 
         ->assertSee('KUB Contoh Kakao')
         ->assertSee('KUB')
         ->assertSee('Kampung Contoh 1')
-        ->assertSee('Belum ada OPD pembina')
         ->assertSee('Menampilkan 1 sampai 1 dari 1 kelompok');
+
+    // Popup pratinjau (?pratinjau=ID) memuat OPD pembina.
+    $this->get('/admin/kelompok?pratinjau='.$organization->id)->assertSee('Belum ada OPD pembina');
 });
 
 test('filter daftar kelompok', function (string $query, array $visible) {
