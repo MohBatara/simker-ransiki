@@ -14,7 +14,6 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Str;
 
 #[Fillable(['name', 'username', 'email', 'phone', 'password', 'must_change_password', 'role', 'opd_id', 'organization_id', 'is_active', 'last_login_at'])]
 #[Hidden(['password', 'remember_token', 'invitation_token'])]
@@ -60,10 +59,10 @@ class User extends Authenticatable
         $this->notify(new ResetPassword($token));
     }
 
-    /** Username selalu disimpan dalam huruf kecil tanpa spasi di tepi. */
+    /** Username selalu disimpan ternormalkan (huruf kecil; nomor HP jadi 08…), lihat App\Support\Username. */
     protected function username(): Attribute
     {
-        return Attribute::make(set: fn (?string $value) => $value === null ? null : Str::lower(trim($value)));
+        return Attribute::make(set: fn (?string $value) => \App\Support\Username::normalize($value));
     }
 
     /**

@@ -30,7 +30,7 @@
                 <x-field label="Nama" for="name" class="md:col-span-2" required>
                     <x-input name="name" :value="$user->name" maxlength="255" required />
                 </x-field>
-                <x-field label="Username" for="username" hint="Dipakai untuk masuk. Huruf kecil, angka, titik, garis bawah, atau tanda hubung." required>
+                <x-field label="Username" for="username" hint="Boleh nama singkat atau nomor HP. Dipakai untuk masuk; huruf kecil, angka, titik, garis bawah, atau tanda hubung." required>
                     <x-input
                         name="username"
                         :value="$user->username"

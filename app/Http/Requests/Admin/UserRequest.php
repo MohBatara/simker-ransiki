@@ -27,7 +27,7 @@ class UserRequest extends FormRequest
     protected function prepareForValidation(): void
     {
         $this->merge([
-            'username' => Str::lower(trim((string) $this->input('username'))),
+            'username' => \App\Support\Username::normalize((string) $this->input('username')),
             'email' => $this->filled('email') ? Str::lower(trim((string) $this->input('email'))) : null,
         ]);
     }

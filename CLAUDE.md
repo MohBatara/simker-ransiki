@@ -197,8 +197,10 @@ dipakai bila berada di area perannya sendiri.
   boleh berisi array/teks: Laravel menolak membuka objek dari cache (`cache.serializable_classes`).
 
 ### Login dan session
-- Login dengan username ATAU email + kata sandi. Username disimpan dan dicocokkan dalam huruf
-  kecil (trim + lowercase), termasuk di seeder dan saat Admin membuat akun.
+- Login dengan username ATAU email + kata sandi. Username disimpan dan dicocokkan ternormalkan lewat SATU helper
+  `App\Support\Username::normalize` (model, form pengguna, login, `simker:create-admin`): huruf kecil tanpa spasi tepi.
+  Username boleh nomor HP: isian yang hanya angka (boleh "+", spasi, titik, tanda hubung) dibuang pemisahnya dan awalan
+  "+62"/"62" menjadi "0", jadi "+62 812-3456-7890" disimpan dan dicocokkan sebagai "081234567890".
 - Tidak ada daftar akun sendiri. Reset oleh Admin (kata sandi sementara) atau, untuk akun aktif yang punya
   email, "Lupa kata sandi?" di halaman masuk (password broker Laravel, `Auth\PasswordResetController`, tautan
   berlaku `auth.passwords.users.expire` = 60 menit). Jawaban SELALU "Jika email terdaftar, tautan telah dikirim"

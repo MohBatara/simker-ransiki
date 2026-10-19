@@ -73,9 +73,12 @@ class LoginRequest extends FormRequest
         }
     }
 
+    /** Email: huruf kecil. Username: dinormalkan sama seperti saat disimpan (nomor HP +62/62 → 0, tanpa pemisah). */
     private function normalizedLogin(): string
     {
-        return Str::lower(trim((string) $this->string('login')));
+        $login = Str::lower(trim((string) $this->string('login')));
+
+        return str_contains($login, '@') ? $login : (string) \App\Support\Username::normalize($login);
     }
 
     private function throttleKey(): string

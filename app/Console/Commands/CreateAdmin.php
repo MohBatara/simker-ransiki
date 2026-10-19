@@ -68,7 +68,11 @@ class CreateAdmin extends Command
     {
         while (true) {
             $value = $given ?? ($optional ? $this->ask($question, '') : $this->ask($question));
-            $value = $normalize ? Str::lower(trim((string) $value)) : trim((string) $value);
+            $value = match (true) {
+                $normalize && $field === 'username' => (string) \App\Support\Username::normalize((string) $value),
+                $normalize => Str::lower(trim((string) $value)),
+                default => trim((string) $value),
+            };
             $value = $value === '' ? null : $value;
 
             $validator = Validator::make([$field => $value], [$field => $rules], [], $this->attributes());

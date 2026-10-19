@@ -121,7 +121,7 @@ test('setiap tab punya URL sendiri, tab aktif ditandai, dan remah mengikuti menu
     'opd masalah' => ['/opd/laporan/masalah', 'Laporan', 'Masalah & kebutuhan', ['Semua laporan', 'Perlu diverifikasi', 'Masalah & kebutuhan']],
 ]);
 
-test('navigasi bawah HP: Admin 4 menu + Lainnya, OPD 5 menu tanpa Lainnya', function () {
+test('navigasi bawah HP: Admin dan Kelompok 4 menu + Lainnya, OPD 5 menu tanpa Lainnya', function () {
     $bottom = function (string $html) {
         preg_match_all('#<nav aria-label="Menu utama" x-data="\{ more: false \}".*?</nav>#s', $html, $nav);
         preg_match('#<ul class="grid h-16[^"]*">(.*?)</ul>#s', $nav[0][0], $list);
@@ -131,6 +131,12 @@ test('navigasi bawah HP: Admin 4 menu + Lainnya, OPD 5 menu tanpa Lainnya', func
 
     expect($bottom($this->actingAs($this->admin)->get('/admin')->getContent()))->toBe(['Dasbor', 'Kelompok', 'Laporan', 'Website', 'Lainnya'])
         ->and($bottom($this->actingAs($this->opdUser)->get('/opd')->getContent()))->toBe(['Dasbor', 'Kelompok', 'Laporan', 'Notifikasi', 'Akun']);
+
+    // Kelompok: 4 menu utama + Lainnya (Legalitas & Izin, Notifikasi, Akun Saya).
+    $kelompok = $this->actingAs(User::factory()->kelompok($this->ours)->create())->get('/kelompok')->getContent();
+    expect($bottom($kelompok))->toBe(['Dasbor', 'Profil', 'Produk', 'Laporan', 'Lainnya']);
+    preg_match('#Menu lainnya.*?</ul>#s', $kelompok, $kelompokMore);
+    expect(html_entity_decode(preg_replace('/\s+/', ' ', strip_tags($kelompokMore[0]))))->toContain('Legalitas & Izin')->toContain('Notifikasi')->toContain('Akun Saya');
 
     $sheet = $this->actingAs($this->admin)->get('/admin')->getContent();
     preg_match('#Menu lainnya.*?</ul>#s', $sheet, $more);
