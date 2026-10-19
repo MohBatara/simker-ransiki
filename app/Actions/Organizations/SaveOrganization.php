@@ -2,6 +2,7 @@
 
 namespace App\Actions\Organizations;
 
+use App\Enums\ProfileStatus;
 use App\Models\BusinessSector;
 use App\Models\Opd;
 use App\Models\Organization;
@@ -15,6 +16,8 @@ use Illuminate\Support\Facades\DB;
  * Menyimpan profil kelompok beserta bidang usaha dan OPD terkait. Dipakai Admin, OPD, dan Kelompok;
  * kolom yang boleh diubah sudah disaring oleh OrganizationRequest. Perubahan kolom dicatat observer,
  * perubahan relasi dicatat di sini; field penting yang diubah kelompok memicu verifikasi ulang profil.
+ * Kelompok yang DIBUAT petugas (Admin/OPD, termasuk impor) langsung berstatus "Profil terverifikasi" dan dicatat di
+ * Riwayat; antrean verifikasi hanya untuk perubahan dari akun kelompok.
  */
 class SaveOrganization
 {
@@ -39,10 +42,20 @@ class SaveOrganization
                 $flagged = ProfileReview::track($organization, $changed, $actor);
             }
 
+            $autoVerified = ! $existing && ! $actor->isKelompok();
             $organization->forceFill([
                 'created_by' => $existing ? $organization->created_by : $actor->id,
                 'updated_by' => $actor->id,
+                ...($autoVerified ? [
+                    'profile_status' => ProfileStatus::Verified,
+                    'profile_verified_at' => now(),
+                    'profile_verified_by' => $actor->id,
+                ] : []),
             ])->save();
+
+            if ($autoVerified) {
+                ChangeLogger::note($organization, 'profile_status', 'Diverifikasi otomatis saat dibuat oleh '.$actor->name);
+            }
 
             if (array_key_exists('sectors', $data)) {
                 $organization->sectors()->sync($data['sectors']);

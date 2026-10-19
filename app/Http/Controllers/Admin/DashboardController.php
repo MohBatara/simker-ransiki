@@ -44,7 +44,9 @@ class DashboardController extends Controller
             // Kartu Laporan terbaru: 5 pengajuan terakhir dari antrean verifikasi yang sama dengan tab Perlu diverifikasi.
             'latestReports' => MonthlyReport::verificationQueue($request->user())->withSubmissionInfo()->with('organization:id,name')->orderByDesc('last_submitted_at')->limit(5)->get(),
             // Sama dengan badge menu Kelompok (dihitung sekali per request).
+            // Sama dengan badge menu Kelompok (perubahan menunggu) dan profil yang belum pernah diverifikasi.
             'profileQueue' => Navigation::counts($request->user())['profiles'],
+            'profilesNew' => Navigation::counts($request->user())['profiles_new'],
         ]);
     }
 }

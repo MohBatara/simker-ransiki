@@ -305,9 +305,15 @@ Jangan mengarang kepanjangan akronim resmi (KDMP, KNMP, dsb.). Simpan apa adanya
   kampung, ketua, telepon, email, alamat, deskripsi, bidang usaha) pada profil terverifikasi → needs_review +
   notifikasi `ProfileNeedsReview` ke akun OPD pembina aktif (tanpa OPD → Admin), sekali saat status berubah.
   Perubahan oleh Admin/OPD atau field lain tidak memicu. Dicek di `SaveOrganization` (satu-satunya jalur ubah
-  profil). Tab "Verifikasi profil" `/{area}/kelompok/verifikasi-profil` = SATU definisi `Organization::profileReviewQueue`
-  (needs_review DAN unverified, visibleTo, tanpa kelompok `closed`; perubahan menunggu dulu, lalu yang belum pernah
-  diverifikasi); badge menu Kelompok dan tugas dasbor "N profil menunggu verifikasi" memakai hitungan yang sama.
+  profil). Kelompok yang DIBUAT atau DIIMPOR petugas (Admin/OPD, lewat `SaveOrganization`) langsung `verified`
+  (verified_by = pembuat) dan tercatat di Riwayat ("Verifikasi profil": "Diverifikasi otomatis saat dibuat oleh <nama>",
+  `ChangeLogger::note`); yang masuk antrean hanya perubahan dari akun kelompok. Data contoh tidak diubah.
+  Tab "Verifikasi profil" `/{area}/kelompok/verifikasi-profil` = `Organization::profileReviewQueue` (needs_review DAN
+  unverified, visibleTo, tanpa `closed`), dipilah chip `?jenis=perubahan` "Perubahan menunggu (N)" (kolom Kelompok, Yang
+  perlu diperiksa, Diubah) dan `?jenis=baru` "Belum pernah diverifikasi (N)" (Kelompok, Kampung, Ditambahkan); bawaan
+  perubahan bila N > 0. Angka tab = total keduanya; badge menu Kelompok = HANYA perubahan menunggu (tidak tampil bila 0);
+  `Navigation::counts` memberi `profiles`, `profiles_new`, `profile_queue` dari satu query. Dasbor: tugas "N perubahan
+  profil menunggu verifikasi" dan "Periksa N profil yang belum pernah diverifikasi".
 - `change_logs` (riwayat, tidak pernah diubah): id, organization_id, loggable_type (alias morph), loggable_id,
   subject ("Profil", "Produk: Kakao", "Izin: PIRT"), action (enum ChangeAction: created, updated, deleted), field,
   old_value, new_value (teks siap tampil: nama kampung, label enum, Ya/Tidak), user_id (NULL = "Sistem"), created_at.
@@ -664,8 +670,8 @@ profil) · Laporan (Semua laporan · Perlu diverifikasi · Masalah & kebutuhan).
   OPD = Dasbor · Kelompok · Laporan · Notifikasi · Akun (lonceng dan ikon akun di header HP disembunyikan bila sudah
   ada di navigasi bawah).
 - Badge (`x-nav-badge`, pil `sun` berteks `ink` 9,0:1, maks "99+", tidak tampil bila 0) di sidebar dan navigasi bawah:
-  menu Laporan = laporan menunggu verifikasi, menu Kelompok = profil menunggu verifikasi. Angkanya SAMA dengan isi tab
-  antreannya: `MonthlyReport::verificationQueue($user)` (semua laporan diajukan dalam cakupan) dan
+  menu Laporan = laporan menunggu verifikasi (SAMA dengan isi tab antreannya), menu Kelompok = HANYA perubahan profil
+  menunggu verifikasi (tab Verifikasi profil juga memuat profil yang belum pernah diverifikasi). Sumber: `MonthlyReport::verificationQueue($user)` (semua laporan diajukan dalam cakupan) dan
   `Organization::profileReviewQueue($user)`, dihitung sekali per request (`Navigation::counts`). PENGECUALIAN Bagian 7:
   token `sun` di area aplikasi hanya untuk badge ini (atas permintaan; dijaga `PublicStyleTest`).
 - URL lama (`/{area}/statistik`, `/{area}/verifikasi`, `/{area}/verifikasi-profil`, `/{area}/masalah`, `/admin/konten`,

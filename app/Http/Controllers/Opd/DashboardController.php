@@ -45,7 +45,9 @@ class DashboardController extends Controller
             'latestReports' => (clone $waiting)->withSubmissionInfo()->with('organization:id,name')->orderByDesc('last_submitted_at')->limit(5)->get(),
             // Produksi per produk periode terpilih, kelompok binaan saja (Statistics memakai visibleTo).
             'production' => (new Statistics($user, [], $period, $period))->production(5),
+            // Sama dengan badge menu Kelompok (perubahan menunggu) dan profil yang belum pernah diverifikasi.
             'profileQueue' => Navigation::counts($user)['profiles'],
+            'profilesNew' => Navigation::counts($user)['profiles_new'],
         ]);
     }
 }

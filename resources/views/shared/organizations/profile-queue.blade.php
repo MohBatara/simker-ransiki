@@ -1,50 +1,64 @@
 {{--
-    Tab "Verifikasi profil" (Admin/OPD): Organization::profileReviewQueue = "Perubahan menunggu verifikasi" (diubah kelompok
-    setelah diverifikasi, ke tab Riwayat) lalu "Profil belum pernah diverifikasi" (ke tab Profil). Menu titik tiga berisi
-    "Tandai terverifikasi" bagi yang berhak (Policy verifyProfile). Variabel: $area, $organizations (paginator).
+    Tab "Verifikasi profil" (Admin/OPD): chip "Perubahan menunggu (N)" dan "Belum pernah diverifikasi (N)" memilah
+    Organization::profileReviewQueue (keadaan ditandai chip, bukan pil di tiap baris). Perubahan: Kelompok, Yang perlu
+    diperiksa, Diubah (ke tab Riwayat). Belum pernah: Kelompok, Kampung, Ditambahkan (ke tab Profil). Menu titik tiga berisi
+    "Tandai terverifikasi" bagi yang berhak (Policy verifyProfile). Variabel: $area, $organizations, $kind, $kindCounts.
 --}}
 @use('App\Support\Format')
 @use('App\Support\ProfileReview')
-@use('App\Enums\ProfileStatus')
+
+@php
+    $changes = $kind === 'perubahan';
+    $chips = ['perubahan' => 'Perubahan menunggu', 'baru' => 'Belum pernah diverifikasi'];
+@endphp
 
 <x-layouts.app
     title="Verifikasi profil"
     section="kelompok"
     tab="profil"
-    :description="($area === 'opd' ? 'Profil kelompok binaan' : 'Profil kelompok').' yang belum terverifikasi: perubahan setelah diverifikasi dan profil yang belum pernah diperiksa.'"
+    :description="($area === 'opd' ? 'Profil kelompok binaan' : 'Profil kelompok').' yang belum terverifikasi: perubahan dari akun kelompok dan profil yang belum pernah diperiksa.'"
 >
     <x-admin.card flush>
-        <div class="flex flex-wrap items-center justify-between gap-2 px-4 pb-4 pt-4 md:px-5 md:pt-5">
+        <div class="flex flex-wrap items-center justify-between gap-3 px-4 pb-4 pt-4 md:px-5 md:pt-5">
             <h2 class="text-card-head font-semibold text-ink">Antrean verifikasi profil</h2>
-            @if ($organizations->isNotEmpty())
-                <p class="text-caption text-ink-2 tabular-nums" role="status">{{ Format::number($organizations->total()) }} profil menunggu verifikasi</p>
-            @endif
+            <nav aria-label="Jenis antrean" class="flex flex-wrap gap-2">
+                @foreach ($chips as $key => $label)
+                    <a href="{{ route($area.'.profile-verifications.index', ['jenis' => $key]) }}" @if ($kind === $key) aria-current="page" @endif @class([
+                        'inline-flex h-11 items-center gap-1.5 rounded-pill border px-3 text-caption font-medium transition-colors md:h-8',
+                        'border-brand-100 bg-brand-50 text-brand' => $kind === $key,
+                        'border-line text-ink-2 hover:bg-hover hover:text-ink' => $kind !== $key,
+                    ])>{{ $label }} <span class="tabular-nums">({{ Format::number($kindCounts[$key]) }})</span></a>
+                @endforeach
+            </nav>
         </div>
 
         @if ($organizations->isEmpty())
-            <x-admin.empty bare icon="identification" title="Semua profil sudah terverifikasi" description="Profil yang baru didaftarkan atau diubah kelompok setelah diverifikasi akan muncul di sini." />
+            <x-admin.empty bare icon="identification"
+                :title="$changes ? 'Tidak ada perubahan yang menunggu' : 'Semua profil sudah pernah diverifikasi'"
+                :description="$changes ? 'Perubahan data penting oleh akun kelompok setelah profilnya diverifikasi akan muncul di sini.' : 'Kelompok yang dibuat atau diimpor petugas langsung terverifikasi.'" />
         @else
             <x-admin.table bare clickable>
                 <x-slot:head>
                     <x-admin.table.heading>Kelompok</x-admin.table.heading>
-                    <x-admin.table.heading fit>Keadaan</x-admin.table.heading>
-                    <x-admin.table.heading>Yang perlu diperiksa</x-admin.table.heading>
-                    <x-admin.table.heading fit>Diubah</x-admin.table.heading>
+                    @if ($changes)
+                        <x-admin.table.heading>Yang perlu diperiksa</x-admin.table.heading>
+                        <x-admin.table.heading fit>Diubah</x-admin.table.heading>
+                    @else
+                        <x-admin.table.heading fit>Kampung</x-admin.table.heading>
+                        <x-admin.table.heading fit>Ditambahkan</x-admin.table.heading>
+                    @endif
                 </x-slot:head>
 
                 @foreach ($organizations as $organization)
-                    @php $changed = $organization->profile_status === ProfileStatus::NeedsReview; @endphp
-                    <x-admin.table.row :href="$changed ? route($area.'.organizations.history', $organization) : route($area.'.organizations.show', $organization)" :for="$organization->name">
-                        <x-admin.table.cell primary><x-admin.identity :name="$organization->name" :subtitle="$organization->institutionType->name.' · '.Format::village($organization->village->name)" /></x-admin.table.cell>
-                        <x-admin.table.cell badge><x-admin.badge-status :status="$organization->profile_status" /></x-admin.table.cell>
-                        <x-admin.table.cell label="Yang perlu diperiksa">{{ $changed ? implode(', ', ProfileReview::changedLabels($organization)) : 'Seluruh profil' }}</x-admin.table.cell>
-                        <x-admin.table.cell label="Diubah" fit>
-                            @if ($changed)
-                                <x-admin.date :value="$organization->profile_changed_at" time />
-                            @else
-                                <span class="text-label text-ink-3">Belum pernah</span>
-                            @endif
-                        </x-admin.table.cell>
+                    <x-admin.table.row :href="$changes ? route($area.'.organizations.history', $organization) : route($area.'.organizations.show', $organization)" :for="$organization->name">
+                        <x-admin.table.cell primary><x-admin.identity :name="$organization->name" :subtitle="$organization->institutionType->name" /></x-admin.table.cell>
+                        @if ($changes)
+                            <x-admin.table.cell label="Yang perlu diperiksa">{{ implode(', ', ProfileReview::changedLabels($organization)) }}</x-admin.table.cell>
+                            <x-admin.table.cell label="Diubah" fit><x-admin.date :value="$organization->profile_changed_at" time /></x-admin.table.cell>
+                        @else
+                            <x-admin.table.cell label="Kampung" fit>{{ Format::village($organization->village->name) }}</x-admin.table.cell>
+                            <x-admin.table.cell label="Ditambahkan" fit><x-admin.date :value="$organization->created_at" /></x-admin.table.cell>
+                        @endif
                         @can('verifyProfile', $organization)
                             <x-slot:menu>
                                 <form method="POST" action="{{ route($area.'.organizations.verify-profile', $organization) }}" data-no-processing>

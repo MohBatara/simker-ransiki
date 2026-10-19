@@ -71,10 +71,11 @@ test('badge menunggu verifikasi mengikuti cakupan data tiap peran', function () 
     Organization::factory()->closed()->create(['profile_status' => ProfileStatus::NeedsReview]);
 
     $this->actingAs($this->opdUser);
-    expect(Navigation::counts($this->opdUser))->toBe(['reports' => 2, 'profiles' => 1]);
+    // profiles = badge menu Kelompok (hanya perubahan menunggu); profile_queue = isi tab (perubahan + belum pernah).
+    expect(Navigation::counts($this->opdUser))->toBe(['reports' => 2, 'profiles' => 1, 'profiles_new' => 0, 'profile_queue' => 1]);
     // Admin: semua laporan diajukan di distrik (sama dengan isi tab Perlu diverifikasi).
-    expect(Navigation::counts($this->admin))->toBe(['reports' => 4, 'profiles' => 2])
-        ->and(Navigation::counts($this->otherOpdUser))->toBe(['reports' => 1, 'profiles' => 0]);
+    expect(Navigation::counts($this->admin))->toBe(['reports' => 4, 'profiles' => 2, 'profiles_new' => 0, 'profile_queue' => 2])
+        ->and(Navigation::counts($this->otherOpdUser))->toBe(['reports' => 1, 'profiles' => 0, 'profiles_new' => 0, 'profile_queue' => 0]);
 
     $html = $this->get('/opd')->assertOk()->getContent();
     expect($html)->toContain('aria-label="Laporan, 2 menunggu verifikasi"')

@@ -2,6 +2,7 @@
 
 namespace App\Support;
 
+use App\Enums\ProfileStatus;
 use App\Enums\Role;
 use App\Models\MonthlyReport;
 use App\Models\Organization;
@@ -37,7 +38,8 @@ class Navigation
             ], ["{$area}.dashboard", "{$area}.statistics.*"], group: 1),
             'kelompok' => self::section($isAdmin ? 'Kelompok' : 'Kelompok binaan', 'user-group', array_filter([
                 ($isAdmin ? 'semua' : 'daftar') => ['label' => $isAdmin ? 'Semua kelompok' : 'Daftar', 'route' => "{$area}.organizations.index"],
-                'profil' => ['label' => 'Verifikasi profil', 'route' => "{$area}.profile-verifications.index", 'badge' => 'profiles'],
+                // Angka tab = total antrean (perubahan + belum pernah diverifikasi); badge menu = hanya perubahan menunggu.
+                'profil' => ['label' => 'Verifikasi profil', 'route' => "{$area}.profile-verifications.index", 'badge' => 'profile_queue'],
                 'ganda' => $isAdmin ? ['label' => 'Kemungkinan data ganda', 'route' => 'admin.organizations.duplicates.index'] : null,
             ]), ["{$area}.organizations.*", "{$area}.profile-verifications.*"], short: 'Kelompok', badge: 'profiles', group: 2),
             'laporan' => self::section('Laporan', 'document-text', [
@@ -143,23 +145,36 @@ class Navigation
     }
 
     /**
-     * Jumlah yang menunggu, sesuai cakupan data peran (sama dengan isi tab antreannya). Sekali per request.
+     * Jumlah yang menunggu, sesuai cakupan data peran. Sekali per request.
+     * - reports: laporan menunggu verifikasi (badge menu Laporan = tab Perlu diverifikasi).
+     * - profiles: "Perubahan menunggu verifikasi" saja (badge menu Kelompok; tidak tampil bila 0).
+     * - profiles_new: "Profil belum pernah diverifikasi" (tugas Dasbor).
+     * - profile_queue: total keduanya = isi tab Verifikasi profil.
      *
-     * @return array{reports: int, profiles: int}
+     * @return array{reports: int, profiles: int, profiles_new: int, profile_queue: int}
      */
     public static function counts(User $user): array
     {
         if (! $user->isAdmin() && ! $user->isOpd()) {
-            return ['reports' => 0, 'profiles' => 0];
+            return ['reports' => 0, 'profiles' => 0, 'profiles_new' => 0, 'profile_queue' => 0];
         }
 
         $attributes = request()->attributes;
         $key = 'navigation.counts.'.$user->id;
 
         if (! $attributes->has($key)) {
+            $profiles = Organization::profileReviewQueue($user)->toBase()
+                ->selectRaw('organizations.profile_status as status, COUNT(*) as total')
+                ->groupBy('organizations.profile_status')
+                ->pluck('total', 'status');
+            $changed = (int) ($profiles[ProfileStatus::NeedsReview->value] ?? 0);
+            $new = (int) ($profiles[ProfileStatus::Unverified->value] ?? 0);
+
             $attributes->set($key, [
                 'reports' => MonthlyReport::verificationQueue($user)->count(),
-                'profiles' => Organization::profileReviewQueue($user)->count(),
+                'profiles' => $changed,
+                'profiles_new' => $new,
+                'profile_queue' => $changed + $new,
             ]);
         }
 

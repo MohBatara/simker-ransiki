@@ -198,6 +198,11 @@ test('impor menyimpan baris siap dan peringatan yang dipilih, dengan bawaan yang
         ->and($first->reporting_starts_on->format('Y-m-d'))->toBe('2026-09-01')
         ->and($first->sectors->pluck('id')->all())->toEqualCanonicalizing([$this->sector->id, $this->sector2->id])
         ->and($first->opds->pluck('id')->all())->toBe([$this->opd->id])
+        // Dibuat petugas lewat impor: langsung terverifikasi, tercatat di Riwayat.
+        ->and($first->profile_status)->toBe(App\Enums\ProfileStatus::Verified)
+        ->and($first->profile_verified_by)->toBe($this->admin->id)
+        ->and(App\Models\ChangeLog::where('organization_id', $first->id)->where('field', 'profile_status')->value('new_value'))
+        ->toBe('Diverifikasi otomatis saat dibuat oleh '.$this->admin->name)
         ->and($created[1]->village_id)->toBe($this->otherVillage->id)
         ->and($created[1]->members_count)->toBe(1250)
         ->and(User::count())->toBe(1);

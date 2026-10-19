@@ -21,6 +21,9 @@ use Illuminate\Database\Eloquent\Model;
 class ChangeLogger
 {
     /** @var array<class-string<Model>, array<string, string>> kolom => label */
+    /** Label riwayat untuk catatan lewat note() (tidak dicatat otomatis oleh observer). */
+    public const NOTE_LABELS = ['profile_status' => 'Verifikasi profil'];
+
     public const FIELDS = [
         Organization::class => [
             'name' => 'Nama kelompok',
@@ -121,11 +124,17 @@ class ChangeLogger
         return true;
     }
 
+    /** Catatan riwayat yang bukan perubahan kolom biasa (mis. verifikasi profil otomatis saat dibuat petugas). */
+    public static function note(Organization $organization, string $field, string $text): void
+    {
+        self::write($organization, ChangeAction::Updated, $field, '', $text);
+    }
+
     public static function label(string $type, ?string $field): ?string
     {
         $class = Organization::getActualClassNameForMorph($type);
 
-        return $field ? (self::FIELDS[$class][$field] ?? $field) : null;
+        return $field ? (self::FIELDS[$class][$field] ?? self::NOTE_LABELS[$field] ?? $field) : null;
     }
 
     private static function write(Model $model, ChangeAction $action, ?string $field = null, ?string $old = null, ?string $new = null): void
