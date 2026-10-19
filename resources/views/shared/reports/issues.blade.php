@@ -73,28 +73,28 @@
             <x-admin.table bare clickable>
                 <x-slot:head>
                     <x-admin.table.heading>Kelompok</x-admin.table.heading>
-                    <x-admin.table.heading>Status</x-admin.table.heading>
-                    <x-admin.table.heading>Kategori</x-admin.table.heading>
+                    <x-admin.table.heading fit>Status</x-admin.table.heading>
+                    <x-admin.table.heading fit>Kategori</x-admin.table.heading>
                     <x-admin.table.heading>Uraian</x-admin.table.heading>
                 </x-slot:head>
 
                 @foreach ($issues as $issue)
                     <x-admin.table.row :href="route($area.'.issues.show', $issue)" :for="$issue->monthlyReport->organization->name">
                         <x-admin.table.cell primary>
-                            {{ $issue->monthlyReport->organization->name }}
+                            <x-admin.identity :name="$issue->monthlyReport->organization->name" :subtitle="Format::village($issue->monthlyReport->organization->village?->name)" />
                         </x-admin.table.cell>
                         <x-admin.table.cell subtitle class="md:hidden">
-                            {{ Format::month($issue->monthlyReport->period) }} · {{ $issue->monthlyReport->organization->village?->name }}
+                            {{ Format::monthShort($issue->monthlyReport->period) }}
                         </x-admin.table.cell>
                         <x-admin.table.cell badge>
                             <x-admin.badge-status :status="$issue->follow_up_status" />
                         </x-admin.table.cell>
-                        <x-admin.table.cell label="Kategori" class="whitespace-nowrap">
+                        <x-admin.table.cell label="Kategori" fit>
                             <x-admin.chip :icon="$issue->kind === IssueKind::Problem ? 'exclamation-triangle' : 'hand-raised'">{{ $issue->category ? $issue->categoryLabel() : 'Tanpa kategori' }}</x-admin.chip>
-                            <span class="mt-1 block text-label text-ink-3">{{ $issue->kind->label() }}<span class="max-md:hidden"> · {{ Format::month($issue->monthlyReport->period) }}</span></span>
+                            <span class="mt-1 block text-label text-ink-3">{{ $issue->kind->label() }}<span class="max-md:hidden"> · {{ Format::monthShort($issue->monthlyReport->period) }}</span></span>
                         </x-admin.table.cell>
                         <x-admin.table.cell label="Uraian" class="max-md:items-start! max-md:text-left!">
-                            <span class="line-clamp-3 md:max-w-md">{{ filled($issue->description) ? $issue->description : Format::EMPTY }}</span>
+                            <span class="line-clamp-3 md:max-w-md">{{ filled($issue->description) ? $issue->description : \App\Support\Format::orEmpty(null) }}</span>
                         </x-admin.table.cell>
                     </x-admin.table.row>
                 @endforeach

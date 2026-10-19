@@ -55,8 +55,8 @@
 
     @if ($stats)
         <div class="grid grid-cols-2 gap-4 xl:grid-cols-4">
-            <x-admin.stat compact icon="user-group" label="Anggota" :value="Format::number($organization->members_count)" :hint="$organization->members_count === null ? 'belum diisi' : 'orang'" />
-            <x-admin.stat compact icon="cube" label="Produk" :value="Format::number($organization->products_count)" :href="$links['produk'] ?? null" />
+            <x-admin.stat compact icon="user-group" label="Anggota" :value="Format::number($organization->members_count)" :hint="$organization->members_count === null ? 'lengkapi di Ubah profil' : 'orang'" />
+            <x-admin.stat compact icon="cube" label="Produk" :value="Format::number($organization->products_count)" hint="produk terdaftar" :href="$links['produk'] ?? null" />
             <x-admin.stat compact icon="document-check" label="Izin terbit" :value="Format::number($organization->issued_licenses_count)" :hint="'dari '.Format::number($organization->licenses_count).' izin'" :href="$links['izin'] ?? null" />
             <x-admin.stat compact icon="clipboard-document-check" label="Laporan terverifikasi" :value="Format::number($organization->verified_reports_count)" :hint="'dari '.Format::number($organization->monthly_reports_count).' laporan'" :href="$links['laporan'] ?? null" />
         </div>

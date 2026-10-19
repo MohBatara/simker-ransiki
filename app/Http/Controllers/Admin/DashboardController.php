@@ -39,6 +39,8 @@ class DashboardController extends Controller
             'production' => $district->production($period),
             // Kartu Ekonomi: penjualan dan biaya 6 bulan sampai periode terpilih + persen perubahan (hanya terverifikasi).
             'economyTrend' => Statistics::recentEconomy($request->user(), $period, $earliest),
+            // Persen perubahan setara: hanya kelompok yang terverifikasi di periode ini dan bulan sebelumnya.
+            'economyChange' => (new Statistics($request->user(), [], $period, $period))->matchedChange($period),
             // Kartu Laporan terbaru: 5 pengajuan terakhir dari antrean verifikasi yang sama dengan tab Perlu diverifikasi.
             'latestReports' => MonthlyReport::verificationQueue($request->user())->withSubmissionInfo()->with('organization:id,name')->orderByDesc('last_submitted_at')->limit(5)->get(),
             // Sama dengan badge menu Kelompok (dihitung sekali per request).

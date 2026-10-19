@@ -36,7 +36,7 @@ class MonthlyReportController extends Controller
         $reports = MonthlyReport::visibleTo($user)
             ->filter($filters)
             ->withSubmissionInfo()
-            ->with(['organization:id,name', 'enterer:id,role'])
+            ->with(['organization:id,name,village_id', 'organization.village:id,name', 'enterer:id,role'])
             ->reviewerOrder()
             ->paginate(20)
             ->withQueryString();
@@ -66,7 +66,7 @@ class MonthlyReportController extends Controller
             ->when($adminOnly, fn ($query) => $query->needsAdminVerification())
             ->withSubmissionInfo()
             ->when(MonthlyReport::separatesDuties(), fn ($query) => $query->withHandledBy($user))
-            ->with(['organization:id,name', 'enterer:id,role'])
+            ->with(['organization:id,name,village_id', 'organization.village:id,name', 'enterer:id,role'])
             ->orderBy('last_submitted_at')
             ->orderBy('monthly_reports.id')
             ->paginate(20)

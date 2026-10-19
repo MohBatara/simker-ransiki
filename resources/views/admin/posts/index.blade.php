@@ -48,16 +48,16 @@
                 <x-admin.table bare clickable>
                     <x-slot:head>
                         <x-admin.table.heading>Judul</x-admin.table.heading>
-                        <x-admin.table.heading>Kategori</x-admin.table.heading>
-                        <x-admin.table.heading>Tanggal terbit</x-admin.table.heading>
-                        <x-admin.table.heading>Status</x-admin.table.heading>
+                        <x-admin.table.heading fit>Kategori</x-admin.table.heading>
+                        <x-admin.table.heading fit>Tanggal terbit</x-admin.table.heading>
+                        <x-admin.table.heading fit>Status</x-admin.table.heading>
                     </x-slot:head>
 
                     @foreach ($posts as $post)
                         <x-admin.table.row :href="route('admin.posts.edit', $post)" :for="$post->title">
                             <x-admin.table.cell primary>{{ $post->title }}</x-admin.table.cell>
-                            <x-admin.table.cell label="Kategori"><x-admin.chip :icon="$post->category === PostCategory::Activity ? 'calendar-days' : 'newspaper'">{{ $post->category->label() }}</x-admin.chip></x-admin.table.cell>
-                            <x-admin.table.cell label="Tanggal terbit"><x-admin.date :value="$post->published_at" time /></x-admin.table.cell>
+                            <x-admin.table.cell label="Kategori" fit><x-admin.chip :icon="$post->category === PostCategory::Activity ? 'calendar-days' : 'newspaper'">{{ $post->category->label() }}</x-admin.chip></x-admin.table.cell>
+                            <x-admin.table.cell label="Tanggal terbit" fit><x-admin.date :value="$post->published_at" time /></x-admin.table.cell>
                             <x-admin.table.cell badge>
                                 @if ($post->isScheduled())
                                     <x-admin.badge-status tone="warning" label="Terjadwal" />

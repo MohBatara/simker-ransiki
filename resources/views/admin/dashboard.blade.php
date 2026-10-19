@@ -81,11 +81,11 @@
                     <x-admin.table.row>
                         <x-admin.table.cell primary>{{ $row['opd']?->short_name ?: ($row['opd']?->name ?? 'Tanpa OPD pembina') }}</x-admin.table.cell>
                         <x-admin.table.cell label="Wajib lapor" numeric>
-                            <a href="{{ route('admin.organizations.index', ['opd' => $opdFilter]) }}" class="inline-flex min-h-11 items-center rounded-control hover:underline md:min-h-0">{{ Format::number($counts['total']) }}</a>
+                            <a href="{{ route('admin.organizations.index', ['opd' => $opdFilter]) }}" class="inline-flex min-h-11 items-center rounded-control hover:underline md:min-h-0">{{ \App\Support\Format::orEmpty(Format::number($counts['total'])) }}</a>
                         </x-admin.table.cell>
                         @foreach ($cells as [$label, $value, $href, $optional])
                             <x-admin.table.cell :label="$label" numeric :optional="$optional">
-                                <a href="{{ $href }}" class="inline-flex min-h-11 items-center rounded-control hover:underline md:min-h-0">{{ Format::number($value) }}</a>
+                                <a href="{{ $href }}" class="inline-flex min-h-11 items-center rounded-control hover:underline md:min-h-0">{{ \App\Support\Format::orEmpty(Format::number($value)) }}</a>
                             </x-admin.table.cell>
                         @endforeach
                         <x-admin.table.cell class="md:w-40 max-md:col-span-2 max-md:pt-2">

@@ -51,8 +51,7 @@
     $sectionTabs = $section && $user ? \App\Support\Navigation::tabs($user, $section) : null;
     $headTitle = $title;
     if ($sectionTabs) {
-        $currentTab = $sectionTabs['tabs'][$tab] ?? null;
-        $breadcrumbs ??= [['label' => $sectionTabs['label'], 'href' => $sectionTabs['href']], ['label' => $currentTab['label'] ?? $title]];
+        // Halaman utama bertab: cukup judul dan subjudul (remah hanya di halaman detail dan form, diisi halaman itu).
         $headTitle = $title === $sectionTabs['label'] ? $title : $title.' · '.$sectionTabs['label'];
     }
 
@@ -125,8 +124,9 @@
                                 @if ($active) aria-current="page" @endif
                                 @class([
                                     'group relative flex flex-col items-center gap-1 rounded-control px-1 py-2 transition-colors xl:h-10 xl:flex-row xl:gap-3 xl:px-3 xl:py-0',
-                                    'bg-brand-50 font-semibold text-brand' => $active,
-                                    'text-ink-2 hover:bg-panel hover:text-ink' => ! $active,
+                                    // Aktif: kartu putih berbingkai + bayangan sangat tipis, garis kiri brand 3px.
+                                    'border border-line bg-panel font-semibold text-brand shadow-xs before:absolute before:inset-y-2 before:-left-px before:w-[3px] before:rounded-r-full before:bg-brand' => $active,
+                                    'border border-transparent text-ink-2 hover:bg-panel/60 hover:text-ink' => ! $active,
                                 ])
                             >
                                 <x-dynamic-component :component="'heroicon-o-'.$item['icon']" class="size-5 shrink-0 xl:size-[18px]" />
@@ -147,8 +147,8 @@
         @if ($userName)
             <div class="shrink-0 px-2 pb-3 xl:px-3" data-sidebar-profile>
                 <div x-data="{ open: false }" x-on:keydown.escape.window="open = false" x-on:click.outside="open = false" class="relative">
-                    <button type="button" x-on:click="open = ! open" x-bind:aria-expanded="open" aria-haspopup="menu" class="flex w-full items-center gap-3 rounded-control p-2 text-left transition-colors hover:bg-panel max-xl:justify-center">
-                        <x-avatar :name="$userName" size="sm" class="bg-panel" />
+                    <button type="button" x-on:click="open = ! open" x-bind:aria-expanded="open" aria-haspopup="menu" class="flex w-full items-center gap-3 rounded-control p-2 text-left transition-colors hover:bg-panel/60 max-xl:justify-center">
+                        <x-avatar :name="$userName" class="bg-brand-100! text-brand!" />
                         <span class="hidden min-w-0 flex-1 leading-tight xl:block">
                             <span class="block truncate text-ui font-semibold text-ink">{{ $userName }}</span>
                             @if ($userRole)
@@ -189,9 +189,9 @@
                 @unless ($focus)
                     <div class="-mr-2 flex shrink-0">
                         @if ($searchUrl)
-                            <a href="{{ $searchUrl }}" class="flex size-11 items-center justify-center rounded-control text-ink-soft hover:bg-subtle hover:text-ink" aria-label="Cari">
+                            <button type="button" x-data x-on:click="$dispatch('open-modal', 'cari-global')" class="flex size-11 items-center justify-center rounded-control text-ink-soft hover:bg-subtle hover:text-ink" aria-label="Cari">
                                 <x-heroicon-o-magnifying-glass class="size-5" />
-                            </a>
+                            </button>
                         @endif
                         {{-- Lonceng dan akun di header HP hanya bila belum ada di navigasi bawah (OPD: keduanya di navigasi bawah). --}}
                         @if ($notificationsUrl && ! $bottomNav->contains('route', 'notifications.index'))
@@ -260,6 +260,10 @@
                 </div>
             </div>
         </main>
+
+        @if ($searchUrl)
+            @include('partials.search-dialog')
+        @endif
 
         {{-- Pesan sistem (sukses, peringatan, gagal) sebagai toast seragam. --}}
         <x-admin.toasts />

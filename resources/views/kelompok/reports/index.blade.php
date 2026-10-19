@@ -23,9 +23,9 @@
         <x-admin.table clickable>
             <x-slot:head>
                 <x-admin.table.heading>Periode</x-admin.table.heading>
-                <x-admin.table.heading>Status</x-admin.table.heading>
-                <x-admin.table.heading>Tenggat</x-admin.table.heading>
-                <x-admin.table.heading>Diajukan</x-admin.table.heading>
+                <x-admin.table.heading fit>Status</x-admin.table.heading>
+                <x-admin.table.heading fit>Tenggat</x-admin.table.heading>
+                <x-admin.table.heading fit>Diajukan</x-admin.table.heading>
                 <x-admin.table.heading><span class="sr-only">Tindakan</span></x-admin.table.heading>
             </x-slot:head>
 
@@ -35,7 +35,7 @@
                     $href = $report ? ($report->status->isEditable() ? route('kelompok.reports.edit', $report) : route('kelompok.reports.show', $report)) : null;
                 @endphp
                 <x-admin.table.row :href="$href">
-                    <x-admin.table.cell primary>{{ Format::month($row['period']) }}</x-admin.table.cell>
+                    <x-admin.table.cell primary><span class="whitespace-nowrap" title="{{ Format::month($row['period']) }}">{{ Format::monthShort($row['period']) }}</span></x-admin.table.cell>
                     <x-admin.table.cell badge>
                         <span class="inline-flex flex-wrap items-center justify-end gap-1.5 md:justify-start">
                             @if ($report)
@@ -48,8 +48,8 @@
                             @endif
                         </span>
                     </x-admin.table.cell>
-                    <x-admin.table.cell label="Tenggat"><x-admin.date :value="$row['deadline']" /></x-admin.table.cell>
-                    <x-admin.table.cell label="Diajukan">
+                    <x-admin.table.cell label="Tenggat" fit><x-admin.date :value="$row['deadline']" /></x-admin.table.cell>
+                    <x-admin.table.cell label="Diajukan" fit>
                         <x-admin.date :value="$report?->submitted_at" time />
                         @if ($report?->wasSubmittedLate())
                             <span class="block text-caption text-ink-soft">Diajukan terlambat</span>

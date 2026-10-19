@@ -40,7 +40,7 @@
             <div x-data="chart(@js([$config]))" class="relative mx-auto size-44">
                 <canvas data-panel="0" role="img" aria-label="{{ $summary }}">{{ $summary }}</canvas>
                 <p class="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
-                    <span class="text-[1.75rem] leading-8 font-semibold tabular-nums text-ink">{{ Format::number($total) }}</span>
+                    <span class="text-[1.75rem] leading-8 font-semibold tabular-nums text-ink">{{ \App\Support\Format::orEmpty(Format::number($total)) }}</span>
                     <span class="text-label text-ink-2">kelompok</span>
                 </p>
             </div>
@@ -51,7 +51,7 @@
                         <a href="{{ $slice['href'] }}" class="inline-flex h-11 max-w-full items-center gap-1.5 rounded-pill border border-line px-2 text-label text-ink-2 transition-colors hover:border-brand-100 hover:bg-hover md:h-7">
                             <span class="{{ $dots[$slice['tone']] }} size-2 shrink-0 rounded-full" aria-hidden="true"></span>
                             <span class="truncate">{{ $slice['label'] }}</span>
-                            <span class="font-semibold tabular-nums text-ink">{{ Format::number($slice['value']) }}</span>
+                            <span class="font-semibold tabular-nums text-ink">{{ \App\Support\Format::orEmpty(Format::number($slice['value'])) }}</span>
                         </a>
                     </li>
                 @endforeach
@@ -63,7 +63,7 @@
             @foreach ($statuses as [$status, $label])
                 <li>
                     <a href="{{ route('admin.organizations.index', ['status' => $status->value]) }}" class="inline-flex min-h-11 items-center rounded-pill md:min-h-0" title="{{ $status->label() }}">
-                        <x-admin.badge-status :tone="App\Support\StatusTone::of($status)" class="gap-1 hover:underline">{{ $label }} <span class="tabular-nums">{{ Format::number($organizations['statuses'][$status->value] ?? 0) }}</span></x-admin.badge-status>
+                        <x-admin.badge-status :tone="App\Support\StatusTone::of($status)" class="gap-1 hover:underline">{{ $label }} <span class="tabular-nums">{{ \App\Support\Format::orEmpty(Format::number($organizations['statuses'][$status->value] ?? 0)) }}</span></x-admin.badge-status>
                     </a>
                 </li>
             @endforeach

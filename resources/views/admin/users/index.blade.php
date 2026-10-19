@@ -48,9 +48,9 @@
                 <x-admin.table bare clickable>
                     <x-slot:head>
                         <x-admin.table.heading>Nama</x-admin.table.heading>
-                        <x-admin.table.heading>Peran</x-admin.table.heading>
-                        <x-admin.table.heading optional>Login terakhir</x-admin.table.heading>
-                        <x-admin.table.heading>Status</x-admin.table.heading>
+                        <x-admin.table.heading fit>Peran</x-admin.table.heading>
+                        <x-admin.table.heading fit optional>Login terakhir</x-admin.table.heading>
+                        <x-admin.table.heading fit>Status</x-admin.table.heading>
                     </x-slot:head>
 
                     @foreach ($users as $user)
@@ -64,13 +64,13 @@
                                     </span>
                                 </span>
                             </x-admin.table.cell>
-                            <x-admin.table.cell label="Peran">
+                            <x-admin.table.cell label="Peran" fit>
                                 <x-admin.chip :icon="match ($user->role) { App\Enums\Role::Admin => 'shield-check', App\Enums\Role::Opd => 'briefcase', default => 'user-group' }">{{ $user->role->label() }}</x-admin.chip>
                                 @if ($user->opd || $user->organization)
                                     <span class="mt-1 block text-label text-ink-3">{{ $user->opd?->short_name ?? $user->organization->name }}</span>
                                 @endif
                             </x-admin.table.cell>
-                            <x-admin.table.cell label="Login terakhir" optional>
+                            <x-admin.table.cell label="Login terakhir" fit optional>
                                 @if ($user->last_login_at)<x-admin.date :value="$user->last_login_at" time />@else Belum pernah @endif
                             </x-admin.table.cell>
                             <x-admin.table.cell badge>

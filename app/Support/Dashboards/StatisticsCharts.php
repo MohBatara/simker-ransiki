@@ -64,7 +64,7 @@ class StatisticsCharts
         $series = ['income_sales' => ['Penjualan', 'brand'], 'costs' => ['Biaya', 'chart-2']];
         $notes = fn (array $row, string $field) => array_values(array_filter([
             'Diisi '.$row['totals'][$field]['filled'].' dari '.$row['obligated'].' kelompok',
-            $row['provisional'] ? 'Sementara: baru '.$row['reports'].' dari '.$row['obligated'].' kelompok terverifikasi' : null,
+            $row['provisional'] ? 'Data belum lengkap: baru '.$row['reports'].' dari '.$row['obligated'].' kelompok terverifikasi' : null,
         ]));
         $value = fn (array $row, string $field) => $row['totals'][$field]['sum'];
 
@@ -87,14 +87,14 @@ class StatisticsCharts
                     Format::month($row['period']),
                     Format::rupiah($value($row, 'income_sales')),
                     Format::rupiah($value($row, 'costs')),
-                    $row['provisional'] ? 'Sementara' : '',
+                    $row['provisional'] ? 'Data belum lengkap' : '',
                 ])->all(),
             ],
             'summary' => 'Penjualan dan biaya per bulan. '.$trend->map(fn (array $row) => Format::month($row['period']).': '
                 .collect($series)->map(fn (array $definition, string $field) => mb_strtolower($definition[0]).' '
                     .($value($row, $field) === null ? 'tidak ada data' : Format::rupiah($value($row, $field))))->join(', ')
-                .($row['provisional'] ? ' (sementara)' : ''))->join('; ').'.',
-            'footnote' => $trend->contains(fn (array $row) => $row['provisional'] && $row['reports'] > 0) ? self::PROVISIONAL_NOTE : null,
+                .($row['provisional'] ? ' (data belum lengkap)' : ''))->join('; ').'.',
+            'footnote' => $trend->contains(fn (array $row) => $row['provisional'] && $row['reports'] > 0) ? 'Titik berlubang dan garis putus-putus: data belum lengkap.' : null,
             'empty' => $trend->every(fn (array $row) => $row['reports'] === 0)
                 ? 'Belum ada laporan terverifikasi pada enam bulan ini.'
                 : null,

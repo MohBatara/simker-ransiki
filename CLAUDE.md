@@ -706,7 +706,7 @@ dirancang dengan baik, bukan landing page startup.
   `brand-50` → `brand-mist` banner sapaan dasbor (atas permintaan).
 - Tidak ada emoji di antarmuka.
 - Tidak ada bayangan tebal. Kartu memakai border 1px, tanpa shadow. Shadow kecil hanya untuk
-  dropdown, modal, dan menu yang melayang; `shadow-xs` hanya untuk kartu mini di banner sapaan.
+  dropdown, modal, dan menu yang melayang; `shadow-xs` hanya untuk kartu mini di banner sapaan dan menu aktif sidebar.
 - Tidak ada warna ungu/biru neon, tidak ada teks berwarna-warni.
 - Tidak ada hero besar dengan tiga kartu fitur dan tombol "Mulai Sekarang".
 - Tidak ada ilustrasi stok, ikon besar dekoratif, atau ikon di setiap judul.
@@ -943,7 +943,14 @@ atau banner foto di area aplikasi. `x-tabs` hanya untuk tab dalam halaman (panel
 - Kontrol bersama (`x-button`, `x-input`, `x-select`, `x-textarea`, `x-field`) membaca variabel `--control-*`/`--label-*`
   (`app.css`): di tema h-9, 13px medium, cincin fokus 3px `brand-100` + border brand; di publik tetap 40px/14px. Di HP
   tetap 44px. Border kontrol tetap `line-input` (3:1, bukan `line` 1,2:1).
-- `x-admin.page-header` (dirender layout): remah kecil, judul 22px semibold, subjudul 13px `ink-2`, slot `badge`/`meta`;
+- Remah (`breadcrumbs`) hanya di halaman detail dan form; halaman utama bertab cukup judul + subjudul (layout tidak
+  lagi mengisi remah "Menu › Tab" otomatis).
+- Nilai kosong di area aplikasi: "Belum diisi" 12px `ink-3` lewat SATU helper `Format::orEmpty()` (komponen
+  `x-admin.empty-value`), tidak pernah "—" atau "-". Ekspor PDF/Excel tetap memakai `Format::EMPTY`/sel kosong.
+- Pencarian umum (Admin/OPD): tombol ikon kaca pembesar di kepala halaman (ukuran sama dengan lonceng) dan header HP
+  membuka dialog `partials.search-dialog` (kelompok, ketua, kampung, produk → `/{area}/cari`), juga Ctrl/Cmd + K. Kotak cari
+  di atas tabel tetap pencarian daftar.
+- `x-admin.page-header` (dirender layout): remah kecil (detail/form), judul 22px semibold, subjudul 13px `ink-2`, slot `badge`/`meta`;
   di kanan slot `tools` (cari + lonceng, tablet/desktop), lalu `secondary` (tombol bergaris; menu "…" vertikal
   `aria-label="Menu tindakan"` di HP) dan `actions` (aksi utama brand). Bila header HP memakai `phone-title` lain, h1
   tetap tampil di HP.
@@ -958,7 +965,7 @@ atau banner foto di area aplikasi. `x-tabs` hanya untuk tab dalam halaman (panel
   Berita, Data master.
 - `x-admin.stat`: label 12px di atas, angka 22px semibold tabular, perubahan persen opsional (`x-admin.change`: naik
   hijau panah naik, turun merah; `up-is-good=false` untuk biaya), keterangan 12px, ikon dalam kotak `brand-50`; versi
-  `compact` satu baris (~88px) di halaman daftar, tab Ekonomi/Legalitas, impor, dan strip kepala detail kelompok.
+  `compact` satu baris (~88px; ikon kiri, label, angka rata atas, keterangan kecil SELALU ada, panah bila bisa diklik) di halaman daftar, tab Ekonomi/Legalitas, impor, dan strip kepala detail kelompok.
   `x-admin.card` (putih, bingkai line, 12px, padding 20px / HP 16px, tanpa bayangan; kepala: judul 15px + keterangan
   13px, di kanan aksi kecil atau `more` = tautan "Lihat semua" brand berpanah; tanpa garis di bawah kepala),
   `x-admin.empty` (ikon dalam kotak `brand-50`, judul, kalimat, aksi; `bare` di dalam kartu), `x-admin.pagination`
@@ -968,7 +975,11 @@ atau banner foto di area aplikasi. `x-tabs` hanya untuk tab dalam halaman (panel
   40px berlatar `head` (11px kapital `ink-3`) yang menempel di atas layar (tidak bila tabel diberi `label`), baris 52px
   teks 13px dengan pemisah `line-soft` dan hover `hover`, angka rata kanan tabular. Baris dengan `href`: kolom terakhir
   tombol titik tiga vertikal berisi "Lihat" (+ `edit` → "Ubah", slot `menu` untuk aksi lain); di HP kartu berlabel +
-  chevron. Kolom kotak centang hanya untuk tabel beraksi massal (belum ada).
+  chevron. Sel nama memakai `x-admin.identity` (avatar inisial [tablet/desktop] + nama maks 2 baris, nama lengkap di
+  `title`, keterangan kecil `ink-3`: ketua di tabel Kelompok, kampung di tabel Laporan/Masalah). Kolom selebar isi (`fit`
+  di heading dan cell: tanggal, periode, status, angka, jenis, kampung) tidak patah baris; kolom nama mengambil sisa
+  lebar. Periode di tabel `Format::monthShort` ("Sep 2026", nama lengkap di title), kampung tanpa awalan "Kampung "
+  (`Format::village`), daftar bidang usaha `x-admin.first-of` (pertama + chip "+n", lengkap di tooltip). Kolom kotak centang hanya untuk tabel beraksi massal (belum ada).
 - `x-admin.badge-status`: SATU peta warna untuk semua status (`App\Support\StatusTone`): success (terverifikasi, aktif,
   terbit, selesai), warning (menunggu/diajukan, diproses, perlu verifikasi ulang), info (ditinjau, direncanakan, sedang
   ditindaklanjuti), danger (perlu revisi, perlu perbaikan, terlambat, ditutup, tidak dapat ditindaklanjuti), neutral
@@ -984,17 +995,20 @@ atau banner foto di area aplikasi. `x-tabs` hanya untuk tab dalam halaman (panel
 - Kartu Ekonomi (Admin dan OPD, `shared.dashboards.economy`, tampilan saja): kepala "Ekonomi <bulan>" + "Dari laporan
   terverifikasi", label "6 bulan terakhir", ikon info bertooltip (catatan cara menghitung). Tiga angka (Penjualan, Biaya,
   Laba) dengan rupiah ringkas `Format::rupiahShort` (rb/jt/M HANYA di sini, nilai lengkap di tooltip) + persen perubahan
-  dari bulan sebelumnya (`Statistics::change`, hanya bila kedua bulan punya angka terverifikasi dan bulan sebelumnya ≠ 0);
+  SETARA (`Statistics::matchedChange`): hanya kelompok yang laporannya terverifikasi di periode ini DAN bulan sebelumnya
+  dan mengisi angka itu di keduanya; tooltip "Dibanding <bulan>, dari N kelompok yang sama"; N < `Statistics::MIN_MATCHED`
+  (5) → teks kecil "belum bisa dibandingkan" (juga kartu "Penjualan <bulan>" di tab Ekonomi, filter ikut);
   laba negatif "Rugi Rp …" (`fix`); "diisi X dari Y laporan" hanya bila X < Y. Cakupan "X dari Y kelompok wajib lapor
   terverifikasi" + pendapatan lain + bar 6px + persen (< 50%: "Angka belum mewakili seluruh kelompok"). Grafik garis 6
   bulan Penjualan (`brand`) dan Biaya (`chart-2`) dari `Statistics::recentEconomy` (query baca, hanya `verified`, aturan
-  bulan sementara) dengan "Lihat tabel". Kosong: ajakan "Buka laporan yang menunggu verifikasi". Admin memakai
+  bulan sementara: titik berlubang + garis putus-putus, keterangan "data belum lengkap") dengan "Lihat tabel". Kosong: ajakan "Buka laporan yang menunggu verifikasi". Admin memakai
   `DistrictStats::economy`, OPD baris terakhir seri (kelompok binaan).
 - Kartu Kelompok (Admin, `shared.dashboards.organizations`): donat jenis kelembagaan (Chart.js `doughnut`, 5 teratas +
   Lainnya) dengan total di tengah, legenda chip berbingkai yang menaut ke daftar terfilter, pil status Aktif / Tidak aktif
   / Ditutup berangka. OPD tidak punya kartu ini (angkanya khusus seluruh distrik).
 - Sidebar: grup kecil tanpa judul dipisah garis (`group` di `Navigation::sections`), item 40px sudut 8px (teks 14px,
-  ikon 18px), aktif `brand-50` + teks/ikon brand semibold, hover latar putih, badge rata kanan.
+  ikon 18px), aktif = latar putih berbingkai `line` + `shadow-xs` + teks/ikon brand semibold + garis kiri brand 3px,
+  hover putih 60%, badge rata kanan. Avatar pengguna di bawah: lingkaran 36px `brand-100`, teks brand.
 - Grafik (`resources/js/charts.js`): label sumbu 11px `ink-3`, grid putus-putus tipis `line`, titik di tiap bulan, sumbu
   rupiah "Rp 50 jt".
 - `x-chart` memakai `x-admin.card`.

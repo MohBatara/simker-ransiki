@@ -21,8 +21,8 @@
                     {{ $log->field ? ChangeLogger::label($log->loggable_type, $log->field) : $log->action->label() }}
                 </x-admin.table.cell>
                 <x-admin.table.cell subtitle>{{ $log->subject }}</x-admin.table.cell>
-                <x-admin.table.cell label="Sebelum" class="max-w-xs break-words whitespace-pre-line text-ink-soft">{{ $log->field ? ($log->old_value ?? Format::EMPTY) : '' }}</x-admin.table.cell>
-                <x-admin.table.cell label="Sesudah" class="max-w-xs break-words whitespace-pre-line">{{ $log->field ? ($log->new_value ?? Format::EMPTY) : '' }}</x-admin.table.cell>
+                <x-admin.table.cell label="Sebelum" class="max-w-xs break-words whitespace-pre-line text-ink-soft">{{ $log->field ? ($log->old_value ?? \App\Support\Format::orEmpty(null)) : '' }}</x-admin.table.cell>
+                <x-admin.table.cell label="Sesudah" class="max-w-xs break-words whitespace-pre-line">{{ $log->field ? ($log->new_value ?? \App\Support\Format::orEmpty(null)) : '' }}</x-admin.table.cell>
                 <x-admin.table.cell label="Oleh">{{ $log->user?->nameWithAgency() ?? 'Sistem' }}</x-admin.table.cell>
                 <x-admin.table.cell label="Waktu"><x-admin.date :value="$log->created_at" time /></x-admin.table.cell>
             </x-admin.table.row>

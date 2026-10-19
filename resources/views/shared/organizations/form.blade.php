@@ -28,8 +28,8 @@
             </x-field>
         @else
             <x-field label="Nama kelompok" :hint="$adminNote" class="md:col-span-2"><p>{{ $organization->name }}</p></x-field>
-            <x-field label="Jenis kelembagaan" :hint="$adminNote"><p>{{ $options['types'][$organization->institution_type_id] ?? \App\Support\Format::EMPTY }}</p></x-field>
-            <x-field label="Kampung" :hint="$adminNote"><p>{{ $options['villages'][$organization->village_id] ?? \App\Support\Format::EMPTY }}</p></x-field>
+            <x-field label="Jenis kelembagaan" :hint="$adminNote"><p>{{ $options['types'][$organization->institution_type_id] ?? \App\Support\Format::orEmpty(null) }}</p></x-field>
+            <x-field label="Kampung" :hint="$adminNote"><p>{{ $options['villages'][$organization->village_id] ?? \App\Support\Format::orEmpty(null) }}</p></x-field>
         @endif
         <x-field label="Nama ketua" for="leader_name" optional>
             <x-input name="leader_name" :value="$organization->leader_name" maxlength="255" />
@@ -154,7 +154,7 @@
     @else
         <div class="grid gap-5 md:grid-cols-2">
             <x-field label="Status kelompok" :hint="$adminNote"><p>{{ $organization->status->label() }}</p></x-field>
-            <x-field label="Mulai wajib lapor" :hint="$adminNote"><p>{{ \App\Support\Format::month($organization->reporting_starts_on) }}</p></x-field>
+            <x-field label="Mulai wajib lapor" :hint="$adminNote"><p>{{ \App\Support\Format::orEmpty(\App\Support\Format::month($organization->reporting_starts_on)) }}</p></x-field>
         </div>
     @endif
 </x-admin.form-section>

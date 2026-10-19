@@ -21,7 +21,7 @@
                         <div class="min-w-0 flex-1">
                             <x-link :href="route('attachments.show', $attachment)" target="_blank" rel="noopener" class="min-w-0 max-w-full font-normal"><span class="truncate">{{ $attachment->original_name }}</span></x-link>
                             <p class="text-caption text-ink-muted">
-                                {{ Format::fileSize($attachment->size) }} · {{ Format::dateShort($attachment->created_at) }}@if ($attachment->uploader) · {{ $attachment->uploader->name }}@endif
+                                {{ Format::fileSize($attachment->size) }} · {{ \App\Support\Format::orEmpty(Format::dateShort($attachment->created_at)) }}@if ($attachment->uploader) · {{ $attachment->uploader->name }}@endif
                             </p>
                         </div>
                         <div class="flex gap-2 max-sm:w-full max-sm:justify-end">

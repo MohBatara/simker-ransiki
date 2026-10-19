@@ -6,8 +6,8 @@
         'Peran' => $user->role->label(),
         'OPD' => $user->opd?->name,
         'Kelompok' => $user->organization?->name,
-        'Email' => $user->email ?? \App\Support\Format::EMPTY,
-        'Telepon' => $user->phone ?? \App\Support\Format::EMPTY,
+        'Email' => $user->email ?? \App\Support\Format::orEmpty(null),
+        'Telepon' => $user->phone ?? \App\Support\Format::orEmpty(null),
     ];
 @endphp
 
@@ -18,7 +18,7 @@
                 @foreach (array_filter($rows, fn ($value) => $value !== null) as $label => $value)
                     <div class="grid gap-1 px-4 py-3 sm:grid-cols-[minmax(0,10rem)_1fr] sm:gap-4">
                         <dt class="text-ink-soft">{{ $label }}</dt>
-                        <dd class="min-w-0 break-words text-ink">{{ $value }}</dd>
+                        <dd class="min-w-0 break-words text-ink">{{ \App\Support\Format::orEmpty($value) }}</dd>
                     </div>
                 @endforeach
             </dl>

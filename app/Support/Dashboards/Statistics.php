@@ -98,9 +98,12 @@ class Statistics
         return (new self($user, [], $from, $period))->economyTrend();
     }
 
+    /** Jumlah minimal kelompok yang sama di kedua bulan agar persen perubahan ditampilkan. */
+    public const MIN_MATCHED = 5;
+
     /**
-     * Perubahan persen dibanding bulan sebelumnya. Null bila salah satu bulan tanpa laporan terverifikasi yang mengisi
-     * angka itu, atau angka bulan sebelumnya nol (persen tidak bermakna).
+     * Perubahan persen dibanding bulan sebelumnya. Null bila salah satu jumlah kosong atau jumlah bulan sebelumnya nol
+     * (persen tidak bermakna).
      */
     public static function change(?int $current, ?int $previous): ?int
     {
@@ -109,6 +112,45 @@ class Statistics
         }
 
         return (int) round(($current - $previous) / abs($previous) * 100);
+    }
+
+    /**
+     * Perbandingan setara periode ini dengan bulan sebelumnya: hanya kelompok yang laporannya terverifikasi di KEDUA bulan
+     * dan mengisi angka itu di keduanya (NULL tidak dihitung 0). Persen null bila kelompok yang sama < MIN_MATCHED.
+     *
+     * @return array<string, array{change: ?int, organizations: int, comparable: bool, previous: CarbonImmutable}>
+     */
+    public function matchedChange(CarbonImmutable $period): array
+    {
+        $previous = $period->subMonthNoOverflow();
+        $fields = ['income_sales', 'income_other', 'costs', 'profit'];
+        $both = fn (string $field) => "current.{$field} IS NOT NULL AND prior.{$field} IS NOT NULL";
+
+        $row = DB::table('monthly_reports as current')
+            ->join('monthly_reports as prior', function ($join) use ($previous) {
+                $join->on('prior.organization_id', '=', 'current.organization_id')
+                    ->where('prior.status', ReportStatus::Verified->value)
+                    ->whereDate('prior.period', $previous->format('Y-m-d'));
+            })
+            ->where('current.status', ReportStatus::Verified->value)
+            ->whereDate('current.period', $period->format('Y-m-d'))
+            ->whereIn('current.organization_id', $this->organizations()->select('organizations.id'))
+            ->selectRaw(collect($fields)->map(fn (string $field) => "SUM(CASE WHEN {$both($field)} THEN current.{$field} END) as {$field}_current, "
+                ."SUM(CASE WHEN {$both($field)} THEN prior.{$field} END) as {$field}_prior, "
+                ."COUNT(DISTINCT CASE WHEN {$both($field)} THEN current.organization_id END) as {$field}_organizations")->join(', '))
+            ->first();
+
+        return collect($fields)->mapWithKeys(function (string $field) use ($row, $previous) {
+            $organizations = (int) ($row->{$field.'_organizations'} ?? 0);
+            $comparable = $organizations >= self::MIN_MATCHED;
+
+            return [$field => [
+                'change' => $comparable ? self::change((int) $row->{$field.'_current'}, (int) $row->{$field.'_prior'}) : null,
+                'organizations' => $organizations,
+                'comparable' => $comparable,
+                'previous' => $previous,
+            ]];
+        })->all();
     }
 
     public function filters(): array

@@ -13,6 +13,22 @@ class Format
 {
     public const EMPTY = '—';
 
+    /** Teks nilai kosong di area aplikasi (x-admin.empty-value), menggantikan tanda pisah. */
+    public const EMPTY_LABEL = 'Belum diisi';
+
+    /**
+     * Hasil format untuk ditampilkan di area aplikasi: nilai kosong (EMPTY, null, '') menjadi "Belum diisi" kecil ink-3,
+     * selain itu teks apa adanya (tetap di-escape oleh Blade). Ekspor PDF/Excel tetap memakai EMPTY.
+     */
+    public static function orEmpty(mixed $formatted): \Illuminate\Support\HtmlString|string
+    {
+        if ($formatted === null || $formatted === '' || $formatted === self::EMPTY) {
+            return new \Illuminate\Support\HtmlString('<span class="text-label font-normal text-ink-3">'.self::EMPTY_LABEL.'</span>');
+        }
+
+        return (string) $formatted;
+    }
+
     public static function number(int|float|string|null $value, int $decimals = 0): string
     {
         if ($value === null || $value === '') {
@@ -169,6 +185,18 @@ class Format
     public static function quantity(int|float|string|null $value): string
     {
         return $value === null || $value === '' ? self::EMPTY : NumberInput::display($value, true);
+    }
+
+    /** Periode ringkas di tabel: "Sep 2026". */
+    public static function monthShort(CarbonInterface|string|null $value): string
+    {
+        return $value === null ? self::EMPTY : Carbon::parse($value)->translatedFormat('M Y');
+    }
+
+    /** Nama kampung di tabel tanpa awalan "Kampung " (kepala kolom sudah menjelaskan). */
+    public static function village(?string $name): string
+    {
+        return $name === null || $name === '' ? self::EMPTY : (preg_replace('/^Kampung\s+/iu', '', $name) ?: $name);
     }
 
     public static function month(CarbonInterface|string|null $value): string

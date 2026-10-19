@@ -8,6 +8,8 @@
     'optional' => false,
     // Judul panjang boleh dua baris.
     'wrap' => false,
+    // Kolom selebar isi (pasangan prop fit di x-admin.table.cell).
+    'fit' => false,
 ])
 
 {{-- Kepala kolom: 40px berlatar head, 11px kapital ink-3 (5,0:1), menempel di atas layar (kecuali tabel bergulir). --}}
@@ -19,5 +21,6 @@
     'py-2' => $wrap,
     'pl-4 pr-8 text-right' => $numeric,
     'px-4 text-left' => ! $numeric,
+    'w-px' => $fit,
     'md:max-xl:hidden' => $optional,
 ]) }}>{{ $slot }}</th>

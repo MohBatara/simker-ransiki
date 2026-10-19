@@ -2,7 +2,8 @@
     Kartu "Ekonomi <bulan>" dasbor Ringkasan (Admin dan OPD, 8 kolom): tiga angka (Penjualan, Biaya, Laba) dengan persen
     perubahan dari bulan sebelumnya (hanya bila kedua bulan punya data terverifikasi), cakupan laporan terverifikasi, lalu
     grafik garis 6 bulan Penjualan dan Biaya. Angka hanya dari laporan terverifikasi; NULL tidak dihitung 0.
-    Variabel: $economy (bentuk DistrictStats::economy), $economyTrend (Statistics::recentEconomy), $period, $area,
+    Variabel: $economy (bentuk DistrictStats::economy), $economyTrend (Statistics::recentEconomy), $economyChange
+    (Statistics::matchedChange: perbandingan setara), $period, $area,
     $class (opsional).
 --}}
 @use('App\Support\Format')
@@ -13,7 +14,6 @@
     $reports = $economy['reports'];
     $obligated = $economy['obligated'];
     $percent = $obligated > 0 ? (int) round($reports / $obligated * 100) : 0;
-    $previous = $economyTrend->count() > 1 ? $economyTrend[$economyTrend->count() - 2] : null;
     $verifiedUrl = route($area.'.reports.index', ['status' => 'verified', 'period' => $period->format('Y-m')]);
     $numbers = [
         'income_sales' => ['Penjualan', true],
@@ -25,7 +25,7 @@
         'Hanya dari laporan terverifikasi.',
         'Angka kosong tidak dihitung sebagai nol.',
         'Laba hanya dari laporan yang mengisi penjualan, pendapatan lain, dan biaya.',
-        'Persen dibanding bulan sebelumnya, hanya bila kedua bulan punya data terverifikasi.',
+        'Persen dibanding bulan sebelumnya, hanya dari kelompok yang terverifikasi di kedua bulan (minimal '.Statistics::MIN_MATCHED.' kelompok).',
     ];
     $chart = StatisticsCharts::economyTrend($economyTrend);
 @endphp
@@ -49,7 +49,7 @@
     <div class="flex flex-1 flex-col gap-5">
         @if ($reports === 0)
             <div class="flex flex-col items-start gap-3 rounded-box border border-line-soft bg-head p-4 sm:flex-row sm:items-center">
-                <p class="min-w-0 flex-1 text-caption text-ink">Belum ada laporan terverifikasi untuk {{ Format::month($period) }}.</p>
+                <p class="min-w-0 flex-1 text-caption text-ink">Belum ada laporan terverifikasi untuk {{ \App\Support\Format::orEmpty(Format::month($period)) }}.</p>
                 <x-button variant="secondary" :href="route($area.'.verifications.index')">Buka laporan yang menunggu verifikasi</x-button>
             </div>
         @else
@@ -61,7 +61,7 @@
                         $loss = $total['sum'] !== null && $total['sum'] < 0;
                         $short = $total['sum'] === null ? null : ($loss ? 'Rugi ' : '').Format::rupiahShort($total['sum']);
                         $full = $total['sum'] === null ? null : ($loss ? 'Rugi Rp '.Format::number(abs($total['sum'])) : Format::rupiah($total['sum']));
-                        $change = $previous ? Statistics::change($total['sum'], $previous['totals'][$field]['sum']) : null;
+                        $comparison = $economyChange[$field] ?? null;
                     @endphp
                     <div @class(['min-w-0', 'sm:border-l sm:border-line-soft sm:pl-4' => ! $loop->first])>
                         <dt class="text-label text-ink-2">{{ $label }}</dt>
@@ -75,7 +75,7 @@
                                         'text-fix' => $loss,
                                         'text-ink' => ! $loss,
                                     ])>{{ $short }}<span class="sr-only"> ({{ $full }})</span></a>
-                                    <x-admin.change :value="$change" :up-is-good="$upIsGood" />
+                                    <x-admin.change :comparison="$comparison" :up-is-good="$upIsGood" />
                                 </span>
                                 @if ($total['filled'] < $reports)
                                     <span class="block text-label text-ink-3">diisi {{ $total['filled'] }} dari {{ $reports }} laporan</span>
@@ -90,10 +90,10 @@
             <div class="space-y-1.5">
                 <div class="flex flex-wrap items-baseline justify-between gap-x-3 text-caption">
                     <p class="text-ink-2">
-                        <a href="{{ $verifiedUrl }}" class="font-semibold tabular-nums text-ink hover:underline">{{ Format::number($reports) }} dari {{ Format::number($obligated) }}</a>
+                        <a href="{{ $verifiedUrl }}" class="font-semibold tabular-nums text-ink hover:underline">{{ \App\Support\Format::orEmpty(Format::number($reports)) }} dari {{ \App\Support\Format::orEmpty(Format::number($obligated)) }}</a>
                         kelompok wajib lapor terverifikasi
                         @if ($other['sum'] !== null)
-                            <span class="whitespace-nowrap">· pendapatan lain {{ Format::rupiah($other['sum']) }}</span>
+                            <span class="whitespace-nowrap">· pendapatan lain {{ \App\Support\Format::orEmpty(Format::rupiah($other['sum'])) }}</span>
                         @endif
                     </p>
                     <span class="shrink-0 font-semibold tabular-nums text-ink">{{ $percent }}%</span>
@@ -137,7 +137,7 @@
                                     @elseif ($cell === '')
                                         <x-admin.table.cell class="max-md:hidden"></x-admin.table.cell>
                                     @else
-                                        <x-admin.table.cell :label="$chart['table']['columns'][$index]" :numeric="in_array($index, $chart['table']['numeric'], true)">{{ $cell }}</x-admin.table.cell>
+                                        <x-admin.table.cell :label="$chart['table']['columns'][$index]" :numeric="in_array($index, $chart['table']['numeric'], true)">{{ \App\Support\Format::orEmpty($cell) }}</x-admin.table.cell>
                                     @endif
                                 @endforeach
                             </x-admin.table.row>

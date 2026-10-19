@@ -6,16 +6,16 @@
     <x-admin.table clickable>
         <x-slot:head>
             <x-admin.table.heading>Periode</x-admin.table.heading>
-            <x-admin.table.heading>Status</x-admin.table.heading>
-            <x-admin.table.heading>Diajukan</x-admin.table.heading>
-            <x-admin.table.heading numeric>Laba</x-admin.table.heading>
+            <x-admin.table.heading fit>Status</x-admin.table.heading>
+            <x-admin.table.heading fit>Diajukan</x-admin.table.heading>
+            <x-admin.table.heading numeric fit>Laba</x-admin.table.heading>
         </x-slot:head>
 
         @foreach ($reports as $report)
             {{-- Draf kelompok yang belum pernah diajukan tidak bisa dibuka peninjau. --}}
             @php $viewable = auth()->user()->can('view', $report); @endphp
             <x-admin.table.row :href="$viewable ? route($area.'.reports.show', [$report, 'dari' => 'kelompok']) : null">
-                <x-admin.table.cell primary>{{ Format::month($report->period) }}</x-admin.table.cell>
+                <x-admin.table.cell primary><span class="whitespace-nowrap" title="{{ Format::month($report->period) }}">{{ Format::monthShort($report->period) }}</span></x-admin.table.cell>
                 <x-admin.table.cell badge>
                     <span class="inline-flex flex-wrap items-center justify-end gap-1.5 md:justify-start">
                         <x-admin.badge-status :status="$report->status" />
@@ -27,8 +27,8 @@
                         @endif
                     </span>
                 </x-admin.table.cell>
-                <x-admin.table.cell label="Diajukan"><x-admin.date :value="$report->submitted_at" /></x-admin.table.cell>
-                <x-admin.table.cell label="Laba" numeric>{{ Format::rupiah($report->profit) }}</x-admin.table.cell>
+                <x-admin.table.cell label="Diajukan" fit><x-admin.date :value="$report->submitted_at" /></x-admin.table.cell>
+                <x-admin.table.cell label="Laba" numeric fit>{{ \App\Support\Format::orEmpty(Format::rupiah($report->profit)) }}</x-admin.table.cell>
             </x-admin.table.row>
         @endforeach
 

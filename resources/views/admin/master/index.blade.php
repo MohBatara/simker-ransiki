@@ -69,7 +69,7 @@
                                 <x-admin.table.cell subtitle>{{ $item->{$column} }}</x-admin.table.cell>
                             @endforeach
                             <x-admin.table.cell label="Kelompok" numeric>
-                                {{ \App\Support\Format::number($item->organizations_count) }}
+                                {{ \App\Support\Format::orEmpty(\App\Support\Format::number($item->organizations_count)) }}
                             </x-admin.table.cell>
                             <x-admin.table.actions :for="$item->name">
                                 <x-dropdown.item icon="pencil-square" x-on:click="edit({{ Js::from($item->only(['id', ...array_keys($fields)])) }})">Ubah</x-dropdown.item>

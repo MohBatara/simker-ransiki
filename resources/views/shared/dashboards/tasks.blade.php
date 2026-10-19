@@ -36,13 +36,13 @@
                             <span class="{{ $box['fill'] }} absolute inset-y-0 left-0 rounded-pill" style="width: {{ min(100, $percent) }}%"></span>
                             <span class="relative flex h-full items-center px-2 text-label font-semibold tabular-nums text-ink">{{ $percent }}%</span>
                         </span>
-                        <span class="text-label text-ink-3"><span class="font-semibold tabular-nums text-ink">{{ Format::number($box['value']) }}</span> dari {{ Format::number($total) }} {{ $box['verb'] }}</span>
+                        <span class="text-label text-ink-3"><span class="font-semibold tabular-nums text-ink">{{ \App\Support\Format::orEmpty(Format::number($box['value'])) }}</span> dari {{ \App\Support\Format::orEmpty(Format::number($total)) }} {{ $box['verb'] }}</span>
                     </a>
                 </li>
             @endforeach
         </ul>
 
-        <p class="text-label text-ink-3">Tenggat {{ Format::date($overdue['deadline']) }}, {{ ReportingPeriod::deadlineDistance($overdue['deadline']) }}.</p>
+        <p class="text-label text-ink-3">Tenggat {{ \App\Support\Format::orEmpty(Format::date($overdue['deadline'])) }}, {{ ReportingPeriod::deadlineDistance($overdue['deadline']) }}.</p>
 
         @if ($tasks === [])
             <p class="mt-auto flex items-center gap-2 text-caption text-ink-2">

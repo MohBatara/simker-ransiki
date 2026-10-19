@@ -10,7 +10,7 @@
 @php
     $problems = $report->issues->where('kind', IssueKind::Problem)->sortBy('id');
     $supports = $report->issues->where('kind', IssueKind::Support)->sortBy('id');
-    $text = fn (?string $value) => filled($value) ? $value : Format::EMPTY;
+    $text = fn (?string $value) => filled($value) ? $value : \App\Support\Format::orEmpty(null);
     $area ??= null;
     $canVerify = $area && auth()->user()->can('verify', $report);
     $canReopen = $area && auth()->user()->can('reopen', $report);
@@ -60,7 +60,7 @@
                         </div>
                         <div>
                             <dt class="text-ink-soft">Jumlah kegiatan</dt>
-                            <dd class="mt-0.5 tabular-nums text-ink">{{ Format::number($report->activity_count) }}</dd>
+                            <dd class="mt-0.5 tabular-nums text-ink">{{ \App\Support\Format::orEmpty(Format::number($report->activity_count)) }}</dd>
                         </div>
                         <div>
                             <dt class="text-ink-soft">Capaian</dt>
@@ -83,10 +83,10 @@
                             </x-slot:head>
                             @foreach ($report->items->sortBy('id') as $item)
                                 <x-admin.table.row>
-                                    <x-admin.table.cell primary>{{ $item->product_name ?? Format::EMPTY }}</x-admin.table.cell>
-                                    <x-admin.table.cell label="Produksi" numeric>{{ Format::quantity($item->production_qty) }} {{ $item->production_qty !== null ? $item->production_unit : '' }}</x-admin.table.cell>
-                                    <x-admin.table.cell label="Terjual" numeric>{{ Format::quantity($item->sales_qty) }} {{ $item->sales_qty !== null ? $item->sales_unit : '' }}</x-admin.table.cell>
-                                    <x-admin.table.cell label="Pendapatan" numeric>{{ Format::rupiah($item->revenue) }}</x-admin.table.cell>
+                                    <x-admin.table.cell primary>{{ $item->product_name ?? \App\Support\Format::orEmpty(null) }}</x-admin.table.cell>
+                                    <x-admin.table.cell label="Produksi" numeric>{{ \App\Support\Format::orEmpty(Format::quantity($item->production_qty)) }} {{ $item->production_qty !== null ? $item->production_unit : '' }}</x-admin.table.cell>
+                                    <x-admin.table.cell label="Terjual" numeric>{{ \App\Support\Format::orEmpty(Format::quantity($item->sales_qty)) }} {{ $item->sales_qty !== null ? $item->sales_unit : '' }}</x-admin.table.cell>
+                                    <x-admin.table.cell label="Pendapatan" numeric>{{ \App\Support\Format::orEmpty(Format::rupiah($item->revenue)) }}</x-admin.table.cell>
                                 </x-admin.table.row>
                             @endforeach
                         </x-admin.table>
@@ -99,7 +99,7 @@
                             @foreach (['Anggota aktif' => Format::number($report->members_active), 'Tenaga kerja' => Format::number($report->workforce_count), 'Perubahan anggota' => $report->members_change > 0 ? '+'.Format::number($report->members_change) : Format::number($report->members_change)] as $label => $value)
                                 <div class="flex justify-between gap-4 py-2 first:pt-0 last:pb-0">
                                     <dt class="text-ink-soft">{{ $label }}</dt>
-                                    <dd class="tabular-nums text-ink">{{ $value }}</dd>
+                                    <dd class="tabular-nums text-ink">{{ \App\Support\Format::orEmpty($value) }}</dd>
                                 </div>
                             @endforeach
                         </dl>
@@ -110,12 +110,12 @@
                             @foreach (['Pendapatan penjualan' => $report->income_sales, 'Pendapatan lain' => $report->income_other, 'Biaya' => $report->costs] as $label => $value)
                                 <div class="flex justify-between gap-4 py-2 first:pt-0">
                                     <dt class="text-ink-soft">{{ $label }}</dt>
-                                    <dd class="tabular-nums text-ink">{{ Format::rupiah($value) }}</dd>
+                                    <dd class="tabular-nums text-ink">{{ \App\Support\Format::orEmpty(Format::rupiah($value)) }}</dd>
                                 </div>
                             @endforeach
                             <div class="flex justify-between gap-4 py-2 last:pb-0">
                                 <dt class="text-ink-soft">Laba <span class="text-caption">(dihitung otomatis)</span></dt>
-                                <dd class="font-semibold tabular-nums text-ink">{{ Format::rupiah($report->profit) }}</dd>
+                                <dd class="font-semibold tabular-nums text-ink">{{ \App\Support\Format::orEmpty(Format::rupiah($report->profit)) }}</dd>
                             </div>
                         </dl>
                         @if ($report->profit === null)
@@ -182,12 +182,12 @@
                         @endif
                         <div class="flex justify-between gap-4 py-2">
                             <dt class="text-ink-soft">Tenggat</dt>
-                            <dd class="text-right">{{ Format::date($report->deadline()) }}</dd>
+                            <dd class="text-right">{{ \App\Support\Format::orEmpty(Format::date($report->deadline())) }}</dd>
                         </div>
                         <div class="flex justify-between gap-4 py-2">
                             <dt class="text-ink-soft">Diajukan</dt>
                             <dd class="text-right">
-                                {{ Format::date($report->submitted_at) }}
+                                {{ \App\Support\Format::orEmpty(Format::date($report->submitted_at)) }}
                                 @if ($report->wasSubmittedLate())
                                     <span class="block text-caption text-ink-soft">Diajukan terlambat</span>
                                 @elseif ($report->isOverdue())
@@ -198,7 +198,7 @@
                         <div class="flex justify-between gap-4 py-2 last:pb-0">
                             <dt class="text-ink-soft">Diverifikasi</dt>
                             <dd class="text-right">
-                                {{ Format::date($report->verified_at) }}
+                                {{ \App\Support\Format::orEmpty(Format::date($report->verified_at)) }}
                                 @if ($report->verified_at && $report->verifier)
                                     <span class="block text-caption text-ink-soft">oleh {{ $report->verifier->name }}</span>
                                 @endif
@@ -211,12 +211,12 @@
                     <ol class="space-y-3">
                         <li>
                             <p class="text-ink">Laporan dibuat</p>
-                            <p class="text-caption text-ink-muted">{{ Format::dateTime($report->created_at) }}</p>
+                            <p class="text-caption text-ink-muted">{{ \App\Support\Format::orEmpty(Format::dateTime($report->created_at)) }}</p>
                         </li>
                         @foreach ($report->reviews as $review)
                             <li>
                                 <p class="text-ink"><span class="font-semibold">{{ $review->action->label() }}</span> oleh {{ $review->user?->nameWithAgency() ?? 'akun yang sudah dihapus' }}</p>
-                                <p class="text-caption text-ink-muted">{{ Format::dateTime($review->created_at) }}</p>
+                                <p class="text-caption text-ink-muted">{{ \App\Support\Format::orEmpty(Format::dateTime($review->created_at)) }}</p>
                                 @if (filled($review->note))
                                     <p class="mt-1 whitespace-pre-line rounded-control bg-subtle px-3 py-2 text-ink-soft break-words">{{ $review->note }}</p>
                                 @endif

@@ -118,7 +118,7 @@ const compactFormat = new Intl.NumberFormat('id-ID', { notation: 'compact', maxi
 
 function formatValue(value, format) {
     if (value === null || value === undefined) {
-        return '—';
+        return 'Belum diisi';
     }
 
     return format === 'rupiah' ? `Rp ${numberFormat.format(value)}` : numberFormat.format(value);

@@ -56,11 +56,11 @@
             @foreach ($licenses as $license)
                 <x-admin.table.row :href="str_replace('__ID__', $license->id, $licenseUrl)">
                     <x-admin.table.cell primary>{{ $license->type }}</x-admin.table.cell>
-                    <x-admin.table.cell label="Nomor">{{ $license->number ?? Format::EMPTY }}</x-admin.table.cell>
+                    <x-admin.table.cell label="Nomor">{{ $license->number ?? \App\Support\Format::orEmpty(null) }}</x-admin.table.cell>
                     <x-admin.table.cell badge><x-admin.badge-status :status="$license->status" /></x-admin.table.cell>
                     <x-admin.table.cell label="Diajukan" optional><x-admin.date :value="$license->submitted_on" /></x-admin.table.cell>
                     <x-admin.table.cell label="Terbit"><x-admin.date :value="$license->issued_on" /></x-admin.table.cell>
-                    <x-admin.table.cell label="Lampiran" numeric optional>{{ Format::number($license->attachments_count) }}</x-admin.table.cell>
+                    <x-admin.table.cell label="Lampiran" numeric optional>{{ \App\Support\Format::orEmpty(Format::number($license->attachments_count)) }}</x-admin.table.cell>
                     @if ($canManage)
                         <x-admin.table.actions :for="$license->type">
                             <x-dropdown.item icon="pencil-square" x-on:click="edit({{ Js::from($toRecord($license)) }})">Ubah</x-dropdown.item>

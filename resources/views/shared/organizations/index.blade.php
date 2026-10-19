@@ -31,7 +31,7 @@
         $statusCounts['inactive'] ? $statusCounts['inactive'].' tidak aktif' : null,
         $statusCounts['closed'] ? $statusCounts['closed'].' ditutup' : null,
         $scopeHint,
-    ])->filter()->join(', ') ?: null;
+    ])->filter()->join(', ') ?: 'di '.Format::number($totals['villages']).' kampung';
     $membersHint = $totals['members'] === null
         ? 'belum ada yang mengisi'
         : 'diisi '.$totals['members_filled'].' dari '.$totals['organizations'].' kelompok';
@@ -61,8 +61,8 @@
         {{-- Kartu angka mengikuti filter aktif (ditukar oleh x-admin.toolbar saat filter berubah). --}}
         <div data-swap="kelompok-angka" class="grid grid-cols-2 gap-4 xl:grid-cols-4">
             <x-admin.stat compact icon="user-group" label="Total kelompok" :value="Format::number($totals['organizations'])" :hint="$totalHint" />
-            <x-admin.stat compact icon="map-pin" label="Kampung" :value="Format::number($totals['villages'])" :hint="$scopeHint" :href="$isOpd ? null : route('admin.master.items', 'kampung')" />
-            <x-admin.stat compact icon="squares-2x2" label="Bidang usaha" :value="Format::number($totals['sectors'])" :hint="$scopeHint" :href="$isOpd ? null : route('admin.master.items', 'bidang-usaha')" />
+            <x-admin.stat compact icon="map-pin" label="Kampung" :value="Format::number($totals['villages'])" :hint="$scopeHint ?? 'tempat kelompok terdaftar'" :href="$isOpd ? null : route('admin.master.items', 'kampung')" />
+            <x-admin.stat compact icon="squares-2x2" label="Bidang usaha" :value="Format::number($totals['sectors'])" :hint="$scopeHint ?? 'jenis bidang usaha'" :href="$isOpd ? null : route('admin.master.items', 'bidang-usaha')" />
             <x-admin.stat compact icon="users" label="Total anggota" :value="Format::number($totals['members'])" :hint="$membersHint" />
         </div>
 
@@ -97,11 +97,11 @@
                         <x-admin.table bare clickable id="daftar-kelompok" x-on:click="select($event)" class="min-w-0">
                             <x-slot:head>
                                 <x-admin.table.heading>Kelompok</x-admin.table.heading>
-                                <x-admin.table.heading>Jenis</x-admin.table.heading>
-                                <x-admin.table.heading>Kampung</x-admin.table.heading>
-                                <x-admin.table.heading optional>Bidang usaha</x-admin.table.heading>
-                                <x-admin.table.heading numeric optional>Anggota</x-admin.table.heading>
-                                <x-admin.table.heading>Status</x-admin.table.heading>
+                                <x-admin.table.heading fit>Jenis</x-admin.table.heading>
+                                <x-admin.table.heading fit>Kampung</x-admin.table.heading>
+                                <x-admin.table.heading fit optional>Bidang usaha</x-admin.table.heading>
+                                <x-admin.table.heading numeric fit optional>Anggota</x-admin.table.heading>
+                                <x-admin.table.heading fit>Status</x-admin.table.heading>
                             </x-slot:head>
 
                             @foreach ($organizations as $organization)
@@ -115,18 +115,12 @@
                                     class="xl:data-[selected]:bg-brand-50"
                                 >
                                     <x-admin.table.cell primary>
-                                        <span class="flex items-center gap-3">
-                                            <x-avatar :name="$organization->name" size="sm" />
-                                            <span class="min-w-0">
-                                                <span class="block">{{ $organization->name }}</span>
-                                                <span class="block text-label font-normal text-ink-3 md:hidden">{{ $organization->institutionType->name }}</span>
-                                            </span>
-                                        </span>
+                                        <x-admin.identity :name="$organization->name" :subtitle="$organization->leader_name ? 'Ketua: '.$organization->leader_name : null" />
                                     </x-admin.table.cell>
-                                    <x-admin.table.cell class="max-md:hidden"><x-admin.chip icon="building-office-2">{{ $organization->institutionType->name }}</x-admin.chip></x-admin.table.cell>
-                                    <x-admin.table.cell label="Kampung" class="md:whitespace-nowrap">{{ $organization->village->name }}</x-admin.table.cell>
-                                    <x-admin.table.cell label="Bidang usaha" optional>{{ $organization->sectors->pluck('name')->join(', ') }}</x-admin.table.cell>
-                                    <x-admin.table.cell label="Anggota" numeric optional>{{ Format::number($organization->members_count) }}</x-admin.table.cell>
+                                    <x-admin.table.cell label="Jenis" fit><x-admin.chip icon="building-office-2">{{ $organization->institutionType->name }}</x-admin.chip></x-admin.table.cell>
+                                    <x-admin.table.cell label="Kampung" fit>{{ Format::village($organization->village->name) }}</x-admin.table.cell>
+                                    <x-admin.table.cell label="Bidang usaha" fit optional><x-admin.first-of :items="$organization->sectors->pluck('name')" /></x-admin.table.cell>
+                                    <x-admin.table.cell label="Anggota" numeric fit optional>{{ Format::orEmpty(Format::number($organization->members_count)) }}</x-admin.table.cell>
                                     <x-admin.table.cell badge>
                                         <x-admin.badge-status :status="$organization->status" />
                                     </x-admin.table.cell>

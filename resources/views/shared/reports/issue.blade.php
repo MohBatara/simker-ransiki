@@ -27,7 +27,7 @@
                 <dl class="space-y-4">
                     <div>
                         <dt class="text-ink-soft">Uraian</dt>
-                        <dd class="mt-0.5 whitespace-pre-line text-ink break-words">{{ filled($issue->description) ? $issue->description : Format::EMPTY }}</dd>
+                        <dd class="mt-0.5 whitespace-pre-line text-ink break-words">{{ filled($issue->description) ? $issue->description : \App\Support\Format::orEmpty(null) }}</dd>
                     </div>
                     <div class="grid gap-4 md:grid-cols-2">
                         <div>
@@ -36,11 +36,11 @@
                         </div>
                         <div>
                             <dt class="text-ink-soft">Kampung</dt>
-                            <dd class="mt-0.5 text-ink">{{ $organization->village?->name ?? Format::EMPTY }}</dd>
+                            <dd class="mt-0.5 text-ink">{{ $organization->village?->name ?? \App\Support\Format::orEmpty(null) }}</dd>
                         </div>
                         <div>
                             <dt class="text-ink-soft">Laporan</dt>
-                            <dd class="mt-0.5"><x-link :href="route($area.'.reports.show', [$report, 'dari' => 'masalah'])" inline>Laporan {{ Format::month($report->period) }}</x-link></dd>
+                            <dd class="mt-0.5"><x-link :href="route($area.'.reports.show', [$report, 'dari' => 'masalah'])" inline>Laporan {{ \App\Support\Format::orEmpty(Format::month($report->period)) }}</x-link></dd>
                         </div>
                         <div>
                             <dt class="text-ink-soft">OPD penanggung jawab</dt>

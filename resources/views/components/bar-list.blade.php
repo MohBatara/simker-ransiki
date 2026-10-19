@@ -21,7 +21,7 @@
                 <span class="block min-w-0 flex-1">
                     <span class="flex items-baseline justify-between gap-3">
                         <span class="min-w-0 truncate text-ink">{{ $item['label'] }}</span>
-                        <span class="shrink-0 font-semibold tabular-nums text-ink">{{ \App\Support\Format::number($item['value']) }}</span>
+                        <span class="shrink-0 font-semibold tabular-nums text-ink">{{ \App\Support\Format::orEmpty(\App\Support\Format::number($item['value'])) }}</span>
                     </span>
                     <span class="mt-1 block h-1.5 overflow-hidden rounded-full bg-subtle" aria-hidden="true">
                         <span class="block h-full rounded-full bg-brand" style="width: {{ round($item['value'] / $max * 100, 2) }}%"></span>

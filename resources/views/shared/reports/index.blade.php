@@ -76,14 +76,14 @@
             <x-admin.table bare clickable>
                 <x-slot:head>
                     <x-admin.table.heading>Kelompok</x-admin.table.heading>
-                    <x-admin.table.heading>Periode</x-admin.table.heading>
-                    <x-admin.table.heading>Status</x-admin.table.heading>
+                    <x-admin.table.heading fit>Periode</x-admin.table.heading>
+                    <x-admin.table.heading fit>Status</x-admin.table.heading>
                     @if ($queue)
-                        <x-admin.table.heading>Diajukan</x-admin.table.heading>
-                        <x-admin.table.heading>Menunggu</x-admin.table.heading>
+                        <x-admin.table.heading fit>Diajukan</x-admin.table.heading>
+                        <x-admin.table.heading fit>Menunggu</x-admin.table.heading>
                     @else
-                        <x-admin.table.heading optional>Diajukan</x-admin.table.heading>
-                        <x-admin.table.heading numeric optional>Laba</x-admin.table.heading>
+                        <x-admin.table.heading fit optional>Diajukan</x-admin.table.heading>
+                        <x-admin.table.heading numeric fit optional>Laba</x-admin.table.heading>
                     @endif
                 </x-slot:head>
 
@@ -92,11 +92,13 @@
                     @php $viewable = auth()->user()->can('view', $report); @endphp
                     {{-- Draf yang belum bisa dibuka tampil redup (ink-soft, tetap 7:1) dan tanpa tautan. --}}
                     <x-admin.table.row :for="$report->organization->name" :href="$viewable ? route($area.'.reports.show', $queue ? [$report, 'dari' => 'antrean'] : $report) : null" :class="$viewable ? null : 'text-ink-soft'" :data-draft="$viewable ? null : 'true'">
-                        <x-admin.table.cell primary>{{ $report->organization->name }}</x-admin.table.cell>
-                        <x-admin.table.cell subtitle>
-                            {{ Format::month($report->period) }}
+                        <x-admin.table.cell primary>
+                            <x-admin.identity :name="$report->organization->name" :subtitle="$report->organization->village ? Format::village($report->organization->village->name) : null" />
+                        </x-admin.table.cell>
+                        <x-admin.table.cell subtitle fit>
+                            <span class="whitespace-nowrap" title="{{ Format::month($report->period) }}">{{ Format::monthShort($report->period) }}</span>
                             @if ($report->handled_by_me)
-                                <span class="block text-caption text-ink-soft">Diisi oleh Anda, perlu pemverifikasi lain</span>
+                                <span class="block text-label text-ink-3 md:whitespace-normal">Diisi oleh Anda, perlu pemverifikasi lain</span>
                             @endif
                         </x-admin.table.cell>
                         <x-admin.table.cell badge>
@@ -121,16 +123,16 @@
                             @endif
                         </x-admin.table.cell>
                         @if ($queue)
-                            <x-admin.table.cell label="Diajukan"><x-admin.date :value="$report->last_submitted_at" time /></x-admin.table.cell>
-                            <x-admin.table.cell label="Menunggu" @class(['font-semibold text-ink' => $report->last_submitted_at?->lt(now()->subDays(App\Support\Dashboards\DistrictStats::WAITING_DAYS))])>{{ Format::waitingSince($report->last_submitted_at) }}</x-admin.table.cell>
+                            <x-admin.table.cell label="Diajukan" fit><x-admin.date :value="$report->last_submitted_at" time /></x-admin.table.cell>
+                            <x-admin.table.cell label="Menunggu" fit @class(['font-semibold text-ink' => $report->last_submitted_at?->lt(now()->subDays(App\Support\Dashboards\DistrictStats::WAITING_DAYS))])>{{ \App\Support\Format::orEmpty(Format::waitingSince($report->last_submitted_at)) }}</x-admin.table.cell>
                         @else
-                            <x-admin.table.cell label="Diajukan" optional>
+                            <x-admin.table.cell label="Diajukan" fit optional>
                                 <x-admin.date :value="$report->submitted_at" time />
                                 @if ($report->wasSubmittedLate())
                                     <span class="block text-caption text-ink-soft">Diajukan terlambat</span>
                                 @endif
                             </x-admin.table.cell>
-                            <x-admin.table.cell label="Laba" numeric optional>{{ Format::rupiah($report->profit) }}</x-admin.table.cell>
+                            <x-admin.table.cell label="Laba" numeric fit optional>{{ \App\Support\Format::orEmpty(Format::rupiah($report->profit)) }}</x-admin.table.cell>
                         @endif
                     </x-admin.table.row>
                 @endforeach

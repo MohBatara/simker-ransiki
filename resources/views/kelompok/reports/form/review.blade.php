@@ -25,7 +25,7 @@
         <x-alert>{{ $submitNote }} Sementara itu, isian tetap bisa disimpan sebagai draf.</x-alert>
     @else
         <x-alert x-show="readyToSubmit">
-            Tenggat {{ Format::date($report->deadline()) }}, pukul 23.59 WIT. Setelah diajukan, laporan dikunci sampai ditinjau OPD.
+            Tenggat {{ \App\Support\Format::orEmpty(Format::date($report->deadline())) }}, pukul 23.59 WIT. Setelah diajukan, laporan dikunci sampai ditinjau OPD.
         </x-alert>
         <x-alert tone="wait" x-cloak x-show="! readyToSubmit">Lengkapi bagian yang ditandai sebelum mengajukan laporan.</x-alert>
     @endif

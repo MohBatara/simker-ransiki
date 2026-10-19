@@ -7,6 +7,8 @@
 
 @php
     $range = Format::month($stats->from()).' sampai '.Format::month($stats->to());
+    $lastMonth = $incomeTrend->last();
+    $lastHint = $lastMonth['total'] === null ? 'belum ada yang mengisi' : 'diisi '.$lastMonth['filled'].' dari '.$lastMonth['obligated'].' kelompok';
     $salesHint = $summary['sales'] === null
         ? 'belum ada yang mengisi'
         : 'diisi '.$summary['sales_filled'].' dari '.$summary['reports'].' laporan';
@@ -25,10 +27,11 @@
         {{-- Ditukar oleh x-admin.toolbar saat filter berubah. --}}
         <div data-swap="statistik" class="space-y-6">
 
-        <div class="grid grid-cols-2 gap-4 xl:grid-cols-3">
+        <div class="grid grid-cols-2 gap-4 xl:grid-cols-4">
             <x-admin.stat compact icon="user-group" label="Kelompok" :value="Format::number($summary['organizations'])" hint="sesuai filter" />
             <x-admin.stat compact icon="document-check" label="Laporan terverifikasi" :value="Format::number($summary['reports'])" :hint="'dari '.$summary['reporting_organizations'].' kelompok'" />
-            <x-admin.stat compact icon="banknotes" label="Pendapatan penjualan" :value="Format::rupiah($summary['sales'])" :hint="$salesHint" class="max-xl:col-span-2" />
+            <x-admin.stat compact icon="banknotes" label="Pendapatan penjualan" :value="Format::rupiah($summary['sales'])" :hint="$salesHint" />
+            <x-admin.stat compact icon="arrow-trending-up" :label="'Penjualan '.Format::month($stats->to())" :value="Format::rupiah($lastMonth['total'])" :hint="$lastHint" :change="$salesChange" />
         </div>
 
         <x-chart
@@ -66,9 +69,9 @@
                             <x-admin.table.row>
                                 <x-admin.table.cell primary>{{ $row['product'] }}</x-admin.table.cell>
                                 {{-- HP: satuan ikut di baris Jumlah ("Jumlah: 1.384 ekor"), kolom Satuan disembunyikan. --}}
-                                <x-admin.table.cell label="Jumlah" numeric inline>{{ Format::quantity($row['quantity']) }}<span class="md:hidden"> {{ $row['unit'] ?? 'tanpa satuan' }}</span></x-admin.table.cell>
+                                <x-admin.table.cell label="Jumlah" numeric inline>{{ \App\Support\Format::orEmpty(Format::quantity($row['quantity'])) }}<span class="md:hidden"> {{ $row['unit'] ?? 'tanpa satuan' }}</span></x-admin.table.cell>
                                 <x-admin.table.cell label="Satuan" class="max-md:hidden">{{ $row['unit'] ?? 'Tanpa satuan' }}</x-admin.table.cell>
-                                <x-admin.table.cell label="Kelompok" numeric inline>{{ Format::number($row['organizations']) }}</x-admin.table.cell>
+                                <x-admin.table.cell label="Kelompok" numeric inline>{{ \App\Support\Format::orEmpty(Format::number($row['organizations'])) }}</x-admin.table.cell>
                             </x-admin.table.row>
                         @endforeach
                     </x-admin.table>

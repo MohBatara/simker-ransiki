@@ -54,8 +54,8 @@
                             <span>{{ $product->name }}</span>
                         </span>
                     </x-admin.table.cell>
-                    <x-admin.table.cell label="Satuan">{{ $product->unit ?? \App\Support\Format::EMPTY }}</x-admin.table.cell>
-                    <x-admin.table.cell label="Kapasitas" optional>{{ $product->capacity ?? \App\Support\Format::EMPTY }}</x-admin.table.cell>
+                    <x-admin.table.cell label="Satuan">{{ $product->unit ?? \App\Support\Format::orEmpty(null) }}</x-admin.table.cell>
+                    <x-admin.table.cell label="Kapasitas" optional>{{ $product->capacity ?? \App\Support\Format::orEmpty(null) }}</x-admin.table.cell>
                     <x-admin.table.cell label="Tampil publik">{{ $product->is_public ? 'Ya' : 'Tidak' }}</x-admin.table.cell>
                     <x-admin.table.cell label="Unggulan">{{ $product->is_featured ? 'Ya' : 'Tidak' }}</x-admin.table.cell>
                     @if ($canManage)

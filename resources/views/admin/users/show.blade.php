@@ -10,8 +10,8 @@
         'Peran' => $user->role->label(),
         'OPD' => $user->opd?->name,
         'Kelompok' => $user->organization?->name,
-        'Email' => $user->email ?? Format::EMPTY,
-        'Telepon' => $user->phone ?? Format::EMPTY,
+        'Email' => $user->email ?? \App\Support\Format::orEmpty(null),
+        'Telepon' => $user->phone ?? \App\Support\Format::orEmpty(null),
         'Login terakhir' => $user->last_login_at ? Format::dateTime($user->last_login_at).' WIT' : 'Belum pernah',
         'Wajib ganti kata sandi' => $user->hasPendingInvitation() ? 'Belum, menunggu undangan diterima' : ($user->must_change_password ? 'Ya, saat masuk berikutnya' : 'Tidak'),
         'Dibuat' => Format::date($user->created_at),
@@ -70,9 +70,9 @@
                             <dt class="text-ink-soft">{{ $label }}</dt>
                             <dd class="min-w-0 break-words text-ink">
                                 @if ($label === 'Kelompok')
-                                    <x-link :href="route('admin.organizations.show', $user->organization)" inline>{{ $value }}</x-link>
+                                    <x-link :href="route('admin.organizations.show', $user->organization)" inline>{{ \App\Support\Format::orEmpty($value) }}</x-link>
                                 @else
-                                    {{ $value }}
+                                    {{ \App\Support\Format::orEmpty($value) }}
                                 @endif
                             </dd>
                         </div>
@@ -84,7 +84,7 @@
         <div class="space-y-6">
             @if ($user->hasPendingInvitation())
                 <x-admin.card title="Undangan email">
-                    <p class="text-ui text-ink-soft">Dikirim {{ Format::dateTime($user->invited_at) }} WIT ke {{ $user->email }}. Tautan berlaku 72 jam dan hanya sekali pakai; mengirim ulang membatalkan tautan lama.</p>
+                    <p class="text-ui text-ink-soft">Dikirim {{ \App\Support\Format::orEmpty(Format::dateTime($user->invited_at)) }} WIT ke {{ $user->email }}. Tautan berlaku 72 jam dan hanya sekali pakai; mengirim ulang membatalkan tautan lama.</p>
                 </x-admin.card>
             @endif
 

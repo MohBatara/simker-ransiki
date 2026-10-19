@@ -92,7 +92,7 @@
                 </div>
                 <div>
                     <p class="text-caption text-ink-muted">text-caption · 13px, keterangan</p>
-                    <p class="text-caption text-ink-soft">Terakhir diperbarui {{ Format::date('2026-10-09') }}</p>
+                    <p class="text-caption text-ink-soft">Terakhir diperbarui {{ \App\Support\Format::orEmpty(Format::date('2026-10-09')) }}</p>
                 </div>
                 <div>
                     <p class="text-caption text-ink-muted">text-micro · 11px, hanya label sidebar tablet</p>
@@ -100,7 +100,7 @@
                 </div>
                 <div class="border-t border-line pt-4">
                     <p class="text-caption text-ink-muted">Format angka dan tanggal (App\Support\Format)</p>
-                    <p class="tabular-nums">{{ Format::number(1250000) }} · {{ Format::rupiah(1250000) }} · {{ Format::date('2026-10-09') }} · {{ Format::month('2026-09-01') }} · kosong: {{ Format::rupiah(null) }}</p>
+                    <p class="tabular-nums">{{ \App\Support\Format::orEmpty(Format::number(1250000)) }} · {{ \App\Support\Format::orEmpty(Format::rupiah(1250000)) }} · {{ \App\Support\Format::orEmpty(Format::date('2026-10-09')) }} · {{ \App\Support\Format::orEmpty(Format::month('2026-09-01')) }} · kosong: {{ \App\Support\Format::orEmpty(Format::rupiah(null)) }}</p>
                 </div>
             </div>
         </x-admin.card>
@@ -160,7 +160,7 @@
         <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
             <x-admin.stat icon="user-group" label="Kelompok aktif" value="22" hint="dari 25 kelompok terdaftar" />
             <x-admin.stat icon="check-badge" label="Terverifikasi" :value="Format::number(14)" tone="success" hint="September 2026" href="#" />
-            <x-admin.stat compact icon="clock" label="Menunggu verifikasi" value="5" tone="warning" />
+            <x-admin.stat compact icon="clock" label="Menunggu verifikasi" value="5" tone="warning" hint="laporan" />
             <x-admin.stat compact icon="banknotes" label="Pendapatan" :value="Format::rupiah(48750000)" hint="diisi 18 dari 25 kelompok" href="#" />
         </div>
 
@@ -205,9 +205,9 @@
                 @foreach ($reports as $report)
                     <x-admin.table.row :href="route('dev.components.form')">
                         <x-admin.table.cell primary>{{ $report['organization'] }}</x-admin.table.cell>
-                        <x-admin.table.cell subtitle>{{ Format::month($report['period']) }}</x-admin.table.cell>
+                        <x-admin.table.cell subtitle>{{ \App\Support\Format::orEmpty(Format::month($report['period'])) }}</x-admin.table.cell>
                         <x-admin.table.cell badge><x-admin.badge-status :tone="$report['status'][1]" :label="$report['status'][0]" /></x-admin.table.cell>
-                        <x-admin.table.cell label="Pendapatan" numeric>{{ Format::rupiah($report['revenue']) }}</x-admin.table.cell>
+                        <x-admin.table.cell label="Pendapatan" numeric>{{ \App\Support\Format::orEmpty(Format::rupiah($report['revenue'])) }}</x-admin.table.cell>
                         <x-admin.table.cell label="Diajukan" optional><x-admin.date :value="$report['submitted_at']" /></x-admin.table.cell>
                     </x-admin.table.row>
                 @endforeach

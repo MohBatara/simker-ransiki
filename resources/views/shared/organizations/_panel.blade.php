@@ -7,7 +7,7 @@
 
 @php
     $organization = $panel['organization'];
-    $text = fn ($value) => filled($value) ? $value : '—';
+    $text = fn ($value) => filled($value) ? $value : \App\Support\Format::orEmpty(null);
 @endphp
 
 <section class="bg-panel" aria-labelledby="panel-judul" data-panel-id="{{ $organization->id }}">
@@ -36,7 +36,7 @@
                 <div class="grid gap-4 sm:grid-cols-2">
                     <x-info-item label="Ketua" icon="user">{{ $text($organization->leader_name) }}</x-info-item>
                     <x-info-item label="Tahun berdiri" icon="calendar">{{ $text($organization->founded_year) }}</x-info-item>
-                    <x-info-item label="Jumlah anggota" icon="user-group">{{ $organization->members_count === null ? '—' : Format::number($organization->members_count).' orang' }}</x-info-item>
+                    <x-info-item label="Jumlah anggota" icon="user-group">{{ $organization->members_count === null ? \App\Support\Format::orEmpty(null) : Format::number($organization->members_count).' orang' }}</x-info-item>
                     <x-info-item label="Jenis" icon="building-office">{{ $organization->institutionType->name }}</x-info-item>
                     <x-info-item label="Bidang usaha" icon="squares-2x2" class="sm:col-span-2">{{ $text($organization->sectors->pluck('name')->join(', ')) }}</x-info-item>
                     <x-info-item label="OPD pembina" icon="briefcase" class="sm:col-span-2">
@@ -82,7 +82,7 @@
                     <x-list>
                         @foreach ($panel['reports'] as $report)
                             <x-list.item :href="auth()->user()->can('view', $report) ? route($area.'.reports.show', [$report, 'dari' => 'kelompok']) : null">
-                                <span class="min-w-0 flex-1 text-ink">{{ Format::month($report->period) }}</span>
+                                <span class="min-w-0 flex-1 text-ink">{{ \App\Support\Format::orEmpty(Format::month($report->period)) }}</span>
                                 <x-admin.badge-status :status="$report->status" :label="$report->status->label()" />
                             </x-list.item>
                         @endforeach

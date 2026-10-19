@@ -41,6 +41,7 @@ class DashboardController extends Controller
             'staleNeeds' => ReportIssue::reviewableBy($user)->where('kind', IssueKind::Support)->stale(config('simker.follow_up.stale_days'))->count(),
             'topIssues' => $stats->topIssues(),
             'economyTrend' => Statistics::recentEconomy($user, $period, $earliest),
+            'economyChange' => (new Statistics($user, [], $period, $period))->matchedChange($period),
             'latestReports' => (clone $waiting)->withSubmissionInfo()->with('organization:id,name')->orderByDesc('last_submitted_at')->limit(5)->get(),
             // Produksi per produk periode terpilih, kelompok binaan saja (Statistics memakai visibleTo).
             'production' => (new Statistics($user, [], $period, $period))->production(5),

@@ -47,7 +47,7 @@
                         <x-list.item :href="route($area.'.organizations.licenses.show', [$license->organization_id, $license])">
                             <span class="min-w-0 flex-1">
                                 <span class="block font-semibold text-ink">{{ $license->organization->name }}</span>
-                                <span class="block text-caption text-ink-soft">{{ $license->type }} · berlaku sampai {{ Format::date($license->expires_on) }}</span>
+                                <span class="block text-caption text-ink-soft">{{ $license->type }} · berlaku sampai {{ \App\Support\Format::orEmpty(Format::date($license->expires_on)) }}</span>
                             </span>
                             <x-admin.badge-status :tone="$days <= 14 ? 'danger' : 'warning'" :label="$days === 0 ? 'Habis hari ini' : $days.' hari lagi'" />
                         </x-list.item>
@@ -108,7 +108,7 @@
                             <x-admin.table.row>
                                 <x-admin.table.cell primary>{{ $row['label'] }}</x-admin.table.cell>
                                 @foreach ($columns as $key => $label)
-                                    <x-admin.table.cell :label="$label" numeric>{{ Format::number($row[$key]) }}</x-admin.table.cell>
+                                    <x-admin.table.cell :label="$label" numeric>{{ \App\Support\Format::orEmpty(Format::number($row[$key])) }}</x-admin.table.cell>
                                 @endforeach
                             </x-admin.table.row>
                         @endforeach

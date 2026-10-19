@@ -6,7 +6,7 @@
 @use('App\Support\Format')
 
 @php
-    $text = fn ($value) => filled($value) ? $value : '—';
+    $text = fn ($value) => filled($value) ? $value : \App\Support\Format::orEmpty(null);
     $latestReport = $overview['latestReport'];
     $productsUrl = $area === 'kelompok' ? route('kelompok.products.index') : route($area.'.organizations.products', $organization);
     $reportUrl = match (true) {
@@ -25,8 +25,8 @@
         'Telepon' => $text($organization->phone),
         'Email' => $text($organization->email),
         'Bidang usaha' => $text($organization->sectors->pluck('name')->join(', ')),
-        'Jumlah anggota' => $organization->members_count === null ? '—' : Format::number($organization->members_count).' orang',
-        'Tenaga kerja' => $organization->workforce_count === null ? '—' : Format::number($organization->workforce_count).' orang',
+        'Jumlah anggota' => $organization->members_count === null ? \App\Support\Format::orEmpty(null) : Format::number($organization->members_count).' orang',
+        'Tenaga kerja' => $organization->workforce_count === null ? \App\Support\Format::orEmpty(null) : Format::number($organization->workforce_count).' orang',
         'Kapasitas produksi' => $text($organization->production_capacity),
         'Pasar' => $text($organization->markets),
         'Aset' => $text($organization->assets),
@@ -42,7 +42,7 @@
     <x-admin.card title="Ringkasan" icon="chart-bar-square" class="max-lg:order-first lg:col-span-5 lg:col-start-8 lg:row-start-2">
         <div class="grid gap-4 sm:grid-cols-2">
             <x-info-item label="Jumlah anggota" icon="user-group">
-                {{ $organization->members_count === null ? '—' : Format::number($organization->members_count).' orang' }}
+                {{ $organization->members_count === null ? \App\Support\Format::orEmpty(null) : Format::number($organization->members_count).' orang' }}
             </x-info-item>
             <x-info-item label="Produk" icon="cube">
                 <x-link :href="$productsUrl" class="font-normal tabular-nums">{{ $organization->products_count }} produk</x-link>
@@ -51,9 +51,9 @@
                 @if ($latestReport)
                     <span class="flex flex-wrap items-center gap-2">
                         @if ($reportUrl)
-                            <x-link :href="$reportUrl" class="font-normal">{{ Format::month($latestReport->period) }}</x-link>
+                            <x-link :href="$reportUrl" class="font-normal">{{ \App\Support\Format::orEmpty(Format::month($latestReport->period)) }}</x-link>
                         @else
-                            {{ Format::month($latestReport->period) }}
+                            {{ \App\Support\Format::orEmpty(Format::month($latestReport->period)) }}
                         @endif
                         <x-admin.badge-status :status="$latestReport->status"  />
                     </span>
@@ -76,7 +76,7 @@
             @foreach ($info as $label => $value)
                 <div class="grid gap-1 py-3 first:pt-0 last:pb-0 sm:grid-cols-[minmax(0,11rem)_1fr] sm:gap-4">
                     <dt class="text-ink-soft">{{ $label }}</dt>
-                    <dd class="whitespace-pre-line break-words text-ink">{{ $value }}</dd>
+                    <dd class="whitespace-pre-line break-words text-ink">{{ \App\Support\Format::orEmpty($value) }}</dd>
                 </div>
             @endforeach
         </dl>
@@ -134,7 +134,7 @@
                     <x-admin.badge-status :status="$organization->profile_status" />
                     @if ($organization->profile_verified_at)
                         <p class="text-caption text-ink-soft">
-                            Diverifikasi {{ Format::date($organization->profile_verified_at) }}@if ($organization->profileVerifier) oleh {{ $organization->profileVerifier->nameWithAgency() }}@endif
+                            Diverifikasi {{ \App\Support\Format::orEmpty(Format::date($organization->profile_verified_at)) }}@if ($organization->profileVerifier) oleh {{ $organization->profileVerifier->nameWithAgency() }}@endif
                         </p>
                     @endif
                     @if ($organization->profile_status === App\Enums\ProfileStatus::NeedsReview)
@@ -160,7 +160,7 @@
             </div>
             <div>
                 <dt class="text-caption text-ink-muted">Mulai wajib lapor</dt>
-                <dd class="text-ink">{{ Format::month($organization->reporting_starts_on) }}</dd>
+                <dd class="text-ink">{{ \App\Support\Format::orEmpty(Format::month($organization->reporting_starts_on)) }}</dd>
             </div>
             @if ($overview['statusChanges']->isNotEmpty())
                 <div>
@@ -170,7 +170,7 @@
                             @foreach ($overview['statusChanges'] as $change)
                                 <li>
                                     <p class="text-ink">{{ $change->from_status->label() }} → {{ $change->to_status->label() }}</p>
-                                    <p class="text-caption text-ink-soft">{{ Format::date($change->created_at) }}@if ($change->user) · {{ $change->user->name }}@endif</p>
+                                    <p class="text-caption text-ink-soft">{{ \App\Support\Format::orEmpty(Format::date($change->created_at)) }}@if ($change->user) · {{ $change->user->name }}@endif</p>
                                     <p class="text-caption text-ink-soft">{{ $change->reason }}</p>
                                 </li>
                             @endforeach
@@ -180,7 +180,7 @@
             @endif
             <div>
                 <dt class="text-caption text-ink-muted">Terakhir diubah</dt>
-                <dd class="text-ink">{{ Format::date($organization->updated_at) }}@if ($organization->updater) oleh {{ $organization->updater->name }}@endif</dd>
+                <dd class="text-ink">{{ \App\Support\Format::orEmpty(Format::date($organization->updated_at)) }}@if ($organization->updater) oleh {{ $organization->updater->name }}@endif</dd>
             </div>
         </dl>
     </x-admin.card>

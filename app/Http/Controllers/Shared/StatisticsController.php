@@ -30,6 +30,8 @@ class StatisticsController extends Controller
             'months' => ReportingPeriod::options($earliest),
             'summary' => $stats->summary(),
             'incomeTrend' => $stats->incomeTrend(),
+            // Penjualan bulan terakhir rentang dibanding bulan sebelumnya, setara (kelompok yang sama, filter ikut).
+            'salesChange' => $stats->matchedChange($stats->to())['income_sales'],
             'compliance' => $stats->compliance(),
             'sectors' => $stats->incomeBySector(),
             'production' => $stats->production(),

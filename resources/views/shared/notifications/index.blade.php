@@ -29,7 +29,7 @@
                             @if ($notification['note'])
                                 <span class="mt-0.5 line-clamp-2 block break-words text-ink-soft">“{{ $notification['note'] }}”</span>
                             @endif
-                            <span class="mt-1 block text-caption text-ink-muted">{{ Format::relativeDateTime($notification['created_at']) }}</span>
+                            <span class="mt-1 block text-caption text-ink-muted">{{ \App\Support\Format::orEmpty(Format::relativeDateTime($notification['created_at'])) }}</span>
                         </span>
                     </x-list.item>
                 @endforeach

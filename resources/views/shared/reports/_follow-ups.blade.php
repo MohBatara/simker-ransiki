@@ -11,7 +11,7 @@
                 @endif
             </p>
             <p class="text-caption text-ink-muted">
-                {{ Format::date($followUp->acted_on) }} · {{ $followUp->user?->nameWithAgency() ?? 'akun yang sudah dihapus' }}
+                {{ \App\Support\Format::orEmpty(Format::date($followUp->acted_on)) }} · {{ $followUp->user?->nameWithAgency() ?? 'akun yang sudah dihapus' }}
                 @if ($followUp->opd)
                     · penanggung jawab {{ $followUp->opd->short_name ?: $followUp->opd->name }}
                 @endif

@@ -16,7 +16,7 @@
 @if ($paginator->total() > 0)
     <div {{ $attributes->class('flex flex-wrap items-center justify-between gap-3') }}>
         <p class="text-caption text-ink-3 tabular-nums">
-            Menampilkan {{ \App\Support\Format::number($paginator->firstItem()) }} sampai {{ \App\Support\Format::number($paginator->lastItem()) }} dari {{ \App\Support\Format::number($paginator->total()) }} {{ $noun }}
+            Menampilkan {{ \App\Support\Format::orEmpty(\App\Support\Format::number($paginator->firstItem())) }} sampai {{ \App\Support\Format::orEmpty(\App\Support\Format::number($paginator->lastItem())) }} dari {{ \App\Support\Format::orEmpty(\App\Support\Format::number($paginator->total())) }} {{ $noun }}
         </p>
         @if ($paginator->hasPages())
             <nav aria-label="Halaman" class="flex items-center gap-1">

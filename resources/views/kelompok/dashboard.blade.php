@@ -33,7 +33,7 @@
 
                         @if ($dueReport?->submitted_at)
                             <p class="text-ink-soft">
-                                Diajukan {{ Format::date($dueReport->submitted_at) }}{{ $dueReport->wasSubmittedLate() ? ', terlambat' : '' }}
+                                Diajukan {{ \App\Support\Format::orEmpty(Format::date($dueReport->submitted_at)) }}{{ $dueReport->wasSubmittedLate() ? ', terlambat' : '' }}
                             </p>
                         @else
                             {{-- Lewat tenggat: fix. Tinggal 3 hari atau kurang: wait, tebal. --}}
@@ -42,7 +42,7 @@
                                 'font-semibold text-wait' => ! $due['pastDeadline'] && $due['daysLeft'] <= 3,
                                 'text-ink-soft' => ! $due['pastDeadline'] && $due['daysLeft'] > 3,
                             ])>
-                                Tenggat {{ Format::date($due['deadline']) }} · {{ $due['distance'] }}
+                                Tenggat {{ \App\Support\Format::orEmpty(Format::date($due['deadline'])) }} · {{ $due['distance'] }}
                             </p>
                         @endif
                     </div>
@@ -61,13 +61,13 @@
                     @endif
                 </div>
             @else
-                <p class="text-ink-soft">Kewajiban lapor dimulai {{ Format::month($organization->reporting_starts_on) }}.</p>
+                <p class="text-ink-soft">Kewajiban lapor dimulai {{ \App\Support\Format::orEmpty(Format::month($organization->reporting_starts_on)) }}.</p>
             @endif
 
             @if ($showCurrent)
                 <div class="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-line pt-3">
                     <p class="text-ink-soft">
-                        Laporan {{ Format::month($current['period']) }} sudah bisa mulai diisi sebagai draf.
+                        Laporan {{ \App\Support\Format::orEmpty(Format::month($current['period'])) }} sudah bisa mulai diisi sebagai draf.
                     </p>
                     @include('kelompok.dashboard.report-action', ['period' => $current['period'], 'report' => $current['report'], 'variant' => 'secondary'])
                 </div>
@@ -79,7 +79,7 @@
                 @if ($revision->latestRevisionRequest)
                     <p class="whitespace-pre-line break-words">{{ $revision->latestRevisionRequest->note }}</p>
                     <p class="mt-1 text-caption text-ink-soft">
-                        Catatan dari {{ $revision->latestRevisionRequest->user?->name ?? 'peninjau' }}, {{ Format::date($revision->latestRevisionRequest->created_at) }}.
+                        Catatan dari {{ $revision->latestRevisionRequest->user?->name ?? 'peninjau' }}, {{ \App\Support\Format::orEmpty(Format::date($revision->latestRevisionRequest->created_at)) }}.
                     </p>
                 @endif
                 <div class="mt-3">
@@ -136,7 +136,7 @@
                     @endphp
                     <x-list.item :href="$href">
                             <span class="min-w-0 flex-1">
-                                <span class="block font-semibold text-ink">{{ Format::month($row['period']) }}</span>
+                                <span class="block font-semibold text-ink">{{ \App\Support\Format::orEmpty(Format::month($row['period'])) }}</span>
                                 @if ($report?->wasSubmittedLate())
                                     <span class="block text-caption text-ink-soft">Diajukan terlambat</span>
                                 @endif
@@ -160,7 +160,7 @@
                     <x-list.item :href="route('kelompok.reports.show', $issue->monthly_report_id)">
                         <span class="min-w-0 flex-1">
                             <span class="block font-semibold text-ink">{{ $issue->category ? $issue->categoryLabel() : 'Tanpa kategori' }}</span>
-                            <span class="block text-caption text-ink-soft">{{ $issue->kind->label() }} · laporan {{ Format::month($issue->monthlyReport->period) }}</span>
+                            <span class="block text-caption text-ink-soft">{{ $issue->kind->label() }} · laporan {{ \App\Support\Format::orEmpty(Format::month($issue->monthlyReport->period)) }}</span>
                             @if ($issue->followUps->isNotEmpty())
                                 <span class="mt-0.5 line-clamp-2 block text-ink-soft break-words">{{ $issue->followUps->first()->note }}</span>
                             @endif

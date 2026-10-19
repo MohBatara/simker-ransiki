@@ -105,7 +105,7 @@
                                     {{-- Sel kosong (mis. Keterangan) tidak ditampilkan di kartu HP. --}}
                                     <x-admin.table.cell class="max-md:hidden"></x-admin.table.cell>
                                 @else
-                                    <x-admin.table.cell :label="$table['columns'][$index] ?? null" :numeric="in_array($index, $numeric, true)" :optional="in_array($index, $optional, true)">{{ $cell }}</x-admin.table.cell>
+                                    <x-admin.table.cell :label="$table['columns'][$index] ?? null" :numeric="in_array($index, $numeric, true)" :optional="in_array($index, $optional, true)">{{ \App\Support\Format::orEmpty($cell) }}</x-admin.table.cell>
                                 @endif
                             @endforeach
                         </x-admin.table.row>

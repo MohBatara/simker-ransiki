@@ -28,7 +28,7 @@
                 @endif
                 {{ $tab['label'] }}
                 @if (($tab['count'] ?? null) !== null)
-                    <span class="rounded-pill bg-idle-bg px-1.5 text-label font-medium tabular-nums text-idle">{{ \App\Support\Format::number($tab['count']) }}</span>
+                    <span class="rounded-pill bg-idle-bg px-1.5 text-label font-medium tabular-nums text-idle">{{ \App\Support\Format::orEmpty(\App\Support\Format::number($tab['count'])) }}</span>
                 @endif
             </a>
         @endforeach

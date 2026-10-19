@@ -14,6 +14,8 @@
     'actions' => false,
     // Kartu HP: "Label: nilai" rata kiri dalam satu baris (mis. "Jumlah: 1.384 ekor"), bukan label kiri–nilai kanan.
     'inline' => false,
+    // Kolom selebar isi (tanggal, periode, status, angka): tidak patah baris, sisa lebar untuk kolom nama.
+    'fit' => false,
 ])
 
 @php
@@ -37,6 +39,8 @@
         'max-md:col-start-2 max-md:row-start-1 max-md:self-center max-md:p-0' => $badge,
         'max-md:col-span-2 max-md:col-start-1 max-md:row-start-2 max-md:px-0 max-md:pb-2 max-md:pt-0.5 max-md:text-ink-soft' => $subtitle,
         'whitespace-nowrap md:text-right max-md:col-span-2 max-md:mt-2 max-md:border-t max-md:border-line-soft max-md:px-0 max-md:pb-0 max-md:pt-3' => $actions,
+        'md:w-px md:whitespace-nowrap' => $fit || $badge,
+        'md:whitespace-nowrap' => $numeric,
         'md:max-xl:hidden' => $optional,
     ]) }}
 >

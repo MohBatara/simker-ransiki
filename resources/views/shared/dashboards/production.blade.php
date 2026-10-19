@@ -21,13 +21,13 @@
                         @if ($row['quantity'] === null)
                             <span class="text-ink-3">Tidak diisi</span>
                         @else
-                            {{ Format::quantity($row['quantity']) }} {{ $row['unit'] }}
+                            {{ \App\Support\Format::orEmpty(Format::quantity($row['quantity'])) }} {{ $row['unit'] }}
                             @if ($row['filled'] < $row['organizations'])
                                 <span class="block text-label text-ink-3">diisi {{ $row['filled'] }} dari {{ $row['organizations'] }} kelompok</span>
                             @endif
                         @endif
                     </x-admin.table.cell>
-                    <x-admin.table.cell label="Kelompok" numeric>{{ Format::number($row['organizations']) }}</x-admin.table.cell>
+                    <x-admin.table.cell label="Kelompok" numeric>{{ \App\Support\Format::orEmpty(Format::number($row['organizations'])) }}</x-admin.table.cell>
                 </x-admin.table.row>
             @endforeach
         </x-admin.table>
