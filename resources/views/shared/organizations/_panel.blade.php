@@ -10,22 +10,29 @@
     $text = fn ($value) => filled($value) ? $value : \App\Support\Format::orEmpty(null);
 @endphp
 
-<section class="bg-panel" aria-labelledby="panel-judul" data-panel-id="{{ $organization->id }}">
-    <div class="relative aspect-[3/1] overflow-hidden rounded-control bg-subtle">
-        @if ($panel['image'])
-            <x-public.picture :image="$panel['image']" alt="" sizes="400px" width="800" height="400" frame="block size-full" class="size-full object-cover" />
-        @else
-            <span class="flex size-full items-center justify-center text-page-title font-semibold text-ink-muted" aria-hidden="true">{{ App\Support\Initials::of($organization->name) }}</span>
-        @endif
-    </div>
+{{-- Tujuan tombol kaki popup ("Ubah", "Buka detail") dibaca dari atribut ini setelah isi dimuat. --}}
+<section class="bg-panel" aria-labelledby="panel-judul" data-panel-id="{{ $organization->id }}"
+         data-detail-url="{{ route($area.'.organizations.show', $organization) }}"
+         @can('update', $organization) data-edit-url="{{ route($area.'.organizations.edit', $organization) }}" @endcan>
+    {{-- Foto utama 16:9 (maks 220px), dimuat langsung tanpa lazy karena berada di dalam popup yang awalnya tersembunyi. --}}
+    @if ($panel['photo'])
+        <img src="{{ $panel['photo']['url'] }}" alt="{{ $panel['photo']['alt'] }}" decoding="async" data-organization-photo
+             class="aspect-video max-h-[220px] w-full rounded-[10px] bg-subtle object-cover">
+    @else
+        <div class="flex aspect-video max-h-[220px] w-full flex-col items-center justify-center gap-1 rounded-[10px] bg-brand-50" data-organization-photo-empty>
+            <span class="text-display font-semibold text-brand" aria-hidden="true">{{ App\Support\Initials::of($organization->name) }}</span>
+            <span class="text-label text-ink-2">Belum ada foto</span>
+        </div>
+    @endif
 
-    <div class="space-y-4 p-5">
+    <div class="space-y-4 pt-4">
         <div>
-            <div class="flex flex-wrap items-center gap-2">
-                <h2 id="panel-judul" tabindex="-1" class="text-page-title font-semibold text-ink focus:outline-none">{{ $organization->name }}</h2>
+            <h2 id="panel-judul" tabindex="-1" class="text-page-title font-semibold text-ink focus:outline-none">{{ $organization->name }}</h2>
+            <p class="mt-0.5 text-caption text-ink-2">{{ $organization->institutionType->name }} <span aria-hidden="true">·</span> {{ $organization->village->name }}</p>
+            <div class="mt-2 flex flex-wrap gap-2">
                 <x-admin.badge-status :status="$organization->status" />
+                <x-admin.badge-status :status="$organization->profile_status" />
             </div>
-            <p class="text-ui text-ink-soft">{{ $organization->village->name }}, Distrik Ransiki</p>
         </div>
 
         <x-tabs :tabs="['informasi' => 'Informasi', 'produk' => 'Produk ('.$organization->products_count.')', 'laporan' => 'Laporan']">
@@ -56,7 +63,7 @@
                             <li class="min-w-0">
                                 <div class="aspect-[4/3] overflow-hidden rounded-control bg-subtle">
                                     @if ($product->photo_path)
-                                        <img src="{{ $product->photoUrl(thumbnail: true) }}" alt="" loading="lazy" decoding="async" class="size-full object-cover">
+                                        <img src="{{ $product->photoUrl(thumbnail: true) }}" alt="" decoding="async" class="size-full object-cover">
                                     @else
                                         <span class="flex size-full items-center justify-center font-semibold text-ink-muted" aria-hidden="true">{{ $product->initials() }}</span>
                                     @endif
@@ -89,11 +96,5 @@
             </x-tabs.panel>
         </x-tabs>
 
-        <div class="flex flex-wrap gap-2 border-t border-line pt-4">
-            @can('update', $organization)
-                <x-button variant="secondary" icon="pencil-square" :href="route($area.'.organizations.edit', $organization)">Ubah</x-button>
-            @endcan
-            <x-button :href="route($area.'.organizations.show', $organization)" class="flex-1">Buka detail</x-button>
-        </div>
     </div>
 </section>

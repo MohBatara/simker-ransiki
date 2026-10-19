@@ -405,6 +405,19 @@ document.addEventListener('auxclick', (event) => event.button === 1 && openRowLi
  */
 Alpine.data('organizationPanel', () => ({
     loading: false,
+    detailUrl: null,
+    editUrl: null,
+
+    init() {
+        this.readUrls();
+    },
+
+    /** Tujuan tombol kaki popup dari isi yang sedang tampil (data-detail-url, data-edit-url). */
+    readUrls() {
+        const section = this.$refs.panel?.querySelector('[data-panel-id]');
+        this.detailUrl = section?.dataset.detailUrl ?? null;
+        this.editUrl = section?.dataset.editUrl ?? null;
+    },
 
     async select(event) {
         const link = event.target.closest('a');
@@ -426,6 +439,7 @@ Alpine.data('organizationPanel', () => ({
                 throw new Error(response.status);
             }
             this.$refs.panel.innerHTML = await response.text();
+            this.readUrls();
             this.markSelected(row);
             this.$dispatch('open-modal', 'organization-preview');
 
@@ -476,6 +490,10 @@ Alpine.data('adminModal', (name, show = false, guard = true) => ({
         }
         this.trigger = document.activeElement;
         this.dirty = false;
+        // Gambar lazy di dalam popup yang tadinya tersembunyi bisa tidak pernah dimuat (mis. Safari): muat segera.
+        this.$el.querySelectorAll('img[loading="lazy"]').forEach((image) => {
+            image.loading = 'eager';
+        });
         this.confirming = false;
         this.$el.showModal();
         document.documentElement.classList.add('modal-open');

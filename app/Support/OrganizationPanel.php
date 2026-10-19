@@ -5,7 +5,7 @@ namespace App\Support;
 use App\Models\Organization;
 
 /**
- * Isi panel detail di samping daftar kelompok (desktop): foto, data inti, 4 produk, 3 laporan terakhir.
+ * Isi popup pratinjau kelompok di daftar (desktop): foto utama (OrganizationPhoto), data inti, 4 produk, 3 laporan terakhir.
  */
 class OrganizationPanel
 {
@@ -20,7 +20,7 @@ class OrganizationPanel
 
         return [
             'organization' => $organization,
-            'image' => BannerImage::forOrganization($organization),
+            'photo' => OrganizationPhoto::for($organization),
             'products' => $organization->products()
                 ->orderByRaw('photo_path IS NULL')
                 ->orderBy('name')

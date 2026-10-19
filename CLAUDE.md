@@ -1002,7 +1002,7 @@ atau banner foto di area aplikasi. `x-tabs` hanya untuk tab dalam halaman (panel
   navigasi bawah), hilang otomatis 4 detik, berhenti saat disorot/difokuskan, bisa ditutup.
 - `x-admin.modal`: SATU komponen popup (tidak ada lagi drawer/panel samping atau `x-modal`). `<dialog>` di tengah layar
   (role dialog, aria-modal, fokus terkunci, fokus awal ke isian pertama, fokus kembali ke pemicu, halaman belakang tidak
-  bisa digulir), latar forest 40% + blur tipis, fade + skala 96% ke 100% dalam 180ms (tanpa gerak bila reduced motion).
+  bisa digulir, gambar lazy di dalamnya dimuat saat dibuka), latar forest 40% + blur tipis, fade + skala 96% ke 100% dalam 180ms (tanpa gerak bila reduced motion).
   Ukuran `sm` 440px (konfirmasi), `md` 560px (form pendek, bawaan), `lg` 760px (pratinjau). Kepala judul 16px + satu baris
   keterangan + tombol X; badan menggulir sendiri (maks 85vh, HP 90vh, lebar penuh dengan margin 16px); slot `footer`
   menempel (Batal = `requestClose()` lalu aksi utama). Tutup lewat Esc, X, atau klik latar; bila isian berubah (`guard`)
@@ -1045,8 +1045,8 @@ atau banner foto di area aplikasi. `x-tabs` hanya untuk tab dalam halaman (panel
   rupiah "Rp 50 jt".
 - `x-chart` memakai `x-admin.card`.
 - Kepala detail kelompok (`x-admin.organization-header`, Admin/OPD dan Profil Kelompok): remah di kiri pada baris yang
-  sama dengan tombol cari dan lonceng (layout `:header="false"` + `breadcrumbs`), lalu avatar inisial 56px (belum ada
-  kolom foto profil kelompok), nama 24px semibold maks 2 baris, subjudul "Jenis · Kampung" + bidang usaha berikon (teks,
+  sama dengan tombol cari dan lonceng (layout `:header="false"` + `breadcrumbs`), lalu foto utama 56px (`OrganizationPhoto`)
+  atau inisial bila tidak ada, nama 24px semibold maks 2 baris, subjudul "Jenis · Kampung" + bidang usaha berikon (teks,
   bukan chip), pil status kelompok + pil status verifikasi profil (+ "Tandai terverifikasi" bagi yang berhak), aksi di
   kanan sejajar nama (tombol tambah sesuai tab, Ubah profil, menu titik tiga Admin: Tambah akun, Ubah status, Hapus).
   Lalu strip 4 `x-admin.stat compact` (anggota: kosong = "Belum diisi" 15px + tautan "lengkapi di Ubah profil"; produk;
@@ -1088,8 +1088,13 @@ atau banner foto di area aplikasi. `x-tabs` hanya untuk tab dalam halaman (panel
   kelompok" (`x-admin.toolbar title`: cari nama + Filter berisi kampung, jenis, status, bidang usaha, OPD [Admin];
   langsung diterapkan) berisi `x-admin.table` selebar kartu (kolom Kelompok, Jenis sebagai chip, Kampung, Bidang usaha,
   Anggota, Status, titik tiga Lihat/Ubah). Mulai 1280px klik baris membuka popup pratinjau lg (Alpine `organizationPanel`,
-  memuat `/{area}/kelompok/{id}/ringkas`, Policy `view`) berisi ringkasan dan "Buka detail"; `?pilih=id` membuka popup
-  sejak awal. Panel baris pertama tetap dirender di server. Layar lebih kecil membuka halaman detail. Aksi:
+  memuat `/{area}/kelompok/{id}/ringkas`, Policy `view`): foto utama 16:9 (maks 220px, sudut 10px; tanpa foto: kotak
+  `brand-50` berinisial + "Belum ada foto"), nama, jenis · kampung, pil status dan verifikasi profil, ringkasan bertab,
+  kaki menempel "Ubah" + "Buka detail"; `?pilih=id` membuka popup sejak awal.
+- Foto utama kelompok: SATU tempat `App\Support\OrganizationPhoto` (belum ada kolom foto profil): foto produk terbaru
+  (`product-photos.show`, Policy) → lampiran gambar kelompok (`attachments.show`, Policy) → foto bidang usaha → tidak ada.
+  Dipakai popup pratinjau dan kepala detail kelompok (56px; tanpa foto: inisial). Gambar di dalam popup tidak memakai
+  `loading="lazy"`; `adminModal` juga mengubah gambar lazy menjadi segera dimuat saat popup dibuka. Panel baris pertama tetap dirender di server. Layar lebih kecil membuka halaman detail. Aksi:
   Tambah kelompok (utama, Admin), Unduh Excel + Impor (sekunder).
 - Detail: kepala `x-admin.organization-header` (lihat pola halaman) → `x-admin.tabs` berikon dengan angka, urutan Profil ·
   Produk · Izin · Laporan · Akun (Admin) · Riwayat → tab Profil tanpa mengulang isi kepala (nama, jenis, status,

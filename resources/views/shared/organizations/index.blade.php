@@ -142,6 +142,10 @@
                         @include('shared.organizations._panel')
                     @endif
                 </div>
+                <x-slot:footer>
+                    <x-button variant="secondary" icon="pencil-square" x-show="editUrl" x-bind:href="editUrl" :href="$panel ? route($area.'.organizations.edit', $panel['organization']) : '#'">Ubah</x-button>
+                    <x-button x-bind:href="detailUrl" :href="$panel ? route($area.'.organizations.show', $panel['organization']) : '#'">Buka detail</x-button>
+                </x-slot:footer>
             </x-admin.modal>
         </div>
     </div>

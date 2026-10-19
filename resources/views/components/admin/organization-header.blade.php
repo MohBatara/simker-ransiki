@@ -16,6 +16,7 @@
     $sectors = $organization->sectors->pluck('name')->join(', ');
     $canVerify = $user && ! $user->isKelompok() && $organization->profile_status !== ProfileStatus::Verified && $user->can('verifyProfile', $organization);
     $licenses = (int) $organization->licenses_count;
+    $photo = \App\Support\OrganizationPhoto::for($organization);
 @endphp
 
 {{--
@@ -27,7 +28,12 @@
 <div {{ $attributes->class('space-y-6') }}>
     <header class="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
         <div class="flex min-w-0 flex-1 items-start gap-4">
-            <x-avatar :name="$organization->name" size="xl" class="size-14! text-page-title! max-sm:hidden" />
+            {{-- Foto utama kelompok (OrganizationPhoto) bila ada, selain itu inisial. --}}
+            @if ($photo)
+                <img src="{{ $photo['url'] }}" alt="{{ $photo['alt'] }}" width="56" height="56" decoding="async" data-organization-photo class="size-14 shrink-0 rounded-box border border-line bg-subtle object-cover max-sm:hidden">
+            @else
+                <x-avatar :name="$organization->name" size="xl" class="size-14! text-page-title! max-sm:hidden" />
+            @endif
             <div class="min-w-0">
                 <h1 class="line-clamp-2 text-[1.5rem] leading-8 font-semibold text-ink" title="{{ $organization->name }}">{{ $organization->name }}</h1>
                 <p class="mt-1 flex flex-wrap items-center gap-x-4 gap-y-1 text-caption text-ink-2">
