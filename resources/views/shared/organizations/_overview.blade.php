@@ -1,6 +1,7 @@
 {{--
-    Tab Profil detail kelompok (Admin/OPD) dan halaman Profil Kelompok. Desktop: kolom utama 7/12 dan
-    kolom samping 5/12; HP: Ringkasan lebih dulu, lalu kartu lain berurutan.
+    Tab Profil detail kelompok (Admin/OPD) dan halaman Profil Kelompok, tanpa mengulang isi kepala halaman. Desktop: kolom
+    kiri 8/12 (Informasi umum, Usaha dan sumber daya, Deskripsi, Foto) dan kanan 4/12 (Lokasi, Ringkasan, Publikasi);
+    HP bertumpuk. Data kosong: "Belum diisi" (Format::orEmpty).
     Variabel: $organization, $overview (App\Support\OrganizationOverview::data), $area, $documents.
 --}}
 @use('App\Support\Format')
@@ -16,37 +17,89 @@
         default => null,
     };
     $legal = $organization->legal_status->label().($organization->legal_number ? ' · '.$organization->legal_number : '');
+    // Nama, jenis, status, kampung, distrik, dan bidang usaha sudah ada di kepala halaman.
     $info = [
-        'Nama kelompok' => $organization->name,
-        'Jenis kelembagaan' => $organization->institutionType->name,
-        'Status' => $organization->status->label(),
-        'Tahun berdiri' => $text($organization->founded_year),
         'Ketua' => $text($organization->leader_name),
         'Telepon' => $text($organization->phone),
         'Email' => $text($organization->email),
-        'Bidang usaha' => $text($organization->sectors->pluck('name')->join(', ')),
-        'Jumlah anggota' => $organization->members_count === null ? \App\Support\Format::orEmpty(null) : Format::number($organization->members_count).' orang',
-        'Tenaga kerja' => $organization->workforce_count === null ? \App\Support\Format::orEmpty(null) : Format::number($organization->workforce_count).' orang',
-        'Kapasitas produksi' => $text($organization->production_capacity),
-        'Pasar' => $text($organization->markets),
-        'Aset' => $text($organization->assets),
-        'Fasilitas' => $text($organization->facilities),
-        'Peralatan' => $text($organization->equipment),
+        'Tahun berdiri' => $text($organization->founded_year),
+        'Jumlah anggota' => $organization->members_count === null ? null : Format::number($organization->members_count).' orang',
+    ];
+    $business = [
+        'Tenaga kerja' => $organization->workforce_count === null ? null : Format::number($organization->workforce_count).' orang',
+        'Kapasitas produksi' => $organization->production_capacity,
+        'Pasar' => $organization->markets,
+        'Aset' => $organization->assets,
+        'Fasilitas' => $organization->facilities,
+        'Peralatan' => $organization->equipment,
         'Legalitas' => $legal,
-        'Catatan legalitas' => $text($organization->legal_notes),
+        'Catatan legalitas' => $organization->legal_notes,
     ];
 @endphp
 
+{{-- Kiri 8 kolom (informasi, usaha, deskripsi, foto), kanan 4 kolom (lokasi, ringkasan, publikasi); jarak 20px. --}}
 <div class="grid gap-5 lg:grid-cols-12 lg:items-start">
-    {{-- Ringkasan: paling atas di HP, kolom samping di desktop. --}}
-    <x-admin.card title="Ringkasan" icon="chart-bar-square" class="max-lg:order-first lg:col-span-5 lg:col-start-8 lg:row-start-2">
-        <div class="grid gap-4 sm:grid-cols-2">
-            <x-info-item label="Jumlah anggota" icon="user-group">
-                {{ $organization->members_count === null ? \App\Support\Format::orEmpty(null) : Format::number($organization->members_count).' orang' }}
-            </x-info-item>
-            <x-info-item label="Produk" icon="cube">
-                <x-link :href="$productsUrl" class="font-normal tabular-nums">{{ $organization->products_count }} produk</x-link>
-            </x-info-item>
+    <div class="space-y-5 lg:col-span-8">
+    <x-admin.card title="Informasi umum" icon="identification">
+        <dl class="divide-y divide-line-soft">
+            @foreach ($info as $label => $value)
+                <div class="grid gap-1 py-2.5 first:pt-0 last:pb-0 sm:grid-cols-[minmax(0,10rem)_1fr] sm:gap-4">
+                    <dt class="text-caption text-ink-2">{{ $label }}</dt>
+                    <dd class="whitespace-pre-line break-words text-ink">{{ \App\Support\Format::orEmpty($value) }}</dd>
+                </div>
+            @endforeach
+        </dl>
+    </x-admin.card>
+
+    <x-admin.card title="Usaha dan sumber daya" icon="briefcase">
+        <dl class="divide-y divide-line-soft">
+            @foreach ($business as $label => $value)
+                <div class="grid gap-1 py-2.5 first:pt-0 last:pb-0 sm:grid-cols-[minmax(0,10rem)_1fr] sm:gap-4">
+                    <dt class="text-caption text-ink-2">{{ $label }}</dt>
+                    <dd class="whitespace-pre-line break-words text-ink">{{ \App\Support\Format::orEmpty($value) }}</dd>
+                </div>
+            @endforeach
+        </dl>
+    </x-admin.card>
+
+    <x-admin.card title="Deskripsi" icon="document-text">
+        @if (filled($organization->description))
+            <p class="whitespace-pre-line break-words text-ink">{{ $organization->description }}</p>
+        @else
+            <p class="text-ink-soft">Belum ada deskripsi kegiatan kelompok.</p>
+        @endif
+    </x-admin.card>
+
+    <x-admin.card title="Foto" icon="photo">
+        @if ($overview['photos']->isNotEmpty())
+            <x-slot:actions>
+                <x-link :href="$productsUrl">Lihat semua</x-link>
+            </x-slot:actions>
+            <ul class="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                @foreach ($overview['photos'] as $photo)
+                    <li class="aspect-[4/3] overflow-hidden rounded-control bg-subtle">
+                        <img src="{{ $photo['url'] }}" alt="{{ $photo['alt'] }}" loading="lazy" decoding="async" class="size-full object-cover">
+                    </li>
+                @endforeach
+            </ul>
+        @else
+            <p class="text-ink-soft">Belum ada foto. Foto produk dan lampiran gambar kelompok akan tampil di sini.</p>
+        @endif
+    </x-admin.card>
+    </div>
+
+    <div class="space-y-5 lg:col-span-4">
+    <x-admin.card title="Lokasi" icon="map-pin">
+        <dl>
+            <dt class="text-caption text-ink-2">Alamat</dt>
+            <dd class="mt-0.5 whitespace-pre-line break-words text-ink">{{ $text($organization->address) }}</dd>
+        </dl>
+        <x-button variant="secondary" icon="arrow-top-right-on-square" :href="$overview['mapsUrl']" target="_blank" rel="noopener" class="mt-4 max-sm:w-full">Buka di Google Maps</x-button>
+        <p class="mt-2 text-label text-ink-3">Dicari dari alamat; titik lokasi kelompok belum tercatat.</p>
+    </x-admin.card>
+
+    <x-admin.card title="Ringkasan" icon="chart-bar-square">
+        <div class="grid gap-4">
             <x-info-item label="Laporan terakhir" icon="document-text">
                 @if ($latestReport)
                     <span class="flex flex-wrap items-center gap-2">
@@ -71,62 +124,7 @@
         </div>
     </x-admin.card>
 
-    <x-admin.card title="Informasi umum" icon="identification" class="lg:col-span-7 lg:row-span-3 lg:row-start-1">
-        <dl class="divide-y divide-line">
-            @foreach ($info as $label => $value)
-                <div class="grid gap-1 py-3 first:pt-0 last:pb-0 sm:grid-cols-[minmax(0,11rem)_1fr] sm:gap-4">
-                    <dt class="text-ink-soft">{{ $label }}</dt>
-                    <dd class="whitespace-pre-line break-words text-ink">{{ \App\Support\Format::orEmpty($value) }}</dd>
-                </div>
-            @endforeach
-        </dl>
-    </x-admin.card>
-
-    <x-admin.card title="Lokasi" icon="map-pin" class="lg:col-span-5 lg:col-start-8 lg:row-start-1">
-        <dl class="space-y-3">
-            <div>
-                <dt class="text-caption text-ink-muted">Kampung</dt>
-                <dd class="text-ink">{{ $organization->village->name }}</dd>
-            </div>
-            <div>
-                <dt class="text-caption text-ink-muted">Distrik</dt>
-                <dd class="text-ink">Ransiki</dd>
-            </div>
-            <div>
-                <dt class="text-caption text-ink-muted">Alamat</dt>
-                <dd class="whitespace-pre-line break-words text-ink">{{ $text($organization->address) }}</dd>
-            </div>
-        </dl>
-        <x-button variant="secondary" icon="arrow-top-right-on-square" :href="$overview['mapsUrl']" target="_blank" rel="noopener" class="mt-4 max-sm:w-full">Buka di Google Maps</x-button>
-        <p class="mt-2 text-caption text-ink-muted">Dicari dari alamat; titik lokasi kelompok belum tercatat.</p>
-    </x-admin.card>
-
-    <x-admin.card title="Deskripsi" icon="document-text" class="lg:col-span-5 lg:col-start-8 lg:row-start-3">
-        @if (filled($organization->description))
-            <p class="whitespace-pre-line break-words text-ink">{{ $organization->description }}</p>
-        @else
-            <p class="text-ink-soft">Belum ada deskripsi kegiatan kelompok.</p>
-        @endif
-    </x-admin.card>
-
-    <x-admin.card title="Foto" icon="photo" class="lg:col-span-7">
-        @if ($overview['photos']->isNotEmpty())
-            <x-slot:actions>
-                <x-link :href="$productsUrl">Lihat semua</x-link>
-            </x-slot:actions>
-            <ul class="grid grid-cols-2 gap-3 sm:grid-cols-4">
-                @foreach ($overview['photos'] as $photo)
-                    <li class="aspect-[4/3] overflow-hidden rounded-control bg-subtle">
-                        <img src="{{ $photo['url'] }}" alt="{{ $photo['alt'] }}" loading="lazy" decoding="async" class="size-full object-cover">
-                    </li>
-                @endforeach
-            </ul>
-        @else
-            <p class="text-ink-soft">Belum ada foto. Foto produk dan lampiran gambar kelompok akan tampil di sini.</p>
-        @endif
-    </x-admin.card>
-
-    <x-admin.card title="Publikasi & pelaporan" icon="globe-alt" class="lg:col-span-5">
+    <x-admin.card title="Publikasi & pelaporan" icon="globe-alt">
         <dl class="space-y-3">
             <div>
                 <dt class="text-caption text-ink-muted">Verifikasi profil</dt>
@@ -141,14 +139,7 @@
                         <p class="text-caption text-ink-soft">Diubah kelompok: {{ implode(', ', App\Support\ProfileReview::changedLabels($organization)) }}</p>
                     @endif
                 </dd>
-                @if ($area !== 'kelompok' && $organization->profile_status !== App\Enums\ProfileStatus::Verified)
-                    @can('verifyProfile', $organization)
-                        <form method="POST" action="{{ route($area.'.organizations.verify-profile', $organization) }}" class="mt-3">
-                            @csrf
-                            <x-button type="submit" variant="secondary" icon="check-badge" processing="Menyimpan…">Tandai profil terverifikasi</x-button>
-                        </form>
-                    @endcan
-                @endif
+                {{-- "Tandai terverifikasi" ada di kepala halaman (x-admin.organization-header). --}}
             </div>
             <div>
                 <dt class="text-caption text-ink-muted">Tampil di direktori publik</dt>
@@ -184,6 +175,7 @@
             </div>
         </dl>
     </x-admin.card>
+    </div>
 
     <div class="lg:col-span-12">
         @include('shared.attachments', $documents + ['icon' => 'paper-clip'])

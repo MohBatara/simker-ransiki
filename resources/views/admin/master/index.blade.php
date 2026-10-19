@@ -101,6 +101,7 @@
 
             <form method="POST" x-bind:action="action" id="record-form" class="space-y-4 text-ink">
                 @csrf
+                <p class="text-label text-ink-3">Kolom bertanda <span class="text-fix" aria-hidden="true">*</span><span class="sr-only">bintang</span> wajib diisi.</p>
                 <input type="hidden" name="_method" x-bind:value="mode === 'edit' ? 'PUT' : 'POST'">
                 <input type="hidden" name="_modal" value="record-form">
                 <input type="hidden" name="_id" x-bind:value="record.id">

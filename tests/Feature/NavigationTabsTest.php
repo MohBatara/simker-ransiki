@@ -16,6 +16,8 @@ beforeEach(function () {
     $this->foreign = Organization::factory()->create();
     $this->foreign->opds()->attach($this->otherOpd);
     $this->orphan = Organization::factory()->create(); // tanpa OPD pembina: hanya Admin yang bisa memverifikasi
+    // Profil terverifikasi: antrean verifikasi profil hanya berisi yang diatur di tiap tes.
+    Organization::query()->update(['profile_status' => ProfileStatus::Verified]);
 
     $this->admin = User::factory()->admin()->create();
     $this->opdUser = User::factory()->opd($this->opd)->create();
@@ -106,15 +108,15 @@ test('setiap tab punya URL sendiri, tab aktif ditandai, dan remah mengikuti menu
         ->and(html_entity_decode(strip_tags($html)))->toContain($tab.' · '.$section);
 })->with([
     'admin ekonomi' => ['/admin/dasbor/ekonomi', 'Dasbor', 'Ekonomi', ['Ringkasan', 'Ekonomi', 'Legalitas']],
-    'admin kelompok' => ['/admin/kelompok', 'Kelompok', 'Semua kelompok', ['Semua kelompok', 'Menunggu verifikasi profil', 'Kemungkinan data ganda']],
-    'admin data ganda' => ['/admin/kelompok/data-ganda', 'Kelompok', 'Kemungkinan data ganda', ['Semua kelompok', 'Menunggu verifikasi profil', 'Kemungkinan data ganda']],
+    'admin kelompok' => ['/admin/kelompok', 'Kelompok', 'Semua kelompok', ['Semua kelompok', 'Verifikasi profil', 'Kemungkinan data ganda']],
+    'admin data ganda' => ['/admin/kelompok/data-ganda', 'Kelompok', 'Kemungkinan data ganda', ['Semua kelompok', 'Verifikasi profil', 'Kemungkinan data ganda']],
     'admin antrean' => ['/admin/laporan/verifikasi', 'Laporan', 'Perlu diverifikasi', ['Semua laporan', 'Perlu diverifikasi', 'Masalah & kebutuhan']],
     'admin website' => ['/admin/website', 'Website', 'Konten Beranda', ['Konten Beranda', 'Profil Ransiki', 'Halaman & kontak', 'Berita & kegiatan']],
     'admin berita' => ['/admin/website/berita', 'Website', 'Berita & kegiatan', ['Konten Beranda', 'Profil Ransiki', 'Halaman & kontak', 'Berita & kegiatan']],
     'admin pengguna' => ['/admin/pengaturan/pengguna', 'Pengaturan', 'Pengguna', ['Pengguna', 'Data master']],
     'admin data master' => ['/admin/pengaturan/data-master/kampung', 'Pengaturan', 'Data master', ['Pengguna', 'Data master']],
     'opd legalitas' => ['/opd/dasbor/legalitas', 'Dasbor', 'Legalitas', ['Ringkasan', 'Ekonomi', 'Legalitas']],
-    'opd kelompok' => ['/opd/kelompok/verifikasi-profil', 'Kelompok binaan', 'Menunggu verifikasi profil', ['Daftar', 'Menunggu verifikasi profil']],
+    'opd kelompok' => ['/opd/kelompok/verifikasi-profil', 'Kelompok binaan', 'Verifikasi profil', ['Daftar', 'Verifikasi profil']],
     'opd masalah' => ['/opd/laporan/masalah', 'Laporan', 'Masalah & kebutuhan', ['Semua laporan', 'Perlu diverifikasi', 'Masalah & kebutuhan']],
 ]);
 

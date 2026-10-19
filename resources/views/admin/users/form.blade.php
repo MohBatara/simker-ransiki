@@ -13,6 +13,9 @@
     :title="$editing ? 'Ubah akun' : 'Tambah akun'"
     :description="$editing ? $user->name : 'Pengguna membuat kata sandi sendiri lewat undangan email, atau memakai kata sandi sementara.'"
     :back="$cancelUrl"
+    :breadcrumbs="$editing
+        ? [['label' => 'Pengguna', 'href' => route('admin.users.index')], ['label' => $user->name, 'href' => route('admin.users.show', $user)], ['label' => 'Ubah akun']]
+        : [['label' => 'Pengguna', 'href' => route('admin.users.index')], ['label' => 'Tambah akun']]"
     focus
 >
     <form method="POST" action="{{ $editing ? route('admin.users.update', $user) : route('admin.users.store') }}" x-data="{ role: @js($role), email: @js((string) old('email', $user->email)) }" class="space-y-6">
@@ -20,7 +23,7 @@
         @if ($editing)
             @method('PUT')
         @endif
-        <x-form-errors />
+        <x-admin.form-intro />
 
         <x-admin.form-section title="Data akun" description="Nama dan cara masuk. Username dipakai untuk masuk dan tidak boleh sama dengan akun lain.">
             <div class="grid gap-5 md:grid-cols-2">
@@ -54,7 +57,7 @@
                     </x-field>
                 @endunless
                 <x-field label="Nomor telepon" for="phone" hint="Untuk mengirim info masuk lewat WhatsApp." optional>
-                    <x-input name="phone" type="tel" inputmode="tel" :value="$user->phone" maxlength="30" />
+                    <x-input name="phone" type="tel" inputmode="tel" :value="$user->phone" maxlength="30" placeholder="08xx xxxx xxxx" autocomplete="tel" class="md:max-w-60" />
                 </x-field>
             </div>
         </x-admin.form-section>

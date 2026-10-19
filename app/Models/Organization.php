@@ -202,13 +202,14 @@ class Organization extends Model
     }
 
     /**
-     * Antrean "Menunggu verifikasi profil": profil berubah setelah diverifikasi, kelompok yang terlihat pengguna, tanpa
-     * kelompok yang ditutup. Dipakai daftar antrean dan badge menu Kelompok (App\Support\Navigation).
+     * Antrean tab "Verifikasi profil" (SATU definisi; badge menu Kelompok dan tugas dasbor memakai ini): profil yang belum
+     * terverifikasi, yaitu "Perubahan menunggu verifikasi" (diubah kelompok setelah diverifikasi) dan "Profil belum pernah
+     * diverifikasi". Hanya kelompok yang terlihat pengguna, tanpa kelompok ditutup.
      */
     public static function profileReviewQueue(User $user): Builder
     {
         return static::visibleTo($user)
-            ->where('profile_status', ProfileStatus::NeedsReview)
+            ->whereIn('profile_status', [ProfileStatus::NeedsReview, ProfileStatus::Unverified])
             ->where('status', '!=', OrganizationStatus::Closed);
     }
 

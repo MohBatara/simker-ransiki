@@ -37,15 +37,16 @@
     phone-title="Detail kelompok"
     :header="false"
     own-heading
+    :breadcrumbs="[
+        ['label' => $area === 'opd' ? 'Kelompok binaan' : 'Kelompok', 'href' => route($area.'.organizations.index')],
+        ['label' => $organization->name],
+    ]"
 >
     <x-slot:lead>
         <x-admin.organization-header
             :organization="$organization"
-            :breadcrumbs="[
-                ['label' => $area === 'opd' ? 'Kelompok binaan' : 'Kelompok', 'href' => route($area.'.organizations.index')],
-                ['label' => $organization->name],
-            ]"
             :links="['produk' => $links['produk'], 'izin' => $links['izin'], 'laporan' => $links['laporan']]"
+            :edit-url="auth()->user()->can('update', $organization) ? route($area.'.organizations.edit', $organization) : null"
         >
             <x-slot:actions>
                 {{-- Tambah di tab Produk/Izin: tombol header membuka modal milik daftar di bawahnya. --}}

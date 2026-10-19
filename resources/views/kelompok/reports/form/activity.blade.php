@@ -7,7 +7,7 @@
 
             <x-field
                 label="Ringkasan aktivitas"
-                label-text="data.no_activity ? 'Keterangan (opsional)' : 'Ringkasan aktivitas'"
+                label-text="data.no_activity ? 'Keterangan' : 'Ringkasan aktivitas'"
                 for="activity_summary"
                 live="'activity_summary'"
                 required-if="! data.no_activity"

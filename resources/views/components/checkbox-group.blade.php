@@ -13,9 +13,6 @@
 <fieldset {{ $attributes->class('space-y-1') }}>
     <legend class="text-ui font-semibold text-ink">
         {{ $label }}
-        @if ($optional)
-            <span class="font-normal text-ink-muted">(opsional)</span>
-        @endif
     </legend>
 
     {{-- Lebar kolom mengikuti isi; maksimal 2 kolom mulai tablet. --}}

@@ -7,10 +7,12 @@
         <x-button variant="secondary" icon="arrow-top-right-on-square" :href="route('public.profile')" target="_blank" rel="noopener">Lihat halaman Profil</x-button>
     </x-slot:secondary>
 
-    <div class="space-y-6">
+    <x-admin.form-intro class="mb-6" />
+
+    <x-admin.form-layout nav>
         @foreach ([
-            'profil' => ['Foto banner', 'Opsional. Latar banner di atas halaman Profil Ransiki dan gambar pratinjau tautan. Tanpa foto ini, banner memakai foto sampul (tab Halaman & kontak) lalu foto bawaan. Gunakan foto lanskap asli Ransiki.'],
-            'kantor' => ['Foto kantor distrik', 'Opsional. Tampil di bagian Kantor distrik. Tanpa foto, bagian itu memakai gambar ikon gedung sederhana.'],
+            'profil' => ['Foto banner', 'Latar banner di atas halaman Profil Ransiki dan gambar pratinjau tautan. Tanpa foto ini, banner memakai foto sampul (tab Halaman & kontak) lalu foto bawaan. Gunakan foto lanskap asli Ransiki.'],
+            'kantor' => ['Foto kantor distrik', 'Tampil di bagian Kantor distrik. Tanpa foto, bagian itu memakai gambar ikon gedung sederhana.'],
         ] as $slot => [$title, $description])
             @php $path = $settings[SiteSetting::PHOTO_SLOTS[$slot]]; @endphp
             <x-admin.form-section :title="$title" :description="$description">
@@ -29,7 +31,6 @@
         <form method="POST" action="{{ route('admin.content.update') }}" class="space-y-6">
             @csrf
             @method('PUT')
-            <x-form-errors />
 
             <x-admin.form-section title="Banner dan pembuka" description="Bagian Sekilas bisa memakai format sederhana: ## Judul, - daftar, **tebal**, [teks](tautan). Pisahkan paragraf dengan satu baris kosong.">
                 <div class="space-y-5">
@@ -121,5 +122,5 @@
                 @endif
             @endforeach
         </x-admin.form-section>
-    </div>
+    </x-admin.form-layout>
 </x-layouts.app>

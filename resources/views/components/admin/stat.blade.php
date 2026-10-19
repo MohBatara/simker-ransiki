@@ -4,6 +4,8 @@
     // Ikon Heroicons dalam kotak brand-50.
     'icon' => null,
     'hint' => null,
+    // Keterangan menjadi tautan (mis. "lengkapi di Ubah profil"); hanya pada kartu tanpa href.
+    'hintHref' => null,
     // Seluruh kartu menjadi tautan ke daftar yang tersaring.
     'href' => null,
     // Warna angka status (bila angka itu sendiri berarti status): success | warning | info | danger.
@@ -17,6 +19,7 @@
 
 @php
     $tag = $href ? 'a' : 'div';
+    $empty = $value === null || $value === '' || $value === \App\Support\Format::EMPTY;
     $valueColor = match ($tone) {
         'warning' => 'text-wait',
         'info' => 'text-info',
@@ -42,11 +45,20 @@
     <span class="block min-w-0 flex-1">
         <span class="block text-label text-ink-2 md:truncate">{{ $label }}</span>
         <span class="mt-0.5 flex flex-wrap items-baseline gap-x-2">
-            <span class="text-[1.375rem] leading-7 font-semibold tabular-nums {{ $valueColor }}">{{ \App\Support\Format::orEmpty($value) }}</span>
+            @if ($empty)
+                {{-- Nilai kosong: teks 15px ink-3, tinggi baris sama dengan angka agar semua kartu sejajar. --}}
+                <span class="text-card-head leading-7 text-ink-3">{{ \App\Support\Format::EMPTY_LABEL }}</span>
+            @else
+                <span class="text-[1.375rem] leading-7 font-semibold tabular-nums {{ $valueColor }}">{{ $value }}</span>
+            @endif
             <x-admin.change :comparison="$change" :up-is-good="$upIsGood" />
         </span>
         {{-- Keterangan selalu ada agar tinggi dan letak angka sama di semua kartu. --}}
-        <span class="block text-label text-ink-3 md:truncate" @if ($hint) title="{{ $hint }}" @endif>{!! $hint ? e($hint) : '&nbsp;' !!}</span>
+        @if ($hintHref && ! $href)
+            <a href="{{ $hintHref }}" class="block text-label font-medium text-brand underline underline-offset-2 hover:text-brand-hover md:truncate">{{ $hint }}</a>
+        @else
+            <span class="block text-label text-ink-3 md:truncate" @if ($hint) title="{{ $hint }}" @endif>{!! $hint ? e($hint) : '&nbsp;' !!}</span>
+        @endif
     </span>
     @if ($href)
         <x-heroicon-o-arrow-up-right class="size-4 shrink-0 self-start text-ink-faint transition-colors group-hover:text-brand" aria-hidden="true" />

@@ -33,9 +33,6 @@
         @elseif ($requiredIf)
             <span x-show="{{ $requiredIf }}"><span class="text-fix" aria-hidden="true">*</span><span class="sr-only">(wajib)</span></span>
         @endif
-        @if ($optional)
-            <span class="font-normal text-ink-muted">(opsional)</span>
-        @endif
     </label>
 
     {{ $slot }}

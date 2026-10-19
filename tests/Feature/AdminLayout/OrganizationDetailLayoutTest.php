@@ -19,10 +19,10 @@ beforeEach(function () {
     $this->admin = User::factory()->admin()->create();
 });
 
-test('kepala: jenis, kampung, badge status dan verifikasi, bidang usaha, remah, strip angka, dan tab berikon', function () {
+test('kepala: jenis · kampung, bidang usaha berikon, pil status dan verifikasi, remah, strip angka, dan tab berikon', function () {
     $this->actingAs($this->admin)->get("/admin/kelompok/{$this->organization->id}")->assertOk()
-        ->assertSee('Kampung Contoh 3, Distrik Ransiki')
-        ->assertSeeInOrder([$this->organization->institutionType->name, 'aria-label="Status kelompok"', 'Belum diverifikasi', 'Perkebunan'], false)
+        ->assertSee('Kampung Contoh 3')
+        ->assertSeeInOrder([$this->organization->institutionType->name, 'Bidang usaha:', 'Perkebunan', 'aria-label="Status kelompok"', 'Profil belum pernah diverifikasi', 'Tandai terverifikasi'], false)
         ->assertSeeInOrder(['Anggota', 'Produk', 'Izin terbit', 'Laporan terverifikasi'])
         ->assertSeeInOrder(['Kelompok', $this->organization->name], false)
         ->assertSeeInOrder(['Akun', '<span class="rounded-pill bg-idle-bg px-1.5 text-label font-medium tabular-nums text-idle">0</span>'], false);

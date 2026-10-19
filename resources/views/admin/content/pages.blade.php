@@ -3,9 +3,11 @@
         <x-button variant="secondary" icon="arrow-top-right-on-square" :href="route('public.contact')" target="_blank" rel="noopener">Lihat halaman Kontak</x-button>
     </x-slot:secondary>
 
-    <div class="space-y-6">
+    <x-admin.form-intro class="mb-6" />
+
+    <x-admin.form-layout nav>
         @foreach ([
-            'sampul' => ['Foto sampul', 'Opsional. Latar halaman masuk dan banner dasbor, juga banner Profil Ransiki selama foto banner di tab Profil Ransiki kosong. Foto hero beranda diatur di tab Beranda. Gunakan foto lanskap asli Ransiki, bukan infografis atau gambar berisi teks.'],
+            'sampul' => ['Foto sampul', 'Latar halaman masuk dan banner dasbor, juga banner Profil Ransiki selama foto banner di tab Profil Ransiki kosong. Foto hero beranda diatur di tab Beranda. Gunakan foto lanskap asli Ransiki, bukan infografis atau gambar berisi teks.'],
         ] as $slot => [$title, $description])
             @php $path = $settings[App\Models\SiteSetting::PHOTO_SLOTS[$slot]]; @endphp
             <x-admin.form-section :title="$title" :description="$description">
@@ -21,7 +23,7 @@
             </x-admin.form-section>
         @endforeach
 
-        <x-admin.form-section title="Foto bidang usaha" description="Opsional. Dipakai di kartu produk unggulan yang belum punya foto. Tersimpan langsung saat diunggah.">
+        <x-admin.form-section title="Foto bidang usaha" description="Dipakai di kartu produk unggulan yang belum punya foto. Tersimpan langsung saat diunggah.">
             <ul class="divide-y divide-line">
                 @foreach ($sectors as $sector)
                     <li class="space-y-3 py-4 first:pt-0 last:pb-0" x-data="{ open: false }">
@@ -52,7 +54,6 @@
         <form method="POST" action="{{ route('admin.content.update') }}" class="space-y-6">
             @csrf
             @method('PUT')
-            <x-form-errors />
 
             <x-admin.form-section title="Keterangan foto sampul" description="Tampil di bawah foto sampul bila foto itu dipakai.">
                 <div class="grid gap-5 md:grid-cols-2">
@@ -71,10 +72,10 @@
                         <x-textarea name="office_address" rows="2" :value="$settings['office_address']" />
                     </x-field>
                     <x-field label="Telepon" for="office_phone" optional>
-                        <x-input name="office_phone" type="tel" inputmode="tel" :value="$settings['office_phone']" maxlength="30" />
+                        <x-input name="office_phone" type="tel" inputmode="tel" :value="$settings['office_phone']" maxlength="30" placeholder="08xx xxxx xxxx" />
                     </x-field>
                     <x-field label="WhatsApp" for="office_whatsapp" hint="Mis. 0812-0000-0000; tautan WhatsApp dibuat otomatis." optional>
-                        <x-input name="office_whatsapp" type="tel" inputmode="tel" :value="$settings['office_whatsapp']" maxlength="30" />
+                        <x-input name="office_whatsapp" type="tel" inputmode="tel" :value="$settings['office_whatsapp']" maxlength="30" placeholder="08xx xxxx xxxx" />
                     </x-field>
                     <x-field label="Email" for="office_email" optional>
                         <x-input name="office_email" type="email" :value="$settings['office_email']" maxlength="255" />
@@ -87,5 +88,5 @@
 
             <x-admin.form-bar :cancel="url()->current()" submit="Simpan konten" />
         </form>
-    </div>
+    </x-admin.form-layout>
 </x-layouts.app>

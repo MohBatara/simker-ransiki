@@ -10,6 +10,7 @@
         <x-admin.organization-header
             :organization="$organization"
             :links="['produk' => route('kelompok.products.index'), 'izin' => route('kelompok.licenses.index'), 'laporan' => route('kelompok.reports.index')]"
+            :edit-url="auth()->user()->can('update', $organization) ? route('kelompok.profile.edit') : null"
         >
             @can('update', $organization)
                 <x-slot:actions>

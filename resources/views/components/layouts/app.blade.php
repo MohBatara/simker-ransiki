@@ -218,8 +218,16 @@
                     @unless ($ownHeading)
                         <h1 class="sr-only">{{ $title }}</h1>
                     @endunless
-                    @if ($tools !== '')
-                        <div class="mb-5 hidden items-center justify-end gap-2 md:flex">{!! $tools !!}</div>
+                    {{-- Tanpa kepala halaman (detail kelompok): remah di kiri dan cari + lonceng di kanan pada SATU baris. --}}
+                    @if ($tools !== '' || $breadcrumbs)
+                        <div class="mb-4 hidden min-h-(--control-h) items-center justify-between gap-4 md:flex">
+                            @if ($breadcrumbs)
+                                <x-breadcrumbs :items="$breadcrumbs" class="min-w-0" />
+                            @else
+                                <span></span>
+                            @endif
+                            <div class="flex shrink-0 items-center gap-2">{!! $tools !!}</div>
+                        </div>
                     @endif
                     {{ $lead ?? '' }}
                 @else

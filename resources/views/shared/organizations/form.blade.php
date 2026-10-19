@@ -35,16 +35,16 @@
             <x-input name="leader_name" :value="$organization->leader_name" maxlength="255" />
         </x-field>
         <x-field label="Nomor telepon" for="phone" optional>
-            <x-input name="phone" type="tel" inputmode="tel" :value="$organization->phone" maxlength="30" />
+            <x-input name="phone" type="tel" inputmode="tel" :value="$organization->phone" maxlength="30" placeholder="08xx xxxx xxxx" autocomplete="tel" />
         </x-field>
         <x-field label="Email" for="email" optional>
             <x-input name="email" type="email" :value="$organization->email" maxlength="255" />
         </x-field>
         <x-field label="Tahun berdiri" for="founded_year" optional>
-            <x-input name="founded_year" type="number" inputmode="numeric" min="1900" :max="now()->year" :value="$organization->founded_year" />
+            <x-input name="founded_year" type="text" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" placeholder="2016" :value="$organization->founded_year" class="md:max-w-32" />
         </x-field>
         <x-field label="Jumlah anggota" for="members_count" hint="Isi 0 bila memang tidak ada. Kosongkan bila belum diketahui." optional>
-            <x-input name="members_count" type="number" inputmode="numeric" min="0" :value="$organization->members_count" />
+            <x-input name="members_count" type="number" inputmode="numeric" min="0" :value="$organization->members_count" class="md:max-w-40" />
         </x-field>
         <x-field label="Alamat" for="address" class="md:col-span-2" optional>
             <x-textarea name="address" rows="2" :value="$organization->address" />
@@ -86,7 +86,7 @@
             <x-textarea name="markets" rows="2" :value="$organization->markets" />
         </x-field>
         <x-field label="Jumlah tenaga kerja" for="workforce_count" hint="Kosongkan bila belum diketahui." optional>
-            <x-input name="workforce_count" type="number" inputmode="numeric" min="0" :value="$organization->workforce_count" />
+            <x-input name="workforce_count" type="number" inputmode="numeric" min="0" :value="$organization->workforce_count" class="md:max-w-40" />
         </x-field>
         <div class="hidden md:block"></div>
         <x-field label="Aset" for="assets" optional>

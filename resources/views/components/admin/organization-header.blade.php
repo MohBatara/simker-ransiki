@@ -1,37 +1,56 @@
 @props([
     'organization',
-    'breadcrumbs' => null,
     // Strip 4 angka ringkas di bawah kepala (butuh *_count dari loadCount).
     'stats' => true,
     // Tautan angka (null = tanpa tautan).
     'links' => [],
+    // Tujuan "lengkapi di Ubah profil" pada kartu Anggota yang kosong.
+    'editUrl' => null,
 ])
 
 @use('App\Support\Format')
+@use('App\Enums\ProfileStatus')
+
+@php
+    $user = auth()->user();
+    $sectors = $organization->sectors->pluck('name')->join(', ');
+    $canVerify = $user && ! $user->isKelompok() && $organization->profile_status !== ProfileStatus::Verified && $user->can('verifyProfile', $organization);
+    $licenses = (int) $organization->licenses_count;
+@endphp
 
 {{--
-    Kepala detail kelompok (Admin/OPD) dan Profil Kelompok: inisial, nama, jenis + kampung, badge status, lencana
-    verifikasi profil, aksi di kanan (slot "actions"; slot "menu" = isi menu "…"). Di bawahnya strip 4 x-admin.stat ringkas:
-    anggota, produk, izin terbit, laporan terverifikasi.
+    Kepala detail kelompok (Admin/OPD) dan Profil Kelompok: avatar 56px, nama 24px (maks 2 baris), subjudul "Jenis · Kampung"
+    + bidang usaha berikon (teks, bukan chip), lalu pil status kelompok dan status verifikasi profil (+ "Tandai
+    terverifikasi" bagi Admin/OPD yang berhak). Aksi di kanan sejajar nama (slot "actions"; slot "menu" = isi menu "…").
+    Di bawahnya strip 4 x-admin.stat ringkas: anggota, produk, izin terbit, laporan terverifikasi.
 --}}
 <div {{ $attributes->class('space-y-6') }}>
     <header class="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-        <div class="flex min-w-0 flex-1 gap-4">
-            <x-avatar :name="$organization->name" size="xl" class="max-sm:hidden" />
+        <div class="flex min-w-0 flex-1 items-start gap-4">
+            <x-avatar :name="$organization->name" size="xl" class="size-14! text-page-title! max-sm:hidden" />
             <div class="min-w-0">
-                @if ($breadcrumbs)
-                    <x-breadcrumbs :items="$breadcrumbs" class="mb-2" />
-                @endif
-                <h1 class="text-admin-title font-semibold text-ink">{{ $organization->name }}</h1>
-                <p class="mt-1 text-ui text-ink-soft md:text-body">
-                    {{ $organization->institutionType->name }} <span aria-hidden="true">·</span> {{ $organization->village->name }}, Distrik Ransiki
+                <h1 class="line-clamp-2 text-[1.5rem] leading-8 font-semibold text-ink" title="{{ $organization->name }}">{{ $organization->name }}</h1>
+                <p class="mt-1 flex flex-wrap items-center gap-x-4 gap-y-1 text-caption text-ink-2">
+                    <span>{{ $organization->institutionType->name }} <span aria-hidden="true">·</span> {{ $organization->village->name }}</span>
+                    @if ($sectors !== '')
+                        <span class="inline-flex items-center gap-1.5">
+                            <x-heroicon-o-squares-2x2 class="size-4 shrink-0 text-ink-faint" aria-hidden="true" />
+                            <span class="sr-only">Bidang usaha:</span>{{ $sectors }}
+                        </span>
+                    @endif
                 </p>
                 <div class="mt-3 flex flex-wrap items-center gap-2" aria-label="Status kelompok">
                     <x-admin.badge-status :status="$organization->status" />
                     <x-admin.badge-status :status="$organization->profile_status" />
-                    @foreach ($organization->sectors as $sector)
-                        <span class="inline-flex items-center rounded-full border border-line bg-paper px-2.5 py-0.5 text-caption text-ink-soft">{{ $sector->name }}</span>
-                    @endforeach
+                    @if ($canVerify)
+                        <form method="POST" action="{{ route($user->role->area().'.organizations.verify-profile', $organization) }}">
+                            @csrf
+                            <button type="submit" data-processing="Menyimpan…" class="inline-flex h-11 items-center gap-1 rounded-pill px-1.5 text-label font-medium text-brand underline underline-offset-4 hover:text-brand-hover md:h-6">
+                                <x-heroicon-o-check-badge class="size-4" aria-hidden="true" />
+                                <span data-button-label>Tandai terverifikasi</span>
+                            </button>
+                        </form>
+                    @endif
                 </div>
             </div>
         </div>
@@ -42,8 +61,8 @@
                 @isset($menu)
                     <x-dropdown width="w-60">
                         <x-slot:trigger>
-                            <x-button variant="secondary" x-bind:aria-expanded="open" aria-haspopup="menu" class="px-3" aria-label="Tindakan lain">
-                                <x-heroicon-o-ellipsis-horizontal class="size-5" />
+                            <x-button variant="secondary" x-bind:aria-expanded="open" aria-haspopup="menu" class="px-2.5" aria-label="Tindakan lain">
+                                <x-heroicon-o-ellipsis-vertical class="size-5" />
                             </x-button>
                         </x-slot:trigger>
                         {{ $menu }}
@@ -55,9 +74,12 @@
 
     @if ($stats)
         <div class="grid grid-cols-2 gap-4 xl:grid-cols-4">
-            <x-admin.stat compact icon="user-group" label="Anggota" :value="Format::number($organization->members_count)" :hint="$organization->members_count === null ? 'lengkapi di Ubah profil' : 'orang'" />
+            <x-admin.stat compact icon="user-group" label="Anggota" :value="Format::number($organization->members_count)"
+                :hint="$organization->members_count === null ? 'lengkapi di Ubah profil' : 'orang'"
+                :hint-href="$organization->members_count === null ? $editUrl : null" />
             <x-admin.stat compact icon="cube" label="Produk" :value="Format::number($organization->products_count)" hint="produk terdaftar" :href="$links['produk'] ?? null" />
-            <x-admin.stat compact icon="document-check" label="Izin terbit" :value="Format::number($organization->issued_licenses_count)" :hint="'dari '.Format::number($organization->licenses_count).' izin'" :href="$links['izin'] ?? null" />
+            <x-admin.stat compact icon="document-check" label="Izin terbit" :value="Format::number($organization->issued_licenses_count)"
+                :hint="$licenses === 0 ? 'belum ada izin tercatat' : 'dari '.Format::number($licenses).' izin tercatat'" :href="$links['izin'] ?? null" />
             <x-admin.stat compact icon="clipboard-document-check" label="Laporan terverifikasi" :value="Format::number($organization->verified_reports_count)" :hint="'dari '.Format::number($organization->monthly_reports_count).' laporan'" :href="$links['laporan'] ?? null" />
         </div>
     @endif

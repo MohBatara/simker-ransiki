@@ -2,7 +2,7 @@
 
 <x-layouts.app
     :title="'Foto '.$type->name"
-    description="Foto kartu jenis kelembagaan di beranda. Opsional."
+    description="Foto kartu jenis kelembagaan di beranda."
     :back="route('admin.master.items', 'jenis-kelembagaan')"
     :breadcrumbs="[['label' => 'Pengaturan', 'href' => route('admin.users.index')], ['label' => 'Data master', 'href' => route('admin.master.items', 'jenis-kelembagaan')], ['label' => 'Foto '.$type->name]]"
     focus
@@ -15,7 +15,7 @@
         x-data="{ preview: null, width: null, pick(event) { const file = event.target.files[0]; this.width = null; this.preview = file ? URL.createObjectURL(file) : null } }"
     >
         @csrf
-        <x-form-errors />
+        <x-admin.form-intro />
 
         <x-admin.form-section title="Foto saat ini" description="Tanpa foto, kartu jenis ini di beranda tampil dengan warna polos.">
             @if ($current)

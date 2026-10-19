@@ -14,9 +14,9 @@ enum ProfileStatus: string
     public function label(): string
     {
         return match ($this) {
-            self::Unverified => 'Belum diverifikasi',
+            self::Unverified => 'Profil belum pernah diverifikasi',
             self::Verified => 'Profil terverifikasi',
-            self::NeedsReview => 'Perlu verifikasi ulang',
+            self::NeedsReview => 'Perubahan menunggu verifikasi',
         };
     }
 }

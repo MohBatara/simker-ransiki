@@ -8,7 +8,9 @@
         <x-button variant="secondary" icon="arrow-top-right-on-square" :href="route('home')" target="_blank" rel="noopener">Lihat beranda</x-button>
     </x-slot:secondary>
 
-    <div class="space-y-6">
+    <x-admin.form-intro class="mb-6" />
+
+    <x-admin.form-layout nav>
         <x-admin.card title="Foto hero" description="Maksimal 3 slide, bergantian setiap 7 detik di bagian atas beranda. Selama belum ada slide yang ditampilkan, beranda memakai foto bawaan.">
             @if ($slides->isEmpty())
                 <p class="text-ui text-ink-soft">Belum ada slide. Tambah slide pertama di bawah.</p>
@@ -121,7 +123,6 @@
         <form method="POST" action="{{ route('admin.content.update') }}" class="space-y-6">
             @csrf
             @method('PUT')
-            <x-form-errors />
 
             <x-admin.form-section title="Judul dan teks beranda" description="Kosongkan untuk memakai teks bawaan.">
                 <div class="grid gap-5 md:grid-cols-2">
@@ -158,5 +159,5 @@
 
             <x-admin.form-bar :cancel="route('admin.content.edit')" submit="Simpan teks" />
         </form>
-    </div>
+    </x-admin.form-layout>
 </x-layouts.app>

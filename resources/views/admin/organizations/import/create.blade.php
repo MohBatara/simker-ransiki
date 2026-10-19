@@ -15,7 +15,7 @@
 
     <form method="POST" action="{{ route('admin.organizations.import.store') }}" enctype="multipart/form-data" class="space-y-6">
         @csrf
-        <x-form-errors />
+        <x-admin.form-intro />
 
         <x-admin.form-section title="1. Unduh template" description="Isi sheet Data, satu baris untuk satu kelompok.">
             <p class="text-ui text-ink-soft">Sheet Petunjuk berisi cara mengisi dan daftar jenis kelembagaan, kampung, bidang usaha, serta OPD yang valid.</p>

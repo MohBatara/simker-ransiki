@@ -6,9 +6,10 @@
     @endcan
 
     <div class="space-y-6">
-        <form method="POST" action="{{ route('kelompok.legal.update') }}">
+        <form method="POST" action="{{ route('kelompok.legal.update') }}" class="space-y-4">
             @csrf
             @method('PATCH')
+            <x-admin.form-intro />
             <x-admin.form-section title="Status legalitas" description="Status hukum kelompok, mis. sudah berbadan hukum atau masih dalam proses.">
                 <div class="grid gap-5 md:grid-cols-2">
                     <x-field label="Status hukum" for="legal_status" required>

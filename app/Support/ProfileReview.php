@@ -10,7 +10,7 @@ use App\Notifications\ProfileNeedsReview;
 use Illuminate\Support\Facades\Notification;
 
 /**
- * Verifikasi profil kelompok. Profil yang sudah diverifikasi menjadi "Perlu verifikasi ulang" bila akun
+ * Verifikasi profil kelompok. Profil yang sudah diverifikasi menjadi "Perubahan menunggu verifikasi" bila akun
  * kelompok mengubah field penting; perubahan oleh Admin/OPD (yang memang berhak memverifikasi) tidak memicu.
  */
 class ProfileReview
@@ -33,7 +33,7 @@ class ProfileReview
      * sampai profil diverifikasi lagi.
      *
      * @param  list<string>  $changed  kolom yang berubah (termasuk "sectors")
-     * @return bool true bila status baru saja berubah menjadi "Perlu verifikasi ulang"
+     * @return bool true bila status baru saja berubah menjadi "Perubahan menunggu verifikasi"
      */
     public static function track(Organization $organization, array $changed, User $actor): bool
     {

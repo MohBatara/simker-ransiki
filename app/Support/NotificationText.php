@@ -33,7 +33,7 @@ class NotificationText
             },
             'report_reminder' => self::reminder($data, $period),
             'possible_duplicate' => self::duplicate($data),
-            'profile_needs_review' => "Profil {$data['organization_name']} diubah kelompok dan perlu verifikasi ulang"
+            'profile_needs_review' => "Profil {$data['organization_name']} diubah kelompok, perubahan menunggu verifikasi"
                 .(empty($data['fields']) ? '.' : ' ('.implode(', ', $data['fields']).').'),
             'issue_follow_up' => (IssueKind::tryFrom($data['issue_kind'] ?? '')?->label() ?? 'Masalah')
                 ." \"{$data['category']}\" dari laporan {$period}: ".mb_strtolower(FollowUpStatus::tryFrom($data['status'] ?? '')?->label() ?? 'diperbarui').'.',

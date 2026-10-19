@@ -46,7 +46,7 @@ test('judul kolom angka dan selnya memakai padding dan perataan yang sama', func
 
 test('perlu dikerjakan: hanya tugas yang ada (tanpa baris angka 0); per OPD di dalam kartu', function () {
     Carbon::setTestNow(Carbon::parse('2026-10-20 12:00:00', 'Asia/Jayapura'));
-    $organization = Organization::factory()->create(['reporting_starts_on' => '2026-07-01']);
+    $organization = Organization::factory()->create(['reporting_starts_on' => '2026-07-01', 'profile_status' => App\Enums\ProfileStatus::Verified]);
     $organization->opds()->attach(Opd::factory()->create());
     User::factory()->kelompok($organization)->create();
     MonthlyReport::factory()->for($organization)->status(ReportStatus::Verified)->create(['period' => '2026-09-01', 'submitted_at' => now()]);

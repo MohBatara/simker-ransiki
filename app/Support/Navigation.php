@@ -37,7 +37,7 @@ class Navigation
             ], ["{$area}.dashboard", "{$area}.statistics.*"], group: 1),
             'kelompok' => self::section($isAdmin ? 'Kelompok' : 'Kelompok binaan', 'user-group', array_filter([
                 ($isAdmin ? 'semua' : 'daftar') => ['label' => $isAdmin ? 'Semua kelompok' : 'Daftar', 'route' => "{$area}.organizations.index"],
-                'profil' => ['label' => 'Menunggu verifikasi profil', 'route' => "{$area}.profile-verifications.index", 'badge' => 'profiles'],
+                'profil' => ['label' => 'Verifikasi profil', 'route' => "{$area}.profile-verifications.index", 'badge' => 'profiles'],
                 'ganda' => $isAdmin ? ['label' => 'Kemungkinan data ganda', 'route' => 'admin.organizations.duplicates.index'] : null,
             ]), ["{$area}.organizations.*", "{$area}.profile-verifications.*"], short: 'Kelompok', badge: 'profiles', group: 2),
             'laporan' => self::section('Laporan', 'document-text', [

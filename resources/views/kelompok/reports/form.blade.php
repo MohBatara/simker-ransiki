@@ -31,6 +31,7 @@
     focus
 >
     <div x-data="reportForm(@js($config))" class="space-y-6">
+        <p class="text-label text-ink-3">Kolom bertanda <span class="text-fix" aria-hidden="true">*</span><span class="sr-only">bintang</span> wajib diisi saat laporan diajukan.</p>
         @include('shared.reports.revision-note', ['fixHint' => true])
 
         @if ($onBehalf)

@@ -21,13 +21,15 @@
         </x-slot:secondary>
     @endif
 
-    <div class="space-y-6">
+    <x-admin.form-intro class="mb-6" />
+
+    {{-- Daftar section hanya untuk form panjang (lebih dari 3 section: Foto sampul baru ada setelah berita disimpan). --}}
+    <x-admin.form-layout :nav="$editing">
         <form id="form-post" method="POST" action="{{ $editing ? route('admin.posts.update', $post) : route('admin.posts.store') }}" class="space-y-6">
             @csrf
             @if ($editing)
                 @method('PUT')
             @endif
-            <x-form-errors />
 
             <x-admin.form-section title="Isi" description="Judul, ringkasan, dan isi berita seperti yang tampil di website.">
                 <div class="space-y-5">
@@ -86,7 +88,7 @@
                 </div>
             </x-admin.form-section>
 
-            <x-admin.form-section title="Kelompok terkait" description="Opsional. Hanya kelompok yang tampil di direktori publik yang ditautkan di halaman berita.">
+            <x-admin.form-section title="Kelompok terkait" description="Hanya kelompok yang tampil di direktori publik yang ditautkan di halaman berita.">
                 <div x-data="{ q: '' }" class="space-y-3">
                     <x-field label="Cari kelompok" for="organization-search" data-no-dirty>
                         <x-input type="search" id="organization-search" x-model="q" placeholder="Ketik nama kelompok atau kampung" autocomplete="off" x-on:keydown.enter.prevent />
@@ -117,7 +119,7 @@
         </form>
 
         @if ($editing)
-            <x-admin.form-section title="Foto sampul" description="Opsional. Tampil di atas berita dan sebagai gambar pratinjau tautan. Tersimpan langsung saat diunggah.">
+            <x-admin.form-section title="Foto sampul" description="Tampil di atas berita dan sebagai gambar pratinjau tautan. Tersimpan langsung saat diunggah.">
                 @if ($sources = $post->coverSources())
                     <img src="{{ $sources['webp'][960] ?? $sources['fallback'] }}" alt="Foto sampul saat ini" class="aspect-[4/3] w-full rounded-tile object-cover md:aspect-[21/9]">
                     <form method="POST" action="{{ route('admin.posts.cover.destroy', $post) }}">
@@ -132,8 +134,9 @@
             <p class="text-caption text-ink-muted">Foto sampul bisa ditambahkan setelah berita disimpan.</p>
         @endif
 
-        <x-admin.form-bar :cancel="route('admin.posts.index')" form="form-post" />
-    </div>
+    </x-admin.form-layout>
+
+    <x-admin.form-bar :cancel="route('admin.posts.index')" form="form-post" />
 
     @if ($editing)
         <x-admin.confirm name="delete-post" title="Hapus berita" :action="route('admin.posts.destroy', $post)" method="DELETE" confirm="Hapus" processing="Menghapus…">

@@ -108,6 +108,6 @@ test('notifikasi verifikasi ulang membuka tab Riwayat kelompok', function () {
     $this->actingAs($this->kelompok)->put('/kelompok/profil', ($this->profile)(['leader_name' => 'Ketua Baru']));
 
     $notification = $this->opdUser->notifications()->sole();
-    $this->actingAs($this->opdUser)->get('/notifikasi')->assertSee('Profil KUB Contoh Verifikasi diubah kelompok dan perlu verifikasi ulang (Ketua).');
+    $this->actingAs($this->opdUser)->get('/notifikasi')->assertSee('Profil KUB Contoh Verifikasi diubah kelompok, perubahan menunggu verifikasi (Ketua).');
     $this->get("/notifikasi/{$notification->id}")->assertRedirect("/opd/kelompok/{$this->organization->id}/riwayat");
 });

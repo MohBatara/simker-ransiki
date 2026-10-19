@@ -461,6 +461,42 @@ Alpine.data('organizationPanel', (initiallyOpen = false) => ({
 }));
 
 /**
+ * Daftar section form panjang (x-admin.form-layout nav): dibangun dari [data-form-section] di dalam form, klik melompat
+ * ke section (gulir halus kecuali prefers-reduced-motion), section aktif ditandai saat menggulir (IntersectionObserver).
+ */
+Alpine.data('formNav', () => ({
+    sections: [],
+    active: null,
+    observer: null,
+
+    init() {
+        const elements = [...this.$root.querySelectorAll('[data-form-section]')];
+        this.sections = elements.map((element) => ({ id: element.id, title: element.dataset.title }));
+        this.active = this.sections[0]?.id ?? null;
+
+        this.observer = new IntersectionObserver((entries) => {
+            const visible = entries.filter((entry) => entry.isIntersecting).sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
+            if (visible.length) {
+                this.active = visible[0].target.id;
+            }
+        }, { rootMargin: '-15% 0px -60% 0px' });
+        elements.forEach((element) => this.observer.observe(element));
+    },
+
+    go(event, id) {
+        event.preventDefault();
+        const smooth = !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        document.getElementById(id)?.scrollIntoView({ behavior: smooth ? 'smooth' : 'auto', block: 'start' });
+        this.active = id;
+        history.replaceState(null, '', '#' + id);
+    },
+
+    destroy() {
+        this.observer?.disconnect();
+    },
+}));
+
+/**
  * Pilihan satuan (komponen x-unit-input). "value" adalah satuan akhir yang dihubungkan ke x-model luar
  * lewat x-modelable; satuan yang tidak ada di daftar ditampilkan sebagai "lainnya" + teks aslinya.
  */
@@ -544,7 +580,9 @@ document.addEventListener('submit', (event) => {
 // Form yang gagal divalidasi: fokus ke isian pertama yang salah (ringkasan x-form-errors ada di atasnya).
 document.addEventListener('DOMContentLoaded', () => {
     if (document.querySelector('[data-form-errors]')) {
-        document.querySelector('[aria-invalid="true"]')?.focus();
+        const first = document.querySelector('[aria-invalid="true"]');
+        first?.focus({ preventScroll: true });
+        first?.scrollIntoView({ block: 'center' });
     }
 });
 

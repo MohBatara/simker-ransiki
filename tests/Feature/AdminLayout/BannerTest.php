@@ -72,7 +72,7 @@ test('peran Kelompok memakai kepala terang yang sama dengan Admin/OPD, tanpa ban
             ->assertDontSee('app-band', false);
     }
 
-    $this->get('/kelompok/profil')->assertSee('text-admin-title font-semibold', false)->assertSee('Laporan terverifikasi');
+    $this->get('/kelompok/profil')->assertSee('line-clamp-2 text-[1.5rem] leading-8 font-semibold', false)->assertSee('Laporan terverifikasi');
 });
 
 test('detail kelompok Admin: inisial, judul, jenis dan kampung, badge status dan verifikasi, lalu aksi di kanan', function () {

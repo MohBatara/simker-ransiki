@@ -2,7 +2,11 @@
 <form method="POST" action="{{ route('account.password.update') }}" class="space-y-4">
     @csrf
     @method('PUT')
-    <x-form-errors />
+    @if ($page ?? false)
+        <x-admin.form-intro />
+    @else
+        <x-form-errors />
+    @endif
     @if ($page ?? false)
         <x-admin.form-section title="Ganti kata sandi" description="Minimal 8 karakter dan berbeda dari kata sandi saat ini.">
             @include('account._password-fields')

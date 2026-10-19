@@ -40,7 +40,7 @@ test('detail kelompok: badge status (pil lembut) di samping judul, tag, ringkasa
         ->assertSee('Ringkasan')
         ->assertSee('DPC')
         ->assertSee("/admin/laporan/{$report->id}?dari=kelompok", false)
-        ->assertSee('2 produk')
+        ->assertSeeInOrder(['Produk', '2', 'produk terdaftar'])
         ->assertSee('belum punya akun')
         ->assertSee('/admin/pengaturan/pengguna/tambah?kelompok='.$organization->id, false)
         ->getContent();
@@ -74,7 +74,7 @@ test('form laporan: label ringkasan berubah bila tidak ada aktivitas, dan steppe
     $report = MonthlyReport::factory()->for($organization)->create(['period' => '2026-09-01']);
 
     $this->actingAs(User::factory()->kelompok($organization)->create())->get("/kelompok/laporan/{$report->id}/ubah")->assertOk()
-        ->assertSee('x-text="data.no_activity ? &#039;Keterangan (opsional)&#039; : &#039;Ringkasan aktivitas&#039;"', false)
+        ->assertSee('x-text="data.no_activity ? &#039;Keterangan&#039; : &#039;Ringkasan aktivitas&#039;"', false)
         ->assertSee('aria-label="Bagian laporan"', false)
         ->assertSee("needsAttention(item.key) ? 'Perlu dilengkapi' : 'Lengkap'", false);
 });

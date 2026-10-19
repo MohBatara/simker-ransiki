@@ -296,15 +296,18 @@ Jangan mengarang kepanjangan akronim resmi (KDMP, KNMP, dsb.). Simpan apa adanya
   from_status, to_status, reason, created_at (tidak pernah diubah); tampil di kartu "Publikasi & pelaporan"
   tab Profil (Admin/OPD saja). `closed`: tidak bisa membuat laporan baru, tidak wajib lapor, tidak tampil
   publik, data tetap terlihat Admin/OPD. `inactive`: tetap bisa masuk dan tetap wajib lapor.
-- Verifikasi profil (Paket 5): `profile_status` (enum ProfileStatus: unverified "Belum diverifikasi", verified
-  "Profil terverifikasi", needs_review "Perlu verifikasi ulang"), `profile_verified_at`, `profile_verified_by`,
+- Verifikasi profil (Paket 5): `profile_status` (enum ProfileStatus: unverified "Profil belum pernah diverifikasi", verified
+  "Profil terverifikasi", needs_review "Perubahan menunggu verifikasi"), `profile_verified_at`, `profile_verified_by`,
   `profile_changed_fields` (json, kolom yang berubah sejak verifikasi), `profile_changed_at`. Admin/OPD pembina
-  menandai terverifikasi dari kartu "Publikasi & pelaporan" (`POST /{area}/kelompok/{id}/verifikasi-profil`, Policy
+  menandai terverifikasi lewat "Tandai terverifikasi" di kepala detail kelompok atau menu titik tiga antrean
+  (`POST /{area}/kelompok/{id}/verifikasi-profil`, Policy
   `verifyProfile`). Bila AKUN KELOMPOK mengubah field penting (`App\Support\ProfileReview::FIELDS`: nama, jenis,
   kampung, ketua, telepon, email, alamat, deskripsi, bidang usaha) pada profil terverifikasi → needs_review +
   notifikasi `ProfileNeedsReview` ke akun OPD pembina aktif (tanpa OPD → Admin), sekali saat status berubah.
   Perubahan oleh Admin/OPD atau field lain tidak memicu. Dicek di `SaveOrganization` (satu-satunya jalur ubah
-  profil). Antrean "Menunggu verifikasi profil" `/{area}/kelompok/verifikasi-profil` (tab menu Kelompok) (visibleTo, tanpa kelompok `closed`).
+  profil). Tab "Verifikasi profil" `/{area}/kelompok/verifikasi-profil` = SATU definisi `Organization::profileReviewQueue`
+  (needs_review DAN unverified, visibleTo, tanpa kelompok `closed`; perubahan menunggu dulu, lalu yang belum pernah
+  diverifikasi); badge menu Kelompok dan tugas dasbor "N profil menunggu verifikasi" memakai hitungan yang sama.
 - `change_logs` (riwayat, tidak pernah diubah): id, organization_id, loggable_type (alias morph), loggable_id,
   subject ("Profil", "Produk: Kakao", "Izin: PIRT"), action (enum ChangeAction: created, updated, deleted), field,
   old_value, new_value (teks siap tampil: nama kampung, label enum, Ya/Tidak), user_id (NULL = "Sistem"), created_at.
@@ -648,13 +651,13 @@ di bawah header (garis bawah `brand` pada tab aktif, angka kecil di tab antrean,
 | Menu | Tab (URL) |
 |---|---|
 | Dasbor | Ringkasan `/admin` · Ekonomi `/admin/dasbor/ekonomi` · Legalitas `/admin/dasbor/legalitas` |
-| Kelompok | Semua kelompok `/admin/kelompok` · Menunggu verifikasi profil `/admin/kelompok/verifikasi-profil` · Kemungkinan data ganda `/admin/kelompok/data-ganda` |
+| Kelompok | Semua kelompok `/admin/kelompok` · Verifikasi profil `/admin/kelompok/verifikasi-profil` · Kemungkinan data ganda `/admin/kelompok/data-ganda` |
 | Laporan | Semua laporan `/admin/laporan` · Perlu diverifikasi `/admin/laporan/verifikasi` · Masalah & kebutuhan `/admin/laporan/masalah` |
 | Website | Konten Beranda `/admin/website` · Profil Ransiki `/admin/website/profil` · Halaman & kontak `/admin/website/halaman` · Berita & kegiatan `/admin/website/berita` |
 | Pengaturan | Pengguna `/admin/pengaturan/pengguna` · Data master `/admin/pengaturan/data-master` (Kampung, Jenis Kelembagaan, Bidang Usaha, OPD) |
 
-**OPD** (3 menu, pola sama, `/opd/...`): Dasbor (Ringkasan · Ekonomi · Legalitas) · Kelompok binaan (Daftar · Menunggu
-verifikasi profil) · Laporan (Semua laporan · Perlu diverifikasi · Masalah & kebutuhan).
+**OPD** (3 menu, pola sama, `/opd/...`): Dasbor (Ringkasan · Ekonomi · Legalitas) · Kelompok binaan (Daftar · Verifikasi
+profil) · Laporan (Semua laporan · Perlu diverifikasi · Masalah & kebutuhan).
 
 - Sidebar Admin/OPD hanya berisi menu di atas; Notifikasi (lonceng) ada di kepala halaman, Akun saya di menu profil bawah sidebar.
 - Navigasi bawah HP: Admin = Dasbor · Kelompok · Laporan · Website · Lainnya (Pengaturan, Notifikasi, Akun Saya);
@@ -1012,21 +1015,31 @@ atau banner foto di area aplikasi. `x-tabs` hanya untuk tab dalam halaman (panel
 - Grafik (`resources/js/charts.js`): label sumbu 11px `ink-3`, grid putus-putus tipis `line`, titik di tiap bulan, sumbu
   rupiah "Rp 50 jt".
 - `x-chart` memakai `x-admin.card`.
-- Kepala detail kelompok (`x-admin.organization-header`, Admin/OPD dan Profil Kelompok): inisial (`x-avatar size="xl"`,
-  belum ada kolom foto profil kelompok), nama, jenis + kampung, badge status + lencana verifikasi profil + pil bidang
-  usaha, aksi di kanan (tombol tambah sesuai tab, Ubah profil, menu "…" Admin: Tambah akun, Ubah status, Hapus), lalu
-  strip 4 `x-admin.stat compact` (anggota, produk, izin terbit, laporan terverifikasi; hitungan `issued_licenses_count`
-  dan `verified_reports_count` dari `loadCount`). Detail memakai `:header="false" own-heading`.
+- Kepala detail kelompok (`x-admin.organization-header`, Admin/OPD dan Profil Kelompok): remah di kiri pada baris yang
+  sama dengan tombol cari dan lonceng (layout `:header="false"` + `breadcrumbs`), lalu avatar inisial 56px (belum ada
+  kolom foto profil kelompok), nama 24px semibold maks 2 baris, subjudul "Jenis · Kampung" + bidang usaha berikon (teks,
+  bukan chip), pil status kelompok + pil status verifikasi profil (+ "Tandai terverifikasi" bagi yang berhak), aksi di
+  kanan sejajar nama (tombol tambah sesuai tab, Ubah profil, menu titik tiga Admin: Tambah akun, Ubah status, Hapus).
+  Lalu strip 4 `x-admin.stat compact` (anggota: kosong = "Belum diisi" 15px + tautan "lengkapi di Ubah profil"; produk;
+  izin terbit "dari N izin tercatat" / "belum ada izin tercatat"; laporan terverifikasi; hitungan dari `loadCount`).
 - Ikon kecil `brand` di judul kartu (`x-admin.card icon`) dan ikon tab (`x-admin.tabs` `icon`) HANYA di detail
   kelompok/Profil Kelompok. Ikon dalam kotak `brand-50` di `x-admin.stat`, `x-admin.empty`, kotak dasbor; dalam
   lingkaran di `x-info-item` dan kotak unggah.
 
 ### Form (pola seragam)
 - Semua form tambah/ubah halaman penuh (kelompok, pengguna, berita, konten Website, foto jenis, impor, Akun Saya,
-  status legalitas Kelompok, form laporan): dibagi kartu `x-admin.form-section` (judul 15px + satu kalimat petunjuk di kiri 4 kolom,
-  isian di kanan 8 kolom mulai 1024px; bertumpuk di HP/tablet; slot `aside` di bawah petunjuk, `footer` untuk tombol
-  simpan section). Label 13px medium di atas isian, bantuan 12px, tanda wajib `*` merah lewat `x-field required` (wajib bersyarat di form Alpine:
-  `required-if="ekspresi JS"`), keterangan kecil lalu error merah di bawah isian.
+  status legalitas Kelompok, form laporan): `x-admin.form-intro` di atas form ("Kolom bertanda * wajib diisi." + ringkasan
+  "Ada N isian yang perlu diperbaiki"; halaman menggulir dan fokus ke isian salah pertama), lalu kartu
+  `x-admin.form-section` (judul 15px + satu kalimat petunjuk di kolom kiri 280px, isian di kanan maks 720px mulai
+  1024px; bertumpuk di HP/tablet; slot `aside`, `footer` untuk tombol simpan section). TIDAK ada label "(opsional)":
+  hanya isian wajib diberi `*` merah lewat `x-field required` (wajib bersyarat di form Alpine: `required-if`). Label
+  13px medium, bantuan 12px, error merah di bawah isian yang berbingkai merah. Isian pendek tidak selebar penuh (tahun,
+  jumlah); telepon `type="tel"` placeholder "08xx xxxx xxxx", tahun berdiri 4 digit placeholder "2016". Remah form:
+  "Kelompok > Tambah kelompok", "Kelompok > Nama > Ubah profil", "Pengguna > Tambah akun".
+- Form panjang (lebih dari 3 section; kelompok, berita yang sudah disimpan, konten Website): `x-admin.form-layout nav` =
+  daftar section menempel di kolom kiri 280px (Alpine `formNav`, klik melompat, section aktif ditandai saat menggulir;
+  disembunyikan di HP), kartu section maks 720px dengan judul di atas isian. Modal (produk, izin, data master, isi
+  laporan) juga diawali kalimat kolom wajib.
 - `x-admin.form-bar`: bar aksi menempel di bawah layar (semua ukuran): Batal (sekunder) + Simpan (utama), info
   "Perubahan belum disimpan" setelah isian berubah, dan peringatan browser saat meninggalkan halaman (Alpine `formGuard`,
   `resources/js/form-guard.js`; isian ber-`data-no-dirty` diabaikan; prop `form` bila bar di luar `<form>`). Halaman
@@ -1050,9 +1063,11 @@ atau banner foto di area aplikasi. `x-tabs` hanya untuk tab dalam halaman (panel
   membuka laci sejak awal. Panel baris pertama tetap dirender di server. Layar lebih kecil membuka halaman detail. Aksi:
   Tambah kelompok (utama, Admin), Unduh Excel + Impor (sekunder).
 - Detail: kepala `x-admin.organization-header` (lihat pola halaman) → `x-admin.tabs` berikon dengan angka, urutan Profil ·
-  Produk · Izin · Laporan · Akun (Admin) · Riwayat → tab Profil: Ringkasan, Informasi umum, Lokasi (tombol "Buka di Google Maps" dari
-  pencarian alamat, tanpa peta tertanam), Deskripsi, Foto (foto produk lalu lampiran gambar), Publikasi & pelaporan,
-  Dokumen. Tidak menambah kolom baru tanpa persetujuan.
+  Produk · Izin · Laporan · Akun (Admin) · Riwayat → tab Profil tanpa mengulang isi kepala (nama, jenis, status,
+  kampung, distrik, bidang usaha), grid kiri 8 / kanan 4 kolom dengan jarak 20px: kiri Informasi umum (Ketua, Telepon,
+  Email, Tahun berdiri, Jumlah anggota), Usaha dan sumber daya, Deskripsi, Foto; kanan Lokasi (Alamat + tombol "Buka di
+  Google Maps" dari pencarian alamat, tanpa peta tertanam), Ringkasan (laporan terakhir, OPD pembina), Publikasi &
+  pelaporan; lalu Dokumen. Data kosong "Belum diisi". Tidak menambah kolom baru tanpa persetujuan.
 
 ### Tabel dan kartu daftar
 - Tidak ada tombol "Buka" per baris. Baris yang punya halaman detail bisa diklik seluruhnya:

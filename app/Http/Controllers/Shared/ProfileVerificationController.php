@@ -8,8 +8,8 @@ use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 /**
- * "Profil menunggu verifikasi" (Admin dan OPD): kelompok yang profilnya diubah setelah diverifikasi.
- * Isi dibatasi Organization::visibleTo; kelompok yang ditutup tidak masuk antrean.
+ * Tab "Verifikasi profil" (Admin dan OPD): Organization::profileReviewQueue. Perubahan menunggu verifikasi lebih dulu
+ * (paling lama diubah di atas), lalu profil yang belum pernah diverifikasi (urut nama).
  */
 class ProfileVerificationController extends Controller
 {
@@ -17,7 +17,9 @@ class ProfileVerificationController extends Controller
     {
         $organizations = Organization::profileReviewQueue($request->user())
             ->with(['village:id,name', 'institutionType:id,name'])
+            ->orderByRaw('profile_status = ? desc', [\App\Enums\ProfileStatus::NeedsReview->value])
             ->orderBy('profile_changed_at')
+            ->orderBy('name')
             ->paginate(20);
 
         return view('shared.organizations.profile-queue', [
