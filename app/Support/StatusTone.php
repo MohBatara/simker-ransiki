@@ -14,12 +14,12 @@ use BackedEnum;
 
 /**
  * SATU peta warna status untuk x-admin.badge-status: success (terverifikasi, aktif, terbit), warning (menunggu,
- * diproses), orange (perlu revisi, perlu perbaikan), danger (terlambat, ditutup, tidak dapat), neutral (draf, belum ada,
- * tidak aktif). Status baru wajib ditambahkan di sini.
+ * diproses), info (tindak lanjut berjalan), danger (perlu revisi, perlu perbaikan, terlambat, ditutup, tidak dapat),
+ * neutral (draf, belum ada, tidak aktif). Status baru wajib ditambahkan di sini.
  */
 class StatusTone
 {
-    public const TONES = ['success', 'warning', 'orange', 'danger', 'neutral'];
+    public const TONES = ['success', 'warning', 'info', 'danger', 'neutral'];
 
     public static function of(BackedEnum $status): string
     {
@@ -28,10 +28,11 @@ class StatusTone
             ProfileStatus::Verified, LegalStatus::Registered, FollowUpStatus::Done, PostStatus::Published => 'success',
 
             ReportStatus::Submitted, ReportingState::Submitted, LicenseStatus::InProcess, LegalStatus::InProcess,
-            ProfileStatus::NeedsReview, FollowUpStatus::Reviewed, FollowUpStatus::Planned, FollowUpStatus::InProgress => 'warning',
+            ProfileStatus::NeedsReview => 'warning',
 
-            ReportStatus::Revision, ReportingState::Revision, LicenseStatus::NeedsFix => 'orange',
+            FollowUpStatus::Reviewed, FollowUpStatus::Planned, FollowUpStatus::InProgress => 'info',
 
+            ReportStatus::Revision, ReportingState::Revision, LicenseStatus::NeedsFix,
             ReportingState::Overdue, OrganizationStatus::Closed, FollowUpStatus::Unable => 'danger',
 
             default => 'neutral',

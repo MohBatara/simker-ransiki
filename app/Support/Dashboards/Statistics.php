@@ -85,21 +85,30 @@ class Statistics
     }
 
     /**
-     * Grafik ringkas tab Ringkasan dasbor Admin/OPD (tanpa filter): tren pendapatan 12 bulan dan kepatuhan pelaporan
-     * 6 bulan terakhir, keduanya sampai bulan wajib lapor dan dipotong di kewajiban lapor paling awal. Angkanya sama
-     * dengan tab Ekonomi untuk bulan yang sama.
+     * Kartu Ekonomi tab Ringkasan dasbor Admin/OPD (tanpa filter): penjualan, pendapatan lain, biaya, dan laba per bulan
+     * untuk N bulan sampai periode terpilih, dipotong di kewajiban lapor paling awal. Baris terakhir = periode terpilih.
      *
-     * @return array{incomeTrend: Collection, compliance: Collection}
+     * @return Collection<int, array{period: CarbonImmutable, reports: int, obligated: int, provisional: bool, totals: array}>
      */
-    public static function overview(User $user, ?CarbonImmutable $earliest): array
+    public static function recentEconomy(User $user, CarbonImmutable $period, ?CarbonImmutable $earliest, int $months = 6): Collection
     {
-        [$from, $to] = self::resolveRange(null, null, $earliest);
-        $recentFrom = $to->subMonthsNoOverflow(5);
+        $from = $period->subMonthsNoOverflow($months - 1);
+        $from = $earliest && $earliest->gt($from) && $earliest->lte($period) ? $earliest : $from;
 
-        return [
-            'incomeTrend' => (new self($user, [], $from, $to))->incomeTrend(),
-            'compliance' => (new self($user, [], $recentFrom->max($from), $to))->compliance(),
-        ];
+        return (new self($user, [], $from, $period))->economyTrend();
+    }
+
+    /**
+     * Perubahan persen dibanding bulan sebelumnya. Null bila salah satu bulan tanpa laporan terverifikasi yang mengisi
+     * angka itu, atau angka bulan sebelumnya nol (persen tidak bermakna).
+     */
+    public static function change(?int $current, ?int $previous): ?int
+    {
+        if ($current === null || $previous === null || $previous === 0) {
+            return null;
+        }
+
+        return (int) round(($current - $previous) / abs($previous) * 100);
     }
 
     public function filters(): array
@@ -178,6 +187,43 @@ class Statistics
                 'reports' => $reports,
                 'obligated' => $obligated[$month->format('Y-m')],
                 'provisional' => self::isProvisional($month, $reports, $obligated[$month->format('Y-m')]),
+            ];
+        });
+    }
+
+    /**
+     * Angka ekonomi per bulan dari laporan terverifikasi (penjualan, pendapatan lain, biaya, laba). Untuk setiap angka:
+     * jumlah (null bila tidak ada yang mengisi, bukan 0) dan berapa laporan yang mengisinya.
+     *
+     * @return Collection<int, array{period: CarbonImmutable, reports: int, obligated: int, provisional: bool, totals: array<string, array{sum: ?int, filled: int}>}>
+     */
+    public function economyTrend(): Collection
+    {
+        $fields = ['income_sales', 'income_other', 'costs', 'profit'];
+        $rows = $this->verifiedReports()->toBase()
+            ->groupBy('monthly_reports.period')
+            ->selectRaw('monthly_reports.period as period, COUNT(*) as reports')
+            ->addSelect(collect($fields)->flatMap(fn (string $field) => [
+                DB::raw("SUM(monthly_reports.{$field}) as {$field}_sum"),
+                DB::raw("COUNT(monthly_reports.{$field}) as {$field}_filled"),
+            ])->all())
+            ->get()
+            ->keyBy(fn ($row) => substr($row->period, 0, 7));
+        $obligated = $this->obligatedPerMonth();
+
+        return $this->months()->map(function (CarbonImmutable $month) use ($rows, $obligated, $fields) {
+            $row = $rows->get($month->format('Y-m'));
+            $reports = (int) ($row->reports ?? 0);
+
+            return [
+                'period' => $month,
+                'reports' => $reports,
+                'obligated' => $obligated[$month->format('Y-m')],
+                'provisional' => self::isProvisional($month, $reports, $obligated[$month->format('Y-m')]),
+                'totals' => collect($fields)->mapWithKeys(fn (string $field) => [$field => [
+                    'sum' => $row && $row->{$field.'_filled'} > 0 ? (int) $row->{$field.'_sum'} : null,
+                    'filled' => (int) ($row->{$field.'_filled'} ?? 0),
+                ]])->all(),
             ];
         });
     }

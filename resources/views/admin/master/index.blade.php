@@ -28,7 +28,9 @@
             label="Jenis data master"
         />
 
+        <x-admin.card flush>
         <x-admin.toolbar
+            :title="'Daftar '.$type->noun()"
             :action="route('admin.master.items', $type)"
             :search-label="'Cari '.$type->noun()"
             :search="$search"
@@ -40,16 +42,16 @@
         <div data-swap="data-master">
             @if ($items->isEmpty())
                 @if ($search !== '')
-                    <x-admin.empty icon="magnifying-glass" title="Tidak ada hasil" :description="'Tidak ada '.$type->noun().' dengan kata “'.$search.'”. Periksa ejaan atau hapus pencarian.'">
+                    <x-admin.empty bare icon="magnifying-glass" title="Tidak ada hasil" :description="'Tidak ada '.$type->noun().' dengan kata “'.$search.'”. Periksa ejaan atau hapus pencarian.'">
                         <x-button variant="secondary" :href="route('admin.master.items', $type)">Hapus pencarian</x-button>
                     </x-admin.empty>
                 @else
-                    <x-admin.empty icon="rectangle-stack" :title="'Belum ada '.($type->noun())" :description="'Tambahkan '.($type->noun()).' pertama agar bisa dipilih di profil kelompok.'">
+                    <x-admin.empty bare icon="rectangle-stack" :title="'Belum ada '.($type->noun())" :description="'Tambahkan '.($type->noun()).' pertama agar bisa dipilih di profil kelompok.'">
                         <x-button icon="plus" x-on:click="create()">Tambah {{ $type->noun() }}</x-button>
                     </x-admin.empty>
                 @endif
             @else
-                <x-admin.table>
+                <x-admin.table bare>
                     <x-slot:head>
                         <x-admin.table.heading>Nama</x-admin.table.heading>
                         @foreach ($columns as $field)
@@ -76,7 +78,7 @@
                                 @endif
                                 @if ($usage)
                                     {{-- Data master yang dipakai tidak bisa dihapus (FK restrict). --}}
-                                    <p class="border-t border-line px-3 py-2 text-caption text-ink-muted">Tidak bisa dihapus, dipakai {{ $usage }}.</p>
+                                    <p class="border-t border-line-soft px-3 py-2 text-label text-ink-3">Tidak bisa dihapus, dipakai {{ $usage }}.</p>
                                 @else
                                     <x-dropdown.item icon="trash" class="text-fix!" x-on:click="remove({{ Js::from(['id' => $item->id, 'name' => $item->name]) }})">Hapus</x-dropdown.item>
                                 @endif
@@ -90,6 +92,7 @@
                 </x-admin.table>
             @endif
         </div>
+        </x-admin.card>
 
         <x-modal name="record-form" :show="$failed" x-on:close="closed()">
             <x-slot:title>

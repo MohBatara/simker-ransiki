@@ -25,7 +25,7 @@ test('kepala: jenis, kampung, badge status dan verifikasi, bidang usaha, remah, 
         ->assertSeeInOrder([$this->organization->institutionType->name, 'aria-label="Status kelompok"', 'Belum diverifikasi', 'Perkebunan'], false)
         ->assertSeeInOrder(['Anggota', 'Produk', 'Izin terbit', 'Laporan terverifikasi'])
         ->assertSeeInOrder(['Kelompok', $this->organization->name], false)
-        ->assertSeeInOrder(['Akun', '<span class="rounded-full px-2 text-caption tabular-nums bg-subtle text-ink-soft">0</span>'], false);
+        ->assertSeeInOrder(['Akun', '<span class="rounded-pill bg-idle-bg px-1.5 text-label font-medium tabular-nums text-idle">0</span>'], false);
 });
 
 test('tautan Google Maps dibentuk dari alamat dan ter-encode', function () {
@@ -53,10 +53,10 @@ test('kartu foto: foto produk lalu lampiran gambar, PDF tidak ikut', function ()
 test('ikon judul kartu hanya di detail kelompok', function () {
     $this->actingAs($this->admin);
 
-    $this->get("/admin/kelompok/{$this->organization->id}")->assertSee('<h2 class="flex items-center gap-2 text-body font-semibold text-ink">', false)
-        ->assertSee('size-5 shrink-0 text-brand', false);
-    $this->get('/admin')->assertDontSee('size-5 shrink-0 text-brand', false);
-    $this->get('/admin/laporan')->assertDontSee('size-5 shrink-0 text-brand', false);
+    $this->get("/admin/kelompok/{$this->organization->id}")->assertSee('<h2 class="flex min-h-8 items-center gap-2 text-card-head font-semibold text-ink">', false)
+        ->assertSee('size-[18px] shrink-0 text-brand', false);
+    $this->get('/admin')->assertDontSee('size-[18px] shrink-0 text-brand', false);
+    $this->get('/admin/laporan')->assertDontSee('size-[18px] shrink-0 text-brand', false);
 });
 
 test('menu "…" Admin: hapus untuk kelompok tanpa laporan/akun, tandai ditutup bila ada laporan', function () {

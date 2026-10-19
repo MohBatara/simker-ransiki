@@ -8,6 +8,9 @@
 /* Direktori publik: tampilan Daftar (wadah [data-view=list]); bawaan tampilan Kartu. */
 @custom-variant list-view (&:where([data-view=list] *));
 
+/* Area aplikasi (layout app, kelas .theme-app): ukuran kontrol tema admin (h-9, radius 8px, 13px medium). */
+@custom-variant app (&:where(.theme-app, .theme-app *));
+
 /*
  * Token desain SIM-KER (CLAUDE.md Bagian 7).
  * Skala bawaan Tailwind untuk warna, teks, ketebalan, radius, dan bayangan sengaja dikosongkan
@@ -20,11 +23,14 @@
 
     --font-weight-*: initial;
     --font-weight-normal: 400;
+    --font-weight-medium: 500; /* tombol, pil status, label form area aplikasi */
     --font-weight-semibold: 600;
 
     --text-*: initial;
-    --text-micro: 0.6875rem; /* 11px, HANYA untuk label sidebar tablet */
+    --text-micro: 0.6875rem; /* 11px: label sidebar tablet, kepala kolom tabel, label sumbu grafik */
     --text-micro--line-height: 0.875rem;
+    --text-label: 0.75rem; /* 12px: label angka, pil status, chip, bantuan form (area aplikasi) */
+    --text-label--line-height: 1rem;
     --text-caption: 0.8125rem; /* 13px keterangan */
     --text-caption--line-height: 1.125rem;
     --text-ui: 0.875rem; /* 14px teks UI, tabel */
@@ -37,8 +43,10 @@
     --text-title-sm--line-height: 1.75rem;
     --text-page-title: 1.375rem; /* 22px judul halaman */
     --text-page-title--line-height: 1.875rem;
-    --text-admin-title: 1.625rem; /* 26px judul halaman Admin/OPD (x-admin.page-header) */
-    --text-admin-title--line-height: 2.125rem;
+    --text-card-head: 0.9375rem; /* 15px judul kartu area aplikasi (x-admin.card) */
+    --text-card-head--line-height: 1.375rem;
+    --text-admin-title: 1.375rem; /* 22px judul halaman area aplikasi (x-admin.page-header) */
+    --text-admin-title--line-height: 1.875rem;
     --text-headline: 1.5rem; /* 24px judul berita utama di Beranda (HP dan tablet) */
     --text-headline--line-height: 2rem;
     --text-title-lg: 2.5rem; /* 40px judul halaman detail berita (desktop) */
@@ -79,9 +87,32 @@
     --color-fix-bg: #f9e7e4;
     --color-idle: #5c625f;
     --color-idle-bg: #eeefec;
-    /* Oranye: perlu revisi / perlu perbaikan (x-admin.badge-status), 5,28:1 di atas latarnya. */
-    --color-orange: #a14a12;
-    --color-orange-bg: #fdeee3;
+
+    /*
+     * Tema area aplikasi (Admin, OPD, Kelompok). Nilai lama (ink-soft, canvas, dst.) dipetakan ke nilai ini di .theme-app,
+     * jadi halaman publik tidak berubah. ink-3 spesifikasi #8A948E hanya 3,1:1 di atas putih, jadi untuk teks digelapkan
+     * ke #636D67 (5,4:1 putih, 4,7:1 canvas); #8A948E tetap sebagai ink-faint untuk ikon dan garis.
+     */
+    --color-panel: #ffffff;
+    --color-ink-2: #5f6b64; /* 5,6:1 putih, 4,9:1 canvas */
+    --color-ink-3: #636d67;
+    --color-ink-faint: #8a948e; /* bukan untuk teks */
+    --color-line-soft: #f0f2ee;
+    --color-head: #f7f8f6; /* kepala kolom tabel */
+    --color-hover: #fafbf9; /* baris tabel saat disorot */
+    --color-brand-600: #2f7a5f;
+    --color-brand-50: #eaf3ee;
+    --color-brand-100: #d3e6db;
+    --color-brand-mist: #f6faf7; /* ujung gradasi banner sapaan */
+    --color-info: #2f5675; /* 6,6:1 di atas info-bg */
+    --color-info-bg: #e6eef5;
+    /* Palet grafik (urutan seri). Warna terang hanya untuk isian, tidak pernah teks. */
+    --color-chart-1: #1f5a47;
+    --color-chart-2: #3e8e6e;
+    --color-chart-3: #8cc5a8;
+    --color-chart-4: #e9b949;
+    --color-chart-5: #d8bf98;
+    --color-chart-other: #c9cec9;
 
     /* Khusus website publik (CLAUDE.md Bagian 7 "Gaya website publik"). */
     --color-forest: #0f2e22;
@@ -99,7 +130,11 @@
     --color-highlight: #fbefcc;
 
     --radius-*: initial;
-    --radius-control: 6px; /* input, tombol, badge */
+    --radius-control: 6px; /* input, tombol, badge (area aplikasi: 8px, lihat .theme-app) */
+    --radius-pill: 6px; /* pil status area aplikasi */
+    --radius-table: 10px; /* bingkai tabel area aplikasi */
+    --radius-box: 12px; /* kartu area aplikasi */
+    --radius-frame: 20px; /* panel konten area aplikasi */
     --radius-card: 10px; /* kartu, modal, menu melayang */
     --radius-public: 8px; /* kartu website publik */
     --radius-photo: 12px; /* foto besar website publik (bagian Tentang) */
@@ -108,6 +143,8 @@
 
     --shadow-*: initial;
     --shadow-float: 0 4px 16px rgb(28 31 30 / 0.08), 0 1px 3px rgb(28 31 30 / 0.06);
+    /* Bayangan paling tipis area aplikasi (kartu mini "melayang" di banner sapaan). */
+    --shadow-xs: 0 1px 2px rgb(28 31 30 / 0.05);
     /* Bayangan halus kartu website publik (bukan area aplikasi). */
     --shadow-card: 0 1px 2px rgb(28 31 30 / 0.04), 0 6px 18px rgb(28 31 30 / 0.06);
     /* Foto besar website publik: hampir tanpa bayangan. */
@@ -135,6 +172,52 @@
     b,
     strong {
         font-weight: 600;
+    }
+
+    /*
+     * Ukuran kontrol bersama (x-button, x-input, x-select, x-textarea, x-field). Publik dan halaman masuk: 40px, 14px
+     * semibold, cincin fokus 1px brand. Area aplikasi (.theme-app): 36px, 13px medium, cincin 3px brand-100.
+     * Di HP tetap 44px (target sentuh).
+     */
+    :root {
+        --control-h: 2.5rem;
+        --control-text: 0.875rem;
+        --control-weight: 600;
+        --control-focus: 0 0 0 1px var(--color-brand);
+        --control-focus-invalid: 0 0 0 1px var(--color-fix);
+        --label-text: 0.875rem;
+        --label-weight: 600;
+        --hint-text: 0.8125rem;
+    }
+
+    /* Tema area aplikasi (layout app): nilai token lama dipetakan ke palet baru. */
+    .theme-app {
+        --control-h: 2.25rem;
+        --control-text: 0.8125rem;
+        --control-weight: 500;
+        --control-focus: 0 0 0 3px #d3e6db;
+        --control-focus-invalid: 0 0 0 3px #fbe4e1;
+        --label-text: 0.8125rem;
+        --label-weight: 500;
+        --hint-text: 0.75rem;
+        --color-ink: #1a1f1c;
+        --color-ink-soft: #5f6b64;
+        --color-ink-muted: #636d67;
+        --color-line: #e6e8e3;
+        --color-canvas: #eef0ec;
+        --color-paper: #ffffff;
+        --color-subtle: #f1f2ef;
+        --color-brand-tint: #eaf3ee;
+        --color-ok: #1e6b3a;
+        --color-ok-bg: #e3f4e8;
+        --color-wait: #8a5a00;
+        --color-wait-bg: #fbf0d4;
+        --color-fix: #a63a2b;
+        --color-fix-bg: #fbe4e1;
+        --color-idle: #4b544f;
+        --color-idle-bg: #f1f2ef;
+        --radius-control: 8px;
+        --radius-tile: 12px;
     }
 
     :where(a, button, summary, [tabindex]):focus-visible {

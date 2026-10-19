@@ -44,8 +44,9 @@
         ]));
     @endphp
 
-    <div class="space-y-6">
+    <x-admin.card flush>
         <x-admin.toolbar
+            :title="$queue ? 'Antrean verifikasi' : 'Daftar laporan'"
             :action="$url"
             search-label="Cari nama kelompok"
             :search="$filters['q'] ?? ''"
@@ -61,18 +62,18 @@
 
         @if ($reports->isEmpty())
             @if ($hasFilters)
-                <x-admin.empty icon="magnifying-glass" title="Tidak ada laporan yang cocok" description="Ubah kata pencarian atau hapus filter.">
+                <x-admin.empty bare icon="magnifying-glass" title="Tidak ada laporan yang cocok" description="Ubah kata pencarian atau hapus filter.">
                     <x-button variant="secondary" :href="$url">Hapus filter</x-button>
                 </x-admin.empty>
             @elseif ($queue)
-                <x-admin.empty icon="clipboard-document-check" title="Tidak ada laporan yang menunggu verifikasi" :description="$area === 'admin' ? 'Laporan yang diajukan kelompok akan muncul di sini.' : 'Laporan yang diajukan kelompok binaan akan muncul di sini.'">
+                <x-admin.empty bare icon="clipboard-document-check" title="Tidak ada laporan yang menunggu verifikasi" :description="$area === 'admin' ? 'Laporan yang diajukan kelompok akan muncul di sini.' : 'Laporan yang diajukan kelompok binaan akan muncul di sini.'">
                     <x-button variant="secondary" :href="route($area.'.reports.index')">Lihat semua laporan</x-button>
                 </x-admin.empty>
             @else
-                <x-admin.empty icon="document-text" title="Belum ada laporan" description="Laporan muncul di sini setelah kelompok mulai mengisi laporan bulanan." />
+                <x-admin.empty bare icon="document-text" title="Belum ada laporan" description="Laporan muncul di sini setelah kelompok mulai mengisi laporan bulanan." />
             @endif
         @else
-            <x-admin.table clickable>
+            <x-admin.table bare clickable>
                 <x-slot:head>
                     <x-admin.table.heading>Kelompok</x-admin.table.heading>
                     <x-admin.table.heading>Periode</x-admin.table.heading>
@@ -90,7 +91,7 @@
                     {{-- Draf kelompok yang belum pernah diajukan tidak bisa dibuka peninjau (404), jadi barisnya tanpa tautan. --}}
                     @php $viewable = auth()->user()->can('view', $report); @endphp
                     {{-- Draf yang belum bisa dibuka tampil redup (ink-soft, tetap 7:1) dan tanpa tautan. --}}
-                    <x-admin.table.row :href="$viewable ? route($area.'.reports.show', $queue ? [$report, 'dari' => 'antrean'] : $report) : null" :class="$viewable ? null : 'text-ink-soft'" :data-draft="$viewable ? null : 'true'">
+                    <x-admin.table.row :for="$report->organization->name" :href="$viewable ? route($area.'.reports.show', $queue ? [$report, 'dari' => 'antrean'] : $report) : null" :class="$viewable ? null : 'text-ink-soft'" :data-draft="$viewable ? null : 'true'">
                         <x-admin.table.cell primary>{{ $report->organization->name }}</x-admin.table.cell>
                         <x-admin.table.cell subtitle>
                             {{ Format::month($report->period) }}
@@ -140,7 +141,7 @@
             </x-admin.table>
         @endif
         </div>
-    </div>
+    </x-admin.card>
 
     @unless ($queue)
         {{-- Rekap satu bulan: status laporan tiap kelompok + angka dari laporan terverifikasi. --}}

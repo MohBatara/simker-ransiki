@@ -47,14 +47,15 @@ test('Admin/OPD: header halaman terang (x-admin.page-header), tanpa pita forest,
     }
 });
 
-test('dasbor Admin/OPD: kartu sapaan forest kecil, tanpa banner foto walau ada foto sampul', function () {
+test('dasbor Admin/OPD: banner sapaan bergradasi lembut brand, tanpa forest dan tanpa banner foto walau ada foto sampul', function () {
     SiteSetting::put(['cover_photo_path' => 'site/sampul.jpg']);
     Carbon\CarbonImmutable::setTestNow(Carbon\CarbonImmutable::parse('2026-10-18 09:00', 'Asia/Jayapura'));
 
     $this->actingAs(User::factory()->opd(Opd::factory()->create())->create(['name' => 'Yosias Kafiar']))->get('/opd')
         ->assertOk()
         ->assertSee('Selamat pagi, Yosias')
-        ->assertSee('rounded-tile bg-forest', false)
+        ->assertSee('bg-linear-to-r from-brand-50 to-brand-mist', false)
+        ->assertDontSee('bg-forest', false)
         ->assertDontSee('app-band-photo max-md:relative', false)
         ->assertDontSee('overlay-forest', false);
 
@@ -90,7 +91,7 @@ test('tab detail kelompok di HP diberi penanda geser di tepi kanan', function ()
     $this->actingAs(User::factory()->admin()->create())
         ->get('/admin/kelompok/'.$this->organization->id)->assertOk()
         ->assertSee('x-ref="scroller"', false)
-        ->assertSee('bg-linear-to-l from-canvas to-transparent md:hidden', false);
+        ->assertSee('bg-linear-to-l from-panel to-transparent md:hidden', false);
 });
 
 test('detail kelompok di HP: header atas "Detail kelompok", judul halaman tetap nama kelompok', function () {

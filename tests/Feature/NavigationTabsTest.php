@@ -100,7 +100,7 @@ test('setiap tab punya URL sendiri, tab aktif ditandai, dan remah mengikuti menu
 
     preg_match('#<nav x-ref="scroller"[^>]*aria-label="'.preg_quote($section, '#').'"\s*>(.*?)</nav>#s', $html, $nav);
     expect($nav)->not->toBeEmpty("Tab {$section} tidak ditemukan di {$url}")
-        ->and(html_entity_decode(trim(preg_replace('/\s+/', ' ', strip_tags(preg_replace('#<span[^>]*rounded-full[^>]*>.*?</span>#s', '', $nav[1]))))))->toBe(implode(' ', $tabs));
+        ->and(html_entity_decode(trim(preg_replace('/\s+/', ' ', strip_tags(preg_replace('#<span[^>]*rounded-pill[^>]*>.*?</span>#s', '', $nav[1]))))))->toBe(implode(' ', $tabs));
     preg_match('#<a[^>]*aria-current="page"[^>]*>(.*?)</a>#s', $nav[1], $current);
     expect(html_entity_decode(trim(strip_tags(preg_replace('#<span.*?</span>#s', '', $current[1])))))->toBe($tab)
         ->and(html_entity_decode(strip_tags($html)))->toContain($tab.' · '.$section);

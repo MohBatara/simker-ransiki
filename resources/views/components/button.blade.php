@@ -9,7 +9,7 @@
 
 @php
     $classes = [
-        'inline-flex h-11 shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-control border px-4 text-ui font-semibold transition-colors md:h-10',
+        'inline-flex h-11 shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-control border px-4 [font-size:var(--control-text)] [font-weight:var(--control-weight)] transition-colors md:h-(--control-h) app:px-3.5',
         'disabled:pointer-events-none disabled:opacity-50',
         match ($variant) {
             'primary' => 'border-brand bg-brand text-paper hover:border-brand-hover hover:bg-brand-hover',
@@ -25,14 +25,14 @@
 @if ($href)
     <a href="{{ $href }}" {{ $attributes->class($classes) }}>
         @if ($icon)
-            <x-dynamic-component :component="'heroicon-o-'.$icon" class="-ml-1 size-5" />
+            <x-dynamic-component :component="'heroicon-o-'.$icon" class="-ml-1 size-5 app:size-4" />
         @endif
         {{ $slot }}
     </a>
 @else
     <button type="{{ $type }}" @if ($processing) data-processing="{{ $processing }}" @endif {{ $attributes->class($classes) }}>
         @if ($icon)
-            <x-dynamic-component :component="'heroicon-o-'.$icon" class="-ml-1 size-5" />
+            <x-dynamic-component :component="'heroicon-o-'.$icon" class="-ml-1 size-5 app:size-4" />
         @endif
         <span data-button-label>{{ $slot }}</span>
     </button>

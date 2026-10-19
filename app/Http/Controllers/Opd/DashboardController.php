@@ -40,7 +40,10 @@ class DashboardController extends Controller
             'overdue' => $stats->overdue(),
             'staleNeeds' => ReportIssue::reviewableBy($user)->where('kind', IssueKind::Support)->stale(config('simker.follow_up.stale_days'))->count(),
             'topIssues' => $stats->topIssues(),
-            'overview' => Statistics::overview($user, $earliest),
+            'economyTrend' => Statistics::recentEconomy($user, $period, $earliest),
+            'latestReports' => (clone $waiting)->withSubmissionInfo()->with('organization:id,name')->orderByDesc('last_submitted_at')->limit(5)->get(),
+            // Produksi per produk periode terpilih, kelompok binaan saja (Statistics memakai visibleTo).
+            'production' => (new Statistics($user, [], $period, $period))->production(5),
             'profileQueue' => Navigation::counts($user)['profiles'],
         ]);
     }

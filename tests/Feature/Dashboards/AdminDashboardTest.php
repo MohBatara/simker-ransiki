@@ -42,12 +42,12 @@ test('dasbor admin: perlu dikerjakan, kartu angka, progres per OPD, kelompok, da
         ->assertSee('/admin/kelompok?status=active&amp;akun=tidak-ada', false)
         // Tanpa laporan menunggu: tugas verifikasi tidak muncul.
         ->assertDontSee('laporan menunggu verifikasi')
-        ->assertSee('Wajib lapor September 2026')
+        ->assertSee('Pelaporan September 2026, 2 kelompok wajib lapor')
         ->assertSee('1 dari 2')
         ->assertSee('DC')
         ->assertSee('Tanpa OPD pembina')
         ->assertSee('3')
-        ->assertSee('kelompok terdaftar')
+        ->assertSee('Menurut jenis kelembagaan')
         ->assertSee('Rp 1,3 jt')
         ->assertSee('title="Rp 1.250.000"', false)
         // Semua laporan mengisi penjualan: keterangan "diisi X dari Y" tidak ditampilkan.

@@ -20,8 +20,9 @@
         <x-button icon="plus" :href="route('admin.users.create')">Tambah akun</x-button>
     </x-slot:actions>
 
-    <div class="space-y-6">
+    <x-admin.card flush>
         <x-admin.toolbar
+            title="Daftar akun"
             :action="$url"
             search-label="Cari nama, username, atau email"
             :search="$filters['q'] ?? ''"
@@ -35,16 +36,16 @@
         <div data-swap="pengguna">
             @if ($users->isEmpty())
                 @if ($hasFilters)
-                    <x-admin.empty icon="magnifying-glass" title="Tidak ada akun yang cocok" description="Ubah kata pencarian atau hapus filter.">
+                    <x-admin.empty bare icon="magnifying-glass" title="Tidak ada akun yang cocok" description="Ubah kata pencarian atau hapus filter.">
                         <x-button variant="secondary" :href="$url">Hapus filter</x-button>
                     </x-admin.empty>
                 @else
-                    <x-admin.empty icon="users" title="Belum ada akun" description="Buat akun untuk petugas OPD dan pengurus kelompok.">
+                    <x-admin.empty bare icon="users" title="Belum ada akun" description="Buat akun untuk petugas OPD dan pengurus kelompok.">
                         <x-button icon="plus" :href="route('admin.users.create')">Tambah akun</x-button>
                     </x-admin.empty>
                 @endif
             @else
-                <x-admin.table clickable>
+                <x-admin.table bare clickable>
                     <x-slot:head>
                         <x-admin.table.heading>Nama</x-admin.table.heading>
                         <x-admin.table.heading>Peran</x-admin.table.heading>
@@ -53,20 +54,20 @@
                     </x-slot:head>
 
                     @foreach ($users as $user)
-                        <x-admin.table.row :href="route('admin.users.show', $user)">
+                        <x-admin.table.row :href="route('admin.users.show', $user)" :edit="route('admin.users.edit', $user)" :for="$user->name">
                             <x-admin.table.cell primary>
                                 <span class="flex items-center gap-3">
-                                    <x-avatar :name="$user->name" />
+                                    <x-avatar :name="$user->name" size="sm" />
                                     <span class="min-w-0">
                                         <span class="block">{{ $user->name }}</span>
-                                        <span class="block text-caption font-normal text-ink-muted">{{ $user->username }}</span>
+                                        <span class="block text-label font-normal text-ink-3">{{ $user->username }}</span>
                                     </span>
                                 </span>
                             </x-admin.table.cell>
                             <x-admin.table.cell label="Peran">
-                                {{ $user->role->label() }}
+                                <x-admin.chip :icon="match ($user->role) { App\Enums\Role::Admin => 'shield-check', App\Enums\Role::Opd => 'briefcase', default => 'user-group' }">{{ $user->role->label() }}</x-admin.chip>
                                 @if ($user->opd || $user->organization)
-                                    <span class="block text-caption text-ink-muted">{{ $user->opd?->short_name ?? $user->organization->name }}</span>
+                                    <span class="mt-1 block text-label text-ink-3">{{ $user->opd?->short_name ?? $user->organization->name }}</span>
                                 @endif
                             </x-admin.table.cell>
                             <x-admin.table.cell label="Login terakhir" optional>
@@ -84,5 +85,5 @@
                 </x-admin.table>
             @endif
         </div>
-    </div>
+    </x-admin.card>
 </x-layouts.app>

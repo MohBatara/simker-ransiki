@@ -26,7 +26,7 @@
 @endphp
 
 <div {{ $attributes->class('space-y-2') }}>
-    <label @if ($id) for="{{ $id }}" @endif @if ($bindFor) x-bind:for="{{ $bindFor }}" @endif @class(['block text-ui font-semibold text-ink', $labelClass])>
+    <label @if ($id) for="{{ $id }}" @endif @if ($bindFor) x-bind:for="{{ $bindFor }}" @endif @class(['block [font-size:var(--label-text)] [font-weight:var(--label-weight)] text-ink', $labelClass])>
         @if ($labelText)<span x-text="{{ $labelText }}">{{ $label }}</span>@else{{ $label }}@endif
         @if ($required)
             <span class="text-fix" aria-hidden="true">*</span><span class="sr-only">(wajib)</span>
@@ -41,16 +41,16 @@
     {{ $slot }}
 
     @if ($live)
-        <p x-cloak x-show="error({{ $live }})" x-text="error({{ $live }})" class="text-caption text-fix"></p>
+        <p x-cloak x-show="error({{ $live }})" x-text="error({{ $live }})" class="[font-size:var(--hint-text)] text-fix"></p>
         @if ($hint)
-            <p x-show="! error({{ $live }})" @if ($hintText) x-text="{{ $hintText }}" @endif class="text-caption text-ink-muted">{{ $hint }}</p>
+            <p x-show="! error({{ $live }})" @if ($hintText) x-text="{{ $hintText }}" @endif class="[font-size:var(--hint-text)] text-ink-muted">{{ $hint }}</p>
         @endif
     @else
         @if ($hint)
-            <p class="text-caption text-ink-muted">{{ $hint }}</p>
+            <p class="[font-size:var(--hint-text)] text-ink-muted">{{ $hint }}</p>
         @endif
         @if ($error)
-            <p id="{{ $id }}-error" class="text-caption text-fix">{{ $error }}</p>
+            <p id="{{ $id }}-error" class="[font-size:var(--hint-text)] text-fix">{{ $error }}</p>
         @endif
     @endif
 </div>

@@ -61,11 +61,13 @@ test('panel detail dirender bersama halaman untuk baris pertama, atau ?pilih=id'
     $first = $this->get('/admin/kelompok')->assertOk();
     expect($first->viewData('panel')['organization']->id)->toBe($this->alpha->id);
     $first->assertSee('data-panel-id="'.$this->alpha->id.'"', false)
-        ->assertSee('data-id="'.$this->alpha->id.'" data-selected="true"', false)
+        ->assertDontSee('data-selected="true"', false)
         ->assertSee('Lihat detail');
 
+    // ?pilih=id: laci terbuka sejak awal dengan baris itu ditandai.
     $this->get('/admin/kelompok?pilih='.$this->beta->id)
         ->assertSee('data-panel-id="'.$this->beta->id.'"', false)
+        ->assertSee('data-id="'.$this->beta->id.'" data-selected="true"', false)
         ->assertSee('Produk Panel Beta')
         ->assertSee('September 2026');
 });
@@ -96,32 +98,31 @@ test('jumlah query daftar terbatas (tanpa N+1)', function () {
     expect(count(DB::getQueryLog()))->toBeLessThan(30);
 });
 
-test('bilah alat: cari + 3 filter sebaris, sisanya di panel "Filter lain", langsung diterapkan tanpa Terapkan/Reset', function () {
+test('kepala kartu daftar: judul, cari kecil, dan tombol Filter berisi semua filter, langsung diterapkan tanpa Terapkan/Reset', function () {
     $html = $this->actingAs($this->admin)->get('/admin/kelompok?sector='.$this->sectorA->id.'&village='.$this->villageA->id)->assertOk()
         ->assertSee('x-data="adminToolbar"', false)
+        ->assertSee('Daftar kelompok')
         ->assertSee('Filter (2)')
-        ->assertSee('Filter lain (1)')
         ->assertDontSee('Terapkan</span>', false)
         ->assertDontSee('>Reset<', false)
         ->getContent();
 
     $panel = strpos($html, 'id="panel-filter"');
 
-    // Sebaris (sebelum panel): kampung, jenis, status. Di panel: bidang usaha dan OPD (plus salinan filter utama untuk HP).
-    expect(strpos($html, 'id="village-inline"'))->toBeLessThan($panel)
-        ->and(strpos($html, 'id="type-inline"'))->toBeLessThan($panel)
-        ->and(strpos($html, 'id="status-inline"'))->toBeLessThan($panel)
-        ->and($html)->not->toContain('id="sector-inline"')
+    // Semua filter ada di panel Filter (laci kanan desktop, bottom sheet HP), tanpa select sebaris.
+    expect($html)->not->toContain('-inline"')
+        ->and(strpos($html, 'id="village-panel"'))->toBeGreaterThan($panel)
         ->and(strpos($html, 'id="sector-panel"'))->toBeGreaterThan($panel)
         ->and(strpos($html, 'id="opd-panel"'))->toBeGreaterThan($panel)
         // Hasil yang ditukar saat filter berubah.
         ->and($html)->toContain('data-swap="kelompok"')->toContain('data-swap="toolbar-summary"');
 });
 
-test('dengan panel detail (≥ 1280px): kolom bidang usaha disembunyikan, nama satu baris dengan title', function () {
+test('ringkasan kelompok di laci kanan, tabel tetap lebar: jenis sebagai chip, kepala tabel menempel', function () {
     $this->actingAs($this->admin)->get('/admin/kelompok')->assertOk()
-        ->assertSee('px-4 text-left md:max-xl:hidden xl:hidden">Bidang usaha</th>', false)
-        ->assertSee('sticky top-16 z-10', false)
-        ->assertSee('class="block xl:truncate" title="Alfa Contoh"', false)
-        ->assertSee('xl:whitespace-nowrap', false);
+        ->assertSee('>Bidang usaha</th>', false)
+        ->assertSee('md:sticky md:top-0 md:z-10', false)
+        ->assertSee('aria-label="Ringkasan kelompok"', false)
+        ->assertSee('fixed inset-y-0 right-0 z-50', false)
+        ->assertSee('rounded-pill border border-line bg-panel', false);
 });

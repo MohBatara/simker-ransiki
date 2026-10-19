@@ -47,8 +47,9 @@
         ]));
     @endphp
 
-    <div class="space-y-6">
+    <x-admin.card flush>
         <x-admin.toolbar
+            title="Daftar masalah dan kebutuhan"
             :action="$url"
             :filters="$toolbarFilters"
             :keep="collect($filters)->only(['lama'])->all()"
@@ -62,14 +63,14 @@
 
         @if ($issues->isEmpty())
             @if ($chips)
-                <x-admin.empty icon="magnifying-glass" title="Tidak ada yang cocok dengan filter" description="Ubah atau hapus filter untuk melihat data lain.">
+                <x-admin.empty bare icon="magnifying-glass" title="Tidak ada yang cocok dengan filter" description="Ubah atau hapus filter untuk melihat data lain.">
                     <x-button variant="secondary" :href="$url">Hapus filter</x-button>
                 </x-admin.empty>
             @else
-                <x-admin.empty icon="exclamation-circle" title="Belum ada masalah atau kebutuhan" description="Isian bagian E dan F dari laporan yang sudah diajukan kelompok akan muncul di sini." />
+                <x-admin.empty bare icon="exclamation-circle" title="Belum ada masalah atau kebutuhan" description="Isian bagian E dan F dari laporan yang sudah diajukan kelompok akan muncul di sini." />
             @endif
         @else
-            <x-admin.table clickable>
+            <x-admin.table bare clickable>
                 <x-slot:head>
                     <x-admin.table.heading>Kelompok</x-admin.table.heading>
                     <x-admin.table.heading>Status</x-admin.table.heading>
@@ -78,7 +79,7 @@
                 </x-slot:head>
 
                 @foreach ($issues as $issue)
-                    <x-admin.table.row :href="route($area.'.issues.show', $issue)">
+                    <x-admin.table.row :href="route($area.'.issues.show', $issue)" :for="$issue->monthlyReport->organization->name">
                         <x-admin.table.cell primary>
                             {{ $issue->monthlyReport->organization->name }}
                         </x-admin.table.cell>
@@ -89,8 +90,8 @@
                             <x-admin.badge-status :status="$issue->follow_up_status" />
                         </x-admin.table.cell>
                         <x-admin.table.cell label="Kategori" class="whitespace-nowrap">
-                            {{ $issue->category ? $issue->categoryLabel() : 'Tanpa kategori' }}
-                            <span class="block text-caption text-ink-soft">{{ $issue->kind->label() }}<span class="max-md:hidden"> · {{ Format::month($issue->monthlyReport->period) }}</span></span>
+                            <x-admin.chip :icon="$issue->kind === IssueKind::Problem ? 'exclamation-triangle' : 'hand-raised'">{{ $issue->category ? $issue->categoryLabel() : 'Tanpa kategori' }}</x-admin.chip>
+                            <span class="mt-1 block text-label text-ink-3">{{ $issue->kind->label() }}<span class="max-md:hidden"> · {{ Format::month($issue->monthlyReport->period) }}</span></span>
                         </x-admin.table.cell>
                         <x-admin.table.cell label="Uraian" class="max-md:items-start! max-md:text-left!">
                             <span class="line-clamp-3 md:max-w-md">{{ filled($issue->description) ? $issue->description : Format::EMPTY }}</span>
@@ -104,5 +105,5 @@
             </x-admin.table>
         @endif
         </div>
-    </div>
+    </x-admin.card>
 </x-layouts.app>

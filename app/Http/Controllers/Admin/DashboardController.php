@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Enums\IssueKind;
 use App\Http\Controllers\Controller;
+use App\Models\MonthlyReport;
 use App\Models\Organization;
 use App\Models\ReportIssue;
 use App\Support\Dashboards\DistrictStats;
@@ -36,7 +37,10 @@ class DashboardController extends Controller
             'organizations' => $district->organizations(),
             'economy' => $district->economy($period),
             'production' => $district->production($period),
-            'overview' => Statistics::overview($request->user(), $earliest),
+            // Kartu Ekonomi: penjualan dan biaya 6 bulan sampai periode terpilih + persen perubahan (hanya terverifikasi).
+            'economyTrend' => Statistics::recentEconomy($request->user(), $period, $earliest),
+            // Kartu Laporan terbaru: 5 pengajuan terakhir dari antrean verifikasi yang sama dengan tab Perlu diverifikasi.
+            'latestReports' => MonthlyReport::verificationQueue($request->user())->withSubmissionInfo()->with('organization:id,name')->orderByDesc('last_submitted_at')->limit(5)->get(),
             // Sama dengan badge menu Kelompok (dihitung sekali per request).
             'profileQueue' => Navigation::counts($request->user())['profiles'],
         ]);

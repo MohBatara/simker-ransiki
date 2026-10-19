@@ -83,7 +83,8 @@ test('baris tabel dengan href menjadi satu link dengan chevron, tanpa tombol buk
         </x-admin.table>
         BLADE);
 
-    expect(substr_count($html, 'href="/laporan/1"'))->toBe(1)
+    // Satu link di sel primary + "Lihat" di menu titik tiga.
+    expect(substr_count($html, 'href="/laporan/1"'))->toBe(2)
         // Lapisan klik hanya sebesar sel primary (aman di Safari); sisa baris lewat data-row-href + JS.
         ->and(substr_count($html, 'data-row-href'))->toBe(1)
         ->and($html)->toContain('data-row-link')

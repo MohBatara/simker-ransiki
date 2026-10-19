@@ -10,7 +10,7 @@
     $text = fn ($value) => filled($value) ? $value : '—';
 @endphp
 
-<section class="overflow-hidden rounded-tile border border-line bg-paper" aria-labelledby="panel-judul" data-panel-id="{{ $organization->id }}">
+<section class="bg-panel" aria-labelledby="panel-judul" data-panel-id="{{ $organization->id }}">
     <div class="relative aspect-[2/1] bg-subtle">
         @if ($panel['image'])
             <x-public.picture :image="$panel['image']" alt="" sizes="400px" width="800" height="400" frame="block size-full" class="size-full object-cover" />
@@ -25,7 +25,7 @@
     <div class="space-y-4 p-5">
         <div>
             <div class="flex flex-wrap items-center gap-2">
-                <h2 id="panel-judul" tabindex="-1" class="text-card-title font-semibold text-ink focus:outline-none">{{ $organization->name }}</h2>
+                <h2 id="panel-judul" tabindex="-1" class="text-page-title font-semibold text-ink focus:outline-none">{{ $organization->name }}</h2>
                 <x-admin.badge-status :status="$organization->status" />
             </div>
             <p class="text-ui text-ink-soft">{{ $organization->village->name }}, Distrik Ransiki</p>

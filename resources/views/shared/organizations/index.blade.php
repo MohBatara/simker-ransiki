@@ -58,96 +58,109 @@
     @endcan
 
     <div class="space-y-6">
-        <x-admin.toolbar
-            :action="$url"
-            search-label="Cari nama kelompok"
-            :search="$filters['q'] ?? ''"
-            :filters="$toolbarFilters"
-            :keep="collect($filters)->only(['akun', 'laporan', 'periode'])->all()"
-            :chips="$chips"
-            :clear-url="$hasFilters ? $url : null"
-        />
+        {{-- Kartu angka mengikuti filter aktif (ditukar oleh x-admin.toolbar saat filter berubah). --}}
+        <div data-swap="kelompok-angka" class="grid grid-cols-2 gap-4 xl:grid-cols-4">
+            <x-admin.stat compact icon="user-group" label="Total kelompok" :value="Format::number($totals['organizations'])" :hint="$totalHint" />
+            <x-admin.stat compact icon="map-pin" label="Kampung" :value="Format::number($totals['villages'])" :hint="$scopeHint" :href="$isOpd ? null : route('admin.master.items', 'kampung')" />
+            <x-admin.stat compact icon="squares-2x2" label="Bidang usaha" :value="Format::number($totals['sectors'])" :hint="$scopeHint" :href="$isOpd ? null : route('admin.master.items', 'bidang-usaha')" />
+            <x-admin.stat compact icon="users" label="Total anggota" :value="Format::number($totals['members'])" :hint="$membersHint" />
+        </div>
 
-        {{-- Ditukar oleh x-admin.toolbar saat filter berubah: kartu angka mengikuti filter, lalu tabel. --}}
-        <div data-swap="kelompok" class="space-y-6">
-            <div class="grid grid-cols-2 gap-4 xl:grid-cols-4">
-                <x-admin.stat compact icon="user-group" label="Total kelompok" :value="Format::number($totals['organizations'])" :hint="$totalHint" />
-                <x-admin.stat compact icon="map-pin" label="Kampung" :value="Format::number($totals['villages'])" :hint="$scopeHint" :href="$isOpd ? null : route('admin.master.items', 'kampung')" />
-                <x-admin.stat compact icon="squares-2x2" label="Bidang usaha" :value="Format::number($totals['sectors'])" :hint="$scopeHint" :href="$isOpd ? null : route('admin.master.items', 'bidang-usaha')" />
-                <x-admin.stat compact icon="users" label="Total anggota" :value="Format::number($totals['members'])" :hint="$membersHint" />
-            </div>
+        {{-- Klik baris (≥ 1280px) membuka laci ringkasan dari kanan di atas konten; layar lebih kecil membuka halaman detail. --}}
+        <div x-data="organizationPanel(@js(request()->filled('pilih')))" x-on:keydown.escape.window="close()">
+            <x-admin.card flush>
+                <x-admin.toolbar
+                    :title="$isOpd ? 'Daftar kelompok binaan' : 'Daftar kelompok'"
+                    :action="$url"
+                    search-label="Cari nama kelompok"
+                    :search="$filters['q'] ?? ''"
+                    :filters="$toolbarFilters"
+                    :keep="collect($filters)->only(['akun', 'laporan', 'periode'])->all()"
+                    :chips="$chips"
+                    :clear-url="$hasFilters ? $url : null"
+                />
 
-            @if ($organizations->isEmpty())
-                @if ($hasFilters)
-                    <x-admin.empty icon="magnifying-glass" title="Tidak ada kelompok yang cocok" description="Ubah kata pencarian atau hapus filter.">
-                        <x-button variant="secondary" :href="$url">Hapus filter</x-button>
-                    </x-admin.empty>
-                @elseif ($isOpd)
-                    <x-admin.empty icon="user-group" title="Belum ada kelompok binaan" description="Kelompok dihubungkan ke OPD oleh Admin distrik. Hubungi Admin bila ada kelompok yang belum muncul." />
-                @else
-                    <x-admin.empty icon="user-group" title="Belum ada kelompok" description="Tambah kelompok pertama agar bisa dipantau dan mulai melapor.">
-                        <x-button icon="plus" :href="route('admin.organizations.create')">Tambah kelompok</x-button>
-                    </x-admin.empty>
-                @endif
-            @else
-                {{-- Desktop (≥ 1280px): klik baris memuat panel detail di kanan; layar lebih kecil membuka halaman detail. --}}
-                <div x-data="organizationPanel" class="xl:grid xl:grid-cols-[minmax(0,1fr)_25rem] xl:items-start xl:gap-6">
-                    <x-admin.table clickable id="daftar-kelompok" x-on:click="select($event)" class="min-w-0">
-                        <x-slot:head>
-                            <x-admin.table.heading>Kelompok</x-admin.table.heading>
-                            <x-admin.table.heading>Kampung</x-admin.table.heading>
-                            {{-- ≥ 1280px panel detail selalu tampil: kolom Bidang usaha dan Anggota (ada di panel) disembunyikan. --}}
-                            <x-admin.table.heading optional class="xl:hidden">Bidang usaha</x-admin.table.heading>
-                            <x-admin.table.heading numeric optional class="xl:hidden">Anggota</x-admin.table.heading>
-                            <x-admin.table.heading>Status</x-admin.table.heading>
-                        </x-slot:head>
+                <div data-swap="kelompok">
+                    @if ($organizations->isEmpty())
+                        @if ($hasFilters)
+                            <x-admin.empty bare icon="magnifying-glass" title="Tidak ada kelompok yang cocok" description="Ubah kata pencarian atau hapus filter.">
+                                <x-button variant="secondary" :href="$url">Hapus filter</x-button>
+                            </x-admin.empty>
+                        @elseif ($isOpd)
+                            <x-admin.empty bare icon="user-group" title="Belum ada kelompok binaan" description="Kelompok dihubungkan ke OPD oleh Admin distrik. Hubungi Admin bila ada kelompok yang belum muncul." />
+                        @else
+                            <x-admin.empty bare icon="user-group" title="Belum ada kelompok" description="Tambah kelompok pertama agar bisa dipantau dan mulai melapor.">
+                                <x-button icon="plus" :href="route('admin.organizations.create')">Tambah kelompok</x-button>
+                            </x-admin.empty>
+                        @endif
+                    @else
+                        <x-admin.table bare clickable id="daftar-kelompok" x-on:click="select($event)" class="min-w-0">
+                            <x-slot:head>
+                                <x-admin.table.heading>Kelompok</x-admin.table.heading>
+                                <x-admin.table.heading>Jenis</x-admin.table.heading>
+                                <x-admin.table.heading>Kampung</x-admin.table.heading>
+                                <x-admin.table.heading optional>Bidang usaha</x-admin.table.heading>
+                                <x-admin.table.heading numeric optional>Anggota</x-admin.table.heading>
+                                <x-admin.table.heading>Status</x-admin.table.heading>
+                            </x-slot:head>
 
-                        @foreach ($organizations as $organization)
-                            <x-admin.table.row
-                                :href="route($area.'.organizations.show', $organization)"
-                                :data-panel-url="route($area.'.organizations.summary', $organization)"
-                                :data-id="$organization->id"
-                                :data-selected="$panel && $panel['organization']->is($organization) ? 'true' : null"
-                                class="xl:data-[selected]:bg-brand-tint"
-                            >
-                                <x-admin.table.cell primary class="xl:w-full xl:max-w-0">
-                                    <span class="flex items-center gap-3">
-                                        <x-avatar :name="$organization->name" />
-                                        <span class="min-w-0">
-                                            <span class="block xl:truncate" title="{{ $organization->name }}">{{ $organization->name }}</span>
-                                            <span class="block text-caption font-normal text-ink-muted xl:truncate">{{ $organization->institutionType->name }}</span>
+                            @foreach ($organizations as $organization)
+                                <x-admin.table.row
+                                    :href="route($area.'.organizations.show', $organization)"
+                                    :edit="route($area.'.organizations.edit', $organization)"
+                                    :for="$organization->name"
+                                    :data-panel-url="route($area.'.organizations.summary', $organization)"
+                                    :data-id="$organization->id"
+                                    :data-selected="$panel && request()->filled('pilih') && $panel['organization']->is($organization) ? 'true' : null"
+                                    class="xl:data-[selected]:bg-brand-50"
+                                >
+                                    <x-admin.table.cell primary>
+                                        <span class="flex items-center gap-3">
+                                            <x-avatar :name="$organization->name" size="sm" />
+                                            <span class="min-w-0">
+                                                <span class="block">{{ $organization->name }}</span>
+                                                <span class="block text-label font-normal text-ink-3 md:hidden">{{ $organization->institutionType->name }}</span>
+                                            </span>
                                         </span>
-                                    </span>
-                                </x-admin.table.cell>
-                                <x-admin.table.cell label="Kampung" class="xl:whitespace-nowrap">{{ $organization->village->name }}</x-admin.table.cell>
-                                <x-admin.table.cell label="Bidang usaha" optional class="xl:hidden">{{ $organization->sectors->pluck('name')->join(', ') }}</x-admin.table.cell>
-                                <x-admin.table.cell label="Anggota" numeric optional class="xl:hidden">{{ Format::number($organization->members_count) }}</x-admin.table.cell>
-                                <x-admin.table.cell badge>
-                                    <x-admin.badge-status :status="$organization->status" />
-                                </x-admin.table.cell>
-                            </x-admin.table.row>
-                        @endforeach
+                                    </x-admin.table.cell>
+                                    <x-admin.table.cell class="max-md:hidden"><x-admin.chip icon="building-office-2">{{ $organization->institutionType->name }}</x-admin.chip></x-admin.table.cell>
+                                    <x-admin.table.cell label="Kampung" class="md:whitespace-nowrap">{{ $organization->village->name }}</x-admin.table.cell>
+                                    <x-admin.table.cell label="Bidang usaha" optional>{{ $organization->sectors->pluck('name')->join(', ') }}</x-admin.table.cell>
+                                    <x-admin.table.cell label="Anggota" numeric optional>{{ Format::number($organization->members_count) }}</x-admin.table.cell>
+                                    <x-admin.table.cell badge>
+                                        <x-admin.badge-status :status="$organization->status" />
+                                    </x-admin.table.cell>
+                                </x-admin.table.row>
+                            @endforeach
 
-                        <x-slot:footer>
-                            <x-admin.pagination :paginator="$organizations" noun="kelompok" />
-                        </x-slot:footer>
-                    </x-admin.table>
-
-                    <aside class="hidden xl:sticky xl:top-20 xl:block" aria-live="polite" x-bind:aria-busy="loading">
-                        <div x-ref="panel" x-bind:class="loading && 'opacity-60'" class="transition-opacity">
-                            @if ($panel)
-                                @include('shared.organizations._panel')
-                            @endif
-                        </div>
-                        <template x-ref="empty">
-                            <div class="rounded-tile border border-dashed border-line-strong bg-paper px-5 py-10 text-center">
-                                <p class="font-semibold text-ink">Pilih kelompok untuk melihat ringkasannya.</p>
-                                <p class="mt-1 text-ink-soft">Klik salah satu baris di daftar.</p>
-                            </div>
-                        </template>
-                    </aside>
+                            <x-slot:footer>
+                                <x-admin.pagination :paginator="$organizations" noun="kelompok" />
+                            </x-slot:footer>
+                        </x-admin.table>
+                    @endif
                 </div>
-            @endif
+            </x-admin.card>
+
+            {{-- Laci ringkasan (≥ 1280px): di atas konten, tabel tetap selebar kartu. --}}
+            <div x-cloak x-show="open" x-on:click="close()" class="fixed inset-0 z-40 hidden bg-ink/20 xl:block" aria-hidden="true"></div>
+            <aside
+                x-cloak
+                x-show="open"
+                x-transition:enter="transition-transform duration-150"
+                x-transition:enter-start="translate-x-full"
+                x-transition:leave="transition-transform duration-150"
+                x-transition:leave-end="translate-x-full"
+                class="fixed inset-y-0 right-0 z-50 hidden w-[26rem] overflow-y-auto border-l border-line bg-panel shadow-float xl:block"
+                aria-live="polite"
+                aria-label="Ringkasan kelompok"
+                x-bind:aria-busy="loading"
+            >
+                <div x-ref="panel" x-bind:class="loading && 'opacity-60'" class="transition-opacity">
+                    @if ($panel)
+                        @include('shared.organizations._panel')
+                    @endif
+                </div>
+            </aside>
         </div>
     </div>
 </x-layouts.app>

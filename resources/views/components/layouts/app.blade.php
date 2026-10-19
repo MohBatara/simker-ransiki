@@ -41,6 +41,13 @@
     $searchUrl = $user && ! $user->isKelompok() && Route::has($user->role->area().'.search') ? route($user->role->area().'.search') : null;
     $back ??= $focus ? url()->previous() : null;
 
+    // Alat kepala halaman (tablet/desktop): cari ringkas (Admin, OPD) + lonceng bertitik merah.
+    $tools = trim(view('partials.app-tools', [
+        'searchUrl' => $searchUrl,
+        'notificationsUrl' => $notificationsUrl,
+        'unreadNotifications' => $unreadNotifications,
+    ])->render());
+
     $sectionTabs = $section && $user ? \App\Support\Navigation::tabs($user, $section) : null;
     $headTitle = $title;
     if ($sectionTabs) {
@@ -78,25 +85,32 @@
 </head>
 {{-- --app-bottom: tinggi area tetap di bawah layar HP, dipakai x-form-actions sticky. --}}
 <body @class([
-    'min-h-dvh bg-canvas font-sans text-ui text-ink antialiased',
+    'theme-app min-h-dvh bg-canvas font-sans text-ui text-ink antialiased',
     '[--app-bottom:calc(4rem+env(safe-area-inset-bottom))] [--app-safe-bottom:0px]' => ! $focus,
     '[--app-bottom:0px] [--app-safe-bottom:env(safe-area-inset-bottom)]' => $focus,
 ])>
     @include('partials.skip-link')
-    {{-- Sidebar: ikon + label ringkas di tablet (72px), penuh di desktop (248px) --}}
-    <aside class="hidden md:fixed md:inset-y-0 md:left-0 md:z-20 md:flex md:w-[72px] md:flex-col md:border-r md:border-line md:bg-paper xl:w-[248px]">
-        <div class="flex h-16 shrink-0 items-center gap-3 border-b border-line px-2 max-xl:justify-center xl:px-5" title="SIM-KER Distrik Ransiki">
-            <x-logo />
-            <div class="hidden min-w-0 leading-tight xl:block">
-                <span class="flex items-center gap-2 text-ui font-semibold text-ink">SIM-KER @include('partials.test-mode-pill')</span>
-                <span class="block text-caption text-ink-muted">Distrik Ransiki</span>
+    {{--
+        Sidebar menempel di latar canvas (tanpa latar putih): ikon + label ringkas di tablet (72px), penuh di desktop
+        (240px). Atas: kartu logo; tengah: menu (40px, sudut 8px, aktif brand-50); bawah: profil yang membuka menu kecil.
+    --}}
+    <aside class="hidden md:fixed md:inset-y-0 md:left-0 md:z-20 md:flex md:w-[72px] md:flex-col md:bg-canvas xl:w-[240px]">
+        <div class="shrink-0 px-2 pt-3 xl:px-3" title="SIM-KER Distrik Ransiki">
+            <div class="flex flex-col items-center gap-1 rounded-box border border-line bg-panel p-2 xl:flex-row xl:gap-3 xl:p-3">
+                <x-logo />
+                <div class="hidden min-w-0 flex-1 leading-tight xl:block">
+                    <span class="flex items-center justify-between gap-2 text-ui font-semibold text-ink">SIM-KER @include('partials.test-mode-pill')</span>
+                    <span class="block text-label text-ink-3">Distrik Ransiki</span>
+                </div>
+                {{-- Tablet: hanya logo, jadi penanda mode uji ringkas di bawahnya. --}}
+                @include('partials.test-mode-pill', ['class' => 'xl:hidden', 'short' => true])
+                <span class="sr-only xl:hidden">SIM-KER Distrik Ransiki</span>
             </div>
-            <span class="sr-only xl:hidden">SIM-KER Distrik Ransiki</span>
         </div>
 
         {{-- Di tablet nav tidak di-scroll agar tooltip tidak terpotong oleh tepi sidebar. Grup kecil tanpa judul, dipisah garis. --}}
-        <nav aria-label="Menu utama" class="flex-1 px-1 py-3 xl:overflow-y-auto xl:px-3">
-            {{-- Notifikasi tidak di sidebar: lonceng ada di bilah atas (tablet dan desktop); Akun Saya ada di menu profil. --}}
+        <nav aria-label="Menu utama" class="flex-1 px-2 py-4 xl:overflow-y-auto xl:px-3">
+            {{-- Notifikasi tidak di sidebar: lonceng ada di kepala halaman; Akun Saya ada di menu profil bawah. --}}
             @foreach ($sidebarGroups as $items)
                 <ul @class(['space-y-1', 'mt-3 border-t border-line pt-3' => ! $loop->first])>
                     @foreach ($items as $item)
@@ -110,13 +124,12 @@
                                 aria-label="{{ $item['label'] }}{{ $navCount > 0 ? ', '.$navCount.' menunggu verifikasi' : '' }}"
                                 @if ($active) aria-current="page" @endif
                                 @class([
-                                    'group relative flex flex-col items-center gap-1 rounded-control px-1 py-2 transition-colors xl:min-h-10 xl:flex-row xl:gap-3 xl:px-3',
-                                    // Aktif: latar brand-tint + garis kiri 3px brand.
-                                    'bg-brand-tint font-semibold text-brand before:absolute before:inset-y-2 before:left-0 before:w-[3px] before:rounded-r-full before:bg-brand' => $active,
-                                    'text-ink-soft hover:bg-subtle hover:text-ink' => ! $active,
+                                    'group relative flex flex-col items-center gap-1 rounded-control px-1 py-2 transition-colors xl:h-10 xl:flex-row xl:gap-3 xl:px-3 xl:py-0',
+                                    'bg-brand-50 font-semibold text-brand' => $active,
+                                    'text-ink-2 hover:bg-panel hover:text-ink' => ! $active,
                                 ])
                             >
-                                <x-dynamic-component :component="'heroicon-o-'.$item['icon']" class="size-5 shrink-0" />
+                                <x-dynamic-component :component="'heroicon-o-'.$item['icon']" class="size-5 shrink-0 xl:size-[18px]" />
                                 <span class="w-full truncate text-center text-micro xl:hidden" aria-hidden="true">{{ $item['short'] ?? $item['label'] }}</span>
                                 <span class="hidden truncate text-ui xl:inline" aria-hidden="true">{{ $item['label'] }}</span>
                                 <x-nav-badge :count="$navCount" class="absolute top-1 left-1/2 ml-1.5 xl:static xl:ml-auto" />
@@ -130,79 +143,38 @@
             @endforeach
         </nav>
 
-        {{-- Kartu profil kecil di bawah sidebar (desktop): nama, peran, tombol keluar. --}}
+        {{-- Profil di bawah sidebar: avatar, nama, peran; diklik membuka menu kecil Akun saya / Keluar. --}}
         @if ($userName)
-            <div class="hidden shrink-0 border-t border-line p-3 xl:block" data-sidebar-profile>
-                <div class="flex items-center gap-3 rounded-control px-2 py-1.5">
-                    <x-avatar :name="$userName" size="sm" />
-                    <a href="{{ $accountUrl ?? '#' }}" class="min-w-0 flex-1 leading-tight hover:underline">
-                        <span class="block truncate text-ui font-semibold text-ink">{{ $userName }}</span>
-                        @if ($userRole)
-                            <span class="block truncate text-caption text-ink-muted">{{ $userRole }}</span>
+            <div class="shrink-0 px-2 pb-3 xl:px-3" data-sidebar-profile>
+                <div x-data="{ open: false }" x-on:keydown.escape.window="open = false" x-on:click.outside="open = false" class="relative">
+                    <button type="button" x-on:click="open = ! open" x-bind:aria-expanded="open" aria-haspopup="menu" class="flex w-full items-center gap-3 rounded-control p-2 text-left transition-colors hover:bg-panel max-xl:justify-center">
+                        <x-avatar :name="$userName" size="sm" class="bg-panel" />
+                        <span class="hidden min-w-0 flex-1 leading-tight xl:block">
+                            <span class="block truncate text-ui font-semibold text-ink">{{ $userName }}</span>
+                            @if ($userRole)
+                                <span class="block truncate text-label text-ink-3">{{ $userRole }}</span>
+                            @endif
+                        </span>
+                        <x-heroicon-o-chevron-up-down class="hidden size-4 shrink-0 text-ink-3 xl:block" aria-hidden="true" />
+                        <span class="sr-only">Menu akun {{ $userName }}</span>
+                    </button>
+                    <div x-cloak x-show="open" x-transition.opacity.duration.100ms class="absolute bottom-full left-0 z-30 mb-1 w-56 rounded-card border border-line bg-panel py-1 shadow-float">
+                        @if ($accountUrl)
+                            <x-dropdown.item :href="$accountUrl" icon="user-circle">Akun saya</x-dropdown.item>
                         @endif
-                    </a>
-                    @if (Route::has('logout'))
-                        <form method="POST" action="{{ route('logout') }}" data-logout data-no-processing>
-                            @csrf
-                            <button type="submit" class="flex size-9 items-center justify-center rounded-control text-ink-soft transition-colors hover:bg-subtle hover:text-ink" aria-label="Keluar" title="Keluar">
-                                <x-heroicon-o-arrow-right-start-on-rectangle class="size-5" />
-                            </button>
-                        </form>
-                    @endif
+                        @if (Route::has('logout'))
+                            <form method="POST" action="{{ route('logout') }}" data-logout data-no-processing>
+                                @csrf
+                                <x-dropdown.item type="submit" icon="arrow-right-start-on-rectangle">Keluar</x-dropdown.item>
+                            </form>
+                        @endif
+                    </div>
                 </div>
             </div>
         @endif
     </aside>
 
-    <div class="md:pl-[72px] xl:pl-[248px]">
-        {{-- Bilah atas tablet/desktop: cari global (Admin, OPD), lonceng, menu profil. --}}
-        <header class="sticky top-0 z-20 hidden h-16 items-center gap-3 border-b border-line bg-paper px-6 md:flex xl:px-8">
-            @if ($searchUrl)
-                <form method="GET" action="{{ $searchUrl }}" role="search" class="min-w-0 max-w-sm flex-1">
-                    <x-search-input label="Cari kelompok, ketua, kampung, atau produk" :value="request()->routeIs('*.search') ? request('q') : null" />
-                </form>
-            @else
-                <div class="flex-1"></div>
-            @endif
-            {{-- Tablet: sidebar hanya logo, jadi penanda mode uji di bilah atas. --}}
-            @include('partials.test-mode-pill', ['class' => 'xl:hidden'])
-            <div class="ml-auto flex items-center gap-2">
-                @if ($notificationsUrl)
-                    <x-notification-bell :href="$notificationsUrl" :count="$unreadNotifications" :active="request()->routeIs('notifications.*')" data-bell="desktop" />
-                @endif
-                @if ($userName)
-                    <x-dropdown width="w-64">
-                        <x-slot:trigger>
-                            <button type="button" x-bind:aria-expanded="open" aria-haspopup="menu" class="flex min-h-11 items-center gap-3 rounded-control px-2 text-left transition-colors hover:bg-subtle md:min-h-10">
-                                <x-avatar :name="$userName" size="sm" />
-                                <span class="hidden min-w-0 max-w-48 leading-tight lg:block">
-                                    <span class="block truncate text-ui font-semibold text-ink">{{ $userName }}</span>
-                                    @if ($userRole)
-                                        <span class="block truncate text-caption text-ink-muted">{{ $userRole }}</span>
-                                    @endif
-                                </span>
-                                <x-heroicon-o-chevron-down class="size-4 text-ink-muted" />
-                                <span class="sr-only">Menu akun {{ $userName }}</span>
-                            </button>
-                        </x-slot:trigger>
-                        <div class="border-b border-line px-3 pb-2 pt-1">
-                            <p class="line-clamp-2 text-ui font-semibold text-ink">{{ $userName }}</p>
-                            <p class="truncate text-caption text-ink-muted">{{ $userRole }}</p>
-                        </div>
-                        @if ($accountUrl)
-                            <x-dropdown.item :href="$accountUrl" icon="user-circle">Akun Saya</x-dropdown.item>
-                        @endif
-                        @if (Route::has('logout'))
-                            <form method="POST" action="{{ route('logout') }}" data-logout>
-                                @csrf
-                                <x-dropdown.item type="submit" icon="arrow-right-start-on-rectangle">Keluar</x-dropdown.item>
-                            </form>
-                        @endif
-                    </x-dropdown>
-                @endif
-            </div>
-        </header>
-
+    <div class="md:pl-[72px] xl:pl-[240px]">
         {{-- Header atas tipis di HP --}}
         <header class="sticky top-0 z-20 border-b border-line bg-paper pt-[env(safe-area-inset-top)] md:hidden">
             <div class="flex h-14 items-center gap-1 px-4">
@@ -235,48 +207,57 @@
             </div>
         </header>
 
+        {{-- Konten di dalam panel putih (margin 12px, sudut 20px, padding 28px; HP 16px tanpa margin). --}}
         <main id="konten" tabindex="-1" @class([
-            'mx-auto w-full max-w-app px-4 pt-5 md:px-6 md:pb-10 md:pt-8 xl:px-8',
+            'min-h-[calc(100dvh-1.5rem)] bg-panel px-4 pt-5 md:m-3 md:rounded-frame md:border md:border-line md:p-7',
             'pb-24' => ! $focus,
             'pb-8' => $focus,
         ])>
-            @if (! $header)
-                @unless ($ownHeading)
-                    <h1 class="sr-only">{{ $title }}</h1>
-                @endunless
-                {{ $lead ?? '' }}
-            @else
-                {{-- Semua peran: header terang seragam (x-admin.page-header); aksi sekunder masuk menu "…" di HP. --}}
-                {{-- condensed: di HP judul sudah ada di header atas; bila header atas memakai judul lain (phoneTitle), h1 tetap tampil. --}}
-                <x-admin.page-header :title="$title" :description="$description" :eyebrow="$eyebrow" :breadcrumbs="$breadcrumbs" :condensed="! $phoneTitle">
-                    @isset($actions)
-                        <x-slot:actions>{{ $actions }}</x-slot:actions>
-                    @endisset
-                    @isset($secondary)
-                        <x-slot:secondary>{{ $secondary }}</x-slot:secondary>
-                    @endisset
-                    @isset($badge)
-                        <x-slot:badge>{{ $badge }}</x-slot:badge>
-                    @endisset
-                    @isset($meta)
-                        <x-slot:meta>{{ $meta }}</x-slot:meta>
-                    @endisset
-                </x-admin.page-header>
-            @endif
+            <div class="mx-auto w-full max-w-app">
+                @if (! $header)
+                    @unless ($ownHeading)
+                        <h1 class="sr-only">{{ $title }}</h1>
+                    @endunless
+                    @if ($tools !== '')
+                        <div class="mb-5 hidden items-center justify-end gap-2 md:flex">{!! $tools !!}</div>
+                    @endif
+                    {{ $lead ?? '' }}
+                @else
+                    {{-- Semua peran: kepala halaman seragam di dalam panel; aksi sekunder masuk menu "…" di HP. --}}
+                    {{-- condensed: di HP judul sudah ada di header atas; bila header atas memakai judul lain (phoneTitle), h1 tetap tampil. --}}
+                    <x-admin.page-header :title="$title" :description="$description" :eyebrow="$eyebrow" :breadcrumbs="$breadcrumbs" :condensed="! $phoneTitle">
+                        @if ($tools !== '')
+                            <x-slot:tools>{!! $tools !!}</x-slot:tools>
+                        @endif
+                        @isset($actions)
+                            <x-slot:actions>{{ $actions }}</x-slot:actions>
+                        @endisset
+                        @isset($secondary)
+                            <x-slot:secondary>{{ $secondary }}</x-slot:secondary>
+                        @endisset
+                        @isset($badge)
+                            <x-slot:badge>{{ $badge }}</x-slot:badge>
+                        @endisset
+                        @isset($meta)
+                            <x-slot:meta>{{ $meta }}</x-slot:meta>
+                        @endisset
+                    </x-admin.page-header>
+                @endif
 
-            @if ($sectionTabs)
-                {{-- data-swap: URL tab ikut filter yang baru diterapkan x-admin.toolbar (mis. Ekonomi ⇄ Legalitas). --}}
-                <x-admin.tabs
-                    data-swap="section-tabs"
-                    :class="$header || isset($lead) ? 'mt-6' : ''"
-                    :tabs="collect($sectionTabs['tabs'])->map(fn ($item, $key) => ['label' => $item['label'], 'href' => $tabUrls[$key] ?? $item['href'], 'count' => $item['count']])->all()"
-                    :active="$tab"
-                    :label="$sectionTabs['label']"
-                />
-            @endif
+                @if ($sectionTabs)
+                    {{-- data-swap: URL tab ikut filter yang baru diterapkan x-admin.toolbar (mis. Ekonomi ⇄ Legalitas). --}}
+                    <x-admin.tabs
+                        data-swap="section-tabs"
+                        :class="$header || isset($lead) ? 'mt-5' : ''"
+                        :tabs="collect($sectionTabs['tabs'])->map(fn ($item, $key) => ['label' => $item['label'], 'href' => $tabUrls[$key] ?? $item['href'], 'count' => $item['count']])->all()"
+                        :active="$tab"
+                        :label="$sectionTabs['label']"
+                    />
+                @endif
 
-            <div class="mt-6">
-                {{ $slot }}
+                <div class="mt-6">
+                    {{ $slot }}
+                </div>
             </div>
         </main>
 

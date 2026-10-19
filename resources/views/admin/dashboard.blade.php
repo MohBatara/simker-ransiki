@@ -5,12 +5,12 @@
 @use('App\Support\Dashboards\ReportingStats')
 
 {{--
-    Dasbor Admin, tab Ringkasan: sapaan + pemilih periode → Perlu dikerjakan (tugas berprioritas dengan tombol aksi)
-    → 4 kartu angka → 2 grafik ringkas → pelaporan per OPD → belum mengajukan → kelompok dan ekonomi.
+    Dasbor Admin, tab Ringkasan: banner sapaan (angka terpenting, sapaan, aksi, pemilih periode) → Ekonomi (8 kolom) +
+    Kelompok (4 kolom) → Perlu dikerjakan (5) + Laporan terbaru (7) → Produksi per produk → pelaporan per OPD → belum
+    mengajukan. HP: semua kartu bertumpuk.
 --}}
 @php
     $month = $period->format('Y-m');
-    $verifiedUrl = route('admin.reports.index', ['status' => 'verified', 'period' => $month]);
     $staleDays = config('simker.follow_up.stale_days');
     $waitingHint = collect([
         $attention['waiting'] ? Format::number($attention['waiting']).' menunggu lebih dari '.DistrictStats::WAITING_DAYS.' hari' : null,
@@ -24,21 +24,35 @@
         $attention['active_without_account'] ? ['icon' => 'user-plus', 'title' => Format::number($attention['active_without_account']).' kelompok aktif belum punya akun', 'hint' => 'Tanpa akun, kelompok belum bisa mengisi laporan sendiri.', 'action' => 'Buat akun '.Format::number($attention['active_without_account']).' kelompok', 'href' => route('admin.organizations.index', ['status' => 'active', 'akun' => 'tidak-ada'])] : null,
         $attention['without_opd'] ? ['icon' => 'building-office-2', 'title' => Format::number($attention['without_opd']).' kelompok belum punya OPD pembina', 'hint' => 'Laporannya hanya bisa diverifikasi Admin.', 'action' => 'Tetapkan OPD', 'href' => route('admin.organizations.index', ['opd' => 'none'])] : null,
     ]));
+    $submittedCount = $progress['verified'] + $progress['submitted'] + $progress['revision'];
+    $waitingTotal = $attention['waiting_total'];
 @endphp
 
-<x-layouts.app title="Dasbor" description="Ringkasan pelaporan dan kelompok di Distrik Ransiki." section="dasbor" tab="ringkasan" :header="false">
-    <x-slot:lead>
-        <x-admin.greeting :name="auth()->user()->name" subtitle="Distrik Ransiki">
+<x-layouts.app title="Dasbor" description="Ringkasan pelaporan dan ekonomi kelompok di Distrik Ransiki." section="dasbor" tab="ringkasan">
+    <div class="space-y-6">
+        <x-admin.greeting
+            :name="auth()->user()->name"
+            subtitle="Distrik Ransiki"
+            :highlight="$waitingTotal
+                ? ['value' => Format::number($waitingTotal), 'label' => 'laporan menunggu verifikasi', 'icon' => 'clipboard-document-check', 'href' => route('admin.verifications.index')]
+                : ['value' => Format::number($progress['verified']), 'label' => 'laporan terverifikasi '.Format::month($period), 'icon' => 'check-badge', 'href' => route('admin.reports.index', ['status' => 'verified', 'period' => $month])]"
+            :sentence="Format::number($submittedCount).' dari '.Format::number($progress['total']).' kelompok wajib lapor sudah mengajukan laporan '.Format::month($period).'.'"
+            :action="$waitingTotal ? ['label' => 'Mulai verifikasi', 'href' => route('admin.verifications.index')] : ['label' => 'Lihat semua laporan', 'href' => route('admin.reports.index')]"
+        >
             @include('shared.dashboards.period-picker')
         </x-admin.greeting>
-    </x-slot:lead>
 
-    <div class="space-y-6">
-        @include('shared.dashboards.tasks')
+        <div class="grid grid-cols-1 gap-6 lg:grid-cols-12 lg:items-stretch">
+            @include('shared.dashboards.economy', ['area' => 'admin', 'class' => 'lg:col-span-8'])
+            @include('shared.dashboards.organizations', ['class' => 'lg:col-span-4'])
+        </div>
 
-        @include('shared.dashboards.stats', ['area' => 'admin'])
+        <div class="grid grid-cols-1 gap-6 lg:grid-cols-12 lg:items-stretch">
+            @include('shared.dashboards.tasks', ['area' => 'admin', 'class' => 'lg:col-span-5'])
+            @include('shared.dashboards.latest-reports', ['area' => 'admin', 'class' => 'lg:col-span-7'])
+        </div>
 
-        @include('shared.dashboards.charts', ['area' => 'admin'])
+        @include('shared.dashboards.production', ['area' => 'admin'])
 
         <x-admin.card title="Pelaporan per OPD" :description="'Periode '.Format::month($period).'. Kelompok dengan beberapa OPD dihitung di setiap OPD-nya.'" flush>
             <x-admin.table bare>
@@ -83,13 +97,5 @@
         </x-admin.card>
 
         @include('shared.dashboards.not-submitted', ['area' => 'admin'])
-
-        {{-- Kelompok 5 kolom, Ekonomi 7 kolom, sama tinggi; HP bertumpuk. Produksi selebar penuh di bawahnya. --}}
-        <div class="grid grid-cols-1 gap-6 lg:grid-cols-12 lg:items-stretch">
-            @include('shared.dashboards.organizations', ['class' => 'lg:col-span-5'])
-            @include('shared.dashboards.economy', ['class' => 'lg:col-span-7'])
-        </div>
-
-        @include('shared.dashboards.production')
     </div>
 </x-layouts.app>

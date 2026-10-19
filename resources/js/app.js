@@ -399,18 +399,19 @@ document.addEventListener('click', openRowLink);
 document.addEventListener('auxclick', (event) => event.button === 1 && openRowLink(event));
 
 /**
- * Panel detail di samping daftar kelompok (layar ≥ 1280px). Klik baris memuat potongan HTML panel
+ * Laci ringkasan kelompok dari kanan di atas daftar (layar ≥ 1280px). Klik baris memuat potongan HTML panel
  * (route .../ringkas, dicek Policy) tanpa pindah halaman; layar lebih kecil, klik dengan Ctrl/Cmd, atau
- * permintaan yang gagal tetap membuka halaman detail.
+ * permintaan yang gagal tetap membuka halaman detail. ?pilih=id membuka laci sejak awal.
  */
-Alpine.data('organizationPanel', () => ({
+Alpine.data('organizationPanel', (initiallyOpen = false) => ({
     loading: false,
+    open: initiallyOpen && window.matchMedia('(min-width: 80rem)').matches,
 
     async select(event) {
         const link = event.target.closest('a');
         const row = event.target.closest('tr[data-panel-url]');
 
-        if (!link || !row || !window.matchMedia('(min-width: 80rem)').matches) {
+        if (!link || !link.matches('[data-row-link]') || !row || !window.matchMedia('(min-width: 80rem)').matches) {
             return;
         }
         if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || event.button !== 0) {
@@ -419,6 +420,7 @@ Alpine.data('organizationPanel', () => ({
 
         event.preventDefault();
         this.loading = true;
+        this.open = true;
 
         try {
             const response = await fetch(row.dataset.panelUrl, { headers: { Accept: 'text/html', 'X-Requested-With': 'XMLHttpRequest' } });
@@ -446,8 +448,15 @@ Alpine.data('organizationPanel', () => ({
     },
 
     close() {
-        this.$refs.panel.innerHTML = this.$refs.empty.innerHTML;
+        if (!this.open) {
+            return;
+        }
+        this.open = false;
         this.markSelected(null);
+
+        const url = new URL(window.location.href);
+        url.searchParams.delete('pilih');
+        window.history.replaceState(null, '', url);
     },
 }));
 

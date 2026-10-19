@@ -24,14 +24,13 @@ test('tenggat tinggal 3 hari atau kurang ditandai wait dan tebal; lewat tenggat 
     'lewat' => ['2026-10-12 09:00:00', 'text-fix', 'lewat 2 hari'],
 ]);
 
-test('dasbor kelompok: kartu sapaan dengan nama kelompok, judul Dasbor', function () {
+test('dasbor kelompok: judul Dasbor lalu banner sapaan dengan nama kelompok', function () {
     Carbon::setTestNow(Carbon::parse('2026-10-04 09:00:00', 'Asia/Jayapura'));
     $organization = Organization::factory()->create(['name' => 'KUB Judul Contoh', 'reporting_starts_on' => '2026-07-01']);
 
     $this->actingAs(User::factory()->kelompok($organization)->create())->get('/kelompok')
         ->assertOk()
-        ->assertSee('<h1 class="sr-only">Dasbor</h1>', false)
-        ->assertSeeInOrder(['KUB Judul Contoh', 'Selamat pagi'])
+        ->assertSeeInOrder(['>Dasbor</h1>', 'KUB Judul Contoh', 'Selamat pagi'], false)
         ->assertSee('<title>Dasbor', false);
 });
 

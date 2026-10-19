@@ -56,6 +56,52 @@ class StatisticsCharts
     }
 
     /**
+     * Grafik garis kartu Ekonomi dasbor Ringkasan: penjualan dan biaya per bulan (Statistics::economyTrend). Bulan tanpa
+     * isian = null (celah); bulan sementara putus-putus seperti tren pendapatan.
+     */
+    public static function economyTrend(Collection $trend): array
+    {
+        $series = ['income_sales' => ['Penjualan', 'brand'], 'costs' => ['Biaya', 'chart-2']];
+        $notes = fn (array $row, string $field) => array_values(array_filter([
+            'Diisi '.$row['totals'][$field]['filled'].' dari '.$row['obligated'].' kelompok',
+            $row['provisional'] ? 'Sementara: baru '.$row['reports'].' dari '.$row['obligated'].' kelompok terverifikasi' : null,
+        ]));
+        $value = fn (array $row, string $field) => $row['totals'][$field]['sum'];
+
+        return [
+            'type' => 'line',
+            'format' => 'rupiah',
+            'legend' => ['position' => 'top', 'always' => true],
+            'labels' => self::monthLabels($trend),
+            'datasets' => collect($series)->map(fn (array $definition, string $field) => [
+                'label' => $definition[0],
+                'tone' => $definition[1],
+                'data' => $trend->map(fn (array $row) => $value($row, $field))->all(),
+                'provisional' => $trend->pluck('provisional')->all(),
+                'notes' => $trend->map(fn (array $row) => $notes($row, $field))->all(),
+            ])->values()->all(),
+            'table' => [
+                'columns' => ['Bulan', 'Penjualan', 'Biaya', 'Keterangan'],
+                'numeric' => [1, 2],
+                'rows' => $trend->map(fn (array $row) => [
+                    Format::month($row['period']),
+                    Format::rupiah($value($row, 'income_sales')),
+                    Format::rupiah($value($row, 'costs')),
+                    $row['provisional'] ? 'Sementara' : '',
+                ])->all(),
+            ],
+            'summary' => 'Penjualan dan biaya per bulan. '.$trend->map(fn (array $row) => Format::month($row['period']).': '
+                .collect($series)->map(fn (array $definition, string $field) => mb_strtolower($definition[0]).' '
+                    .($value($row, $field) === null ? 'tidak ada data' : Format::rupiah($value($row, $field))))->join(', ')
+                .($row['provisional'] ? ' (sementara)' : ''))->join('; ').'.',
+            'footnote' => $trend->contains(fn (array $row) => $row['provisional'] && $row['reports'] > 0) ? self::PROVISIONAL_NOTE : null,
+            'empty' => $trend->every(fn (array $row) => $row['reports'] === 0)
+                ? 'Belum ada laporan terverifikasi pada enam bulan ini.'
+                : null,
+        ];
+    }
+
+    /**
      * Kepatuhan pelaporan, ditumpuk dari bawah dengan urutan tetap. Legenda di atas grafik memuat jumlah
      * bulan terakhir, sehingga segmen tetap bisa dibedakan tanpa warna (urutan + legenda + tabel).
      */

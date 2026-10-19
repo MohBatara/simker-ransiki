@@ -1,26 +1,27 @@
 @use('App\Support\Format')
 
 @php
+    // Nilai di area aplikasi (.theme-app); halaman publik memakai nilai lama di @theme.
     $colors = [
-        ['ink', '#1C1F1E', 'Teks utama', 'bg-ink'],
-        ['ink-soft', '#4A504D', 'Teks sekunder', 'bg-ink-soft'],
-        ['ink-muted', '#686E6B', 'Keterangan, placeholder', 'bg-ink-muted'],
-        ['line', '#E3E5E1', 'Border default', 'bg-line'],
-        ['line-strong', '#C9CCC6', 'Border tegas (kartu, pemisah)', 'bg-line-strong'],
-        ['line-input', '#858B87', 'Border kontrol form', 'bg-line-input'],
-        ['paper', '#FFFFFF', 'Permukaan kartu', 'bg-paper'],
-        ['canvas', '#F6F6F3', 'Latar halaman', 'bg-canvas'],
-        ['subtle', '#EFF0EC', 'Latar baris/hover', 'bg-subtle'],
+        ['ink', '#1A1F1C', 'Teks utama', 'bg-ink'],
+        ['ink-2', '#5F6B64', 'Teks sekunder', 'bg-ink-2'],
+        ['ink-3', '#636D67', 'Keterangan (spesifikasi #8A948E digelapkan agar 4,5:1)', 'bg-ink-3'],
+        ['line', '#E6E8E3', 'Border kartu dan tabel', 'bg-line'],
+        ['line-soft', '#F0F2EE', 'Pemisah baris tabel', 'bg-line-soft'],
+        ['line-input', '#858B87', 'Border kontrol form (3:1)', 'bg-line-input'],
+        ['panel', '#FFFFFF', 'Panel konten dan kartu', 'bg-panel'],
+        ['canvas', '#EEF0EC', 'Latar halaman dan sidebar', 'bg-canvas'],
         ['brand', '#1F5A47', 'Aksen utama', 'bg-brand'],
-        ['brand-hover', '#174536', 'Aksen saat hover', 'bg-brand-hover'],
-        ['brand-tint', '#E7F0EC', 'Latar lembut aksen', 'bg-brand-tint'],
+        ['brand-600', '#2F7A5F', 'Aksen terang', 'bg-brand-600'],
+        ['brand-100', '#D3E6DB', 'Bingkai lembut aksen', 'bg-brand-100'],
+        ['brand-50', '#EAF3EE', 'Latar lembut aksen', 'bg-brand-50'],
     ];
     $statuses = [
-        ['ok', '#2F6B3A', '#E8F1E8', 'Terverifikasi', 'bg-ok', 'bg-ok-bg'],
-        ['wait', '#8A5A00', '#FBF1DC', 'Menunggu verifikasi', 'bg-wait', 'bg-wait-bg'],
-        ['orange', '#A14A12', '#FDEEE3', 'Perlu revisi / perlu perbaikan', 'bg-orange', 'bg-orange-bg'],
-        ['fix', '#A3392B', '#F9E7E4', 'Terlambat / ditutup', 'bg-fix', 'bg-fix-bg'],
-        ['idle', '#5C625F', '#EEEFEC', 'Draf / tidak aktif', 'bg-idle', 'bg-idle-bg'],
+        ['sukses', '#1E6B3A', '#E3F4E8', 'Terverifikasi, aktif', 'bg-ok', 'bg-ok-bg'],
+        ['menunggu', '#8A5A00', '#FBF0D4', 'Menunggu verifikasi', 'bg-wait', 'bg-wait-bg'],
+        ['gagal', '#A63A2B', '#FBE4E1', 'Perlu revisi, terlambat, ditutup', 'bg-fix', 'bg-fix-bg'],
+        ['info', '#2F5675', '#E6EEF5', 'Tindak lanjut berjalan', 'bg-info', 'bg-info-bg'],
+        ['netral', '#4B544F', '#F1F2EF', 'Draf, tidak aktif', 'bg-idle', 'bg-idle-bg'],
     ];
 @endphp
 

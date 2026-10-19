@@ -18,11 +18,7 @@
     section="dasbor"
     tab="ekonomi"
     :tab-urls="['ekonomi' => route($area.'.statistics.economy', $filters), 'legalitas' => route($area.'.statistics.legal', $filters)]"
-    :header="false"
 >
-    <x-slot:lead>
-        <x-admin.greeting :name="auth()->user()->name" :subtitle="$area === 'opd' ? auth()->user()->opd?->name : 'Distrik Ransiki'" />
-    </x-slot:lead>
     <div class="space-y-6">
         @include('shared.statistics._header', ['tab' => 'economy', 'summaryText' => $range])
 

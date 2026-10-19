@@ -28,7 +28,7 @@ test('halaman masuk dengan foto sampul: overlay padat 70% dan teks sekunder puti
     expect($html)->toContain('<picture')->toContain('bg-forest/70')->not->toContain('text-forest-soft');
 });
 
-test('detail kelompok: badge status (pil bertitik) di samping judul, tag, ringkasan, dan peringatan akun', function () {
+test('detail kelompok: badge status (pil lembut) di samping judul, tag, ringkasan, dan peringatan akun', function () {
     $opd = Opd::factory()->create(['short_name' => 'DPC']);
     $organization = Organization::factory()->create(['status' => OrganizationStatus::Inactive]);
     $organization->opds()->attach($opd);
@@ -45,7 +45,7 @@ test('detail kelompok: badge status (pil bertitik) di samping judul, tag, ringka
         ->assertSee('/admin/pengaturan/pengguna/tambah?kelompok='.$organization->id, false)
         ->getContent();
 
-    expect($html)->toMatch('/<h1[^>]*>.*?<\/h1>.*?aria-label="Status kelompok">\s*<span data-tone="neutral"[^>]*><span[^>]*><\/span>Tidak aktif sementara<\/span>/s');
+    expect($html)->toMatch('/<h1[^>]*>.*?<\/h1>.*?aria-label="Status kelompok">\s*<span data-tone="neutral"[^>]*>Tidak aktif sementara<\/span>/s');
 });
 
 test('detail kelompok untuk OPD tidak menampilkan peringatan akun', function () {

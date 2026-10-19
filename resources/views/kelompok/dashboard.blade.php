@@ -8,10 +8,14 @@
     $showCurrent = $current['allowed'] && $canCreate && (! $due || $dueSubmitted || $current['report']);
 @endphp
 
-<x-layouts.app title="Dasbor" :header="false">
-    <x-slot:lead>
-        <x-admin.greeting :name="auth()->user()->name" :subtitle="$organization->name" />
-    </x-slot:lead>
+<x-layouts.app title="Dasbor" description="Laporan bulanan, produksi, dan tindak lanjut kelompok Anda.">
+    <x-admin.greeting
+        :name="auth()->user()->name"
+        :subtitle="$organization->name"
+        :sentence="$due ? 'Laporan '.Format::month($due['period']).': tenggat '.Format::date($due['deadline']).', '.$due['distance'].'.' : null"
+        :action="['label' => 'Buka laporan bulanan', 'href' => route('kelompok.reports.index')]"
+        class="mb-6"
+    />
 
     <div class="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_320px] lg:items-start">
         {{-- Kartu utama: apa yang perlu dilakukan untuk bulan wajib lapor --}}

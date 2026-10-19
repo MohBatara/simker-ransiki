@@ -21,7 +21,7 @@
 <div
     x-data="formGuard(@js($dirty))"
     @if ($form) data-form="{{ $form }}" @endif
-    {{ $attributes->class('sticky bottom-[var(--app-bottom,0px)] z-10 -mx-4 mt-6 flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-line bg-paper px-4 pt-3 pb-[calc(0.75rem+var(--app-safe-bottom,0px))] md:bottom-0 md:-mx-6 md:rounded-t-tile md:border-x md:px-6 xl:-mx-8 xl:px-8 print:hidden') }}
+    {{ $attributes->class('sticky bottom-[var(--app-bottom,0px)] z-10 -mx-4 mt-6 flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-line bg-panel px-4 pt-3 pb-[calc(0.75rem+var(--app-safe-bottom,0px))] md:bottom-0 md:-mx-7 md:rounded-t-box md:border-x md:px-7 print:hidden') }}
 >
     <p class="flex min-w-0 flex-1 items-center gap-2 text-ui text-ink-soft max-md:w-full max-md:text-caption" role="status">
         <span x-cloak x-show="dirty" class="inline-flex items-center gap-2"><span class="size-2 shrink-0 rounded-full bg-wait" aria-hidden="true"></span>Perubahan belum disimpan</span>

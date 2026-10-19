@@ -22,16 +22,16 @@
         @if ($name) name="{{ $name }}" @endif
         @if ($id) id="{{ $id }}" @endif
         @if ($invalid) aria-invalid="true" aria-describedby="{{ $id }}-error" @endif
-        @if ($invalidIf) x-bind:aria-invalid="!! ({{ $invalidIf }})" x-bind:class="({{ $invalidIf }}) && 'border-fix! focus:border-fix! focus:ring-fix!'" @endif
+        @if ($invalidIf) x-bind:aria-invalid="!! ({{ $invalidIf }})" x-bind:class="({{ $invalidIf }}) && 'border-fix! focus:border-fix! focus:shadow-[var(--control-focus-invalid)]!'" @endif
         {{ $attributes->class([
-            'block h-11 w-full appearance-none rounded-control border bg-paper pl-3 pr-9 text-body text-ink transition-colors md:text-ui',
-            'md:h-10' => $size !== 'sm',
+            'block h-11 w-full appearance-none rounded-control border bg-paper pl-3 pr-9 text-body text-ink transition-colors md:[font-size:var(--control-text)]',
+            'md:h-(--control-h)' => $size !== 'sm',
             'md:h-9' => $size === 'sm',
             // Pilihan kosong (placeholder) tampil redup seperti placeholder input; daftar opsinya tetap ink.
             'has-[option:first-child:checked]:text-ink-muted *:text-ink' => $placeholder,
-            'focus:outline-none focus:ring-1 disabled:bg-subtle disabled:text-ink-muted',
-            'border-line-input focus:border-brand focus:ring-brand' => ! $invalid,
-            'border-fix focus:border-fix focus:ring-fix' => $invalid,
+            'focus:outline-none disabled:bg-subtle disabled:text-ink-muted',
+            'border-line-input focus:border-brand focus:shadow-[var(--control-focus)]' => ! $invalid,
+            'border-fix focus:border-fix focus:shadow-[var(--control-focus-invalid)]' => $invalid,
         ]) }}
     >
         @if ($placeholder)

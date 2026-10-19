@@ -20,8 +20,9 @@
         <x-button icon="plus" :href="route('admin.posts.create')">Tambah berita</x-button>
     </x-slot:actions>
 
-    <div class="space-y-6">
+    <x-admin.card flush>
         <x-admin.toolbar
+            title="Daftar berita"
             :action="$url"
             search-label="Cari judul"
             :search="$filters['q'] ?? ''"
@@ -35,16 +36,16 @@
         <div data-swap="berita">
             @if ($posts->isEmpty())
                 @if ($chips !== [])
-                    <x-admin.empty icon="magnifying-glass" title="Tidak ada berita yang cocok" description="Ubah kata pencarian atau hapus filter.">
+                    <x-admin.empty bare icon="magnifying-glass" title="Tidak ada berita yang cocok" description="Ubah kata pencarian atau hapus filter.">
                         <x-button variant="secondary" :href="$url">Hapus filter</x-button>
                     </x-admin.empty>
                 @else
-                    <x-admin.empty icon="newspaper" title="Belum ada berita" description="Tulis berita atau kegiatan pertama untuk website publik.">
+                    <x-admin.empty bare icon="newspaper" title="Belum ada berita" description="Tulis berita atau kegiatan pertama untuk website publik.">
                         <x-button icon="plus" :href="route('admin.posts.create')">Tambah berita</x-button>
                     </x-admin.empty>
                 @endif
             @else
-                <x-admin.table clickable>
+                <x-admin.table bare clickable>
                     <x-slot:head>
                         <x-admin.table.heading>Judul</x-admin.table.heading>
                         <x-admin.table.heading>Kategori</x-admin.table.heading>
@@ -53,9 +54,9 @@
                     </x-slot:head>
 
                     @foreach ($posts as $post)
-                        <x-admin.table.row :href="route('admin.posts.edit', $post)">
+                        <x-admin.table.row :href="route('admin.posts.edit', $post)" :for="$post->title">
                             <x-admin.table.cell primary>{{ $post->title }}</x-admin.table.cell>
-                            <x-admin.table.cell label="Kategori">{{ $post->category->label() }}</x-admin.table.cell>
+                            <x-admin.table.cell label="Kategori"><x-admin.chip :icon="$post->category === PostCategory::Activity ? 'calendar-days' : 'newspaper'">{{ $post->category->label() }}</x-admin.chip></x-admin.table.cell>
                             <x-admin.table.cell label="Tanggal terbit"><x-admin.date :value="$post->published_at" time /></x-admin.table.cell>
                             <x-admin.table.cell badge>
                                 @if ($post->isScheduled())
@@ -73,5 +74,5 @@
                 </x-admin.table>
             @endif
         </div>
-    </div>
+    </x-admin.card>
 </x-layouts.app>

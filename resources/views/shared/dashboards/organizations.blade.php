@@ -1,98 +1,72 @@
 {{--
-    Kartu "Kelompok" dasbor Admin, tab Ringkasan: total, bar status bersegmen (Aktif brand, Tidak aktif sementara sand,
-    Ditutup clay) dengan legenda yang bisa diklik, lalu daftar ringkas jenis kelembagaan (5 teratas, sisanya
-    dibuka di tempat). Bidang usaha ada di tab Ekonomi dan filter daftar Kelompok. Variabel: $organizations (DistrictStats::organizations()).
+    Kartu "Kelompok" dasbor Admin, tab Ringkasan (4 kolom): donat jenis kelembagaan dengan total di tengah, legenda chip
+    berbingkai (5 jenis teratas + Lainnya, menaut ke daftar terfilter), lalu pil status (Aktif, Tidak aktif, Ditutup).
+    Variabel: $organizations (DistrictStats::organizations()), $class (opsional).
 --}}
 @use('App\Support\Format')
 @use('App\Enums\OrganizationStatus')
 
 @php
     $total = $organizations['total'];
-    $segments = collect([
-        [OrganizationStatus::Active, 'Aktif', 'bg-brand'],
-        [OrganizationStatus::Inactive, 'Tidak aktif', 'bg-sand'],
-        [OrganizationStatus::Closed, 'Ditutup', 'bg-clay'],
-    ])->map(fn ($segment) => [
-        'label' => $segment[1],
-        'full' => $segment[0]->label(),
-        'color' => $segment[2],
-        'value' => $organizations['statuses'][$segment[0]->value] ?? 0,
-        'href' => route('admin.organizations.index', ['status' => $segment[0]->value]),
+    $types = collect($organizations['types'])->where('value', '>', 0)->values();
+    $top = $types->take(5)->values();
+    $rest = $types->slice(5);
+    $tones = ['chart-1', 'chart-2', 'chart-3', 'chart-4', 'chart-5'];
+    $slices = $top->map(fn ($type, $index) => [
+        'label' => $type['label'],
+        'value' => $type['value'],
+        'tone' => $tones[$index],
+        'href' => route('admin.organizations.index', ['type' => $type['id']]),
     ]);
-    $lists = [
-        ['title' => 'Jenis kelembagaan', 'items' => $organizations['types'], 'filter' => 'type', 'note' => null],
-    ];
+    if ($rest->isNotEmpty()) {
+        $slices->push(['label' => 'Lainnya', 'value' => $rest->sum('value'), 'tone' => 'chart-other', 'href' => route('admin.organizations.index')]);
+    }
+    $statuses = collect([
+        [OrganizationStatus::Active, 'Aktif'],
+        [OrganizationStatus::Inactive, 'Tidak aktif'],
+        [OrganizationStatus::Closed, 'Ditutup'],
+    ]);
+    $config = ['type' => 'doughnut', 'labels' => $slices->pluck('label')->all(), 'data' => $slices->pluck('value')->all(), 'tones' => $slices->pluck('tone')->all()];
+    $summary = 'Kelompok per jenis kelembagaan: '.$slices->map(fn ($slice) => $slice['label'].' '.$slice['value'])->join(', ').'.';
+    // Kelas statis agar Tailwind membangun warna palet grafik untuk titik legenda.
+    $dots = ['chart-1' => 'bg-chart-1', 'chart-2' => 'bg-chart-2', 'chart-3' => 'bg-chart-3', 'chart-4' => 'bg-chart-4', 'chart-5' => 'bg-chart-5', 'chart-other' => 'bg-chart-other'];
 @endphp
 
-<x-admin.card title="Kelompok" description="Semua kelompok terdaftar di Distrik Ransiki." stretch :class="$class ?? null">
-    <x-slot:actions>
-        <x-link :href="route('admin.organizations.index')" class="gap-1 text-ui">
-            Lihat semua <x-heroicon-o-arrow-right class="size-4" aria-hidden="true" />
-        </x-link>
-    </x-slot:actions>
+<x-admin.card title="Kelompok" description="Menurut jenis kelembagaan" stretch :more="route('admin.organizations.index')" :class="$class ?? null">
+    <div class="flex flex-1 flex-col gap-5">
+        @if ($slices->isEmpty())
+            <p class="text-caption text-ink-2">Belum ada kelompok terdaftar.</p>
+        @else
+            <div x-data="chart(@js([$config]))" class="relative mx-auto size-44">
+                <canvas data-panel="0" role="img" aria-label="{{ $summary }}">{{ $summary }}</canvas>
+                <p class="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
+                    <span class="text-[1.75rem] leading-8 font-semibold tabular-nums text-ink">{{ Format::number($total) }}</span>
+                    <span class="text-label text-ink-2">kelompok</span>
+                </p>
+            </div>
 
-    <div class="space-y-6">
-        <div class="space-y-3">
-            <p class="flex flex-wrap items-baseline gap-x-2">
-                <span class="text-[2.25rem] leading-[2.5rem] font-semibold tabular-nums text-ink">{{ Format::number($total) }}</span>
-                <span class="text-ui text-ink-soft">kelompok terdaftar</span>
-            </p>
-
-            {{-- Bar status bersegmen 8px; tiap segmen menaut ke daftar Kelompok terfilter. --}}
-            @if ($total > 0)
-                <div class="flex h-2 overflow-hidden rounded-full bg-subtle">
-                    @foreach ($segments->where('value', '>', 0) as $segment)
-                        <a href="{{ $segment['href'] }}" class="{{ $segment['color'] }} h-full transition-opacity hover:opacity-80 focus-visible:outline-offset-1" style="width: {{ $segment['value'] / $total * 100 }}%" title="{{ $segment['full'] }}: {{ Format::number($segment['value']) }}" aria-label="{{ $segment['full'] }}: {{ Format::number($segment['value']) }} kelompok"></a>
-                    @endforeach
-                </div>
-            @endif
-            <ul class="flex flex-wrap items-center gap-x-4 gap-y-1 text-caption" aria-label="Status kelompok">
-                @foreach ($segments as $segment)
-                    <li>
-                        <a href="{{ $segment['href'] }}" class="inline-flex min-h-11 items-center gap-1.5 rounded-control text-ink-soft hover:text-ink hover:underline md:min-h-0" title="{{ $segment['full'] }}">
-                            <span class="{{ $segment['color'] }} size-2 shrink-0 rounded-full" aria-hidden="true"></span>
-                            {{ $segment['label'] }} <span class="font-semibold tabular-nums text-ink">{{ Format::number($segment['value']) }}</span>
+            <ul class="flex flex-wrap gap-1.5" aria-label="Jenis kelembagaan">
+                @foreach ($slices as $slice)
+                    <li class="min-w-0">
+                        <a href="{{ $slice['href'] }}" class="inline-flex h-11 max-w-full items-center gap-1.5 rounded-pill border border-line px-2 text-label text-ink-2 transition-colors hover:border-brand-100 hover:bg-hover md:h-7">
+                            <span class="{{ $dots[$slice['tone']] }} size-2 shrink-0 rounded-full" aria-hidden="true"></span>
+                            <span class="truncate">{{ $slice['label'] }}</span>
+                            <span class="font-semibold tabular-nums text-ink">{{ Format::number($slice['value']) }}</span>
                         </a>
                     </li>
                 @endforeach
             </ul>
-        </div>
+        @endif
 
-        @foreach ($lists as $list)
-            @php
-                $items = collect($list['items'])->values();
-                $max = max(1, (int) $items->max('value'));
-            @endphp
-            <section x-data="{ all: false }" class="border-t border-line pt-5">
-                <h3 class="text-ui font-semibold text-ink">{{ $list['title'] }}</h3>
-                @if ($list['note'])
-                    <p class="text-caption text-ink-muted">{{ $list['note'] }}</p>
-                @endif
-                @if ($items->isEmpty())
-                    <p class="mt-2 text-ui text-ink-soft">Belum ada data.</p>
-                @else
-                    <ul class="mt-2">
-                        @foreach ($items as $item)
-                            <li @if ($loop->index >= 5) x-cloak x-show="all" @endif>
-                                <a href="{{ route('admin.organizations.index', [$list['filter'] => $item['id']]) }}" class="group flex min-h-11 flex-col justify-center gap-1 rounded-control py-1 md:min-h-9">
-                                    <span class="flex items-baseline justify-between gap-3 text-ui">
-                                        <span class="min-w-0 truncate text-ink group-hover:underline">{{ $item['label'] }}</span>
-                                        <span class="shrink-0 font-semibold tabular-nums text-ink">{{ Format::number($item['value']) }}</span>
-                                    </span>
-                                    <span class="block h-1 overflow-hidden rounded-full bg-subtle" aria-hidden="true">
-                                        <span class="block h-full rounded-full bg-brand" style="width: {{ $item['value'] / $max * 100 }}%"></span>
-                                    </span>
-                                </a>
-                            </li>
-                        @endforeach
-                    </ul>
-                    @if ($items->count() > 5)
-                        <button type="button" x-on:click="all = ! all" x-bind:aria-expanded="all" class="mt-1 inline-flex min-h-11 items-center rounded-control text-ui font-semibold text-brand hover:text-brand-hover md:min-h-9">
-                            <span x-text="all ? 'Tampilkan lebih sedikit' : 'Tampilkan semua ({{ $items->count() }})'">Tampilkan semua ({{ $items->count() }})</span>
-                        </button>
-                    @endif
-                @endif
-            </section>
-        @endforeach
+        {{-- Status kelompok sebagai pil lembut; tiap pil menaut ke daftar Kelompok terfilter. --}}
+        <ul class="mt-auto flex flex-wrap gap-2 border-t border-line-soft pt-4" aria-label="Status kelompok">
+            @foreach ($statuses as [$status, $label])
+                <li>
+                    <a href="{{ route('admin.organizations.index', ['status' => $status->value]) }}" class="inline-flex min-h-11 items-center rounded-pill md:min-h-0" title="{{ $status->label() }}">
+                        <x-admin.badge-status :tone="App\Support\StatusTone::of($status)" class="gap-1 hover:underline">{{ $label }} <span class="tabular-nums">{{ Format::number($organizations['statuses'][$status->value] ?? 0) }}</span></x-admin.badge-status>
+                    </a>
+                </li>
+            @endforeach
+        </ul>
     </div>
 </x-admin.card>

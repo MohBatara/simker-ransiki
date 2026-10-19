@@ -9,7 +9,7 @@ use App\Models\Organization;
 use App\Models\User;
 use App\Notifications\ReportReviewed;
 
-test('bilah atas: lonceng dan menu profil; sidebar tanpa lonceng, dengan kartu profil + Keluar di bawah', function () {
+test('kepala halaman: lonceng bertitik; sidebar tanpa lonceng, dengan profil di bawah yang membuka Akun saya / Keluar', function () {
     $organization = Organization::factory()->create();
     $user = User::factory()->kelompok($organization)->create();
     $user->notify(new ReportReviewed(MonthlyReport::factory()->for($organization)->create(), ReviewAction::Verified, null));
@@ -18,8 +18,8 @@ test('bilah atas: lonceng dan menu profil; sidebar tanpa lonceng, dengan kartu p
     $sidebar = substr($html, strpos($html, '<aside'), strpos($html, '</aside>') - strpos($html, '<aside'));
 
     expect($sidebar)->not->toContain('data-bell')->not->toContain('/notifikasi')
-        ->toContain('data-sidebar-profile')->toContain('aria-label="Keluar"')
-        ->and($html)->toContain('data-bell="desktop"')->toContain('Notifikasi, 1 belum dibaca')
+        ->toContain('data-sidebar-profile')->toContain('Akun saya')->toContain('Keluar')
+        ->and($html)->toContain('data-bell="desktop"')->toContain('Notifikasi, 1 belum dibaca')->toContain('rounded-full bg-fix')
         ->toContain('Menu akun')->toContain('data-logout');
 
     // Kelompok tidak mendapat kotak cari global.
@@ -28,12 +28,12 @@ test('bilah atas: lonceng dan menu profil; sidebar tanpa lonceng, dengan kartu p
     $this->get('/notifikasi')->assertSee('aria-current="page"', false)->assertSee('bg-brand-tint text-brand', false);
 });
 
-test('blok pengguna: avatar, nama dua baris, dan nama singkat OPD', function () {
+test('blok pengguna: avatar, nama, dan nama singkat OPD', function () {
     $opd = Opd::factory()->create(['name' => 'Dinas Perikanan Contoh', 'short_name' => 'DPC']);
 
     $this->actingAs(User::factory()->opd($opd)->create(['name' => 'Petugas Dengan Nama Yang Cukup Panjang']))
         ->get('/opd')
-        ->assertSee('<p class="line-clamp-2 text-ui font-semibold text-ink">Petugas Dengan Nama Yang Cukup Panjang</p>', false)
+        ->assertSee('<span class="block truncate text-ui font-semibold text-ink">Petugas Dengan Nama Yang Cukup Panjang</span>', false)
         ->assertSee('OPD · DPC')
         ->assertSee('>PD</span>', false);
 });
@@ -65,8 +65,8 @@ test('daftar kelompok: avatar + nama + jenis · kampung; kolom status dengan bad
         ->assertSee($active->village->name)
         ->getContent();
 
-    expect($html)->toMatch('#<span data-tone="success"[^>]*><span[^>]*></span>Aktif</span>#')
-        ->toMatch('#<span data-tone="danger"[^>]*><span[^>]*></span>Ditutup</span>#');
+    expect($html)->toMatch('#<span data-tone="success"[^>]*>Aktif</span>#')
+        ->toMatch('#<span data-tone="danger"[^>]*>Ditutup</span>#');
 });
 
 test('scroll-padding untuk header dan bar aksi yang menempel', function () {
