@@ -65,7 +65,7 @@
         @endforeach
 
         @if ($filters)
-            <x-button variant="secondary" icon="funnel" @class(['md:hidden' => ! $others]) x-on:click="$dispatch('open-modal', @js($panel))" aria-haspopup="dialog" aria-controls="panel-filter">
+            <x-button variant="secondary" icon="funnel" @class(['md:hidden' => ! $others]) x-on:click="$dispatch('open-modal', {{ \Illuminate\Support\Js::from($panel) }})" aria-haspopup="dialog" aria-controls="panel-filter">
                 @if ($title)
                     Filter{{ $activeCount ? " ({$activeCount})" : '' }}
                 @else

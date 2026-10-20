@@ -14,15 +14,20 @@ test('direktif Blade tidak dipakai di atribut tag komponen', function () {
         preg_match_all('/<x-[\w.:-]+/', $source, $tags, PREG_OFFSET_CAPTURE);
 
         foreach ($tags[0] as [$name, $offset]) {
-            // Ujung tag: ">" pertama di luar tanda kutip.
+            // Ujung tag: ">" pertama di luar tanda kutip dan di luar kurung (mis. "=>" di dalam @class([...])).
             $quote = null;
+            $depth = 0;
             for ($end = $offset; $end < strlen($source); $end++) {
                 $char = $source[$end];
                 if ($quote) {
                     $quote = $char === $quote ? null : $quote;
                 } elseif ($char === '"' || $char === "'") {
                     $quote = $char;
-                } elseif ($char === '>') {
+                } elseif ($char === '(' || $char === '[') {
+                    $depth++;
+                } elseif ($char === ')' || $char === ']') {
+                    $depth--;
+                } elseif ($char === '>' && $depth <= 0) {
                     break;
                 }
             }
