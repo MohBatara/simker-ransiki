@@ -3,7 +3,9 @@
 namespace App\Support;
 
 use Carbon\CarbonInterface;
+use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\HtmlString;
 use Illuminate\Support\Str;
 
 /**
@@ -20,13 +22,32 @@ class Format
      * Hasil format untuk ditampilkan di area aplikasi: nilai kosong (EMPTY, null, '') menjadi "Belum diisi" kecil ink-3,
      * selain itu teks apa adanya (tetap di-escape oleh Blade). Ekspor PDF/Excel tetap memakai EMPTY.
      */
-    public static function orEmpty(mixed $formatted): \Illuminate\Support\HtmlString|string
+    public static function orEmpty(mixed $formatted): Htmlable|string
     {
+        // Sudah HTML aman (mis. hasil orEmpty sebelumnya): kembalikan apa adanya. Bila diubah ke string, Blade
+        // meng-escape-nya dan kode <span> tampil mentah.
+        if ($formatted instanceof Htmlable) {
+            return $formatted;
+        }
+
         if ($formatted === null || $formatted === '' || $formatted === self::EMPTY) {
-            return new \Illuminate\Support\HtmlString('<span class="text-label font-normal text-ink-3">'.self::EMPTY_LABEL.'</span>');
+            return new HtmlString('<span class="text-label font-normal text-ink-3">'.self::EMPTY_LABEL.'</span>');
         }
 
         return (string) $formatted;
+    }
+
+    /**
+     * Versi teks polos orEmpty() untuk teks yang bukan HTML (atribut title, notifikasi, email, judul): "Belum diisi" tanpa
+     * tag. Juga menerima hasil orEmpty(). Ekspor Excel/PDF tidak memakai ini: angka kosong tetap sel kosong / EMPTY.
+     */
+    public static function emptyText(mixed $formatted): string
+    {
+        if ($formatted instanceof Htmlable) {
+            return trim(strip_tags($formatted->toHtml()));
+        }
+
+        return $formatted === null || $formatted === '' || $formatted === self::EMPTY ? self::EMPTY_LABEL : (string) $formatted;
     }
 
     public static function number(int|float|string|null $value, int $decimals = 0): string

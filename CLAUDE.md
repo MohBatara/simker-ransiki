@@ -985,6 +985,10 @@ atau banner foto di area aplikasi. `x-tabs` hanya untuk tab dalam halaman (panel
   lagi mengisi remah "Menu › Tab" otomatis).
 - Nilai kosong di area aplikasi: "Belum diisi" 12px `ink-3` lewat SATU helper `Format::orEmpty()` (komponen
   `x-admin.empty-value`), tidak pernah "—" atau "-". Ekspor PDF/Excel tetap memakai `Format::EMPTY`/sel kosong.
+  `orEmpty()` mengembalikan `HtmlString` (aman dicetak dengan `{{ }}`; data pengguna tetap di-escape, jangan `{!! !!}`)
+  dan mengembalikan HTML apa adanya bila dipanggil lagi pada hasilnya. JANGAN menyambungnya dengan teks (`'a'.orEmpty()`)
+  atau memakainya di atribut: hasilnya string dan kode `<span>` tampil mentah. Untuk teks polos (title, notifikasi,
+  email) pakai `Format::emptyText()`. Dijaga `EmptyValueRenderingTest` (halaman utama tiap peran tanpa `&lt;span`).
 - Pencarian umum (Admin/OPD): tombol ikon kaca pembesar di kepala halaman (ukuran sama dengan lonceng) dan header HP
   membuka dialog `partials.search-dialog` (kelompok, ketua, kampung, produk → `/{area}/cari`), juga Ctrl/Cmd + K. Kotak cari
   di atas tabel tetap pencarian daftar.
