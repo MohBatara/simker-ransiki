@@ -54,6 +54,7 @@ final class DemoData
         'kerajinan' => [0.8, 0.8, 0.9, 0.9, 1.0, 1.0, 1.1, 1.4, 1.0, 0.9, 1.0, 1.3],
         'sayur' => [0.8, 0.7, 0.8, 1.0, 1.1, 1.2, 1.2, 1.1, 1.0, 0.9, 0.8, 0.8],
         'padi' => [0.3, 0.4, 1.6, 1.8, 0.5, 0.4, 0.5, 1.5, 1.7, 0.6, 0.4, 0.3],
+        'ternak' => [1.0, 0.9, 0.9, 1.0, 1.0, 1.0, 1.0, 1.1, 1.0, 1.0, 1.1, 1.4],
         'dagang' => [1.0, 0.9, 1.0, 1.0, 1.0, 1.0, 1.0, 1.1, 1.0, 1.0, 1.1, 1.4],
     ];
 
@@ -62,7 +63,8 @@ final class DemoData
      * name, type (kode jenis), village (indeks VILLAGES), leader, sectors, opds, members, founded,
      * tier (rajin | biasa | telat: kebiasaan melapor), products: [nama, satuan, jumlah dasar per bulan,
      * harga per satuan, musim, foto|null], dan opsional: status + since (bulan mulai tidak aktif),
-     * public, starts (wajib lapor mulai), email.
+     * public, starts (wajib lapor mulai), email, text (kunci SECTOR_TEXT bila beda dari bidang pertama), photos (foto
+     * kelompok dari media/kelompok, disimpan sebagai lampiran gambar kelompok).
      *
      * Kelompok binaan Dinas Perikanan hanya dibina OPD itu (uji: satu OPD tidak berbagi kelompok).
      */
@@ -71,13 +73,13 @@ final class DemoData
             'name' => 'Kelompok Tani Kakao Harapan', 'type' => 'kelompok_perkebunan', 'village' => 0,
             'leader' => 'Yakob Rumbiak', 'sectors' => ['Perkebunan', 'Pengolahan Hasil'], 'opds' => ['Pertanian', 'Dinkopdag'],
             'members' => 24, 'founded' => 2014, 'tier' => 'rajin', 'email' => true,
-            'products' => [['Kakao fermentasi kering', 'kg', 220, 75_000, 'kakao', 'kakao.jpg'], ['Pinang kering', 'kg', 60, 18_000, 'pinang', null]],
+            'products' => [['Kakao fermentasi kering', 'kg', 220, 75_000, 'kakao', null], ['Pinang kering', 'kg', 60, 18_000, 'pinang', null]],
         ],
         2 => [
             'name' => 'KUB Sumber Berkat', 'type' => 'kub', 'village' => 4,
             'leader' => 'Sri Wahyuningsih', 'sectors' => ['Pengolahan Hasil', 'UMKM'], 'opds' => ['Dinkopdag', 'DPMPTSP'],
             'members' => 12, 'founded' => 2018, 'tier' => 'rajin',
-            'products' => [['Keripik pisang', 'bungkus', 240, 15_000, 'olahan', 'keripik.jpg'], ['Keripik keladi', 'bungkus', 120, 15_000, 'olahan', null]],
+            'products' => [['Keripik pisang', 'bungkus', 240, 15_000, 'olahan', null], ['Keripik keladi', 'bungkus', 120, 15_000, 'olahan', null]],
         ],
         3 => [
             'name' => 'BUMDes Maju Bersama', 'type' => 'bumdes', 'village' => 1,
@@ -89,19 +91,20 @@ final class DemoData
             'name' => 'Kelompok Perajin Noken Mama Sejahtera', 'type' => 'lainnya', 'village' => 7,
             'leader' => 'Yuliana Ronsumbre', 'sectors' => ['Lainnya', 'UMKM'], 'opds' => ['Dinkopdag'],
             'members' => 15, 'founded' => 2019, 'tier' => 'telat',
-            'products' => [['Noken benang', 'buah', 25, 150_000, 'kerajinan', null], ['Noken kulit kayu', 'buah', 8, 250_000, 'kerajinan', null]],
+            'products' => [['Noken kulit kayu', 'buah', 8, 250_000, 'kerajinan', 'media/produk/tas-kulit-kayu-2.jpg'], ['Noken benang', 'buah', 25, 150_000, 'kerajinan', null]],
         ],
         5 => [
             'name' => 'KNMP Mina Bahari', 'type' => 'knmp', 'village' => 2,
             'leader' => 'Markus Sawaki', 'sectors' => ['Perikanan'], 'opds' => ['Perikanan'],
             'members' => 31, 'founded' => 2025, 'tier' => 'biasa',
-            'products' => [['Ikan segar', 'kg', 600, 35_000, 'ikan', 'perikanan.jpg'], ['Ikan asap', 'ekor', 300, 25_000, 'ikan', null]],
+            'products' => [['Ikan segar', 'kg', 600, 35_000, 'ikan', null], ['Ikan asap', 'ekor', 300, 25_000, 'ikan', null]],
         ],
         6 => [
             'name' => 'Kelompok Nelayan Tanjung Pasir Bersatu', 'type' => 'kelompok_perikanan', 'village' => 2,
             'leader' => 'La Ode Hamid', 'sectors' => ['Perikanan'], 'opds' => ['Perikanan'],
             'members' => 18, 'founded' => 2012, 'tier' => 'rajin',
             'products' => [['Ikan asap', 'ekor', 350, 25_000, 'ikan', null], ['Abon ikan', 'bungkus', 80, 30_000, 'ikan', null]],
+            'photos' => ['media/kelompok/perahu-nelayan.jpg'],
         ],
         7 => [
             'name' => 'Kelompok Tani Sayur Lembah Subur', 'type' => 'kelompok_pertanian', 'village' => 5,
@@ -131,7 +134,7 @@ final class DemoData
             'name' => 'Kelompok Usaha Bersama Pengolahan Hasil Perikanan dan Kelautan Mina Sejahtera Pantai Damai', 'type' => 'kub', 'village' => 6,
             'leader' => 'Siti Aminah', 'sectors' => ['Perikanan', 'Pengolahan Hasil'], 'opds' => ['Perikanan'],
             'members' => 14, 'founded' => 2016, 'tier' => 'biasa',
-            'products' => [['Abon ikan', 'bungkus', 150, 30_000, 'ikan', null], ['Ikan asap', 'ekor', 200, 25_000, 'ikan', null], ['Kerupuk ikan', 'bungkus', 180, 12_000, 'olahan', null]],
+            'products' => [['Abon ikan', 'bungkus', 150, 30_000, 'ikan', 'media/produk/abon-ikan.jpg'], ['Ikan asap', 'ekor', 200, 25_000, 'ikan', null], ['Kerupuk ikan', 'bungkus', 180, 12_000, 'olahan', null]],
         ],
         12 => [
             'name' => 'Kelompok Tani Kopi Pegunungan Sungai Bening', 'type' => 'kelompok_perkebunan', 'village' => 7,
@@ -179,7 +182,7 @@ final class DemoData
             'name' => 'Kelompok Tani Kakao Mekar Jaya', 'type' => 'kelompok_perkebunan', 'village' => 4,
             'leader' => 'Bambang Suryanto', 'sectors' => ['Perkebunan'], 'opds' => ['Pertanian', 'DPMPTSP'],
             'members' => 22, 'founded' => 2009, 'tier' => 'rajin',
-            'products' => [['Kakao fermentasi kering', 'kg', 180, 75_000, 'kakao', 'panen-kakao.jpg']],
+            'products' => [['Kakao fermentasi kering', 'kg', 180, 75_000, 'kakao', null]],
         ],
         20 => [
             'name' => 'Kelompok Wanita Pengolah Pisang Bukit Hijau', 'type' => 'umkm', 'village' => 0,
@@ -195,10 +198,11 @@ final class DemoData
             'products' => [['Keripik pisang', 'bungkus', 60, 15_000, 'olahan', null]],
         ],
         22 => [
-            'name' => 'Kelompok Tani Hortikultura Subur Makmur', 'type' => 'kelompok_pertanian', 'village' => 5,
-            'leader' => 'Suparman', 'sectors' => ['Pertanian'], 'opds' => ['Pertanian'],
+            'name' => 'Kelompok Peternak Ayam Kampung Subur Makmur', 'type' => 'kelompok_pertanian', 'village' => 5,
+            'leader' => 'Suparman', 'sectors' => ['Pertanian'], 'opds' => ['Pertanian'], 'text' => 'Peternakan',
             'members' => 19, 'founded' => 2012, 'tier' => 'rajin',
-            'products' => [['Sawi', 'ikat', 600, 5_000, 'sayur', null], ['Cabai keriting', 'kg', 90, 50_000, 'sayur', null], ['Kacang panjang', 'ikat', 400, 5_000, 'sayur', null]],
+            'products' => [['Ayam kampung', 'ekor', 90, 85_000, 'ternak', 'media/produk/ayam-kampung.jpg'], ['Telur ayam kampung', 'buah', 600, 3_000, 'ternak', null]],
+            'photos' => ['media/kelompok/kandang-ayam.jpg', 'media/kelompok/kandang-ayam-dalam.jpg'],
         ],
         23 => [
             'name' => 'Kelompok Perajin Anyaman Pandan', 'type' => 'lainnya', 'village' => 7,
@@ -216,7 +220,7 @@ final class DemoData
             'name' => 'Kelompok Tani Padi Sawah Sri Rejeki', 'type' => 'kelompok_pertanian', 'village' => 4,
             'leader' => 'Ahmad Fauzi', 'sectors' => ['Pertanian'], 'opds' => ['Pertanian'],
             'members' => 28, 'founded' => 2008, 'tier' => 'biasa',
-            'products' => [['Beras', 'kg', 1000, 13_000, 'padi', 'pertanian.jpg']],
+            'products' => [['Beras', 'kg', 1000, 13_000, 'padi', null]],
         ],
         26 => [
             'name' => 'UMKM Kue dan Roti Berkah', 'type' => 'umkm', 'village' => 1,
@@ -252,7 +256,7 @@ final class DemoData
             'name' => 'UMKM Noken Kasih', 'type' => 'umkm', 'village' => 3,
             'leader' => 'Debora Korwa', 'sectors' => ['UMKM', 'Lainnya'], 'opds' => ['Dinkopdag'],
             'members' => 4, 'founded' => 2023, 'tier' => 'telat',
-            'products' => [['Noken benang', 'buah', 30, 150_000, 'kerajinan', null]],
+            'products' => [['Tas dan topi anyaman', 'buah', 30, 150_000, 'kerajinan', 'media/produk/tas-kulit-kayu.jpg']],
         ],
         32 => [
             'name' => 'Kelompok Tani Jagung dan Kacang Tanah Mekar Jaya', 'type' => 'kelompok_pertanian', 'village' => 4,
@@ -270,7 +274,7 @@ final class DemoData
             'name' => 'KUB Cokelat Olahan Lembah Subur', 'type' => 'kub', 'village' => 5,
             'leader' => 'Yustina Seran', 'sectors' => ['Pengolahan Hasil', 'Perkebunan'], 'opds' => ['Pertanian', 'Dinkopdag'],
             'members' => 8, 'founded' => 2022, 'tier' => 'biasa',
-            'products' => [['Cokelat batang', 'bungkus', 120, 25_000, 'olahan', 'pengemasan.jpg'], ['Bubuk kakao', 'bungkus', 80, 30_000, 'olahan', null]],
+            'products' => [['Cokelat batang', 'bungkus', 120, 25_000, 'olahan', null], ['Bubuk kakao', 'bungkus', 80, 30_000, 'olahan', null]],
         ],
         35 => [
             'name' => 'Kelompok Pemuda Tani Milenial Bukit Hijau', 'type' => 'kelompok_pertanian', 'village' => 0,
@@ -366,6 +370,11 @@ final class DemoData
             'Unit usaha milik kampung yang menyediakan {produk} bagi warga {kampung} dan sekitarnya dengan harga terjangkau.',
             ['Pengadaan dan penjualan {produk}.', 'Pengadaan barang dan pencatatan stok bulanan.', 'Penjualan rutin dan rapat pengurus.'],
             ['Stok tersedia sepanjang bulan.', 'Pencatatan keuangan sudah memakai buku kas.'],
+        ],
+        'Peternakan' => [
+            'Anggota memelihara ayam kampung di kandang bersama di {kampung} dan menjual {produk} ke pasar distrik dan pesanan warga.',
+            ['Pemberian pakan, pembersihan kandang, dan penjualan {produk}.', 'Vaksinasi ayam dan penimbangan sebelum dijual.', 'Penetasan telur dan pemisahan anak ayam.'],
+            ['Kematian ayam turun setelah kandang diperbaiki.', 'Mendapat pesanan tetap dari rumah makan di distrik.'],
         ],
         'Lainnya' => [
             'Mama-mama perajin di {kampung} membuat {produk} dari bahan alam. Dijual saat ada acara dan lewat pesanan.',

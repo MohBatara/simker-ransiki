@@ -7,7 +7,7 @@ use App\Models\Village;
 use Illuminate\Database\Seeder;
 
 /**
- * Data awal server produksi: hanya data master, tanpa data contoh dan tanpa akun.
+ * Data awal server produksi: data master dan foto resmi distrik (OfficialPhotoSeeder), tanpa data contoh dan tanpa akun.
  * Aman dijalankan ulang (php artisan db:seed --class=ProductionSeeder --force).
  * Admin pertama dibuat dengan php artisan simker:create-admin.
  */
@@ -39,5 +39,7 @@ class ProductionSeeder extends Seeder
         foreach (static::VILLAGES as $name) {
             Village::firstOrCreate(['name' => $name]);
         }
+
+        $this->call(OfficialPhotoSeeder::class);
     }
 }

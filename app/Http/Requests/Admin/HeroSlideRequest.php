@@ -95,7 +95,7 @@ class HeroSlideRequest extends FormRequest
         return [
             function (Validator $validator) {
                 if (! $this->route('slide') && HeroSlide::count() >= HeroSlide::MAX) {
-                    $validator->errors()->add($this->prefix().'.photo', 'Sudah ada 3 slide. Hapus salah satu slide lebih dulu.');
+                    $validator->errors()->add($this->prefix().'.photo', 'Sudah ada '.HeroSlide::MAX.' slide. Hapus salah satu slide lebih dulu.');
                 }
             },
         ];

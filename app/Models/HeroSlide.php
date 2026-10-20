@@ -18,7 +18,7 @@ class HeroSlide extends Model
 {
     use HasFactory;
 
-    public const MAX = 3;
+    public const MAX = 4;
 
     protected function casts(): array
     {

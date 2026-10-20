@@ -7,9 +7,9 @@ use App\Http\Controllers\Publik\SiteImageController;
 use App\Http\Requests\Admin\HeroSlideRequest;
 use App\Models\HeroSlide;
 use App\Support\ImageVariants;
+use App\Support\SitePhotos;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Str;
 
 /**
  * Slide hero beranda (Konten Website > Beranda). Hanya Admin (HeroSlidePolicy di route).
@@ -20,7 +20,7 @@ class HeroSlideController extends Controller
     {
         $slide = new HeroSlide($request->fields());
         $slide->forceFill([
-            'photo_path' => $this->storePhoto($request),
+            'photo_path' => SitePhotos::storeHero($request->photo()->getRealPath()),
             'position' => (int) HeroSlide::max('position') + 1,
             'created_by' => $request->user()->id,
             'updated_by' => $request->user()->id,
@@ -35,7 +35,7 @@ class HeroSlideController extends Controller
 
         if ($request->photo()) {
             $old = $slide->photo_path;
-            $slide->forceFill(['photo_path' => $this->storePhoto($request)]);
+            $slide->forceFill(['photo_path' => SitePhotos::storeHero($request->photo()->getRealPath())]);
         }
 
         $slide->save();
@@ -73,14 +73,5 @@ class HeroSlideController extends Controller
             ->each(fn (HeroSlide $item, int $i) => $item->forceFill(['position' => $i + 1])->save());
 
         return to_route('admin.content.edit')->with('status', 'Slide dihapus.');
-    }
-
-    /** Hanya varian terkompres yang disimpan (WebP 640/1280/1920 + JPEG 1920), tanpa EXIF; file asli dibuang. */
-    private function storePhoto(HeroSlideRequest $request): string
-    {
-        $path = 'site/hero-'.Str::uuid().'.jpg';
-        ImageVariants::store(SiteImageController::DISK, $request->photo()->getRealPath(), $path, ImageVariants::HERO, ImageVariants::HERO_SLIDE_BUDGET, jpegMaxSide: ImageVariants::HERO_MAX_SIDE);
-
-        return $path;
     }
 }

@@ -12,7 +12,7 @@
     <div class="home-page overflow-x-clip">
     <div class="home-top" @if ($topSectors->isNotEmpty()) data-strip @endif>
     <div class="relative">
-    {{-- Hero: slide dari Admin (maks 3) + overlay; tanpa slide aktif, satu foto bawaan. --}}
+    {{-- Hero: slide dari Admin (maks 4) + overlay; tanpa slide aktif, satu foto bawaan. --}}
     <section
         class="on-dark relative isolate overflow-hidden bg-forest text-paper"
         data-hero
