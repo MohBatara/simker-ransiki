@@ -63,7 +63,7 @@
         <div x-cloak x-show="confirming" class="flex shrink-0 flex-wrap items-center justify-between gap-2 border-t border-line bg-wait-bg px-4 py-3 md:px-5" role="alertdialog" aria-live="assertive" aria-label="Buang perubahan?">
             <p class="text-caption font-medium text-ink">Buang perubahan? Isian yang belum disimpan akan hilang.</p>
             <div class="flex gap-2">
-                <x-button variant="secondary" x-on:click="confirming = false" x-ref="keep">Kembali mengisi</x-button>
+                <x-button variant="secondary" x-on:click="confirming = false" data-modal-keep>Kembali mengisi</x-button>
                 <x-button variant="danger-solid" x-on:click="discard()">Buang</x-button>
             </div>
         </div>

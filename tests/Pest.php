@@ -7,6 +7,19 @@ pest()->extend(TestCase::class)
     ->use(RefreshDatabase::class)
     ->in('Feature');
 
+/*
+ * Tes browser (pestphp/pest-plugin-browser + Playwright Chromium): klik sungguhan, gagal bila ada error JavaScript atau
+ * console. Memakai aset hasil build (public/build), bukan server Vite dev, agar hasilnya sama di mana pun:
+ * jalankan `sail npm run build` sebelum `sail artisan test tests/Browser`.
+ */
+pest()->extend(TestCase::class)
+    ->use(RefreshDatabase::class)
+    ->beforeEach(fn () => Illuminate\Support\Facades\Vite::useHotFile(storage_path('framework/tanpa-vite-dev')))
+    ->in('Browser');
+
+// Tunggu elemen paling lama 5 detik agar tes yang gagal cepat selesai.
+pest()->browser()->timeout(5000);
+
 /**
  * File unggahan sungguhan di folder sementara. Berbeda dengan UploadedFile::fake(), tipe file-nya
  * dibaca dari isi (finfo), sehingga pengecekan tipe berdasarkan isi benar-benar teruji.
@@ -64,3 +77,5 @@ function hrefsIn(string $html): array
 
     return collect($document->getElementsByTagName('a'))->map(fn (DOMElement $a) => $a->getAttribute('href'))->all();
 }
+
+require __DIR__.'/Browser/Helpers.php';

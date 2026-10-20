@@ -32,3 +32,6 @@ Thumbs.db
 !/database/seeders/media/sementara/*/
 !/database/seeders/media/sementara/DAFTAR-FOTO.md
 !/database/seeders/media/sementara/*/.gitkeep
+
+# Tangkapan layar tes browser yang gagal (dibuat ulang setiap kali tes dijalankan).
+/tests/Browser/Screenshots

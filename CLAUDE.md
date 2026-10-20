@@ -1121,7 +1121,9 @@ atau banner foto di area aplikasi. `x-tabs` hanya untuk tab dalam halaman (panel
   "Belum ada foto"), nama, jenis · kampung, pil status dan verifikasi profil, ringkasan angka (anggota, produk, izin terbit,
   laporan terverifikasi), ketua, telepon, email, tahun berdiri, bidang usaha, OPD pembina, alamat, produk, laporan
   terakhir. Kaki: panah sebelumnya/berikutnya (juga tombol ← →), "Tutup", "Ubah profil", "Buka detail". URL `?pratinjau=ID`
-  (alias lama `?pilih`): membuka = pushState sehingga Back menutup popup, pindah ← → = replaceState; membuka URL itu
+  (alias lama `?pilih`): membuka, pindah ← →, dan menutup SELALU lewat history.replaceState (tidak menambah riwayat, tidak
+  pernah history.back()), jadi popup yang dibuka langsung dari URL ditutup sama seperti dari klik baris (X, Tutup, Esc,
+  klik latar: parameter dihapus, popup disembunyikan); tombol Back meninggalkan halaman. Membuka URL itu
   langsung menampilkan popup (dirender server di daftar, dimuat saat init di tab lain). Pola yang sama di tab Verifikasi
   profil (klik baris) dan Kemungkinan data ganda (klik nama kelompok mana pun). Dari dalam popup, `$refs`/`$root` milik
   daftar tidak terjangkau: `organizationPanel` menyimpan elemen pembungkusnya sendiri.

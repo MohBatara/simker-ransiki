@@ -372,6 +372,10 @@ Alpine.data('chart', (configs) => {
  * acuan posisi sehingga lapisannya bisa lepas dan menutupi baris lain. Ctrl/Cmd/klik tengah = tab baru.
  */
 function openRowLink(event) {
+    // Klik di dalam popup tidak pernah diteruskan ke baris tabel di belakangnya.
+    if (event.target.closest('dialog')) {
+        return;
+    }
     const row = event.target.closest('tr[data-row-href]');
     if (!row || event.defaultPrevented) {
         return;
@@ -402,8 +406,8 @@ document.addEventListener('auxclick', (event) => event.button === 1 && openRowLi
  * Popup pratinjau kelompok (daftar Kelompok, Verifikasi profil, Kemungkinan data ganda; semua ukuran layar). Elemen pemicu
  * ber-[data-preview-id] (baris tabel atau tautan nama). Klik biasa pada tautannya (klik di bagian lain baris diteruskan
  * openRowLink) memuat /{area}/kelompok/{id}/ringkas (Policy view) ke popup tanpa pindah halaman; Ctrl/Cmd/klik tengah tetap
- * membuka detail di tab baru. URL ?pratinjau=ID: dibuka = pushState (tombol Back menutup popup), pindah dengan ← → =
- * replaceState. Membuka URL itu langsung menampilkan popup (dirender server atau dimuat saat init).
+ * membuka detail di tab baru. URL ?pratinjau=ID selalu diubah lewat replaceState (buka, pindah ← →, tutup). Membuka URL itu
+ * langsung menampilkan popup (dirender server atau dimuat saat init).
  */
 Alpine.data('organizationPanel', (summaryTemplate) => {
     // Pembungkus daftar + popup. Disimpan di luar data reaktif; $root di dalam popup menunjuk ke <dialog>, bukan ke sini.
@@ -414,28 +418,16 @@ Alpine.data('organizationPanel', (summaryTemplate) => {
         detailUrl: null,
         editUrl: null,
         currentId: null,
-        pushed: false,
-        fromPopstate: false,
 
         init() {
             wrapper = this.$el;
             this.readUrls();
             const requested = new URL(window.location.href).searchParams.get('pratinjau');
             if (requested && !this.currentId) {
-                this.load(requested, { history: false });
+                this.load(requested);
             } else if (this.currentId) {
                 this.markSelected(this.currentId);
             }
-
-            window.addEventListener('popstate', () => {
-                const id = new URL(window.location.href).searchParams.get('pratinjau');
-                if (!id) {
-                    this.fromPopstate = true;
-                    this.$dispatch('close-modal', 'organization-preview');
-                } else if (id !== this.currentId) {
-                    this.load(id, { history: false });
-                }
-            });
         },
 
         /** Wadah isi popup ([data-preview-panel] di dalam x-admin.modal; $refs dan $root tidak menjangkau dari lingkup popup). */
@@ -460,7 +452,8 @@ Alpine.data('organizationPanel', (summaryTemplate) => {
         },
 
         select(event) {
-            if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || event.button !== 0) {
+            // Klik di dalam popup (mis. tautan "Semua produk") bukan klik baris.
+            if (event.target.closest('dialog') || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || event.button !== 0) {
                 return;
             }
             const link = event.target.closest('a');
@@ -480,7 +473,11 @@ Alpine.data('organizationPanel', (summaryTemplate) => {
             }
         },
 
-        async load(id, { history = true, fallback = null } = {}) {
+        /**
+         * ?pratinjau=ID selalu lewat history.replaceState (tidak menambah riwayat), sehingga popup yang dibuka dari klik
+         * baris maupun langsung dari URL ditutup dengan cara yang sama: hapus parameternya, tanpa history.back().
+         */
+        async load(id, { fallback = null } = {}) {
             this.loading = true;
             try {
                 const response = await fetch(summaryTemplate.replace('__ID__', id), { headers: { Accept: 'text/html', 'X-Requested-With': 'XMLHttpRequest' } });
@@ -488,22 +485,14 @@ Alpine.data('organizationPanel', (summaryTemplate) => {
                     throw new Error(response.status);
                 }
                 this.panel().innerHTML = await response.text();
-                const wasOpen = this.currentId !== null;
                 this.readUrls();
                 this.markSelected(this.currentId);
                 this.$dispatch('open-modal', 'organization-preview');
 
-                if (history) {
-                    const url = new URL(window.location.href);
-                    url.searchParams.set('pratinjau', this.currentId);
-                    url.searchParams.delete('pilih');
-                    if (wasOpen || this.pushed) {
-                        window.history.replaceState({ pratinjau: this.currentId }, '', url);
-                    } else {
-                        window.history.pushState({ pratinjau: this.currentId }, '', url);
-                        this.pushed = true;
-                    }
-                }
+                const url = new URL(window.location.href);
+                url.searchParams.set('pratinjau', this.currentId);
+                url.searchParams.delete('pilih');
+                window.history.replaceState(window.history.state, '', url);
             } catch {
                 if (fallback) {
                     window.location.assign(fallback);
@@ -532,16 +521,10 @@ Alpine.data('organizationPanel', (summaryTemplate) => {
             this.currentId = null;
             const url = new URL(window.location.href);
             if (url.searchParams.has('pratinjau') || url.searchParams.has('pilih')) {
-                if (this.pushed && !this.fromPopstate) {
-                    window.history.back();
-                } else {
-                    url.searchParams.delete('pratinjau');
-                    url.searchParams.delete('pilih');
-                    window.history.replaceState(null, '', url);
-                }
+                url.searchParams.delete('pratinjau');
+                url.searchParams.delete('pilih');
+                window.history.replaceState(window.history.state, '', url);
             }
-            this.pushed = false;
-            this.fromPopstate = false;
         },
     };
 });
@@ -551,75 +534,86 @@ Alpine.data('organizationPanel', (summaryTemplate) => {
  * halaman belakang inert; halaman tidak bisa digulir (kelas di <html>); fokus kembali ke pemicu setelah ditutup.
  * Isian yang diubah (kecuali [data-no-dirty]) membuat penutupan meminta konfirmasi "Buang perubahan?".
  */
-Alpine.data('adminModal', (name, show = false, guard = true) => ({
-    name,
-    dirty: false,
-    confirming: false,
-    trigger: null,
+Alpine.data('adminModal', (name, show = false, guard = true) => {
+    // <dialog> milik popup ini. Bukan this.$el: dari tombol di dalam popup (X, Batal) $el menunjuk ke tombol itu.
+    let dialog = null;
 
-    init() {
-        if (show) {
-            this.$nextTick(() => this.open());
-        }
-    },
-
-    open() {
-        if (this.$el.open) {
-            return;
-        }
-        this.trigger = document.activeElement;
-        this.dirty = false;
-        // Gambar lazy di dalam popup yang tadinya tersembunyi bisa tidak pernah dimuat (mis. Safari): muat segera.
-        this.$el.querySelectorAll('img[loading="lazy"]').forEach((image) => {
-            image.loading = 'eager';
-        });
-        this.confirming = false;
-        this.$el.showModal();
-        document.documentElement.classList.add('modal-open');
-        // Fokus awal ke isian pertama (form pendek); popup tanpa isian tetap pada tombol pertama.
-        this.$el.querySelector('[autofocus], form input:not([type=hidden]):not([disabled]), form select:not([disabled]), form textarea:not([disabled])')?.focus();
-    },
-
-    markDirty(event) {
-        if (guard && !event.target.closest('[data-no-dirty]')) {
-            this.dirty = true;
-        }
-    },
-
-    requestClose() {
-        if (this.dirty && !this.confirming) {
-            this.confirming = true;
-            this.$nextTick(() => this.$refs.keep?.focus());
-            return;
-        }
-        if (!this.confirming) {
-            this.close();
-        }
-    },
-
-    discard() {
-        this.dirty = false;
-        this.close();
-    },
-
-    close() {
-        this.confirming = false;
-        if (this.$el.open) {
-            this.$el.close();
-        }
-    },
-
-    restoreFocus() {
-        if (!document.querySelector('dialog[open]')) {
+    const unlockPage = () => {
+        if (!document.querySelector('dialog.app-modal[open]')) {
             document.documentElement.classList.remove('modal-open');
         }
-        if (this.trigger && document.contains(this.trigger)) {
-            this.trigger.focus({ preventScroll: true });
-        }
-        this.trigger = null;
-        this.$dispatch('modal-closed', this.name);
-    },
-}));
+    };
+
+    return {
+        name,
+        dirty: false,
+        confirming: false,
+        trigger: null,
+
+        init() {
+            dialog = this.$el;
+            if (show) {
+                this.$nextTick(() => this.open());
+            }
+        },
+
+        open() {
+            if (dialog.open) {
+                return;
+            }
+            this.trigger = document.activeElement;
+            this.dirty = false;
+            this.confirming = false;
+            // Gambar lazy di dalam popup yang tadinya tersembunyi bisa tidak pernah dimuat (mis. Safari): muat segera.
+            dialog.querySelectorAll('img[loading="lazy"]').forEach((image) => {
+                image.loading = 'eager';
+            });
+            dialog.showModal();
+            document.documentElement.classList.add('modal-open');
+            // Fokus awal ke isian pertama (form pendek); popup tanpa isian tetap pada tombol pertama.
+            dialog.querySelector('[autofocus], form input:not([type=hidden]):not([disabled]), form select:not([disabled]), form textarea:not([disabled])')?.focus();
+        },
+
+        markDirty(event) {
+            if (guard && !event.target.closest('[data-no-dirty]')) {
+                this.dirty = true;
+            }
+        },
+
+        requestClose() {
+            if (this.dirty && !this.confirming) {
+                this.confirming = true;
+                this.$nextTick(() => dialog.querySelector('[data-modal-keep]')?.focus());
+                return;
+            }
+            if (!this.confirming) {
+                this.close();
+            }
+        },
+
+        discard() {
+            this.dirty = false;
+            this.close();
+        },
+
+        close() {
+            this.confirming = false;
+            if (dialog.open) {
+                dialog.close();
+            }
+        },
+
+        /** Dipanggil event "close" <dialog> (semua cara menutup): buka kunci gulir, kembalikan fokus, kabari induk. */
+        restoreFocus() {
+            unlockPage();
+            if (this.trigger && document.contains(this.trigger)) {
+                this.trigger.focus({ preventScroll: true });
+            }
+            this.trigger = null;
+            dialog.dispatchEvent(new CustomEvent('modal-closed', { detail: name, bubbles: true }));
+        },
+    };
+});
 
 /**
  * Daftar section form panjang (x-admin.form-layout nav): dibangun dari [data-form-section] di dalam form, klik melompat
