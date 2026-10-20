@@ -85,6 +85,8 @@
 {{-- --app-bottom: tinggi area tetap di bawah layar HP, dipakai x-form-actions sticky. --}}
 <body @class([
     'theme-app min-h-dvh bg-canvas font-sans text-ui text-ink antialiased',
+    // Area Kelompok (pengurus di HP): teks minimal 14px dan kontrol 44px di semua ukuran layar (app.css).
+    'theme-kelompok' => auth()->user()?->isKelompok(),
     '[--app-bottom:calc(4rem+env(safe-area-inset-bottom))] [--app-safe-bottom:0px]' => ! $focus,
     '[--app-bottom:0px] [--app-safe-bottom:env(safe-area-inset-bottom)]' => $focus,
 ])>
@@ -109,7 +111,7 @@
 
         {{-- Di tablet nav tidak di-scroll agar tooltip tidak terpotong oleh tepi sidebar. Grup kecil tanpa judul, dipisah garis. --}}
         <nav aria-label="Menu utama" class="flex-1 px-2 py-4 xl:overflow-y-auto xl:px-3">
-            {{-- Notifikasi tidak di sidebar: lonceng ada di kepala halaman; Akun Saya ada di menu profil bawah. --}}
+            {{-- Notifikasi tidak di sidebar: lonceng ada di kepala halaman; Akun saya ada di menu profil bawah. --}}
             @foreach ($sidebarGroups as $items)
                 <ul @class(['space-y-1', 'mt-3 border-t border-line pt-3' => ! $loop->first])>
                     @foreach ($items as $item)

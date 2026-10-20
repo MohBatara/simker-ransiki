@@ -1,4 +1,4 @@
-{{-- Ganti kata sandi. $page = true di Akun Saya (bar simpan menempel); di halaman wajib ganti (layout guest) tombol penuh. --}}
+{{-- Ganti kata sandi. $page = true di Akun saya (bar simpan menempel); di halaman wajib ganti (layout guest) tombol penuh. --}}
 <form novalidate method="POST" action="{{ route('account.password.update') }}" class="space-y-4">
     @csrf
     @method('PUT')

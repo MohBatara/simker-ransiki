@@ -112,8 +112,8 @@ test('setiap tab punya URL sendiri, tab aktif ditandai, dan remah mengikuti menu
     'admin kelompok' => ['/admin/kelompok', 'Kelompok', 'Semua kelompok', ['Semua kelompok', 'Verifikasi profil', 'Kemungkinan data ganda']],
     'admin data ganda' => ['/admin/kelompok/data-ganda', 'Kelompok', 'Kemungkinan data ganda', ['Semua kelompok', 'Verifikasi profil', 'Kemungkinan data ganda']],
     'admin antrean' => ['/admin/laporan/verifikasi', 'Laporan', 'Perlu diverifikasi', ['Semua laporan', 'Perlu diverifikasi', 'Masalah & kebutuhan']],
-    'admin website' => ['/admin/website', 'Website', 'Konten Beranda', ['Konten Beranda', 'Profil Ransiki', 'Halaman & kontak', 'Berita & kegiatan']],
-    'admin berita' => ['/admin/website/berita', 'Website', 'Berita & kegiatan', ['Konten Beranda', 'Profil Ransiki', 'Halaman & kontak', 'Berita & kegiatan']],
+    'admin website' => ['/admin/website', 'Website', 'Konten beranda', ['Konten beranda', 'Profil Ransiki', 'Halaman & kontak', 'Berita & kegiatan']],
+    'admin berita' => ['/admin/website/berita', 'Website', 'Berita & kegiatan', ['Konten beranda', 'Profil Ransiki', 'Halaman & kontak', 'Berita & kegiatan']],
     'admin pengguna' => ['/admin/pengaturan/pengguna', 'Pengaturan', 'Pengguna', ['Pengguna', 'Data master']],
     'admin data master' => ['/admin/pengaturan/data-master/kampung', 'Pengaturan', 'Data master', ['Pengguna', 'Data master']],
     'opd legalitas' => ['/opd/dasbor/legalitas', 'Dasbor', 'Legalitas', ['Ringkasan', 'Ekonomi', 'Legalitas']],
@@ -132,13 +132,13 @@ test('navigasi bawah HP: Admin dan Kelompok 4 menu + Lainnya, OPD 5 menu tanpa L
     expect($bottom($this->actingAs($this->admin)->get('/admin')->getContent()))->toBe(['Dasbor', 'Kelompok', 'Laporan', 'Website', 'Lainnya'])
         ->and($bottom($this->actingAs($this->opdUser)->get('/opd')->getContent()))->toBe(['Dasbor', 'Kelompok', 'Laporan', 'Notifikasi', 'Akun']);
 
-    // Kelompok: 4 menu utama + Lainnya (Legalitas & Izin, Notifikasi, Akun Saya).
+    // Kelompok: 4 menu utama + Lainnya (Legalitas dan izin, Notifikasi, Akun saya).
     $kelompok = $this->actingAs(User::factory()->kelompok($this->ours)->create())->get('/kelompok')->getContent();
     expect($bottom($kelompok))->toBe(['Dasbor', 'Profil', 'Produk', 'Laporan', 'Lainnya']);
     preg_match('#Menu lainnya.*?</ul>#s', $kelompok, $kelompokMore);
-    expect(html_entity_decode(preg_replace('/\s+/', ' ', strip_tags($kelompokMore[0]))))->toContain('Legalitas & Izin')->toContain('Notifikasi')->toContain('Akun Saya');
+    expect(html_entity_decode(preg_replace('/\s+/', ' ', strip_tags($kelompokMore[0]))))->toContain('Legalitas dan izin')->toContain('Notifikasi')->toContain('Akun saya');
 
     $sheet = $this->actingAs($this->admin)->get('/admin')->getContent();
     preg_match('#Menu lainnya.*?</ul>#s', $sheet, $more);
-    expect(preg_replace('/\s+/', ' ', strip_tags($more[0])))->toContain('Pengaturan')->toContain('Notifikasi')->toContain('Akun Saya');
+    expect(preg_replace('/\s+/', ' ', strip_tags($more[0])))->toContain('Pengaturan')->toContain('Notifikasi')->toContain('Akun saya');
 });

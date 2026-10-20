@@ -5,6 +5,8 @@ use App\Models\MonthlyReport;
 use App\Models\Organization;
 use App\Models\User;
 use App\Support\Dashboards\Statistics;
+use App\Support\Format;
+use Carbon\CarbonImmutable;
 use Illuminate\Support\Carbon;
 
 beforeEach(function () {
@@ -43,8 +45,9 @@ test('dasbor admin: kartu Ekonomi dengan grafik 6 bulan, lalu Laporan terbaru da
         ->assertSee('Ekonomi September 2026')
         ->assertSee('6 bulan terakhir')
         ->assertSee('Rp 1,5 jt')
-        // Hanya 1 kelompok yang sama di kedua bulan: persen disembunyikan.
-        ->assertSee('belum bisa dibandingkan')
+        // Hanya 1 kelompok yang sama di kedua bulan: persen disembunyikan, catatannya sekali di bawah ketiga angka.
+        ->assertSee('Belum bisa dibandingkan dengan Agustus 2026')
+        ->assertDontSee('>belum bisa dibandingkan<', false)
         ->assertSee('Laporan terbaru')
         ->assertSee('KUB Antre')
         ->assertSee('/admin/laporan/'.$waiting->id.'?dari=antrean', false)
@@ -77,8 +80,8 @@ test('perbandingan setara: hanya kelompok terverifikasi di kedua bulan yang meng
     $report($partial, '2026-08-01', ['income_sales' => null]);
     $report($partial, '2026-09-01', ['income_sales' => 700000]);
 
-    $comparison = (new Statistics($admin, [], \Carbon\CarbonImmutable::parse('2026-09-01'), \Carbon\CarbonImmutable::parse('2026-09-01')))
-        ->matchedChange(\Carbon\CarbonImmutable::parse('2026-09-01'));
+    $comparison = (new Statistics($admin, [], CarbonImmutable::parse('2026-09-01'), CarbonImmutable::parse('2026-09-01')))
+        ->matchedChange(CarbonImmutable::parse('2026-09-01'));
 
     expect($comparison['income_sales'])->toMatchArray(['change' => 50, 'organizations' => 5, 'comparable' => true])
         ->and($comparison['costs'])->toMatchArray(['change' => 0, 'organizations' => 6, 'comparable' => true])
@@ -97,16 +100,16 @@ test('perbandingan setara dengan kurang dari 5 kelompok yang sama: persen tidak 
         MonthlyReport::factory()->for($organization)->status(ReportStatus::Verified)->create(['period' => '2026-09-01', 'submitted_at' => now(), 'income_sales' => 2000]);
     }
 
-    $comparison = (new Statistics($admin))->matchedChange(\Carbon\CarbonImmutable::parse('2026-09-01'));
+    $comparison = (new Statistics($admin))->matchedChange(CarbonImmutable::parse('2026-09-01'));
 
     expect($comparison['income_sales'])->toMatchArray(['change' => null, 'organizations' => 4, 'comparable' => false]);
 });
 
 test('nilai kosong di area aplikasi tampil "Belum diisi", bukan tanda pisah', function () {
-    expect((string) App\Support\Format::orEmpty(App\Support\Format::rupiah(null)))->toContain('Belum diisi')->toContain('text-ink-3')
-        ->and(App\Support\Format::orEmpty('Rp 1.000'))->toBe('Rp 1.000')
-        ->and(App\Support\Format::monthShort('2026-09-01'))->toBe('Sep 2026')
-        ->and(App\Support\Format::village('Kampung Sumber Air'))->toBe('Sumber Air');
+    expect((string) Format::orEmpty(Format::rupiah(null)))->toContain('Belum diisi')->toContain('text-ink-3')
+        ->and(Format::orEmpty('Rp 1.000'))->toBe('Rp 1.000')
+        ->and(Format::monthShort('2026-09-01'))->toBe('Sep 2026')
+        ->and(Format::village('Kampung Sumber Air'))->toBe('Sumber Air');
 
     $organization = Organization::factory()->create(['members_count' => null, 'leader_name' => 'Ketua Contoh']);
     $html = $this->actingAs(User::factory()->admin()->create())->get('/admin/kelompok')->assertOk()

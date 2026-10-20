@@ -16,16 +16,17 @@ class DashboardController extends Controller
     {
         $organization = Organization::findOrFail($request->user()->organization_id);
         $summary = new KelompokSummary($organization);
+        $history = $summary->history(3);
         // visibleTo untuk akun kelompok = kelompoknya sendiri; 12 bulan sampai bulan wajib lapor.
         $stats = new Statistics($request->user());
 
         return view('kelompok.dashboard', [
             'organization' => $organization,
-            'due' => $summary->due(),
+            'task' => $summary->task(),
             'current' => $summary->current(),
-            'revision' => $summary->latestRevision(),
             'checklist' => $summary->profileChecklist(),
-            'history' => $summary->history(),
+            'history' => $history,
+            'olderOutstanding' => $history->isEmpty() ? 0 : $summary->outstandingBefore($history->last()['period']),
             'followUps' => $summary->followUps(),
             'incomeTrend' => $stats->incomeTrend(),
             'productionTrend' => $stats->productionTrend(),

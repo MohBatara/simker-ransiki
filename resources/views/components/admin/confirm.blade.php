@@ -37,7 +37,7 @@
         <div class="space-y-4">{{ $slot }}</div>
     @endif
     <x-slot:footer>
-        <x-button variant="secondary" x-on:click="$dispatch('close-modal', @js($name))">Batal</x-button>
+        <x-button variant="secondary" x-on:click="$dispatch('close-modal', {{ \Illuminate\Support\Js::from($name) }})">Batal</x-button>
         <x-button type="submit" :form="$formId" :variant="$tone === 'danger' ? 'danger-solid' : 'primary'" :processing="$processing">{{ $confirm }}</x-button>
     </x-slot:footer>
 </x-modal>

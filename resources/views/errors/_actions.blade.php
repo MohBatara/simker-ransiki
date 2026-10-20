@@ -16,7 +16,7 @@
     @if ($reload ?? false)
         <x-button variant="secondary" icon="arrow-path" x-on:click="window.location.reload()">Muat ulang</x-button>
     @else
-        <x-button variant="secondary" icon="arrow-left" x-on:click="history.length > 1 ? history.back() : window.location.assign(@js($url))">Kembali</x-button>
+        <x-button variant="secondary" icon="arrow-left" x-on:click="history.length > 1 ? history.back() : window.location.assign({{ \Illuminate\Support\Js::from($url) }})">Kembali</x-button>
     @endif
     <x-button :href="$url">{{ $label }}</x-button>
 </div>

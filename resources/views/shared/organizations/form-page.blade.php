@@ -6,7 +6,7 @@
     $editing = $organization->exists;
     $area = auth()->user()->role->area();
     $breadcrumbs = match (true) {
-        $area === 'kelompok' => [['label' => 'Profil Kelompok', 'href' => route('kelompok.profile.show')], ['label' => 'Ubah profil']],
+        $area === 'kelompok' => [['label' => 'Profil kelompok', 'href' => route('kelompok.profile.show')], ['label' => 'Ubah profil']],
         $editing => [
             ['label' => $area === 'opd' ? 'Kelompok binaan' : 'Kelompok', 'href' => route($area.'.organizations.index')],
             ['label' => $organization->name, 'href' => route($area.'.organizations.show', $organization)],
