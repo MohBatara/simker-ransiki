@@ -1,20 +1,20 @@
 {{--
     Kartu "Pelaporan per OPD" (Dasbor Admin, tab Ringkasan). Angka dari ReportingStats::progressPerOpd() (kelompok dengan
     beberapa OPD dihitung di setiap OPD) dan progress() untuk "Seluruh distrik" (kelompok dihitung sekali).
-    Satu baris per OPD (±76px, seluruh baris menaut ke daftar Laporan tersaring OPD + periode): singkatan + nama resmi,
-    bilah bertumpuk 14px dengan tooltip per segmen dan ringkasan yang hanya menyebut status berisi, lalu persen
-    terverifikasi + "X dari Y kelompok". Urut persen terverifikasi terendah dulu; OPD tanpa kelompok wajib lapor di akhir.
-    HP: bertumpuk (nama, bilah, angka). Variabel: $perOpd, $progress, $period, $month.
+    Satu warna (brand) dua tingkat: terverifikasi = brand, sudah diajukan belum terverifikasi (menunggu + perlu revisi) =
+    brand 30%, sisanya track abu polos. Rincian netral (ink-3); hanya "perlu revisi" dan "belum diajukan" berwarna clay.
+    Persen 28px ink, clay bila < 50%. Baris ±68px menaut ke daftar Laporan tersaring OPD + periode; urut persen terendah
+    dulu; "Seluruh distrik" terakhir, dipisah garis tebal, teks tebal. HP: bertumpuk. Variabel: $perOpd, $progress, $period, $month.
 --}}
 @use('App\Support\Format')
 
 @php
-    // Warna bilah (atas permintaan; sama dengan legenda). Belum diajukan = abu bergaris tipis.
-    $tones = [
-        'verified' => ['Terverifikasi', 'terverifikasi', 'bg-brand'],
-        'submitted' => ['Menunggu verifikasi', 'menunggu', 'bg-[#C9962E]'],
-        'revision' => ['Perlu revisi', 'revisi', 'bg-[#A63A2B]'],
-        'pending' => ['Belum diajukan', 'belum diajukan', 'bg-[#C9CEC9] bg-[repeating-linear-gradient(135deg,transparent_0_3px,rgb(255_255_255/0.55)_3px_5px)]'],
+    // Rincian di bawah bilah: [kunci, teks, perlu perhatian (clay)]. Angka nol tidak ditampilkan.
+    $details = [
+        ['verified', 'terverifikasi', false],
+        ['submitted', 'menunggu', false],
+        ['revision', 'perlu revisi', true],
+        ['pending', 'belum diajukan', true],
     ];
     $shape = fn (array $counts) => [
         'verified' => $counts['verified'],
@@ -50,43 +50,54 @@
 
 <x-admin.card title="Pelaporan per OPD" :description="Format::month($period).' · kelompok dengan beberapa OPD dihitung di setiap OPD'" flush>
     <x-slot:meta>
-        <ul class="mt-3 flex flex-wrap gap-x-4 gap-y-1.5 text-label text-ink-2" aria-label="Keterangan warna" data-opd-legend>
-            @foreach ($tones as [$label, , $fill])
-                <li class="inline-flex items-center gap-1.5"><span class="size-2.5 shrink-0 rounded-full {{ $fill }}" aria-hidden="true"></span>{{ $label }}</li>
-            @endforeach
-        </ul>
+        <p class="mt-1 text-label text-ink-3" data-opd-legend>Hijau tua: terverifikasi · Hijau muda: sudah diajukan, belum diperiksa</p>
     </x-slot:meta>
 
     <ul class="border-t border-line" data-opd-rows>
         @foreach ($rows as $row)
             @php
-                $parts = collect($tones)->filter(fn ($tone, string $key) => $row[$key] > 0);
-                $summary = $parts->map(fn ($tone, string $key) => $row[$key].' '.$tone[1])->join(' · ');
+                $submitted = $row['submitted'] + $row['revision'];
+                $parts = collect($details)->filter(fn (array $detail) => $row[$detail[0]] > 0);
+                $summary = $parts->map(fn (array $detail) => $row[$detail[0]].' '.$detail[1])->join(' · ');
+                $width = fn (int $value) => $row['total'] > 0 ? round($value / $row['total'] * 100, 2) : 0;
             @endphp
-            <li @class(['border-b border-line-soft last:border-b-0', 'bg-brand-50' => $row['district']]) data-opd-row="{{ $row['short'] }}">
-                <a href="{{ $row['href'] }}" @class([
-                    'grid min-h-19 grid-cols-1 gap-x-6 gap-y-2 px-4 py-3 transition-colors md:grid-cols-[15rem_minmax(0,1fr)_10rem] md:items-center md:px-5 lg:grid-cols-[16.25rem_minmax(0,1fr)_10rem]',
-                    'hover:bg-hover' => ! $row['district'],
-                    'hover:bg-brand-100/60' => $row['district'],
-                ])>
+            <li @class([
+                'border-line-soft',
+                'border-b' => ! $row['district'],
+                'border-t-2 border-t-line-strong' => $row['district'],
+            ]) data-opd-row="{{ $row['short'] }}">
+                <a href="{{ $row['href'] }}" class="grid min-h-17 grid-cols-1 gap-x-6 gap-y-2 px-4 py-3 transition-colors md:py-2.5 hover:bg-hover md:grid-cols-[15rem_minmax(0,1fr)_9rem] md:items-center md:px-5 lg:grid-cols-[16.25rem_minmax(0,1fr)_9rem]">
                     <span class="min-w-0">
                         <span class="block font-semibold text-ink">{{ $row['short'] }}</span>
                         @if ($row['name'])
-                            <span class="block truncate text-label text-ink-3" title="{{ $row['name'] }}">{{ $row['name'] }}</span>
+                            <span @class(['block truncate text-label', 'text-ink-3' => ! $row['district'], 'font-semibold text-ink-2' => $row['district']]) title="{{ $row['name'] }}">{{ $row['name'] }}</span>
                         @endif
                     </span>
 
                     <span class="min-w-0">
-                        <span class="flex h-3.5 w-full overflow-hidden rounded-full bg-subtle" role="img" aria-label="{{ $row['short'] }}: {{ $summary ?: 'tidak ada kelompok wajib lapor' }}">
-                            @foreach ($parts as $key => [$label, , $fill])
-                                <span class="h-full border-r-2 border-paper last:border-r-0 {{ $fill }}" style="width: {{ round($row[$key] / $row['total'] * 100, 2) }}%" title="{{ $label }}: {{ $row[$key] }} kelompok" data-segment="{{ $key }}"></span>
-                            @endforeach
+                        <span class="flex h-2 w-full overflow-hidden rounded-full bg-[#ECEEEA]" role="img" aria-label="{{ $row['short'] }}: {{ $summary ?: 'tidak ada kelompok wajib lapor' }}">
+                            @if ($row['verified'] > 0)
+                                <span class="h-full bg-brand" style="width: {{ $width($row['verified']) }}%" title="Terverifikasi: {{ $row['verified'] }} kelompok" data-segment="verified"></span>
+                            @endif
+                            @if ($submitted > 0)
+                                <span class="h-full bg-brand/30" style="width: {{ $width($submitted) }}%" title="Sudah diajukan, belum terverifikasi: {{ $submitted }} kelompok" data-segment="submitted"></span>
+                            @endif
                         </span>
-                        <span class="mt-1.5 block text-label text-ink-2">{{ $summary ?: 'Tidak ada kelompok wajib lapor' }}</span>
+                        <span @class(['mt-1.5 block text-label text-ink-3', 'font-semibold' => $row['district']])>
+                            @forelse ($parts as [$key, $text, $attention])
+                                @if (! $loop->first) · @endif<span @class(['text-[#A63A2B]' => $attention]) @if ($attention) data-attention @endif>{{ $row[$key] }} {{ $text }}</span>
+                            @empty
+                                Tidak ada kelompok wajib lapor
+                            @endforelse
+                        </span>
                     </span>
 
                     <span class="flex items-baseline gap-2 md:block md:text-right">
-                        <span class="text-admin-title font-semibold tabular-nums text-ink">{{ $row['percent'] === null ? Format::orEmpty(null) : $row['percent'].'%' }}</span>
+                        <span @class([
+                            'text-[1.75rem] leading-8 font-semibold tabular-nums',
+                            'text-[#A63A2B]' => $row['percent'] !== null && $row['percent'] < 50,
+                            'text-ink' => $row['percent'] === null || $row['percent'] >= 50,
+                        ]) data-percent>{{ $row['percent'] === null ? Format::orEmpty(null) : $row['percent'].'%' }}</span>
                         <span class="block text-label text-ink-3 max-md:inline">{{ Format::number($row['verified']) }} dari {{ Format::number($row['total']) }} kelompok</span>
                     </span>
                 </a>

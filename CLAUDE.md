@@ -590,13 +590,16 @@ draft ──ajukan──▶ submitted ──verifikasi──▶ verified ──b
   terbaru" (7/12, `shared.dashboards.latest-reports`): 5 pengajuan terakhir dari `MonthlyReport::verificationQueue`
   → Produksi per produk (7/12, 5 baris) berdampingan dengan Belum mengajukan (5/12) → Admin: pelaporan per OPD
   (`admin.dashboard._opd-reporting`, angka dari `ReportingStats::progressPerOpd()`/`progress()`): subjudul "<bulan> ·
-  kelompok dengan beberapa OPD dihitung di setiap OPD", legenda titik warna (slot `meta` di `x-admin.card`); satu baris
-  per OPD ±76px yang seluruhnya menaut ke daftar Laporan `?opd=&period=`: singkatan tebal + nama resmi kecil `ink-3`
-  terpotong (title) dari Data Master, bilah bertumpuk 14px (Terverifikasi `brand`, Menunggu #C9962E, Perlu revisi
-  #A63A2B, Belum diajukan = draf + belum dibuat #C9CEC9 bergaris tipis; atas permintaan) dengan title per segmen
-  "Menunggu verifikasi: 3 kelompok", ringkasan yang hanya menyebut status berisi ("1 terverifikasi · 3 menunggu ·
-  1 revisi"), lalu persen terverifikasi besar + "X dari Y kelompok". Urut persen terendah dulu (OPD tanpa kelompok wajib
-  lapor di akhir), lalu baris "Seluruh distrik" berlatar `brand-50` (setiap kelompok dihitung sekali). HP: bertumpuk.
+  kelompok dengan beberapa OPD dihitung di setiap OPD", satu baris keterangan kecil "Hijau tua: terverifikasi · Hijau
+  muda: sudah diajukan, belum diperiksa" (slot `meta` di `x-admin.card`); satu baris per OPD ±68px yang seluruhnya
+  menaut ke daftar Laporan `?opd=&period=`: singkatan tebal + nama resmi kecil `ink-3` terpotong (title) dari Data
+  Master, bilah 8px SATU warna dua tingkat tanpa celah/pola (terverifikasi `brand`, menunggu + perlu revisi `brand/30`,
+  sisanya track #ECEEEA) dengan title per segmen, rincian `ink-3` yang hanya menyebut status berisi ("1 terverifikasi ·
+  3 menunggu · 1 perlu revisi"; hanya "perlu revisi" dan "belum diajukan" berwarna clay #A63A2B), lalu persen
+  terverifikasi 28px `ink` (clay bila < 50%) + "X dari Y kelompok". Urut persen terendah dulu (OPD tanpa kelompok wajib
+  lapor di akhir), lalu "Seluruh distrik" (setiap kelompok dihitung sekali) dengan garis atas tebal dan teks tebal, tanpa
+  latar. HP: bertumpuk. Prinsip warna yang sama di kotak progres "Perlu dikerjakan": isian `brand/30` (terverifikasi
+  `brand/45`), clay hanya untuk Terlambat melapor.
   HP: semua kartu bertumpuk, grid 2x2 tetap 2 kolom.
   "Produksi per produk" (dasbor Admin/OPD dan tab Ekonomi): SATU sumber `Statistics::production()` (Admin = seluruh
   distrik, OPD = binaan; `DistrictStats` tidak lagi menghitung produksi). Hanya laporan `verified`, produk + satuan

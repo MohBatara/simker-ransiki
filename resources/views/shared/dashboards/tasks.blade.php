@@ -11,10 +11,12 @@
     $month = $period->format('Y-m');
     $total = $progress['total'];
     $submitted = $progress['verified'] + $progress['submitted'] + $progress['revision'];
+    // Satu warna (brand) untuk progres, seperti kartu Pelaporan per OPD: terverifikasi lebih tua, yang lain brand 30%.
+    // Clay hanya untuk yang perlu perhatian (terlambat). Teks persen di atas isian tetap ink (kontras cukup di kedua tingkat).
     $boxes = [
-        ['icon' => 'paper-airplane', 'title' => 'Sudah mengajukan', 'value' => $submitted, 'verb' => 'mengajukan', 'icon_class' => 'bg-brand-50 text-brand', 'fill' => 'bg-brand-100', 'href' => route($area.'.reports.index', ['period' => $month])],
-        ['icon' => 'check-badge', 'title' => 'Terverifikasi', 'value' => $progress['verified'], 'verb' => 'terverifikasi', 'icon_class' => 'bg-ok-bg text-ok', 'fill' => 'bg-chart-3', 'href' => route($area.'.reports.index', ['status' => 'verified', 'period' => $month])],
-        ['icon' => 'clock', 'title' => 'Menunggu verifikasi', 'value' => $progress['submitted'], 'verb' => 'menunggu', 'icon_class' => 'bg-wait-bg text-wait', 'fill' => 'bg-sand', 'href' => route($area.'.reports.index', ['status' => 'submitted', 'period' => $month])],
+        ['icon' => 'paper-airplane', 'title' => 'Sudah mengajukan', 'value' => $submitted, 'verb' => 'mengajukan', 'icon_class' => 'bg-brand-50 text-brand', 'fill' => 'bg-brand/30', 'href' => route($area.'.reports.index', ['period' => $month])],
+        ['icon' => 'check-badge', 'title' => 'Terverifikasi', 'value' => $progress['verified'], 'verb' => 'terverifikasi', 'icon_class' => 'bg-brand-50 text-brand', 'fill' => 'bg-brand/45', 'href' => route($area.'.reports.index', ['status' => 'verified', 'period' => $month])],
+        ['icon' => 'clock', 'title' => 'Menunggu verifikasi', 'value' => $progress['submitted'], 'verb' => 'menunggu', 'icon_class' => 'bg-brand-50 text-brand', 'fill' => 'bg-brand/30', 'href' => route($area.'.reports.index', ['status' => 'submitted', 'period' => $month])],
         ['icon' => 'exclamation-triangle', 'title' => 'Terlambat melapor', 'value' => $overdue['total'], 'verb' => 'terlambat', 'icon_class' => 'bg-fix-bg text-fix', 'fill' => 'bg-fix-bg', 'href' => route($area.'.organizations.index', ['laporan' => 'terlambat', 'periode' => $month])],
     ];
 @endphp

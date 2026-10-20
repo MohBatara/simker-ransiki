@@ -8,9 +8,9 @@ use App\Models\User;
 use Illuminate\Support\Carbon;
 
 /*
- * Kartu "Pelaporan per OPD" (Dasbor Admin): baris per OPD urut persen terverifikasi terendah, bilah bertumpuk bertooltip,
- * ringkasan tanpa angka nol, persen + "X dari Y kelompok", baris menaut ke daftar Laporan OPD + periode, dan baris
- * "Seluruh distrik" yang menghitung setiap kelompok sekali. Angka tetap dari ReportingStats.
+ * Kartu "Pelaporan per OPD" (Dasbor Admin): satu warna (brand) dua tingkat, rincian netral dengan clay hanya untuk
+ * "perlu revisi" dan "belum diajukan", persen clay bila < 50%, urut persen terverifikasi terendah, baris menaut ke daftar
+ * Laporan OPD + periode, dan "Seluruh distrik" yang menghitung setiap kelompok sekali. Angka tetap dari ReportingStats.
  */
 beforeEach(function () {
     Carbon::setTestNow(Carbon::parse('2026-10-20 10:00', 'Asia/Jayapura'));
@@ -43,42 +43,56 @@ beforeEach(function () {
 
 afterEach(fn () => Carbon::setTestNow());
 
-function opdCard(mixed $test): string
+/** @return array{0: string, 1: array<string, string>} isi kartu + HTML per baris (kunci = nama baris) */
+function opdCard(mixed $test): array
 {
     $html = $test->get('/admin?periode=2026-09')->assertOk()->getContent();
     preg_match('#<ul class="border-t border-line" data-opd-rows>.*?</ul>#s', $html, $card);
+    preg_match_all('#<li[^>]*data-opd-row="([^"]+)">(.*?)</li>#s', $card[0], $rows, PREG_SET_ORDER);
 
-    return $card[0];
+    return [$card[0], collect($rows)->mapWithKeys(fn ($row) => [$row[1] => $row[0]])->all()];
 }
 
 test('baris urut persen terverifikasi terendah, Seluruh distrik terakhir dengan kelompok dihitung sekali', function () {
     $this->actingAs($this->admin);
-    $card = opdCard($this);
+    [, $rows] = opdCard($this);
 
-    preg_match_all('#data-opd-row="([^"]+)"#', $card, $rows);
-    expect($rows[1])->toBe(['DKPP', 'Perikanan', 'Seluruh distrik']);
+    expect(array_keys($rows))->toBe(['DKPP', 'Perikanan', 'Seluruh distrik']);
 
-    $text = preg_replace('/\s+/', ' ', strip_tags($card));
-    expect($text)->toContain('DKPP Dinas Ketahanan Pangan dan Pertanian')
-        ->toContain('1 terverifikasi · 3 menunggu · 1 revisi 20% 1 dari 5 kelompok')
-        ->toContain('2 terverifikasi · 1 belum diajukan 67% 2 dari 3 kelompok')
+    $text = fn (string $row) => preg_replace('/\s+/', ' ', trim(strip_tags($rows[$row])));
+    expect($text('DKPP'))->toBe('DKPP Dinas Ketahanan Pangan dan Pertanian 1 terverifikasi · 3 menunggu · 1 perlu revisi 20% 1 dari 5 kelompok')
+        ->and($text('Perikanan'))->toBe('Perikanan Dinas Perikanan 2 terverifikasi · 1 belum diajukan 67% 2 dari 3 kelompok')
         // 7 kelompok unik (kelompok bersama tidak ganda): 2 terverifikasi, 3 menunggu, 1 revisi, 1 belum.
-        ->toContain('Seluruh distrik Setiap kelompok dihitung sekali 2 terverifikasi · 3 menunggu · 1 revisi · 1 belum diajukan 29% 2 dari 7 kelompok')
-        // Angka nol tidak disebut.
-        ->not->toContain('0 revisi')->not->toContain('0 menunggu');
+        ->and($text('Seluruh distrik'))->toBe('Seluruh distrik Setiap kelompok dihitung sekali 2 terverifikasi · 3 menunggu · 1 perlu revisi · 1 belum diajukan 29% 2 dari 7 kelompok');
 });
 
-test('segmen bertooltip, baris menaut ke daftar Laporan OPD + periode, legenda empat status', function () {
+test('bilah satu warna dua tingkat tanpa pola, clay hanya untuk yang perlu perhatian dan persen di bawah 50%', function () {
     $this->actingAs($this->admin);
-    $card = opdCard($this);
+    [$card, $rows] = opdCard($this);
 
-    expect($card)->toContain('title="Menunggu verifikasi: 3 kelompok"')
-        ->toContain('title="Perlu revisi: 1 kelompok"')
-        ->toContain('title="Belum diajukan: 1 kelompok"')
-        ->toContain('href="'.e(route('admin.reports.index', ['opd' => $this->dkpp->id, 'period' => '2026-09'])).'"')
-        ->toContain('class="border-b border-line-soft last:border-b-0 bg-brand-50" data-opd-row="Seluruh distrik"');
+    // Terverifikasi brand, menunggu + perlu revisi brand 30%, sisanya track abu polos.
+    expect($rows['DKPP'])->toContain('class="h-full bg-brand" style="width: 20%" title="Terverifikasi: 1 kelompok"')
+        ->toContain('class="h-full bg-brand/30" style="width: 80%" title="Sudah diajukan, belum terverifikasi: 4 kelompok"')
+        ->toContain('h-2 w-full overflow-hidden rounded-full bg-[#ECEEEA]')
+        ->and($card)->not->toContain('repeating-linear-gradient')->not->toContain('#C9962E')->not->toContain('bg-brand-50');
+
+    // Clay: "perlu revisi" dan "belum diajukan" saja; persen 20% clay, 67% ink.
+    preg_match_all('#<span class="text-\[\#A63A2B\]"\s+data-attention\s*>([^<]+)</span>#', $card, $attention);
+    expect($attention[1])->toBe(['1 perlu revisi', '1 belum diajukan', '1 perlu revisi', '1 belum diajukan'])
+        ->and($rows['DKPP'])->toMatch('#text-\[\#A63A2B\]" data-percent>20%#')
+        ->and($rows['Perikanan'])->toMatch('#text-ink" data-percent>67%#');
+
+    // Seluruh distrik: garis pemisah tebal, tanpa latar berwarna.
+    expect($rows['Seluruh distrik'])->toContain('border-t-2 border-t-line-strong');
+});
+
+test('baris menaut ke daftar Laporan OPD + periode; keterangan satu baris menggantikan legenda empat warna', function () {
+    $this->actingAs($this->admin);
+    [$card] = opdCard($this);
+
+    expect($card)->toContain('href="'.e(route('admin.reports.index', ['opd' => $this->dkpp->id, 'period' => '2026-09'])).'"');
 
     $this->get('/admin?periode=2026-09')
         ->assertSee('September 2026 · kelompok dengan beberapa OPD dihitung di setiap OPD')
-        ->assertSeeInOrder(['data-opd-legend', 'Terverifikasi', 'Menunggu verifikasi', 'Perlu revisi', 'Belum diajukan'], false);
+        ->assertSee('Hijau tua: terverifikasi · Hijau muda: sudah diajukan, belum diperiksa');
 });
