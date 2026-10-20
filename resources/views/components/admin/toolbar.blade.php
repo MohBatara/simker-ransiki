@@ -98,9 +98,9 @@
                     @endforeach
                 </div>
                 <x-slot:footer>
-                    <x-button variant="secondary" x-on:click="resetPanel(@js($panel))" class="mr-auto">Atur ulang</x-button>
-                    <x-button variant="secondary" x-on:click="$dispatch('close-modal', @js($panel))">Batal</x-button>
-                    <x-button x-on:click="applyPanel(@js($panel))">Terapkan</x-button>
+                    <x-button variant="secondary" x-on:click="resetPanel({{ \Illuminate\Support\Js::from($panel) }})" class="mr-auto">Atur ulang</x-button>
+                    <x-button variant="secondary" x-on:click="$dispatch('close-modal', {{ \Illuminate\Support\Js::from($panel) }})">Batal</x-button>
+                    <x-button x-on:click="applyPanel({{ \Illuminate\Support\Js::from($panel) }})">Terapkan</x-button>
                 </x-slot:footer>
             </x-admin.modal>
         @endif
