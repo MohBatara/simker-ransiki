@@ -12,7 +12,7 @@
     $office = [
         ['map-pin', 'Alamat', $settings['office_address'], null],
         ['clock', 'Jam layanan', $settings['office_hours'], null],
-        ['phone', 'Telepon', $settings['office_phone'], $settings['office_phone'] ? 'tel:'.preg_replace('/[^0-9+]/', '', $settings['office_phone']) : null],
+        ['phone', 'Telepon', \App\Support\Format::phone($settings['office_phone']), \App\Support\Format::telUrl($settings['office_phone'])],
         ['envelope', 'Email', $settings['office_email'], $settings['office_email'] ? 'mailto:'.$settings['office_email'] : null],
     ];
     $office = array_filter($office, fn ($item) => filled($item[2]));

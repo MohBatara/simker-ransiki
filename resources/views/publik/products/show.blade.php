@@ -168,7 +168,7 @@
                     <div class="mt-6" x-ref="cta">
                         <x-public.pill-link :href="$cta['href']" full class="sm:w-auto sm:justify-start" :target="$cta['external'] ? '_blank' : null" :rel="$cta['external'] ? 'noopener' : null">{{ $cta['label'] }}</x-public.pill-link>
                         @if ($phone)
-                            <p class="mt-3 text-ui text-ink-soft">Atau telepon <a href="tel:{{ preg_replace('/[^0-9+]/', '', $phone) }}" class="rounded-control font-semibold text-brand underline underline-offset-4 hover:text-brand-hover">{{ $phone }}</a></p>
+                            <p class="mt-3 text-ui text-ink-soft">Atau telepon <a href="{{ \App\Support\Format::telUrl($phone) }}" class="rounded-control font-semibold text-brand underline underline-offset-4 hover:text-brand-hover">{{ \App\Support\Format::phone($phone) }}</a></p>
                         @elseif (! $whatsapp)
                             <p class="mt-3 text-ui text-ink-soft">Kontak kelompok tidak dipublikasikan. Hubungi <a href="{{ route('public.contact') }}" class="rounded-control font-semibold text-brand underline underline-offset-4 hover:text-brand-hover">kantor distrik</a>.</p>
                         @endif

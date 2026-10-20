@@ -99,6 +99,36 @@ class Format
             : self::number($bytes / 1024 / 1024, 1).' MB';
     }
 
+    /**
+     * Nomor telepon untuk TAMPILAN (data tersimpan tidak diubah): dikelompokkan dengan spasi, bukan tanda hubung.
+     * 0812-0000-1005 → "0812 0000 1005"; +62 812-0000-1005 → "+62 812 0000 1005". Nomor lain (mis. telepon kantor
+     * berkode wilayah) hanya diganti pemisahnya menjadi spasi. Kosong → null.
+     */
+    public static function phone(?string $phone): ?string
+    {
+        $phone = trim((string) $phone);
+        if ($phone === '') {
+            return null;
+        }
+
+        $digits = preg_replace('/\D+/', '', $phone);
+        $group = fn (string $value) => trim(implode(' ', [substr($value, 0, 4), substr($value, 4, 4), substr($value, 8)]));
+
+        return match (true) {
+            str_starts_with($phone, '+62') && strlen($digits) >= 11 => '+62 '.substr($digits, 2, 3).' '.$group(substr($digits, 5)),
+            str_starts_with($digits, '08') && strlen($digits) >= 10 && strlen($digits) <= 13 => $group($digits),
+            default => trim(preg_replace('/\s+/', ' ', strtr($phone, ['-' => ' ', '.' => ' ']))),
+        };
+    }
+
+    /** Tautan tel: dari nomor apa pun (angka dan + saja), atau null. */
+    public static function telUrl(?string $phone): ?string
+    {
+        $digits = preg_replace('/[^\d+]/', '', (string) $phone);
+
+        return $digits === '' ? null : 'tel:'.$digits;
+    }
+
     /** Tautan WhatsApp dari nomor Indonesia: 0812… atau +62 812… menjadi https://wa.me/62812…. */
     public static function whatsappUrl(?string $phone): ?string
     {

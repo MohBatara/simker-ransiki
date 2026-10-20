@@ -56,7 +56,7 @@
         <x-info-item label="Ketua" icon="user">{{ $text($organization->leader_name) }}</x-info-item>
         <x-info-item label="Telepon" icon="phone">
             @if (filled($organization->phone))
-                <x-link :href="'tel:'.preg_replace('/[^\d+]/', '', $organization->phone)" class="font-normal">{{ $organization->phone }}</x-link>
+                <x-link :href="Format::telUrl($organization->phone)" class="font-normal">{{ Format::phone($organization->phone) }}</x-link>
             @else
                 {{ Format::orEmpty(null) }}
             @endif

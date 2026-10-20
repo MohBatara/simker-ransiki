@@ -118,7 +118,7 @@
                             <p class="flex flex-wrap items-center gap-x-2 text-ink-soft">
                                 <span>{{ $officer->name }}</span>
                                 @if ($officer->phone)
-                                    <x-link :href="'tel:'.preg_replace('/[^\d+]/', '', $officer->phone)" class="font-normal">{{ $officer->phone }}</x-link>
+                                    <x-link :href="\App\Support\Format::telUrl($officer->phone)" class="font-normal">{{ \App\Support\Format::phone($officer->phone) }}</x-link>
                                 @endif
                             </p>
                         @empty

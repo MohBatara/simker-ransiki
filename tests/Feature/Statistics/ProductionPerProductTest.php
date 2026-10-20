@@ -125,7 +125,7 @@ test('kartu dasbor: subjudul baru, nama kelompok tunggal, "N kelompok" dengan da
 
     $this->actingAs($this->admin)->get('/admin?periode=2026-09')->assertOk()
         ->assertSee('Lima produk yang paling banyak diproduksi kelompok. Satuan berbeda tidak dijumlahkan.')
-        ->assertSee('Dibanding bulan lalu')
+        ->assertSee('Vs Agustus')->assertDontSee('Dibanding bulan lalu')
         ->assertSee('2 kelompok')
         ->assertSee('title="Kelompok Alfa, Kelompok Beta"', false)
         ->assertSee('data-production-change="up"', false)

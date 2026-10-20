@@ -192,7 +192,7 @@ test('kantor distrik: hanya baris yang terisi, tombol Hubungi kami, telepon tel:
 
     SiteSetting::put(['office_address' => 'Alamat contoh', 'office_phone' => '0800-1234-5678', 'office_hours' => 'Senin sampai Jumat']);
     $html = profileSection($this->get('/profil')->getContent(), 'kantor');
-    expect(strip_tags($html))->toMatch('/Alamat\s+Alamat contoh\s+Jam layanan\s+Senin sampai Jumat\s+Telepon\s+0800-1234-5678/')
+    expect(strip_tags($html))->toMatch('/Alamat\s+Alamat contoh\s+Jam layanan\s+Senin sampai Jumat\s+Telepon\s+0800 1234 5678/')
         ->and($html)->toContain('href="tel:080012345678"')->not->toContain('Email')->toContain('data-office-illustration')->not->toContain('/foto-kantor');
 
     SiteSetting::put(['office_photo_path' => 'site/kantor.jpg']);

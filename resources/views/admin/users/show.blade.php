@@ -11,7 +11,7 @@
         'OPD' => $user->opd?->name,
         'Kelompok' => $user->organization?->name,
         'Email' => $user->email ?? \App\Support\Format::orEmpty(null),
-        'Telepon' => $user->phone ?? \App\Support\Format::orEmpty(null),
+        'Telepon' => Format::phone($user->phone) ?? \App\Support\Format::orEmpty(null),
         'Login terakhir' => $user->last_login_at ? Format::dateTime($user->last_login_at).' WIT' : 'Belum pernah',
         'Wajib ganti kata sandi' => $user->hasPendingInvitation() ? 'Belum, menunggu undangan diterima' : ($user->must_change_password ? 'Ya, saat masuk berikutnya' : 'Tidak'),
         'Dibuat' => Format::date($user->created_at),

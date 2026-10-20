@@ -602,7 +602,13 @@ draft ──ajukan──▶ submitted ──verifikasi──▶ verified ──b
   <periode>, dari N kelompok yang sama"); "Baru" bila tidak ada kelompok yang melaporkannya di periode sebelumnya;
   "belum bisa dibandingkan" bila ada tetapi tidak ada kelompok yang mengisi di keduanya. Dijaga `ProductionPerProductTest`.
   Grafik kepatuhan pelaporan dan tren 12 bulan hanya di tab Ekonomi.
-  Setelah tenggat, daftar "Belum mengajukan" berjudul "Terlambat melapor {bulan}" dengan badge "Terlambat".
+  Setelah tenggat, daftar "Belum mengajukan" berjudul "Terlambat melapor {bulan}" (`shared.dashboards.not-submitted`,
+  `lg:self-start`, tidak dipaksa setinggi kartu Produksi): maks 5 baris bertumpuk dipisah garis tipis = nama (maks 2
+  baris) + SATU pil keadaan di kanan ("Draf, belum diajukan" / "Belum diisi"; "Terlambat" tidak diulang karena sudah di
+  judul), "Ketua: <nama> · 0812 0000 1005" (tel:), tombol kecil "Salin pesan pengingat" rata kiri; lalu "Lihat semua (N)"
+  ke daftar Kelompok `?laporan=terlambat&periode=` (memuat kelompok yang belum membuat laporan, yang tidak ada di daftar
+  Laporan). Kosong: ikon centang + "Semua kelompok sudah melapor tepat waktu." Kartu Produksi per produk: kolom
+  pembanding berjudul "Vs <bulan sebelumnya>" (satu baris), kolom Kelompok rata kiri.
   Dasbor Kelompok: tanpa kepala halaman (`:header="false" lead-tools`: h1 pembaca layar, lonceng di pojok kanan atas kartu
   sapaan). Kartu sapaan netral (brand-50, bingkai brand-100) untuk semua keadaan: "tanggal · nama kelompok", sapaan, lalu
   SATU kotak tugas (`kelompok.dashboard.task`, `KelompokSummary::task`, pertama yang berlaku): putih, bingkai line, sudut
@@ -801,6 +807,9 @@ pemisah tetap `line`/`line-strong`. Periksa kontras sebelum mengubah atau menamb
 - Angka dalam tabel memakai `tabular-nums`, rata kanan, dengan jarak ekstra (32px) sebelum
   kolom berikutnya.
 - Format Indonesia: `1.250.000`, `Rp 1.250.000`, tanggal `9 Oktober 2026`, bulan `September 2026`.
+- Nomor telepon di tampilan (semua peran dan publik) lewat SATU helper `Format::phone()`: spasi, bukan tanda hubung
+  ("0812 0000 1005", "+62 812 0000 1005"); data tersimpan tidak diubah. Tautan `tel:` lewat `Format::telUrl()`,
+  WhatsApp lewat `Format::whatsappUrl()`.
 
 ### Bentuk & jarak
 - Radius: 6px untuk input/tombol/badge, 10px untuk kartu dan modal (area aplikasi: lihat "Tema area aplikasi").

@@ -124,7 +124,8 @@ test('badge Terlambat di daftar laporan kelompok dan Admin/OPD', function () {
     $this->actingAs($member)->get('/kelompok/laporan')->assertOk()->assertSee($badge, false);
     $this->actingAs(User::factory()->opd($this->opd)->create())->get('/opd/laporan')->assertOk()->assertSee($badge, false);
     $this->get("/opd/kelompok/{$organization->id}/laporan")->assertOk()->assertSee($badge, false);
-    $this->get('/opd')->assertSee($badge, false);
+    // Dasbor: "Terlambat" sudah di judul kartu, pil di tiap baris hanya keadaan laporannya.
+    $this->get('/opd')->assertSee('Terlambat melapor September 2026')->assertSee('Draf, belum diajukan')->assertDontSee($badge, false);
 });
 
 test('kelompok tutup tidak ditandai terlambat di daftar laporannya sendiri', function () {

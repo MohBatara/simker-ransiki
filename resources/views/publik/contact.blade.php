@@ -9,8 +9,8 @@
 @php
     $phone = $settings['office_phone'];
     $quick = array_filter([
-        ['phone', 'Telepon', $phone, $phone ? 'tel:'.preg_replace('/[^0-9+]/', '', $phone) : null, false],
-        ['chat-bubble-left-right', 'WhatsApp', $settings['office_whatsapp'], Format::whatsappUrl($settings['office_whatsapp']), true],
+        ['phone', 'Telepon', Format::phone($phone), Format::telUrl($phone), false],
+        ['chat-bubble-left-right', 'WhatsApp', Format::phone($settings['office_whatsapp']), Format::whatsappUrl($settings['office_whatsapp']), true],
         ['envelope', 'Email', $settings['office_email'], $settings['office_email'] ? 'mailto:'.$settings['office_email'] : null, false],
     ], fn ($item) => filled($item[2]) && $item[3]);
     $office = array_filter([

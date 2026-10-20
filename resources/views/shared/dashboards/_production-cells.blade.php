@@ -8,7 +8,7 @@
 
 @if ($cell === 'organizations')
     @if ($row['organizations'] === 1 && $row['organization_names'])
-        <span class="block max-w-40 truncate text-label text-ink-2 md:ml-auto" title="{{ $row['organization_names'][0] }}">{{ $row['organization_names'][0] }}</span>
+        <span class="block max-w-40 truncate text-label text-ink-2" title="{{ $row['organization_names'][0] }}">{{ $row['organization_names'][0] }}</span>
     @else
         <span class="cursor-help whitespace-nowrap tabular-nums" title="{{ implode(', ', $row['organization_names']) }}">{{ Format::number($row['organizations']) }} kelompok</span>
     @endif

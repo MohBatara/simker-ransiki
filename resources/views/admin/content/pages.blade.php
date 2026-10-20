@@ -74,7 +74,7 @@
                     <x-field label="Telepon" for="office_phone" optional>
                         <x-input name="office_phone" type="tel" inputmode="tel" :value="$settings['office_phone']" maxlength="30" placeholder="08xx xxxx xxxx" />
                     </x-field>
-                    <x-field label="WhatsApp" for="office_whatsapp" hint="Mis. 0812-0000-0000; tautan WhatsApp dibuat otomatis." optional>
+                    <x-field label="WhatsApp" for="office_whatsapp" hint="Mis. 0812 0000 0000; tautan WhatsApp dibuat otomatis." optional>
                         <x-input name="office_whatsapp" type="tel" inputmode="tel" :value="$settings['office_whatsapp']" maxlength="30" placeholder="08xx xxxx xxxx" />
                     </x-field>
                     <x-field label="Email" for="office_email" optional>

@@ -4,15 +4,19 @@ use App\Models\BusinessSector;
 use App\Models\HeroSlide;
 use App\Models\InstitutionType;
 use App\Models\Organization;
+use App\Models\Post;
 use App\Models\Product;
 use App\Models\SiteSetting;
 use App\Models\User;
 use App\Models\Village;
 use App\Support\Format;
 use App\Support\PublicDirectory;
-use Illuminate\Support\Str;
+use App\Support\PublicIcons;
+use Database\Seeders\DemoSeeder;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 test('angka beranda hanya menghitung yang publik, unik, dan di-cache', function () {
     [$kebun, $olahan] = BusinessSector::factory()->count(2)->create();
@@ -273,7 +277,7 @@ test('admin mengubah konten dan hasilnya langsung tampil di website publik', fun
         ->assertSee('<h2>Sejarah contoh</h2>', false)
         ->assertSee('<strong>teks tebal</strong>', false)
         ->assertDontSee('<script>alert(1)</script>', false);
-    $this->get('/kontak')->assertSee('https://wa.me/6281200001111', false)->assertSee('0800-1234-5678');
+    $this->get('/kontak')->assertSee('https://wa.me/6281200001111', false)->assertSee('0800 1234 5678')->assertDontSee('0800-1234-5678');
 });
 
 test('validasi Konten Website berbahasa Indonesia', function () {
@@ -313,7 +317,7 @@ test('ringkasan beranda tetap terbaca dari cache yang benar-benar diserialisasi'
     PublicDirectory::stats();
     PublicDirectory::sectors();
 
-    expect(PublicDirectory::stats()['updated_at'])->toBeInstanceOf(Illuminate\Support\Carbon::class)
+    expect(PublicDirectory::stats()['updated_at'])->toBeInstanceOf(Carbon::class)
         ->and(PublicDirectory::sectors()->first()->name)->toBe('Perikanan');
     $this->get('/')->assertOk()->assertSee('Perikanan');
 
@@ -321,7 +325,7 @@ test('ringkasan beranda tetap terbaca dari cache yang benar-benar diserialisasi'
 });
 
 test('ikon bidang usaha dari Lucide menurut slug nama, bidang baru memakai ikon bawaan', function (string $sector, string $icon) {
-    expect(App\Support\PublicIcons::sector($sector))->toBe($icon)
+    expect(PublicIcons::sector($sector))->toBe($icon)
         ->and(file_exists(resource_path('svg/lucide/'.substr($icon, 7).'.svg')))->toBeTrue();
 })->with([
     ['Pertanian', 'lucide:sprout'],
@@ -353,7 +357,7 @@ test('halaman publik tanpa tanda pisah dan tanpa hiasan garis emas; emas hanya u
     $organization = Organization::factory()->public()->create(['name' => 'KUB Contoh Rapi']);
     $organization->sectors()->attach(BusinessSector::factory()->create(['name' => 'Perikanan']));
     $product = Product::factory()->for($organization)->create(['is_public' => true, 'is_featured' => true]);
-    $post = App\Models\Post::factory()->create(['category' => 'kegiatan']);
+    $post = Post::factory()->create(['category' => 'kegiatan']);
     $post->organizations()->attach($organization);
 
     foreach (['/', '/direktori', '/direktori/kub-contoh-rapi', '/produk', '/produk/'.$product->slug, '/berita', '/berita/'.$post->slug, '/profil', '/kontak'] as $url) {
@@ -399,7 +403,6 @@ test('bagian ajakan memuat empat langkah (teks Konten Website) di latar terang, 
     $this->get('/')->assertSee('Isi profil')->assertSee('Kalimat contoh langkah dua.')->assertSee('Melapor tiap bulan');
 });
 
-
 test('admin mengisi deskripsi jenis kelembagaan di Data Master dan langsung tampil di beranda', function () {
     $type = InstitutionType::factory()->create(['name' => 'KDMP']);
     Organization::factory()->public()->create(['institution_type_id' => $type->id]);
@@ -415,7 +418,7 @@ test('admin mengisi deskripsi jenis kelembagaan di Data Master dan langsung tamp
 });
 
 test('keterangan dan kredit foto publik tanpa catatan internal (data demo)', function () {
-    $this->seed(Database\Seeders\DemoSeeder::class);
+    $this->seed(DemoSeeder::class);
 
     foreach (['/', '/profil', '/login'] as $url) {
         $this->get($url)->assertOk()->assertDontSee('Foto sementara')->assertDontSee('foto resmi distrik')->assertDontSee('Dokumentasi sementara');
@@ -536,4 +539,3 @@ test('bagian Produk unggulan di Beranda: tanpa label kecil, tombol pil, geser di
         ->and(substr_count($section[0], 'Lihat semua produk'))->toBe(2)
         ->and($section[0])->toContain('rounded-full bg-forest');
 });
-

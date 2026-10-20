@@ -7,7 +7,7 @@
         'OPD' => $user->opd?->name,
         'Kelompok' => $user->organization?->name,
         'Email' => $user->email ?? \App\Support\Format::orEmpty(null),
-        'Telepon' => $user->phone ?? \App\Support\Format::orEmpty(null),
+        'Telepon' => \App\Support\Format::phone($user->phone) ?? \App\Support\Format::orEmpty(null),
     ];
 @endphp
 

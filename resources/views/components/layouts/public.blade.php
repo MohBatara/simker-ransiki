@@ -205,7 +205,7 @@
                 <dl class="mt-4 flex flex-wrap gap-x-6 gap-y-3 text-ui lg:block lg:space-y-3">
                     @foreach ([
                         ['map-pin', 'Alamat', $office['office_address'], null],
-                        ['phone', 'Telepon', $office['office_phone'], $office['office_phone'] ? $tel($office['office_phone']) : null],
+                        ['phone', 'Telepon', \App\Support\Format::phone($office['office_phone']), $office['office_phone'] ? $tel($office['office_phone']) : null],
                         ['envelope', 'Email', $office['office_email'], $office['office_email'] ? 'mailto:'.$office['office_email'] : null],
                         ['clock', 'Jam layanan', $office['office_hours'], null],
                     ] as [$icon, $label, $value, $href])

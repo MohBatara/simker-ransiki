@@ -20,7 +20,7 @@
     // Nama, jenis, status, kampung, distrik, dan bidang usaha sudah ada di kepala halaman.
     $info = [
         'Ketua' => $text($organization->leader_name),
-        'Telepon' => $text($organization->phone),
+        'Telepon' => $text(\App\Support\Format::phone($organization->phone)),
         'Email' => $text($organization->email),
         'Tahun berdiri' => $text($organization->founded_year),
         'Jumlah anggota' => $organization->members_count === null ? null : Format::number($organization->members_count).' orang',

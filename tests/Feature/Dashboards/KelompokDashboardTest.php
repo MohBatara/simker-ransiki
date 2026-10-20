@@ -163,7 +163,7 @@ test('kelompok saya: status profil, angka ringkas bertautan, OPD pembina dengan 
         ->assertSee('Belum: deskripsi kelompok, minimal satu produk, foto produk, status legalitas')
         ->assertSeeInOrder(['Produk', '0', 'Izin tercatat', '0', 'Anggota', 'Belum diisi'])
         ->assertSee('href="'.route('kelompok.licenses.index').'"', false)
-        ->assertSeeInOrder(['OPD pembina', 'Dinas Contoh Pembina', 'Petugas Aktif', '0812-0000-1111'])
+        ->assertSeeInOrder(['OPD pembina', 'Dinas Contoh Pembina', 'Petugas Aktif', '0812 0000 1111'])
         ->assertSee('href="tel:081200001111"', false)
         ->assertDontSee('Petugas Nonaktif');
 

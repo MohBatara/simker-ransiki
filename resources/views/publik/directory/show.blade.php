@@ -94,7 +94,7 @@
                         @if ($contact->phone)
                             <div>
                                 <dt class="text-caption text-ink-muted">Telepon</dt>
-                                <dd><a href="tel:{{ preg_replace('/[^0-9+]/', '', $contact->phone) }}" class="rounded-control text-brand hover:text-brand-hover">{{ $contact->phone }}</a></dd>
+                                <dd><a href="{{ \App\Support\Format::telUrl($contact->phone) }}" class="rounded-control text-brand hover:text-brand-hover">{{ \App\Support\Format::phone($contact->phone) }}</a></dd>
                             </div>
                         @endif
                         @if ($contact->email)

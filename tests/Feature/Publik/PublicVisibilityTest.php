@@ -88,7 +88,7 @@ test('kontak kelompok hanya tampil bila diizinkan', function () {
 
     $this->get('/direktori/kub-contoh-terbuka')
         ->assertSee('KETUA-RAHASIA')
-        ->assertSee('0800-1111-2222')
+        ->assertSee('0800 1111 2222')
         ->assertSee('https://wa.me/6280011112222', false)
         ->assertDontSee('ASET-RAHASIA');
 });
