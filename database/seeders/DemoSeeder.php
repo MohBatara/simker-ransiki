@@ -31,6 +31,7 @@ use Illuminate\Database\Seeder;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
 use RuntimeException;
 
@@ -41,17 +42,27 @@ use RuntimeException;
  */
 class DemoSeeder extends Seeder
 {
-    /** Bulan laporan pertama; 12 bulan sampai bulan wajib lapor (September 2026). */
-    private const FIRST_PERIOD = '2025-10-01';
+    /** Bulan laporan pertama; 6 bulan sampai bulan wajib lapor (September 2026). */
+    private const FIRST_PERIOD = '2026-04-01';
 
-    /** 12 bulan riwayat + bulan berjalan (Oktober 2026, hanya draf). */
-    private const PERIOD_COUNT = 13;
+    /** 6 bulan riwayat + bulan berjalan (Oktober 2026, hanya draf kelompok 1). */
+    private const PERIOD_COUNT = 7;
 
-    /** Status laporan yang dipaksa agar akun uji punya keadaan yang menarik untuk dicoba. */
-    private const OVERRIDES = [
-        1 => ['2026-08' => ReportStatus::Verified, '2026-09' => ReportStatus::Revision, '2026-10' => ReportStatus::Draft],
-        5 => ['2026-09' => ReportStatus::Draft],
+    /** Indeks bulan wajib lapor (September 2026) dalam rentang di atas. */
+    private const DUE_INDEX = 5;
+
+    /**
+     * Masalah & kebutuhan demo (sengaja sedikit): [kelompok, indeks bulan, jenis, kategori, uraian, jalur tindak lanjut].
+     * Kebutuhan kelompok 7 bulan Agustus dibiarkan Baru lebih dari 30 hari (tugas "kebutuhan belum ditindaklanjuti").
+     */
+    private const ISSUES = [
+        [6, 5, IssueKind::Problem, 'bahan_baku', 'Pasokan ikan tongkol berkurang karena angin kencang, produksi abon turun.', []],
+        [7, 4, IssueKind::Support, 'pelatihan', 'Pelatihan vaksinasi dan perawatan ayam untuk anggota baru.', []],
+        [2, 4, IssueKind::Support, 'pemasaran', 'Bantuan kemasan dan label agar keripik bisa masuk toko oleh-oleh di kota.', ['reviewed', 'planned']],
+        [11, 3, IssueKind::Problem, 'peralatan', 'Mesin sangrai kopi sering mati saat dipakai lama.', ['reviewed', 'in_progress', 'done']],
     ];
+
+    public const TEMPORARY_EXTENSIONS = ['jpg', 'jpeg', 'png', 'webp'];
 
     private const REVISION_NOTES = [
         'Angka penjualan belum sesuai dengan jumlah produksi. Mohon dicek lagi.',
@@ -161,6 +172,9 @@ class DemoSeeder extends Seeder
         foreach ($organizations as $n => $seeded) {
             $this->seedReports($n, DemoData::ORGANIZATIONS[$n], $seeded, $opdUsers, $groupUsers[$n] ?? null);
         }
+
+        // Angka publik (beranda, direktori) di-cache 10 menit; dikosongkan agar langsung sesuai data demo baru.
+        Cache::flush();
     }
 
     /**
@@ -179,6 +193,28 @@ class DemoSeeder extends Seeder
         return database_path('seeders/'.(str_starts_with($file, 'media/') ? $file : 'photos/'.$file));
     }
 
+    /**
+     * Foto sementara untuk presentasi (database/seeders/media/sementara/{kelompok|produk|berita}/{slug}.jpg|jpeg|png|webp,
+     * tidak masuk git; daftar di DAFTAR-FOTO.md). Dikecilkan otomatis saat disimpan (maks 1600 px).
+     */
+    private function temporaryPhoto(string $folder, string $slug): ?string
+    {
+        foreach (self::TEMPORARY_EXTENSIONS as $extension) {
+            $path = database_path("seeders/media/sementara/{$folder}/{$slug}.{$extension}");
+            if (is_file($path)) {
+                return $path;
+            }
+        }
+
+        return null;
+    }
+
+    /** Foto sementara bila ada, selain itu foto klien yang cocok (bila ada). */
+    private function photoFor(string $folder, string $slug, ?string $fallback): ?string
+    {
+        return $this->temporaryPhoto($folder, $slug) ?? ($fallback ? $this->photo($fallback) : null);
+    }
+
     private function storeWidePhoto(string $file, string $path, array $budgets = [], array $widths = ImageVariants::WIDE): string
     {
         ImageVariants::store('local', $this->photo($file), $path, $widths, $budgets);
@@ -186,12 +222,12 @@ class DemoSeeder extends Seeder
         return $path;
     }
 
-    private function storeProductPhoto(Product $product, string $file): void
+    private function storeProductPhoto(Product $product, string $source): void
     {
         $base = sprintf('products/%d/demo', $product->id);
 
-        ImageVariants::store(Product::PHOTO_DISK, $this->photo($file), $base.'.jpg', ImageVariants::PRODUCT);
-        $thumbnail = ImageProcessor::process($this->photo($file), 'image/jpeg', ImageProcessor::THUMBNAIL_SIDE, 'jpeg');
+        ImageVariants::store(Product::PHOTO_DISK, $source, $base.'.jpg', ImageVariants::PRODUCT);
+        $thumbnail = ImageProcessor::process($source, 'image/jpeg', ImageProcessor::THUMBNAIL_SIDE, 'jpeg');
         Storage::disk(Product::PHOTO_DISK)->put($base.Product::THUMBNAIL_SUFFIX.'.jpg', $thumbnail['contents']);
 
         $product->forceFill(['photo_path' => $base.'.jpg'])->save();
@@ -206,8 +242,9 @@ class DemoSeeder extends Seeder
         $captions = OfficialPhotoSeeder::captions();
 
         foreach ($files as $file) {
-            $name = ($captions[substr($file, strlen('media/'))] ?? 'Foto kelompok').'.jpg';
-            app(StoreAttachment::class)->handle($organization, new UploadedFile($this->photo($file), $name, 'image/jpeg', null, true), $uploader);
+            $path = str_starts_with($file, '/') ? $file : $this->photo($file);
+            $name = ($captions[substr($file, strlen('media/'))] ?? 'Foto kelompok '.$organization->name).'.jpg';
+            app(StoreAttachment::class)->handle($organization, new UploadedFile($path, $name, null, null, true), $uploader);
         }
     }
 
@@ -264,31 +301,17 @@ class DemoSeeder extends Seeder
     }
 
     /**
-     * Tujuh berita terbit (empat berfoto asli klien; satu kegiatan dengan tanggal kegiatan ke depan untuk Agenda), satu draf, dan satu
-     * terjadwal (keduanya tidak tampil publik). Elemen ke-9 opsional = tanggal kegiatan.
+     * Empat berita terbit (tiga berfoto asli klien; satu kegiatan dengan tanggal kegiatan ke depan untuk Agenda). Foto
+     * sementara di media/sementara/berita/{slug} didahulukan. Elemen ke-9 opsional = tanggal kegiatan.
      */
     private function seedPosts(User $admin, array $organizations): void
     {
         $posts = [
             [
-                'Pelatihan fermentasi biji kakao untuk tiga kelompok tani', 'kegiatan', '2026-09-24 09:00', 'published', [1, 19, 38], null,
-                'Petugas penyuluh melatih anggota tiga kelompok tani cara fermentasi dan penjemuran biji kakao agar mutunya seragam.',
-                "Pelatihan berlangsung dua hari di rumah fermentasi Kelompok Tani Kakao Harapan. Peserta berasal dari tiga kelompok tani kakao binaan.\n\n## Materi\n\n- Memilih buah yang matang penuh\n- Fermentasi dalam kotak kayu selama lima hari\n- Penjemuran di para-para sampai kadar air cukup rendah\n- Sortasi dan pengemasan dalam karung bersih\n\nSetiap kelompok membawa pulang satu set catatan praktik. Petugas akan berkunjung lagi bulan depan untuk melihat hasilnya.",
-            ],
-            [
-                'Produk olahan kelompok dijual bersama di Pasar Ransiki', 'kegiatan', '2026-08-19 10:00', 'published', [2, 20, 34, 36], 'media/berita/pasar-ransiki.jpg',
-                'Keripik pisang, cokelat batang, dan sagu lempeng dari empat kelompok binaan dijual di lapak bersama Pasar Ransiki.',
-                "Empat kelompok usaha binaan berjualan di lapak bersama Pasar Ransiki selama tiga hari pasar. Lapak menampilkan keripik pisang, cokelat batang, sagu lempeng, dan bagea.\n\nSebagian besar produk habis terjual pada hari kedua. Beberapa pembeli meminta kontak kelompok untuk pesanan rutin.\n\nPengalaman ini menunjukkan kemasan dan label yang rapi sangat membantu penjualan.",
-            ],
-            [
-                'Petugas meninjau kandang kelompok peternak ayam kampung', 'kegiatan', '2026-07-08 08:00', 'published', [22], 'media/berita/kandang-ayam.jpg',
-                'Petugas penyuluh mengunjungi kandang Kelompok Peternak Ayam Kampung Subur Makmur untuk memeriksa kebersihan kandang dan kesehatan ayam.',
-                "Kunjungan dilakukan pagi hari saat ayam diberi pakan. Petugas memeriksa ventilasi kandang, tempat minum, dan catatan vaksinasi.\n\nAnggota diminta memisahkan ayam yang sakit dan mencatat jumlah ayam setiap pekan agar laporan bulanan lebih mudah diisi.",
-            ],
-            [
-                'Pendampingan pencatatan hasil tangkapan kelompok nelayan', 'kegiatan', '2026-06-12 09:00', 'published', [6, 17], 'media/berita/pendampingan-nelayan-2.jpg',
-                'Petugas mendampingi dua kelompok nelayan mencatat hasil tangkapan harian sebagai bahan laporan bulanan.',
-                "Pendampingan dilakukan di pangkalan perahu kelompok. Setiap nelayan mencatat jenis ikan, berat, dan harga jual setelah kembali melaut.\n\nCatatan harian ini dijumlahkan setiap akhir bulan sehingga angka produksi dan penjualan di laporan lebih tepat.",
+                'Pelatihan pengasapan ikan untuk kelompok nelayan', 'kegiatan', '2026-10-05 09:00', 'published', [5, 6], 'media/berita/pendampingan-nelayan.jpg',
+                'Pelatihan pengasapan ikan yang lebih bersih untuk kelompok nelayan dan pengolah ikan, terbuka bagi anggota yang mendaftar.',
+                "Pelatihan ini membahas cara mengasap ikan dengan tungku tertutup agar asap tidak menempel berlebihan dan ikan lebih tahan lama.\n\nPendaftaran lewat petugas OPD pembina paling lambat satu pekan sebelum pelatihan.",
+                '2026-11-12',
             ],
             [
                 'Batas pengiriman laporan bulanan setiap tanggal 10', 'berita', '2026-09-01 08:00', 'published', [], null,
@@ -296,25 +319,14 @@ class DemoSeeder extends Seeder
                 "Laporan bulanan berisi kegiatan, produksi dan penjualan, keuangan, masalah, dan kebutuhan dukungan.\n\nKelompok yang belum punya akun dapat melapor lewat petugas OPD pembina. Bila tidak ada kegiatan, pilih \"Tidak ada aktivitas bulan ini\".",
             ],
             [
-                'Pendampingan pengurusan NIB bagi kelompok usaha', 'berita', '2026-08-05 08:00', 'published', [], null,
-                'Petugas membuka jadwal pendampingan pengurusan Nomor Induk Berusaha di kantor distrik setiap Selasa dan Kamis.',
-                "Bawa KTP ketua, data anggota, dan keterangan usaha. Pendampingan tidak dipungut biaya.\n\nKelompok yang sudah punya NIB dapat melanjutkan ke pengurusan PIRT atau sertifikat halal.",
+                'Produk olahan kelompok dijual bersama di Pasar Ransiki', 'kegiatan', '2026-08-19 10:00', 'published', [2, 4, 12], 'media/berita/pasar-ransiki.jpg',
+                'Keripik pisang, noken, dan sagu lempeng dari tiga kelompok binaan dijual di lapak bersama Pasar Ransiki.',
+                "Tiga kelompok usaha binaan berjualan di lapak bersama Pasar Ransiki selama tiga hari pasar.\n\nSebagian besar produk habis terjual pada hari kedua. Beberapa pembeli meminta kontak kelompok untuk pesanan rutin.\n\nPengalaman ini menunjukkan kemasan dan label yang rapi sangat membantu penjualan.",
             ],
             [
-                'Pelatihan pengasapan ikan untuk kelompok nelayan', 'kegiatan', '2026-10-05 09:00', 'published', [6, 33], 'media/berita/pendampingan-nelayan.jpg',
-                'Pelatihan pengasapan ikan yang lebih bersih untuk dua kelompok nelayan, terbuka bagi anggota yang mendaftar.',
-                "Pelatihan contoh ini membahas cara mengasap ikan dengan tungku tertutup agar asap tidak menempel berlebihan.\n\nPendaftaran lewat petugas OPD pembina paling lambat satu pekan sebelum pelatihan.",
-                '2026-11-12',
-            ],
-            [
-                'Rencana pelatihan pengolahan ikan asap', 'kegiatan', null, 'draft', [6, 33], null,
-                'Rencana pelatihan pengasapan ikan yang lebih bersih untuk kelompok nelayan.',
-                'Draf. Jadwal dan tempat menyusul.',
-            ],
-            [
-                'Pameran produk kampung akhir tahun', 'berita', '2026-12-01 08:00', 'published', [], null,
-                'Pendaftaran stan pameran produk kampung akhir tahun dibuka untuk kelompok binaan.',
-                'Setiap kelompok mendapat satu meja. Pendaftaran lewat petugas OPD pembina.',
+                'Petugas meninjau kandang kelompok peternak ayam kampung', 'kegiatan', '2026-07-08 08:00', 'published', [7], 'media/berita/kandang-ayam.jpg',
+                'Petugas penyuluh mengunjungi kandang Kelompok Peternak Ayam Kampung Subur Makmur untuk memeriksa kebersihan kandang dan kesehatan ayam.',
+                "Kunjungan dilakukan pagi hari saat ayam diberi pakan. Petugas memeriksa ventilasi kandang, tempat minum, dan catatan vaksinasi.\n\nAnggota diminta memisahkan ayam yang sakit dan mencatat jumlah ayam setiap pekan agar laporan bulanan lebih mudah diisi.",
             ],
         ];
 
@@ -333,9 +345,9 @@ class DemoSeeder extends Seeder
             $post->forceFill(['created_by' => $admin->id, 'updated_by' => $admin->id])->save();
             $post->organizations()->sync(collect($related)->map(fn (int $n) => $organizations[$n]['organization']->id)->all());
 
-            if ($photo && $this->photosEnabled()) {
+            if ($this->photosEnabled() && $source = $this->photoFor('berita', $post->slug, $photo)) {
                 $path = "posts/berita-{$post->id}-demo.jpg";
-                ImageVariants::store(Post::PHOTO_DISK, $this->photo($photo), $path, ImageVariants::WIDE, ImageVariants::HERO_BUDGET);
+                ImageVariants::store(Post::PHOTO_DISK, $source, $path, ImageVariants::WIDE, ImageVariants::HERO_BUDGET);
                 $post->forceFill(['cover_photo_path' => $path])->save();
             }
         }
@@ -409,19 +421,20 @@ class DemoSeeder extends Seeder
                 'description' => $description ? str_replace('{satuan}', $unit, $description) : null,
                 'unit' => $unit,
                 'capacity' => sprintf('%s %s/bulan', Format::number(round($base * 1.2, -1)), $unit),
-                'is_public' => $organization->is_public && ! ($index > 0 && $n % 4 === 0),
-                'is_featured' => $organization->is_public && $index === 0 && ($photo !== null || $n % 4 === 2),
+                'is_public' => $organization->is_public,
+                'is_featured' => $organization->is_public && $index === 0 && ($photo !== null || $n % 4 === 2 || ($data['featured'] ?? false)),
             ]);
 
-            if ($photo && $this->photosEnabled()) {
-                $this->storeProductPhoto($product, $photo);
+            if ($this->photosEnabled() && $source = $this->photoFor('produk', $product->slug, $photo)) {
+                $this->storeProductPhoto($product, $source);
             }
 
             $products[] = [$product, $base, $price, $season];
         }
 
         if ($this->photosEnabled()) {
-            $this->storeOrganizationPhotos($organization, $data['photos'] ?? [], $admin);
+            $temporary = $this->temporaryPhoto('kelompok', $organization->slug);
+            $this->storeOrganizationPhotos($organization, $temporary ? [$temporary] : ($data['photos'] ?? []), $admin);
         }
 
         $this->seedLicenses($n, $organization);
@@ -471,8 +484,6 @@ class DemoSeeder extends Seeder
 
         $verifier = $opdUsers[$seeded['opds'][0]];
         $tier = $data['tier'];
-        $inactiveSince = isset($data['since']) ? Carbon::parse($data['since']) : null;
-        $primarySector = $data['sectors'][0];
 
         foreach (range(0, self::PERIOD_COUNT - 1) as $i) {
             $period = Carbon::parse(self::FIRST_PERIOD)->addMonthsNoOverflow($i);
@@ -480,18 +491,15 @@ class DemoSeeder extends Seeder
                 continue;
             }
 
-            $status = array_key_exists($period->format('Y-m'), self::OVERRIDES[$n] ?? [])
-                ? self::OVERRIDES[$n][$period->format('Y-m')]
-                : $this->reportStatus($n, $tier, $i);
+            $status = $this->reportStatus($n, $data, $i);
             if ($status === null) {
                 continue;
             }
 
             [$status, $steps] = $this->timeline($status, $n, $tier, $i, $period, $verifier, $groupUser);
 
-            // Tidak aktif sementara, atau nelayan tidak melaut saat angin barat bulan Januari.
-            $noActivity = ($inactiveSince && $period->gte($inactiveSince))
-                || ($primarySector === 'Perikanan' && $period->month === 1 && $tier !== 'rajin');
+            // Kelompok nelayan tidak melaut sebulan karena cuaca buruk (contoh "Tidak ada aktivitas bulan ini").
+            $noActivity = $n === 5 && $i === 1;
 
             [$figures, $items] = $noActivity
                 ? [['activity_count' => 0], []]
@@ -508,63 +516,24 @@ class DemoSeeder extends Seeder
                 $report->items()->create($item);
             }
 
-            if (! $noActivity) {
-                $this->seedIssues($report, $n, $i);
-            }
-
-            // Kelompok tanpa akun: draf bulan wajib lapor diisi petugas OPD kedua atas nama kelompok.
-            if ($status === ReportStatus::Draft && ! $groupUser && $tier === 'telat' && count($seeded['opds']) > 1 && $i === 11) {
-                $enteredBy = $opdUsers[$seeded['opds'][1]];
-                $report->forceFill(['entered_by' => $enteredBy->id])->save();
-                ReportReview::forceCreate([
-                    'monthly_report_id' => $report->id,
-                    'user_id' => $enteredBy->id,
-                    'action' => ReviewAction::Entered,
-                    'created_at' => Carbon::parse('2026-10-09 14:00'),
-                ]);
-            }
-
             $this->saveHistory($report, $steps);
 
             if (in_array($status, [ReportStatus::Submitted, ReportStatus::Verified])) {
-                $this->seedFollowUps($report, $n, $i, $verifier, $steps[0][1]);
+                $this->seedIssues($report, $n, $i, $verifier, $steps[0][1]);
             }
         }
     }
 
     /**
-     * Status awal per kebiasaan melapor; null = tidak melapor bulan itu. Indeks 0–8: Oktober 2025–Juni 2026,
-     * 9: Juli, 10: Agustus, 11: September (bulan wajib lapor, tenggat 10 Oktober), 12: Oktober (bulan berjalan).
+     * Status laporan: April sampai Agustus 2026 terverifikasi semua (grafik terisi), September (bulan wajib lapor, tenggat
+     * 10 Oktober) mengikuti kunci `september` kelompok, Oktober (bulan berjalan) hanya draf kelompok 1.
      */
-    private function reportStatus(int $n, string $tier, int $i): ?ReportStatus
+    private function reportStatus(int $n, array $data, int $i): ?ReportStatus
     {
-        $r = $this->chance($n, $i, 'status');
-        $gap = ['rajin' => 0.0, 'biasa' => 0.05, 'telat' => 0.18][$tier];
-
         return match (true) {
-            $i === 12 => $tier === 'rajin' && $r < 0.5 ? ReportStatus::Draft : null,
-            $i <= 8 => $i > 0 && $r < $gap ? null : ReportStatus::Verified,
-            $i === 9 => match (true) {
-                $r < $gap => null,
-                $r < $gap + 0.05 => ReportStatus::Submitted,
-                default => ReportStatus::Verified,
-            },
-            $i === 10 => match ($tier) {
-                'rajin' => $r < 0.2 ? ReportStatus::Submitted : ReportStatus::Verified,
-                'biasa' => $r < 0.1 ? ReportStatus::Revision : ($r < 0.25 ? ReportStatus::Submitted : ReportStatus::Verified),
-                'telat' => $r < 0.2 ? null : ($r < 0.35 ? ReportStatus::Revision : ($r < 0.5 ? ReportStatus::Submitted : ReportStatus::Verified)),
-            },
-            default => match ($tier) {
-                'rajin' => $r < 0.5 ? ReportStatus::Submitted : ($r < 0.85 ? ReportStatus::Verified : ReportStatus::Revision),
-                'biasa' => match (true) {
-                    $r < 0.12 => null,
-                    $r < 0.3 => ReportStatus::Draft,
-                    $r < 0.65 => ReportStatus::Submitted,
-                    $r < 0.75 => ReportStatus::Revision,
-                    default => ReportStatus::Verified,
-                },
-                'telat' => $r < 0.35 ? null : ($r < 0.7 ? ReportStatus::Draft : ReportStatus::Submitted),
-            },
+            $i < self::DUE_INDEX => ReportStatus::Verified,
+            $i === self::DUE_INDEX => ReportStatus::from($data['september'] ?? 'verified'),
+            default => $n === 1 ? ReportStatus::Draft : null,
         };
     }
 
@@ -719,55 +688,20 @@ class DemoSeeder extends Seeder
         ], $items];
     }
 
-    private function seedIssues(MonthlyReport $report, int $n, int $i): void
+    /** Isian E/F dari ISSUES beserta riwayat tindak lanjutnya (mulai 3 hari setelah diajukan, jarak 5 hari). */
+    private function seedIssues(MonthlyReport $report, int $n, int $i, User $verifier, Carbon $submittedAt): void
     {
-        if ($this->chance($n, $i, 'problem') < 0.28) {
-            [$category, $description] = DemoData::PROBLEMS[($n * 3 + $i) % count(DemoData::PROBLEMS)];
-            $report->issues()->create(['kind' => IssueKind::Problem, 'category' => $category, 'description' => $description]);
-        }
+        foreach (self::ISSUES as [$group, $index, $kind, $category, $description, $path]) {
+            if ($group !== $n || $index !== $i) {
+                continue;
+            }
 
-        if ($this->chance($n, $i, 'need') < 0.22) {
-            [$category, $description] = DemoData::NEEDS[($n + $i) % count(DemoData::NEEDS)];
-            $report->issues()->create(['kind' => IssueKind::Support, 'category' => $category, 'description' => $description]);
-        }
-    }
-
-    /**
-     * Tindak lanjut beragam: isian lama kebanyakan sudah Selesai, isian baru sebagian masih Baru (ada yang lebih
-     * dari 30 hari, muncul di "Kebutuhan belum ditindaklanjuti").
-     */
-    private function seedFollowUps(MonthlyReport $report, int $n, int $i, User $verifier, Carbon $submittedAt): void
-    {
-        $paths = [
-            [],
-            ['reviewed'],
-            ['reviewed', 'planned'],
-            ['reviewed', 'planned', 'in_progress'],
-            ['reviewed', 'in_progress', 'done'],
-            ['reviewed', 'unable'],
-        ];
-
-        foreach ($report->issues as $index => $issue) {
-            $r = $this->chance($n, $i, "follow{$index}");
-            $path = $paths[match (true) {
-                // Isian sampai Juni 2026 sudah lama ditangani.
-                $i <= 8 => $r < 0.8 ? 4 : ($r < 0.9 ? 5 : 3),
-                $r < 0.35 => 0,
-                $r < 0.5 => 1,
-                $r < 0.62 => 2,
-                $r < 0.75 => 3,
-                $r < 0.92 => 4,
-                default => 5,
-            }];
-
+            $issue = $report->issues()->create(['kind' => $kind, 'category' => $category, 'description' => $description]);
             $from = FollowUpStatus::New;
             $at = $submittedAt->copy()->addDays(3);
             $last = null;
-            foreach ($path as $to) {
-                if ($at->gte($this->now)) {
-                    break;
-                }
 
+            foreach ($path as $to) {
                 IssueFollowUp::forceCreate([
                     'report_issue_id' => $issue->id,
                     'user_id' => $verifier->id,
@@ -780,7 +714,7 @@ class DemoSeeder extends Seeder
                 ]);
                 $from = FollowUpStatus::from($to);
                 $last = $at->copy();
-                $at->addDays(5 + $n % 6);
+                $at->addDays(5);
             }
 
             if ($last) {

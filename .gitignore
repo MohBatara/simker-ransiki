@@ -26,3 +26,9 @@ Homestead.json
 Homestead.yaml
 Thumbs.db
 .Rhistory
+
+# Foto sementara untuk presentasi (dari internet, tidak boleh ke GitHub); hanya DAFTAR-FOTO.md dan struktur folder ikut.
+/database/seeders/media/sementara/**
+!/database/seeders/media/sementara/*/
+!/database/seeders/media/sementara/DAFTAR-FOTO.md
+!/database/seeders/media/sementara/*/.gitkeep

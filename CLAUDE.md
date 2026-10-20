@@ -1195,18 +1195,21 @@ marketplace, PWA/aplikasi mobile, dua bahasa.
 Data contoh harus terlihat realistis namun jelas bukan data resmi:
 - 4 OPD: Dinas Pertanian dan Perkebunan, DPMPTSP, Dinkopdag, Dinas Perikanan
   (nama sesuai blueprint klien; akan diganti nama resmi).
-- 8 kampung bernama "Kampung Contoh 1" s.d. "Kampung Contoh 8".
+- 8 kampung bernama samaran netral (`DemoData::VILLAGES`, mis. "Kampung Bukit Hijau"), tanpa kata "Contoh".
 - Jenis kelembagaan dan bidang usaha sesuai Bagian 4.
-- 25 kelompok dengan kombinasi jenis, bidang usaha (1–3), dan OPD (1–3) yang beragam.
-  Beberapa berstatus `inactive` dan satu `closed`.
-- Produk contoh: kakao, kopi, pinang, sagu, ikan asap, keripik, dsb.
-- Riwayat laporan terverifikasi Januari–Juni 2026 (sebagian bulan sengaja kosong) untuk grafik, lalu
-  laporan bulanan 3 bulan terakhir dengan status beragam (draft, submitted, revision, verified),
-  sebagian kelompok sengaja belum melapor, sebagian `no_activity`, sebagian angka keuangan kosong.
-- Foto contoh: produk, kelompok, dan sampul berita dari foto klien `database/seeders/media` (abon ikan, tas anyaman, ayam
-  kampung; kelompok nelayan dan Kelompok Peternak Ayam Kampung Subur Makmur). Foto kelompok disimpan sebagai lampiran
-  gambar kelompok (`StoreAttachment`, belum ada kolom foto profil kelompok). Foto sementara lain (sampul, Tentang, bidang
-  usaha, jenis kelembagaan) masih dari `database/seeders/photos`. Produk tanpa foto memakai petak inisial.
+- Data RINGKAS untuk presentasi (dijaga `SeederTest`): 12 kelompok aktif dan publik (UMKM, kelompok tani, perkebunan,
+  nelayan, peternakan, KUB, BUMDes, KDMP; tersebar di 8 kampung), 15 produk (1 atau 2 per kelompok, semua publik),
+  4 berita terbit, 3 sampai 4 masalah & kebutuhan (`DemoSeeder::ISSUES`, satu kebutuhan Baru > 30 hari).
+- Laporan: April sampai Agustus 2026 terverifikasi semua (grafik terisi); September 2026 (bulan wajib lapor) diatur kunci
+  `september` per kelompok: 4 menunggu verifikasi (3 binaan Pertanian), 1 perlu revisi (kelompok1, Yakob Rumbiak, diminta
+  Yosias Kafiar), 1 terlambat (kelompok2, draf belum diajukan), 6 terverifikasi; Oktober hanya draf kelompok1. Satu bulan
+  `no_activity` (kelompok nelayan, Mei).
+- Foto: foto sementara `database/seeders/media/sementara/{kelompok|produk|berita}/{slug}.jpg|jpeg|png|webp` (tidak masuk
+  git, daftar + saran isi di `DAFTAR-FOTO.md` yang ikut git) didahulukan, lalu foto klien `database/seeders/media`
+  (abon ikan, tas anyaman, ayam kampung; perahu nelayan dan kandang ayam), lalu inisial. Dikecilkan otomatis maks 1600 px.
+  Foto kelompok disimpan sebagai lampiran gambar kelompok (`StoreAttachment`, belum ada kolom foto profil kelompok).
+  Foto sementara lain (sampul, Tentang, bidang usaha, jenis kelembagaan) masih dari `database/seeders/photos`.
+  Seeder mengosongkan cache di akhir agar angka publik langsung sesuai.
 - Akun uji (kata sandi `password`, hanya untuk local):
   `admin` · `opd.pertanian` · `opd.dpmptsp` · `opd.dinkopdag` · `opd.perikanan` ·
   `kelompok1`, `kelompok2` (dua kelompok berbeda, untuk uji akses silang)
