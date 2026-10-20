@@ -422,8 +422,8 @@ Jangan mengarang kepanjangan akronim resmi (KDMP, KNMP, dsb.). Simpan apa adanya
 - Ekonomi: tren pendapatan penjualan (garis; bulan tanpa isian = null/celah, cakupan "Diisi X dari Y kelompok"
   wajib lapor), kepatuhan pelaporan per bulan (bertumpuk; logika `ReportingState`: terverifikasi / menunggu /
   perlu revisi / terlambat / belum diajukan), pendapatan per bidang usaha (catatan wajib: kelompok berbidang
-  ganda dihitung di setiap bidangnya; TIDAK ada total gabungan), produksi per produk + satuan (tabel, urut
-  terbesar), masalah & kebutuhan per kategori (jumlah laporan). Semua hanya dari laporan `verified`, kecuali
+  ganda dihitung di setiap bidangnya; TIDAK ada total gabungan), produksi per produk + satuan (tabel 7/12 di samping
+  grafik bidang 5/12, lihat "Produksi per produk" di bawah), masalah & kebutuhan per kategori (jumlah laporan). Semua hanya dari laporan `verified`, kecuali
   kepatuhan pelaporan.
 - Legalitas (per kelompok unik): punya izin terbit, izin diproses, izin perlu perbaikan, belum punya izin
   (= tidak ada izin issued/in_process/needs_fix). Satu kelompok bisa masuk beberapa kartu. Rincian per jenis
@@ -437,7 +437,8 @@ Jangan mengarang kepanjangan akronim resmi (KDMP, KNMP, dsb.). Simpan apa adanya
 - Dasbor Kelompok: grafik pendapatan dan produksi 12 bulan (paling banyak 2 produk + satuan terbesar), dua kartu
   sama tinggi di bagian bawah dasbor. Produksi: legenda produk + satuan, judul sumbu Y =
   satuan; satuan berbeda → grafik kecil terpisah (panel) dalam satu kartu, tidak pernah satu sumbu untuk dua satuan.
-- Tabel produksi di HP: kartu dengan nama tebal lalu "Jumlah: 1.384 ekor" dan "Kelompok: 5" (`x-admin.table.cell inline`).
+- Tabel produksi di HP: kartu dengan nama tebal lalu "Jumlah: 1.384 ekor", "Kelompok: 5 kelompok", dan perubahan
+  (`x-admin.table.cell inline`).
 
 ### Konten & notifikasi
 - `hero_slides` (foto hero beranda, Konten Website > tab Beranda, maks `HeroSlide::MAX` = 4, Policy `HeroSlidePolicy`
@@ -587,8 +588,19 @@ draft ──ajukan──▶ submitted ──verifikasi──▶ verified ──b
   `simker.follow_up.stale_days` (30) hari, `ReportIssue::stale`), profil menunggu verifikasi, dan khusus Admin kelompok
   aktif tanpa akun serta kelompok tanpa OPD pembina; kosong = "Tidak ada yang perlu dikerjakan sekarang." → "Laporan
   terbaru" (7/12, `shared.dashboards.latest-reports`): 5 pengajuan terakhir dari `MonthlyReport::verificationQueue`
-  → Produksi per produk selebar penuh (5 teratas; OPD lewat `Statistics` periode itu, kelompok binaan saja) → Admin:
-  pelaporan per OPD; lalu belum mengajukan (Admin dan OPD). HP: semua kartu bertumpuk, grid 2x2 tetap 2 kolom.
+  → Produksi per produk (7/12, 5 baris) berdampingan dengan Belum mengajukan (5/12) → Admin: pelaporan per OPD.
+  HP: semua kartu bertumpuk, grid 2x2 tetap 2 kolom.
+  "Produksi per produk" (dasbor Admin/OPD dan tab Ekonomi): SATU sumber `Statistics::production()` (Admin = seluruh
+  distrik, OPD = binaan; `DistrictStats` tidak lagi menghitung produksi). Hanya laporan `verified`, produk + satuan
+  `LOWER(TRIM)`, satuan berbeda tidak dijumlahkan. Urut jumlah kelompok yang memproduksi (terbanyak), lalu nama produk,
+  lalu satuan; TIDAK pernah membandingkan jumlah antarsatuan. Subjudul dasbor "Lima produk yang paling banyak diproduksi
+  kelompok. Satuan berbeda tidak dijumlahkan." Jumlah + satuan satu sel ("744 bungkus", "diisi X dari Y kelompok" bila
+  ada yang kosong). Kolom Kelompok (`shared.dashboards._production-cells`): 1 kelompok = namanya (teks kecil satu baris,
+  nama lengkap di title), lebih = "3 kelompok" dengan daftar nama di title. Kolom "Dibanding bulan lalu" (tab Ekonomi:
+  "Dibanding periode sebelumnya" = rentang sebelumnya yang sama panjang): persen setara, hanya kelompok yang mengisi
+  jumlah produk + satuan yang sama di kedua periode (naik hijau panah atas, turun merah panah bawah, title "Dibanding
+  <periode>, dari N kelompok yang sama"); "Baru" bila tidak ada kelompok yang melaporkannya di periode sebelumnya;
+  "belum bisa dibandingkan" bila ada tetapi tidak ada kelompok yang mengisi di keduanya. Dijaga `ProductionPerProductTest`.
   Grafik kepatuhan pelaporan dan tren 12 bulan hanya di tab Ekonomi.
   Setelah tenggat, daftar "Belum mengajukan" berjudul "Terlambat melapor {bulan}" dengan badge "Terlambat".
   Dasbor Kelompok: tanpa kepala halaman (`:header="false" lead-tools`: h1 pembaca layar, lonceng di pojok kanan atas kartu

@@ -53,7 +53,11 @@
             @include('shared.dashboards.latest-reports', ['area' => 'admin', 'class' => 'lg:col-span-7'])
         </div>
 
-        @include('shared.dashboards.production', ['area' => 'admin'])
+        {{-- Produksi per produk tidak selebar penuh: nama dan angka berdekatan. --}}
+        <div class="grid grid-cols-1 gap-6 lg:grid-cols-12 lg:items-stretch">
+            @include('shared.dashboards.production', ['area' => 'admin', 'class' => 'lg:col-span-7'])
+            @include('shared.dashboards.not-submitted', ['area' => 'admin', 'class' => 'lg:col-span-5'])
+        </div>
 
         <x-admin.card title="Pelaporan per OPD" :description="'Periode '.Format::month($period).'. Kelompok dengan beberapa OPD dihitung di setiap OPD-nya.'" flush>
             <x-admin.table bare>
@@ -96,7 +100,5 @@
                 @endforeach
             </x-admin.table>
         </x-admin.card>
-
-        @include('shared.dashboards.not-submitted', ['area' => 'admin'])
     </div>
 </x-layouts.app>

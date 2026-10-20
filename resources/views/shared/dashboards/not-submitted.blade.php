@@ -17,6 +17,8 @@
     :title="($late ? 'Terlambat melapor ' : 'Belum mengajukan ').Format::month($period)"
     :description="'Tenggat '.Format::date($deadline).' · '.ReportingPeriod::deadlineDistance($deadline)"
     id="belum-melapor"
+    stretch
+    :class="$class ?? null"
 >
     @if ($notSubmitted->isEmpty())
         <p class="text-ink-soft">Semua kelompok wajib lapor sudah mengajukan laporan bulan ini.</p>

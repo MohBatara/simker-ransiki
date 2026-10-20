@@ -66,8 +66,10 @@
             @include('shared.dashboards.latest-reports', ['area' => 'opd', 'class' => 'lg:col-span-7'])
         </div>
 
-        @include('shared.dashboards.production', ['area' => 'opd'])
-
-        @include('shared.dashboards.not-submitted', ['area' => 'opd'])
+        {{-- Produksi per produk tidak selebar penuh: nama dan angka berdekatan. --}}
+        <div class="grid grid-cols-1 gap-6 lg:grid-cols-12 lg:items-stretch">
+            @include('shared.dashboards.production', ['area' => 'opd', 'class' => 'lg:col-span-7'])
+            @include('shared.dashboards.not-submitted', ['area' => 'opd', 'class' => 'lg:col-span-5'])
+        </div>
     </div>
 </x-layouts.app>

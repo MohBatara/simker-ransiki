@@ -7,6 +7,9 @@ use App\Models\MonthlyReport;
 use App\Models\Opd;
 use App\Models\Organization;
 use App\Models\User;
+use App\Support\Dashboards\Statistics;
+use App\Support\Dashboards\StatisticsCharts;
+use Carbon\CarbonImmutable;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Testing\TestResponse;
@@ -253,24 +256,24 @@ test('form izin menyimpan tanggal berlaku sampai, tidak boleh sebelum tanggal te
 });
 
 test('bulan sementara: belum lewat tenggat + 14 hari, atau cakupan terverifikasi di bawah 80%', function () {
-    $month = fn (string $value) => \Carbon\CarbonImmutable::parse($value);
+    $month = fn (string $value) => CarbonImmutable::parse($value);
 
-    expect(App\Support\Dashboards\Statistics::isProvisional($month('2026-09-01'), 2, 2))->toBeTrue()
-        ->and(App\Support\Dashboards\Statistics::isProvisional($month('2026-08-01'), 1, 2))->toBeTrue()
-        ->and(App\Support\Dashboards\Statistics::isProvisional($month('2026-08-01'), 4, 5))->toBeFalse()
-        ->and(App\Support\Dashboards\Statistics::isProvisional($month('2026-08-01'), 0, 0))->toBeFalse();
+    expect(Statistics::isProvisional($month('2026-09-01'), 2, 2))->toBeTrue()
+        ->and(Statistics::isProvisional($month('2026-08-01'), 1, 2))->toBeTrue()
+        ->and(Statistics::isProvisional($month('2026-08-01'), 4, 5))->toBeFalse()
+        ->and(Statistics::isProvisional($month('2026-08-01'), 0, 0))->toBeFalse();
 
     config(['simker.statistics.provisional_min_coverage' => 0.5]);
-    expect(App\Support\Dashboards\Statistics::isProvisional($month('2026-08-01'), 1, 2))->toBeFalse();
+    expect(Statistics::isProvisional($month('2026-08-01'), 1, 2))->toBeFalse();
 
     // Tanggal 25 Oktober: September sudah lewat tenggat + 14 hari.
     Carbon::setTestNow(Carbon::parse('2026-10-25 12:00:00', 'Asia/Jayapura'));
-    expect(App\Support\Dashboards\Statistics::isProvisional($month('2026-09-01'), 2, 2))->toBeFalse();
+    expect(Statistics::isProvisional($month('2026-09-01'), 2, 2))->toBeFalse();
 });
 
 test('grafik tren menandai bulan sementara di tooltip, catatan, dan tabel', function () {
     $response = $this->actingAs($this->opdUser)->get('/opd/dasbor/ekonomi')->assertOk();
-    $chart = App\Support\Dashboards\StatisticsCharts::incomeTrend($response->viewData('incomeTrend'));
+    $chart = StatisticsCharts::incomeTrend($response->viewData('incomeTrend'));
 
     expect($chart['datasets'][0]['provisional'])->toBe([true, true, true])
         ->and($chart['datasets'][0]['notes'][1])->toBe(['Diisi 0 dari 2 kelompok', 'Sementara: baru 1 dari 2 kelompok terverifikasi'])
@@ -282,7 +285,7 @@ test('grafik tren menandai bulan sementara di tooltip, catatan, dan tabel', func
 test('grafik produksi kelompok: satuan berbeda dipisah, legenda dan sumbu Y bersatuan', function () {
     $this->actingAs(User::factory()->kelompok($this->onlyA)->create());
     $response = $this->get('/kelompok')->assertOk();
-    $chart = App\Support\Dashboards\StatisticsCharts::productionTrend($response->viewData('productionTrend'), $response->viewData('months'));
+    $chart = StatisticsCharts::productionTrend($response->viewData('productionTrend'), $response->viewData('months'));
 
     expect(collect($chart['panels'])->map(fn ($panel) => [$panel['subtitle'], $panel['yTitle'], count($panel['datasets'])])->all())
         ->toBe([['kakao (kg)', 'kg', 1], ['Kakao (karung)', 'karung', 1]])
@@ -291,28 +294,31 @@ test('grafik produksi kelompok: satuan berbeda dipisah, legenda dan sumbu Y bers
         ->assertSee('data-panel="1"', false);
 
     // Satuan sama: satu grafik berisi dua garis.
-    $this->onlyA->monthlyReports()->whereDate("period", "2026-09-01")->first()->items()->where('production_unit', 'karung')->update(['production_unit' => 'kg', 'product_name' => 'Kopi']);
-    $chart = App\Support\Dashboards\StatisticsCharts::productionTrend($this->get('/kelompok')->viewData('productionTrend'), $response->viewData('months'));
+    $this->onlyA->monthlyReports()->whereDate('period', '2026-09-01')->first()->items()->where('production_unit', 'karung')->update(['production_unit' => 'kg', 'product_name' => 'Kopi']);
+    $chart = StatisticsCharts::productionTrend($this->get('/kelompok')->viewData('productionTrend'), $response->viewData('months'));
     expect($chart['panels'])->toHaveCount(1)
         ->and($chart['panels'][0]['yTitle'])->toBe('kg')
         ->and($chart['footnote'])->toBe('Dua produk dengan produksi terbesar, satuannya sama.');
 });
 
 test('kepatuhan pelaporan: urutan tumpukan tetap dan legenda memuat jumlah bulan terakhir', function () {
-    $chart = App\Support\Dashboards\StatisticsCharts::compliance($this->actingAs($this->opdUser)->get('/opd/dasbor/ekonomi')->viewData('compliance'));
+    $chart = StatisticsCharts::compliance($this->actingAs($this->opdUser)->get('/opd/dasbor/ekonomi')->viewData('compliance'));
 
     expect(collect($chart['datasets'])->pluck('label')->all())->toBe(['Terverifikasi', 'Menunggu verifikasi', 'Perlu revisi', 'Terlambat', 'Belum diajukan'])
         ->and($chart['legend'])->toBe(['position' => 'top', 'title' => 'Jumlah September 2026:', 'lastValue' => true]);
 });
 
-test('tabel produksi di HP: satuan ikut di baris Jumlah', function () {
-    $this->actingAs($this->opdUser)->get('/opd/dasbor/ekonomi')->assertOk()
+test('tabel produksi: satuan menempel pada jumlah di semua ukuran layar, tanpa kolom Satuan terpisah', function () {
+    $html = $this->actingAs($this->opdUser)->get('/opd/dasbor/ekonomi')->assertOk()
         ->assertSee('data-label="Jumlah"', false)
-        ->assertSee('15<span class="md:hidden"> kg</span>', false);
+        ->getContent();
+
+    expect(preg_match('#15\s+kg#', strip_tags($html)))->toBe(1)
+        ->and($html)->not->toContain('data-label="Satuan"');
 });
 
 test('tabel lebar muat di tablet: judul kolom boleh dua baris, kolom turunan opsional, wadah gulir berlabel', function () {
-    $chart = App\Support\Dashboards\StatisticsCharts::compliance($this->actingAs($this->admin)->get('/admin/dasbor/ekonomi')->viewData('compliance'));
+    $chart = StatisticsCharts::compliance($this->actingAs($this->admin)->get('/admin/dasbor/ekonomi')->viewData('compliance'));
     expect($chart['table']['columns'][6])->toBe('Wajib lapor')->and($chart['table']['optional'])->toBe([6]);
 
     $this->get('/admin/dasbor/ekonomi')->assertSee('role="region" aria-label="Tabel kepatuhan pelaporan" tabindex="0"', false);

@@ -36,7 +36,8 @@ class DashboardController extends Controller
             'staleNeeds' => ReportIssue::reviewableBy($request->user())->where('kind', IssueKind::Support)->stale(config('simker.follow_up.stale_days'))->count(),
             'organizations' => $district->organizations(),
             'economy' => $district->economy($period),
-            'production' => $district->production($period),
+            // Sama dengan OPD dan tab Ekonomi: urut jumlah kelompok, nama kelompok, pembanding setara bulan lalu.
+            'production' => (new Statistics($request->user(), [], $period, $period))->production(5),
             // Kartu Ekonomi: penjualan dan biaya 6 bulan sampai periode terpilih + persen perubahan (hanya terverifikasi).
             'economyTrend' => Statistics::recentEconomy($request->user(), $period, $earliest),
             // Persen perubahan setara: hanya kelompok yang terverifikasi di periode ini dan bulan sebelumnya.

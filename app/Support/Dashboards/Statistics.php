@@ -14,6 +14,7 @@ use App\Models\Organization;
 use App\Models\ReportIssue;
 use App\Models\ReportItem;
 use App\Models\User;
+use App\Support\Format;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
@@ -342,32 +343,113 @@ class Statistics
     }
 
     /**
-     * Produksi per produk + satuan (nama dan satuan dibandingkan LOWER(TRIM)); satuan berbeda tidak pernah
-     * dijumlahkan. Urut dari jumlah terbesar.
+     * Produksi per produk + satuan dari laporan terverifikasi (nama dan satuan dibandingkan LOWER(TRIM)); satuan berbeda
+     * tidak pernah dijumlahkan. Urut dari jumlah kelompok yang memproduksi (terbanyak dulu), lalu nama produk, lalu
+     * satuan: jumlah antarsatuan tidak pernah dibandingkan. Dipakai dasbor Admin/OPD (satu bulan) dan tab Ekonomi.
      *
-     * @return Collection<int, array{product: string, unit: ?string, quantity: ?string, filled: int, organizations: int}>
+     * `filled` = kelompok yang mengisi jumlahnya. `change` membandingkan dengan rentang sebelumnya yang sama panjang
+     * (dasbor: bulan lalu) secara setara: hanya kelompok yang mengisi jumlah produk + satuan yang sama di kedua rentang.
+     * status: compared (percent terisi), new (tidak ada kelompok yang melaporkannya di rentang sebelumnya), incomparable.
+     *
+     * @return Collection<int, array{product: string, unit: ?string, quantity: ?float, filled: int, organizations: int,
+     *     organization_names: list<string>, change: array{status: string, percent: ?float, matched: int, previous: string}}>
      */
     public function production(int $limit = 30): Collection
     {
-        return $this->productionQuery()
+        $current = $this->productionByOrganization($this->from, $this->to);
+        $months = $this->months()->count();
+        $previousFrom = $this->from->subMonthsNoOverflow($months);
+        $previousTo = $this->from->subMonthNoOverflow();
+        $previous = $this->productionByOrganization($previousFrom, $previousTo)->groupBy('key');
+        $previousLabel = $months === 1 ? Format::month($previousTo) : Format::month($previousFrom).' sampai '.Format::month($previousTo);
+        $names = Organization::whereIn('id', $current->pluck('organization_id')->unique())->pluck('name', 'id');
+
+        return $current->groupBy('key')
+            ->map(function (Collection $rows, string $key) use ($previous, $previousLabel, $names) {
+                $filled = $rows->where('filled', '>', 0);
+
+                return [
+                    'product' => $rows->min('product'),
+                    'unit' => $rows->first()->unit,
+                    'quantity' => $filled->isEmpty() ? null : round($filled->sum('quantity'), 2),
+                    'filled' => $filled->count(),
+                    'organizations' => $rows->count(),
+                    'organization_names' => $rows->map(fn ($row) => $names[$row->organization_id] ?? null)->filter()->sort()->values()->all(),
+                    'change' => self::productionChange($filled, $previous->get($key, collect()), $previousLabel),
+                ];
+            })
+            ->sortBy([
+                ['organizations', 'desc'],
+                fn (array $a, array $b) => strcmp(mb_strtolower($a['product']), mb_strtolower($b['product'])) ?: strcmp((string) $a['unit'], (string) $b['unit']),
+            ])
+            ->take($limit)
+            ->values();
+    }
+
+    /**
+     * Perubahan setara: jumlah kelompok yang mengisi di KEDUA rentang saja, rentang ini dibanding sebelumnya.
+     *
+     * @param  Collection<int, object>  $current  baris per kelompok yang mengisi jumlah di rentang ini
+     * @param  Collection<int, object>  $previous  baris per kelompok produk + satuan yang sama di rentang sebelumnya
+     * @return array{status: string, percent: ?float, matched: int, previous: string}
+     */
+    private static function productionChange(Collection $current, Collection $previous, string $label): array
+    {
+        if ($previous->isEmpty()) {
+            return ['status' => 'new', 'percent' => null, 'matched' => 0, 'previous' => $label];
+        }
+
+        $before = $previous->where('filled', '>', 0)->keyBy('organization_id');
+        $matched = $current->filter(fn ($row) => $before->has($row->organization_id));
+        $previousTotal = $matched->sum(fn ($row) => $before[$row->organization_id]->quantity);
+
+        if ($matched->isEmpty() || $previousTotal <= 0) {
+            return ['status' => 'incomparable', 'percent' => null, 'matched' => $matched->count(), 'previous' => $label];
+        }
+
+        return [
+            'status' => 'compared',
+            'percent' => round(($matched->sum('quantity') - $previousTotal) / $previousTotal * 100, 1),
+            'matched' => $matched->count(),
+            'previous' => $label,
+        ];
+    }
+
+    /**
+     * Produksi per kelompok per produk + satuan dari laporan terverifikasi dalam rentang (kelompok terlihat + filter).
+     *
+     * @return Collection<int, object{key: string, product: string, unit: ?string, organization_id: int, quantity: float, filled: int}>
+     */
+    private function productionByOrganization(CarbonImmutable $from, CarbonImmutable $to): Collection
+    {
+        $reports = $this->reports()
+            ->where('monthly_reports.status', ReportStatus::Verified)
+            ->whereBetween('monthly_reports.period', [$from->format('Y-m-01'), $to->format('Y-m-01')])
+            ->select('monthly_reports.id');
+
+        return ReportItem::query()
+            ->join('monthly_reports', 'monthly_reports.id', '=', 'report_items.monthly_report_id')
+            ->whereIn('monthly_reports.id', $reports)
+            ->whereNotNull('report_items.product_name')
+            ->toBase()
+            ->groupBy(DB::raw('LOWER(TRIM(report_items.product_name))'), DB::raw('LOWER(TRIM(report_items.production_unit))'), 'monthly_reports.organization_id')
             ->select([
+                DB::raw('LOWER(TRIM(report_items.product_name)) as product_key'),
                 DB::raw('MIN(TRIM(report_items.product_name)) as product'),
                 DB::raw('LOWER(TRIM(report_items.production_unit)) as unit'),
+                'monthly_reports.organization_id',
                 DB::raw('SUM(report_items.production_qty) as quantity'),
                 DB::raw('COUNT(report_items.production_qty) as filled'),
-                DB::raw('COUNT(DISTINCT monthly_reports.organization_id) as organizations'),
             ])
-            ->orderByDesc('quantity')
-            ->orderBy('product')
-            ->limit($limit)
             ->get()
-            ->map(fn ($row) => [
-                'product' => $row->product,
-                'unit' => $row->unit,
-                'quantity' => $row->filled > 0 ? $row->quantity : null,
-                'filled' => (int) $row->filled,
-                'organizations' => (int) $row->organizations,
-            ]);
+            ->map(function ($row) {
+                $row->key = $row->product_key.'|'.$row->unit;
+                $row->quantity = (float) $row->quantity;
+                $row->filled = (int) $row->filled;
+                $row->organization_id = (int) $row->organization_id;
+
+                return $row;
+            });
     }
 
     /**

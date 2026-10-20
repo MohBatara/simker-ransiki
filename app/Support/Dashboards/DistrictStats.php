@@ -9,7 +9,6 @@ use App\Models\InstitutionType;
 use App\Models\MonthlyReport;
 use App\Models\Organization;
 use App\Models\User;
-use App\Models\ReportItem;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -95,40 +94,5 @@ class DistrictStats
                 'filled' => (int) $row->{$field.'_filled'},
             ]])->all(),
         ];
-    }
-
-    /**
-     * Produksi per produk + satuan dari laporan terverifikasi. Nama dan satuan dibandingkan dalam huruf
-     * kecil tanpa spasi tepi; satuan berbeda tidak pernah dijumlahkan.
-     *
-     * @return Collection<int, array{product: string, unit: ?string, quantity: ?string, filled: int, organizations: int}>
-     */
-    public function production(CarbonImmutable $period, int $limit = 10): Collection
-    {
-        return ReportItem::query()
-            ->join('monthly_reports', 'monthly_reports.id', '=', 'report_items.monthly_report_id')
-            ->where('monthly_reports.status', ReportStatus::Verified)
-            ->whereDate('monthly_reports.period', $period->format('Y-m-d'))
-            ->whereNotNull('report_items.product_name')
-            ->groupBy(DB::raw('LOWER(TRIM(report_items.product_name))'), DB::raw('LOWER(TRIM(report_items.production_unit))'))
-            ->select([
-                DB::raw('MIN(TRIM(report_items.product_name)) as product'),
-                DB::raw('LOWER(TRIM(report_items.production_unit)) as unit'),
-                DB::raw('SUM(report_items.production_qty) as quantity'),
-                DB::raw('COUNT(report_items.production_qty) as filled'),
-                DB::raw('COUNT(DISTINCT monthly_reports.organization_id) as organizations'),
-            ])
-            ->orderByDesc('organizations')
-            ->orderBy('product')
-            ->limit($limit)
-            ->toBase()
-            ->get()
-            ->map(fn ($row) => [
-                'product' => $row->product,
-                'unit' => $row->unit,
-                'quantity' => $row->filled > 0 ? $row->quantity : null,
-                'filled' => (int) $row->filled,
-                'organizations' => (int) $row->organizations,
-            ]);
     }
 }

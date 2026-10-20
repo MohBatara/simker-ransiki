@@ -15,6 +15,7 @@ use App\Support\Dashboards\DistrictStats;
 use App\Support\Dashboards\KelompokSummary;
 use App\Support\Dashboards\ReportingPeriod;
 use App\Support\Dashboards\ReportingStats;
+use App\Support\Dashboards\Statistics;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Carbon;
 
@@ -127,7 +128,7 @@ test('produksi dikelompokkan per produk dan satuan yang dirapikan; satuan berbed
     $this->r8->items()->create(['product_name' => 'Pinang', 'production_qty' => null, 'production_unit' => null]);
     $this->r2->items()->create(['product_name' => 'Kakao kering', 'production_qty' => 99, 'production_unit' => 'kg']);
 
-    $rows = (new DistrictStats)->production($this->period);
+    $rows = (new Statistics($this->admin, [], $this->period, $this->period))->production();
 
     expect($rows->map(fn ($row) => [mb_strtolower($row['product']), $row['unit'], $row['quantity'] === null ? null : (float) $row['quantity'], $row['organizations']])->all())->toBe([
         ['kakao kering', 'kg', 15.5, 2],
