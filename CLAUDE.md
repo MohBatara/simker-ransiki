@@ -427,10 +427,10 @@ Jangan mengarang kepanjangan akronim resmi (KDMP, KNMP, dsb.). Simpan apa adanya
   Tata letak tab Ekonomi: angka → tren → kepatuhan → baris tiga kartu sama tinggi (Pendapatan per bidang usaha, Masalah
   terbanyak, Kebutuhan dukungan terbanyak; catatan cara menghitung di ikon info `x-admin.info-tip` lewat prop `info`
   `x-chart`, bukan teks di bawah grafik) → "Produksi per produk" SELEBAR PENUH (`shared.statistics._production`, lengkap):
-  Produk (min 260px) | Produksi (angka + satuan, kanan) | Kelompok (kiri, nama utuh; > 1 = "3 kelompok" + daftar di
+  Produk (30%) | Produksi (15%, angka + satuan, kanan) | Kelompok (sisanya, kiri, nama utuh; > 1 = "3 kelompok" + daftar di
   title) | "Vs periode sebelumnya" (kanan; rentang sama panjang tepat sebelumnya, setara). Tidak ada baris yang bisa
   dibandingkan → kolom disembunyikan + "Belum ada data periode sebelumnya untuk dibandingkan."; sebagian → yang tidak bisa
-  "baru" kecil `ink-3`. Cari (produk/kelompok, Alpine, tanpa memuat ulang) di kepala kartu, baris 52px, 15 baris lalu
+  "baru" kecil `ink-3`. Cari (produk/kelompok, Alpine, tanpa memuat ulang, kotak min 280px) di kepala kartu, baris 52px, 15 baris lalu
   "Tampilkan semua (N)".
 - Legalitas (per kelompok unik): punya izin terbit, izin diproses, izin perlu perbaikan, belum punya izin
   (= tidak ada izin issued/in_process/needs_fix). Satu kelompok bisa masuk beberapa kartu. Rincian per jenis

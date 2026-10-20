@@ -1,6 +1,6 @@
 {{--
     Tab Ekonomi: "Produksi per produk" selebar penuh dan lengkap (Statistics::production, urutan sama dengan Dasbor).
-    Kolom: Produk (min 260px) | Produksi (angka + satuan, kanan) | Kelompok (kiri, nama utuh; lebih dari satu = "3 kelompok"
+    Kolom: Produk (30%) | Produksi (15%, angka + satuan, kanan) | Kelompok (kiri, nama utuh; lebih dari satu = "3 kelompok"
     dengan daftar di tooltip) | Vs periode sebelumnya (kanan; rentang sama panjang tepat sebelumnya, perhitungan setara).
     Tidak ada satu pun baris yang bisa dibandingkan → kolom disembunyikan + kalimat kecil; sebagian → yang tidak bisa diberi
     "baru" kecil ink-3. Cari (nama produk/kelompok) dan "Tampilkan semua (N)" setelah 15 baris lewat Alpine, tanpa memuat ulang.
@@ -19,7 +19,7 @@
         @if ($production->isNotEmpty())
             <x-slot:actions>
                 <label class="sr-only" for="cari-produksi">Cari produk atau kelompok</label>
-                <x-input type="search" id="cari-produksi" x-model.debounce.150ms="q" placeholder="Cari produk atau kelompok" class="w-64 max-sm:w-[min(20rem,calc(100vw-4rem))] md:h-8!" data-no-dirty />
+                <x-input type="search" id="cari-produksi" x-model.debounce.150ms="q" placeholder="Cari produk atau kelompok" class="w-72 min-w-[280px] max-sm:w-[min(20rem,calc(100vw-4rem))] md:h-8!" data-no-dirty />
             </x-slot:actions>
         @endif
 
@@ -32,8 +32,9 @@
 
             <x-admin.table bare class="max-md:p-4" label="Tabel produksi per produk">
                 <x-slot:head>
-                    <x-admin.table.heading class="md:min-w-65">Produk</x-admin.table.heading>
-                    <x-admin.table.heading numeric fit>Produksi</x-admin.table.heading>
+                    {{-- Lebar kolom: Produk 30%, Produksi 15%, Kelompok sisanya (Vs selebar isi). --}}
+                    <x-admin.table.heading class="md:w-[30%]">Produk</x-admin.table.heading>
+                    <x-admin.table.heading numeric class="md:w-[15%]">Produksi</x-admin.table.heading>
                     <x-admin.table.heading>Kelompok</x-admin.table.heading>
                     @if ($comparable)
                         <x-admin.table.heading numeric fit><span title="Dibanding {{ $previous }}, dari kelompok yang sama">Vs periode sebelumnya</span></x-admin.table.heading>
@@ -44,8 +45,8 @@
                         x-show="q === '' ? (all || {{ $loop->index }} < {{ $limit }}) : $el.dataset.search.includes(q.toLowerCase().trim())"
                         data-search="{{ mb_strtolower($row['product'].' '.implode(' ', $row['organization_names'])) }}"
                     >
-                        <x-admin.table.cell primary class="md:min-w-65">{{ $row['product'] }}</x-admin.table.cell>
-                        <x-admin.table.cell label="Produksi" numeric fit inline>
+                        <x-admin.table.cell primary>{{ $row['product'] }}</x-admin.table.cell>
+                        <x-admin.table.cell label="Produksi" numeric inline class="md:whitespace-nowrap">
                             @if ($row['quantity'] === null)
                                 <span class="text-ink-3">Tidak diisi</span>
                             @else
