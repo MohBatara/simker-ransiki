@@ -6,6 +6,7 @@ use App\Models\MonthlyReport;
 use App\Models\Opd;
 use App\Models\Organization;
 use App\Models\User;
+use App\Support\Format;
 use Database\Seeders\DemoSeeder;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -106,16 +107,17 @@ test('tautan dasbor admin tidak di-escape ganda', function () {
 
     expect($hrefs->filter(fn ($href) => str_contains($href, '&amp;'))->all())->toBe([]);
 
-    parse_str((string) parse_url($hrefs->first(fn ($href) => str_contains($href, 'laporan=belum-diajukan')), PHP_URL_QUERY), $query);
-    expect($query)->toMatchArray(['laporan' => 'belum-diajukan', 'periode' => '2026-09']);
+    // Baris kartu Pelaporan per OPD: daftar Laporan tersaring OPD + periode.
+    parse_str((string) parse_url($hrefs->first(fn ($href) => str_contains($href, '/admin/laporan?') && str_contains($href, 'opd=')), PHP_URL_QUERY), $query);
+    expect($query)->toMatchArray(['opd' => (string) $organization->opds()->value('opds.id'), 'period' => '2026-09']);
 });
 
 test('rupiah ringkas untuk kotak angka utama: rb, jt, M', function () {
-    expect(App\Support\Format::rupiahShort(850000))->toBe('Rp 850 rb')
-        ->and(App\Support\Format::rupiahShort(121_400_000))->toBe('Rp 121,4 jt')
-        ->and(App\Support\Format::rupiahShort(2_000_000))->toBe('Rp 2 jt')
-        ->and(App\Support\Format::rupiahShort(1_250_000_000))->toBe('Rp 1,3 M')
-        ->and(App\Support\Format::rupiahShort(-500))->toBe('Rp 500');
+    expect(Format::rupiahShort(850000))->toBe('Rp 850 rb')
+        ->and(Format::rupiahShort(121_400_000))->toBe('Rp 121,4 jt')
+        ->and(Format::rupiahShort(2_000_000))->toBe('Rp 2 jt')
+        ->and(Format::rupiahShort(1_250_000_000))->toBe('Rp 1,3 M')
+        ->and(Format::rupiahShort(-500))->toBe('Rp 500');
 });
 
 test('kartu Ekonomi: cakupan di bawah 50% diberi catatan, laba negatif ditulis Rugi, kartu Kelompok bersegmen', function () {

@@ -37,6 +37,8 @@
                 @if ($description)
                     <p class="text-caption text-ink-3">{{ $description }}</p>
                 @endif
+                {{-- Slot "meta": isi kecil di bawah keterangan (mis. legenda warna). --}}
+                {{ $meta ?? '' }}
             </div>
             @if (isset($actions) || $more)
                 <div class="flex flex-wrap items-center gap-2 text-caption">

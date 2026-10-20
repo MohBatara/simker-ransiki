@@ -59,46 +59,6 @@
             @include('shared.dashboards.not-submitted', ['area' => 'admin', 'class' => 'lg:col-span-5'])
         </div>
 
-        <x-admin.card title="Pelaporan per OPD" :description="'Periode '.Format::month($period).'. Kelompok dengan beberapa OPD dihitung di setiap OPD-nya.'" flush>
-            <x-admin.table bare>
-                <x-slot:head>
-                    <x-admin.table.heading>OPD</x-admin.table.heading>
-                    <x-admin.table.heading numeric>Wajib lapor</x-admin.table.heading>
-                    <x-admin.table.heading numeric>Terverifikasi</x-admin.table.heading>
-                    <x-admin.table.heading numeric optional wrap>Menunggu verifikasi</x-admin.table.heading>
-                    <x-admin.table.heading numeric optional wrap>Perlu revisi</x-admin.table.heading>
-                    <x-admin.table.heading numeric>Belum diajukan</x-admin.table.heading>
-                    <x-admin.table.heading><span class="sr-only">Progres</span></x-admin.table.heading>
-                </x-slot:head>
-                @foreach ($perOpd as $row)
-                    @php
-                        $counts = $row['counts'];
-                        $opdFilter = $row['opd'] ? $row['opd']->id : 'none';
-                        $reportsUrl = fn (string $status) => route('admin.reports.index', ['opd' => $opdFilter, 'status' => $status, 'period' => $month]);
-                        $cells = [
-                            ['Terverifikasi', $counts['verified'], $reportsUrl('verified'), false],
-                            ['Menunggu verifikasi', $counts['submitted'], $reportsUrl('submitted'), true],
-                            ['Perlu revisi', $counts['revision'], $reportsUrl('revision'), true],
-                            ['Belum diajukan', $counts['draft'] + $counts['missing'], route('admin.organizations.index', ['opd' => $opdFilter, 'laporan' => 'belum-diajukan', 'periode' => $month]), false],
-                        ];
-                    @endphp
-                    @continue(! $row['opd'] && $counts['total'] === 0)
-                    <x-admin.table.row>
-                        <x-admin.table.cell primary>{{ $row['opd']?->short_name ?: ($row['opd']?->name ?? 'Tanpa OPD pembina') }}</x-admin.table.cell>
-                        <x-admin.table.cell label="Wajib lapor" numeric>
-                            <a href="{{ route('admin.organizations.index', ['opd' => $opdFilter]) }}" class="inline-flex min-h-11 items-center rounded-control hover:underline md:min-h-0">{{ \App\Support\Format::orEmpty(Format::number($counts['total'])) }}</a>
-                        </x-admin.table.cell>
-                        @foreach ($cells as [$label, $value, $href, $optional])
-                            <x-admin.table.cell :label="$label" numeric :optional="$optional">
-                                <a href="{{ $href }}" class="inline-flex min-h-11 items-center rounded-control hover:underline md:min-h-0">{{ \App\Support\Format::orEmpty(Format::number($value)) }}</a>
-                            </x-admin.table.cell>
-                        @endforeach
-                        <x-admin.table.cell class="md:w-40 max-md:col-span-2 max-md:pt-2">
-                            <x-stacked-bar size="sm" :legend="false" :label="'Pelaporan '.($row['opd']?->name ?? 'kelompok tanpa OPD')" :segments="ReportingStats::segments($counts, 'admin', $period)" />
-                        </x-admin.table.cell>
-                    </x-admin.table.row>
-                @endforeach
-            </x-admin.table>
-        </x-admin.card>
+        @include('admin.dashboard._opd-reporting')
     </div>
 </x-layouts.app>
