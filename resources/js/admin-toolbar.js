@@ -1,5 +1,6 @@
 /**
- * Bilah alat daftar Admin/OPD (x-admin.toolbar): filter langsung diterapkan tanpa tombol Terapkan. Hasil dimuat ulang
+ * Bilah alat daftar Admin/OPD (x-admin.toolbar): cari dan filter sebaris langsung diterapkan; filter di popup Filter
+ * (x-admin.modal) diterapkan lewat tombol "Terapkan" atau dikosongkan lewat "Atur ulang". Hasil dimuat ulang
  * lewat fetch lalu setiap elemen [data-swap="kunci"] di halaman ditukar dengan versi baru dari server (tabel, ringkasan,
  * kartu angka, tautan unduh yang ikut filter). URL diperbarui (pushState); tombol kembali memuat ulang halaman.
  * Cari: jeda 300 ms setelah berhenti mengetik. Gagal memuat = pindah halaman biasa.
@@ -7,7 +8,6 @@
 const desktopQuery = window.matchMedia('(min-width: 48rem)');
 
 export default () => ({
-    open: false,
     loading: false,
     desktop: desktopQuery.matches,
     timer: null,
@@ -16,12 +16,6 @@ export default () => ({
     init() {
         desktopQuery.addEventListener('change', (event) => {
             this.desktop = event.matches;
-        });
-        this.$watch('open', (open) => {
-            document.documentElement.classList.toggle('overflow-hidden', open);
-            if (open) {
-                this.$nextTick(() => this.focusables()[0]?.focus());
-            }
         });
         if (!window.__adminToolbarPopstate) {
             window.__adminToolbarPopstate = true;
@@ -76,24 +70,17 @@ export default () => ({
         }
     },
 
-    focusables() {
-        return [...this.$refs.panel.querySelectorAll('a[href], button:not([disabled]), select:not([disabled]), input:not([disabled])')]
-            .filter((element) => element.offsetParent !== null);
+    /** "Terapkan" di popup Filter: terapkan pilihan lalu tutup popup. */
+    applyPanel(name) {
+        this.apply();
+        this.$dispatch('close-modal', name);
     },
 
-    trap(event) {
-        const items = this.focusables();
-        if (!items.length) {
-            return;
-        }
-        const first = items[0];
-        const last = items[items.length - 1];
-        if (event.shiftKey && document.activeElement === first) {
-            event.preventDefault();
-            last.focus();
-        } else if (!event.shiftKey && document.activeElement === last) {
-            event.preventDefault();
-            first.focus();
-        }
+    /** "Atur ulang" di popup Filter: kosongkan semua filter (cari tetap), terapkan, tutup popup. */
+    resetPanel(name) {
+        this.$refs.form.querySelectorAll('select[data-filter]').forEach((select) => {
+            select.value = '';
+        });
+        this.applyPanel(name);
     },
 });

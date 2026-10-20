@@ -71,6 +71,6 @@ test('halaman akun saya tampil di layout app bila tidak wajib ganti', function (
     $this->actingAs(User::factory()->admin()->create())
         ->get(route('account.password.edit'))
         ->assertOk()
-        ->assertSee('Akun Saya')
+        ->assertSee('Akun saya')
         ->assertSee('Keluar');
 });

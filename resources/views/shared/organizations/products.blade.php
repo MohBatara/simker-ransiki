@@ -78,10 +78,10 @@
     @endif
 
     @if ($canManage)
-        <x-modal name="record-form" :show="$failed" x-on:close="closed()">
-            <x-slot:title>
+        <x-admin.modal name="record-form" :show="$failed" x-on:modal-closed="closed()">
+            <x-slot:heading>
                 <span x-text="mode === 'edit' ? 'Ubah produk' : 'Tambah produk'">Tambah produk</span>
-            </x-slot:title>
+            </x-slot:heading>
 
             <form novalidate method="POST" x-bind:action="action" id="product-form" class="space-y-4 text-ink">
                 @csrf
@@ -111,14 +111,14 @@
             </form>
 
             <x-slot:footer>
-                <x-button variant="secondary" x-on:click="$dispatch('close-modal', 'record-form')">Batal</x-button>
+                <x-button variant="secondary" x-on:click="requestClose()">Batal</x-button>
                 <x-button type="submit" form="product-form" processing="Menyimpan…">Simpan</x-button>
             </x-slot:footer>
-        </x-modal>
+        </x-admin.modal>
 
         @if ($canPhoto ?? false)
             <div x-data="{ photo: {} }" x-on:product-photo.window="photo = $event.detail; $dispatch('open-modal', 'product-photo')">
-                <x-modal name="product-photo" title="Foto produk">
+                <x-admin.modal name="product-photo" title="Foto produk" :guard="false">
                     <p class="font-semibold text-ink" x-text="photo.name"></p>
                     <template x-if="photo.url">
                         <img x-bind:src="photo.url" alt="Foto produk saat ini" class="mt-3 max-h-64 w-full rounded-tile border border-line object-contain">
@@ -142,7 +142,7 @@
                         </form>
                         <x-button variant="secondary" x-on:click="$dispatch('close-modal', 'product-photo')">Tutup</x-button>
                     </x-slot:footer>
-                </x-modal>
+                </x-admin.modal>
             </div>
         @endif
 

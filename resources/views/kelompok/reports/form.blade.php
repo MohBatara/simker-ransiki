@@ -110,23 +110,23 @@
             </x-admin.action-bar>
         </div>
 
-        <x-modal name="report-submit" title="Ajukan laporan">
+        <x-admin.modal name="report-submit" title="Ajukan laporan" size="sm">
             <p>Setelah diajukan, laporan tidak bisa diubah sampai ditinjau OPD. Bila OPD meminta revisi, laporan bisa diperbaiki lagi.</p>
             <x-slot:footer>
-                <x-button variant="secondary" x-on:click="$dispatch('close-modal', 'report-submit')">Batal</x-button>
+                <x-button variant="secondary" x-on:click="requestClose()">Batal</x-button>
                 <x-button x-on:click="submit()">Ajukan laporan</x-button>
             </x-slot:footer>
-        </x-modal>
+        </x-admin.modal>
 
         @if ($previous)
-            <x-modal name="report-copy" title="Salin dari bulan lalu">
+            <x-admin.modal name="report-copy" title="Salin dari bulan lalu">
                 <p x-show="copying === 'items'">Daftar produk di bagian ini akan diganti dengan produk dan satuan dari laporan {{ $previous['period'] }}. Jumlahnya dikosongkan.</p>
                 <p x-show="copying === 'people'">Jumlah anggota aktif dan tenaga kerja akan diganti dengan angka dari laporan {{ $previous['period'] }}.</p>
                 <x-slot:footer>
-                    <x-button variant="secondary" x-on:click="$dispatch('close-modal', 'report-copy')">Batal</x-button>
+                    <x-button variant="secondary" x-on:click="requestClose()">Batal</x-button>
                     <x-button x-on:click="applyCopy(copying)">Ganti isian</x-button>
                 </x-slot:footer>
-            </x-modal>
+            </x-admin.modal>
         @endif
 
         <form novalidate id="report-submit-form" method="POST" action="{{ $urls['submit'] }}" class="hidden">

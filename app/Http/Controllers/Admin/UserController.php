@@ -31,22 +31,20 @@ class UserController extends Controller
             ->paginate(20)
             ->withQueryString();
 
-        return view('admin.users.index', compact('users', 'filters', 'inactiveCount'));
+        return view('admin.users.index', [...compact('users', 'filters', 'inactiveCount'), 'newUser' => new User, ...$this->options()]);
     }
 
-    public function create(Request $request): View
+    /**
+     * Tambah akun kini berupa popup: alamat lama dialihkan ke daftar Pengguna dengan popup terbuka, atau ke tab Akun
+     * detail kelompok bila membawa ?kelompok= (pintasan "Tambah akun" kelompok).
+     */
+    public function create(Request $request): RedirectResponse
     {
-        // Pintasan dari tab "Akun Pengguna" di detail kelompok.
         $organization = Organization::find($request->integer('kelompok'));
 
-        return view('admin.users.form', [
-            'user' => new User([
-                'role' => $organization ? Role::Kelompok : null,
-                'organization_id' => $organization?->id,
-            ]),
-            'presetOrganization' => $organization,
-            ...$this->options(),
-        ]);
+        return $organization
+            ? redirect()->route('admin.organizations.users', [$organization, 'tambah-akun' => 1])
+            : redirect()->route('admin.users.index', ['tambah' => 1]);
     }
 
     public function store(UserRequest $request, IssueTemporaryPassword $issuePassword, SendInvitation $invite): RedirectResponse
@@ -71,6 +69,7 @@ class UserController extends Controller
         $credentials = session('credentials');
 
         return view('admin.users.show', [
+            ...$this->options(),
             'user' => $user->load(['opd', 'organization']),
             'temporaryPassword' => ($credentials['user_id'] ?? null) === $user->id
                 ? Crypt::decryptString($credentials['password'])
@@ -78,13 +77,10 @@ class UserController extends Controller
         ]);
     }
 
-    public function edit(User $user): View
+    /** Ubah akun kini berupa popup di detail akun; alamat lama dialihkan ke sana dengan popup terbuka. */
+    public function edit(User $user): RedirectResponse
     {
-        return view('admin.users.form', [
-            'user' => $user,
-            'presetOrganization' => null,
-            ...$this->options(),
-        ]);
+        return redirect()->route('admin.users.show', [$user, 'ubah' => 1]);
     }
 
     public function update(UserRequest $request, User $user): RedirectResponse

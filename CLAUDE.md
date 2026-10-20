@@ -435,7 +435,7 @@ Jangan mengarang kepanjangan akronim resmi (KDMP, KNMP, dsb.). Simpan apa adanya
   baru X dari Y kelompok terverifikasi", catatan "Garis putus-putus = data bulan itu belum lengkap." (hanya bila ada
   bulan sementara yang bernilai), kolom tabel Keterangan "Sementara".
 - Dasbor Kelompok: grafik pendapatan dan produksi 12 bulan (paling banyak 2 produk + satuan terbesar), dua kartu
-  sama tinggi di bawah kartu Riwayat laporan yang selebar grid. Produksi: legenda produk + satuan, judul sumbu Y =
+  sama tinggi di bagian bawah dasbor. Produksi: legenda produk + satuan, judul sumbu Y =
   satuan; satuan berbeda → grafik kecil terpisah (panel) dalam satu kartu, tidak pernah satu sumbu untuk dua satuan.
 - Tabel produksi di HP: kartu dengan nama tebal lalu "Jumlah: 1.384 ekor" dan "Kelompok: 5" (`x-admin.table.cell inline`).
 
@@ -591,7 +591,20 @@ draft ──ajukan──▶ submitted ──verifikasi──▶ verified ──b
   pelaporan per OPD; lalu belum mengajukan (Admin dan OPD). HP: semua kartu bertumpuk, grid 2x2 tetap 2 kolom.
   Grafik kepatuhan pelaporan dan tren 12 bulan hanya di tab Ekonomi.
   Setelah tenggat, daftar "Belum mengajukan" berjudul "Terlambat melapor {bulan}" dengan badge "Terlambat".
-  Dasbor Kelompok: "Tenggat {tanggal} · N hari lagi". "Diajukan terlambat" (`wasSubmittedLate()`, informasi saja):
+  Dasbor Kelompok: tanpa kepala halaman (`:header="false" lead-tools`: h1 pembaca layar, lonceng di pojok kanan atas kartu
+  sapaan). Kartu sapaan netral (brand-50, bingkai brand-100) untuk semua keadaan: "tanggal · nama kelompok", sapaan, lalu
+  SATU kotak tugas (`kelompok.dashboard.task`, `KelompokSummary::task`, pertama yang berlaku): putih, bingkai line, sudut
+  12px, garis aksen 4px kiri + ikon status (merah revisi/terlambat, kuning menunggu, selain itu brand), judul 15px, kutipan
+  catatan 14px + sumber "Nama, OPD · 5 Okt 2026", tombol di kanan (desktop) / di bawah selebar penuh (HP). Keadaan: a) Perlu
+  revisi "Laporan {bulan} perlu diperbaiki" + "Perbaiki laporan"; b) belum pernah diajukan dan lewat tenggat (`ReportingState`
+  Terlambat) "terlambat N hari" + "Isi laporan sekarang"; c) belum diajukan sebelum tenggat "paling lambat {tanggal} (N hari
+  lagi)" + "Isi laporan"; d) menunggu "sedang diperiksa OPD", tanpa tombol; e) "sudah terverifikasi. Terima kasih." Tombol
+  tugas tidak diulang di kartu lain. Di bawahnya (desktop 8 + 4 kolom, sama tinggi; HP bertumpuk): "Laporan saya" (3 bulan
+  wajib lapor terakhir, baris 60px: periode, tanggal diajukan, pil `ReportingState`; bulan lebih lama yang belum diajukan
+  dihitung; kaki brand-50 draf bulan berjalan "Laporan {bulan} sudah bisa diisi" + Lanjutkan) dan "Kelompok saya"
+  (`KelompokSummary::facts`: "Profil lengkap" atau "Profil belum lengkap, N bagian lagi" + daftar yang belum; Produk, Izin
+  tercatat, Anggota bertautan; OPD pembina + petugas aktif + telepon). "Lewat/terlambat N hari" HANYA untuk laporan yang
+  belum pernah diajukan; diajukan tepat waktu lalu direvisi tidak pernah terlambat. "Diajukan terlambat" (`wasSubmittedLate()`, informasi saja):
   `submitted_at` melewati tenggat periodenya.
 - Status "belum melapor" dihitung untuk kelompok `active` dan `inactive` yang
   `reporting_starts_on` ≤ periode. Kelompok `closed` tidak dihitung.
@@ -654,8 +667,8 @@ Setiap perubahan status mencatat baris di `report_reviews` dan mengirim notifika
 
 **Publik:** Beranda · Profil Ransiki · Direktori Kelompok · Produk Unggulan · Berita · Kontak · Masuk
 
-**Kelompok:** Dasbor · Profil Kelompok · Produk · Legalitas & Izin · Laporan Bulanan ·
-Notifikasi · Akun Saya
+**Kelompok:** Dasbor · Profil kelompok · Produk · Legalitas dan izin · Laporan bulanan ·
+Notifikasi · Akun saya
 
 **Admin dan OPD: menu bertab.** Menu yang berkaitan digabung; setiap menu berisi tab, dan setiap tab punya URL sendiri
 (bisa dibuka langsung, tombol kembali bekerja). Satu sumber: `App\Support\Navigation::sections()` (menu, tab, badge);
@@ -669,14 +682,14 @@ di bawah header (garis bawah `brand` pada tab aktif, angka kecil di tab antrean,
 | Dasbor | Ringkasan `/admin` · Ekonomi `/admin/dasbor/ekonomi` · Legalitas `/admin/dasbor/legalitas` |
 | Kelompok | Semua kelompok `/admin/kelompok` · Verifikasi profil `/admin/kelompok/verifikasi-profil` · Kemungkinan data ganda `/admin/kelompok/data-ganda` |
 | Laporan | Semua laporan `/admin/laporan` · Perlu diverifikasi `/admin/laporan/verifikasi` · Masalah & kebutuhan `/admin/laporan/masalah` |
-| Website | Konten Beranda `/admin/website` · Profil Ransiki `/admin/website/profil` · Halaman & kontak `/admin/website/halaman` · Berita & kegiatan `/admin/website/berita` |
+| Website | Konten beranda `/admin/website` · Profil Ransiki `/admin/website/profil` · Halaman & kontak `/admin/website/halaman` · Berita & kegiatan `/admin/website/berita` |
 | Pengaturan | Pengguna `/admin/pengaturan/pengguna` · Data master `/admin/pengaturan/data-master` (Kampung, Jenis Kelembagaan, Bidang Usaha, OPD) |
 
 **OPD** (3 menu, pola sama, `/opd/...`): Dasbor (Ringkasan · Ekonomi · Legalitas) · Kelompok binaan (Daftar · Verifikasi
 profil) · Laporan (Semua laporan · Perlu diverifikasi · Masalah & kebutuhan).
 
 - Sidebar Admin/OPD hanya berisi menu di atas; Notifikasi (lonceng) ada di kepala halaman, Akun saya di menu profil bawah sidebar.
-- Navigasi bawah HP: Admin = Dasbor · Kelompok · Laporan · Website · Lainnya (Pengaturan, Notifikasi, Akun Saya);
+- Navigasi bawah HP: Admin = Dasbor · Kelompok · Laporan · Website · Lainnya (Pengaturan, Notifikasi, Akun saya);
   OPD = Dasbor · Kelompok · Laporan · Notifikasi · Akun (lonceng dan ikon akun di header HP disembunyikan bila sudah
   ada di navigasi bawah).
 - Badge (`x-nav-badge`, pil `sun` berteks `ink` 9,0:1, maks "99+", tidak tampil bila 0) di sidebar dan navigasi bawah:
@@ -697,12 +710,12 @@ Pakai "Dasbor", bukan "Dashboard", di semua teks antarmuka dan semua ukuran laya
 | Menu lengkap | Label ringkas |
 |---|---|
 | Dasbor | Dasbor |
-| Profil Kelompok | Profil |
+| Profil kelompok | Profil |
 | Produk | Produk |
-| Legalitas & Izin | Izin |
-| Laporan Bulanan, Laporan | Laporan |
+| Legalitas dan izin | Izin |
+| Laporan bulanan, Laporan | Laporan |
 | Notifikasi | Notifikasi |
-| Akun Saya | Akun |
+| Akun saya | Akun |
 | Kelompok, Kelompok binaan | Kelompok |
 | Website | Website |
 | Pengaturan | Pengaturan |
@@ -722,7 +735,8 @@ dirancang dengan baik, bukan landing page startup.
 - Tidak ada gradasi, glow, blur, glassmorphism, atau pola latar dekoratif. Pengecualian: overlay foto
   (`.overlay-forest`, lihat di bawah), gradasi tipis `panel` → transparan di tepi kanan tab yang bisa
   digeser di HP (`x-tabs`, hanya saat masih ada tab tersembunyi) sebagai penanda geser, dan latar lembut
-  `brand-50` → `brand-mist` banner sapaan dasbor (atas permintaan).
+  `brand-50` → `brand-mist` banner sapaan dasbor (atas permintaan), dan latar popup `x-admin.modal` (forest 40% + blur 2px,
+  atas permintaan).
 - Tidak ada emoji di antarmuka.
 - Tidak ada bayangan tebal. Kartu memakai border 1px, tanpa shadow. Shadow kecil hanya untuk
   dropdown, modal, dan menu yang melayang; `shadow-xs` hanya untuk kartu mini di banner sapaan dan menu aktif sidebar.
@@ -770,8 +784,8 @@ pemisah tetap `line`/`line-strong`. Periksa kontras sebelum mengubah atau menamb
 - Pengecualian: 11px (`text-micro`) HANYA untuk label ringkas di sidebar tablet. Jangan dipakai
   di tempat lain.
 - Ketebalan: 400 dan 600; area aplikasi juga 500 (`font-medium`) untuk tombol, pil, dan label form. Judul memakai 600, bukan 700/800.
-- Gunakan sentence case: "Laporan bulanan", bukan "Laporan Bulanan" pada tombol dan label.
-  Nama menu boleh Title Case singkat.
+- Gunakan sentence case (huruf besar di awal saja) pada tombol, label, DAN nama menu semua peran: "Laporan bulanan",
+  "Profil kelompok", "Akun saya", "Legalitas dan izin" (nama diri tetap, mis. "Profil Ransiki").
 - Angka dalam tabel memakai `tabular-nums`, rata kanan, dengan jarak ekstra (32px) sebelum
   kolom berikutnya.
 - Format Indonesia: `1.250.000`, `Rp 1.250.000`, tanggal `9 Oktober 2026`, bulan `September 2026`.
@@ -931,7 +945,7 @@ Halaman tidak boleh menulis ulang gaya tombol/kartu/tautan/baris daftar sendiri.
   mengikuti asal halaman, termasuk setelah verifikasi/minta revisi.
 - Tombol "Tambah ..." selalu di aksi header; daftar dengan modal (`recordForm`) mendengarkan event
   (`product-create`, `license-create`, `master-create`).
-- Status kelompok selalu tampil sebagai `x-admin.badge-status` (kolom Status daftar, kepala detail/Profil Kelompok),
+- Status kelompok selalu tampil sebagai `x-admin.badge-status` (kolom Status daftar, kepala detail/Profil kelompok),
   termasuk "Aktif" (hijau).
 - Label status laporan SAMA di seluruh aplikasi (Admin, OPD, Kelompok, PDF, Excel), satu sumber `ReportStatus::label()`:
   draft "Draf", submitted "Menunggu verifikasi", revision "Perlu revisi", verified "Terverifikasi" (`ReportingState`
@@ -959,6 +973,11 @@ atau banner foto di area aplikasi. `x-tabs` hanya untuk tab dalam halaman (panel
   (`rounded-pill`), tabel 10px (`rounded-table`), kartu 12px (`rounded-box`, juga `rounded-tile` di tema), panel 20px
   (`rounded-frame`). Teks: judul halaman 22px (`text-admin-title`), judul kartu 15px (`text-card-head`), label 12px
   (`text-label`), kepala tabel/sumbu grafik 11px (`text-micro`); ketebalan 500 (`font-medium`) untuk tombol, pil, label.
+- Area Kelompok (`<body class="theme-app theme-kelompok">`, akun kelompok): teks minimal 14px (variabel `--text-label`,
+  `--text-caption`, `--text-micro` ditimpa di `.theme-kelompok`, app.css) dan kontrol 44px di semua ukuran layar. Pil panjang
+  di daftar HP ditaruh di bawah teks agar kolom teks tidak terjepit.
+- Direktif Blade (`@js`, `@json`) TIDAK dikompilasi di atribut tag komponen `<x-...>` (teks mentah, Alpine error, tombol
+  mati). Di atribut komponen pakai `{{ Js::from($nilai) }}`; dijaga `BladeComponentAttributeTest`.
 - Kontrol bersama (`x-button`, `x-input`, `x-select`, `x-textarea`, `x-field`) membaca variabel `--control-*`/`--label-*`
   (`app.css`): di tema h-9, 13px medium, cincin fokus 3px `brand-100` + border brand; di publik tetap 40px/14px. Di HP
   tetap 44px. Border kontrol tetap `line-input` (3:1, bukan `line` 1,2:1).
@@ -975,8 +994,9 @@ atau banner foto di area aplikasi. `x-tabs` hanya untuk tab dalam halaman (panel
   tetap tampil di HP.
 - `x-admin.tabs`: tab bertautan 13px, tab aktif teks brand + garis bawah brand 2px, hitungan dalam pil kecil netral.
 - `x-admin.toolbar`: dengan `title` menjadi kepala kartu daftar (judul kiri; cari kecil + tombol "Filter" berikon corong
-  berisi SEMUA filter di kanan; laci kanan desktop, bottom sheet HP). Tanpa `title` (tab Ekonomi/Legalitas): maks 3 filter
-  sebaris + "Filter lain". Langsung diterapkan tanpa Terapkan/Reset: Alpine `adminToolbar` (`resources/js/admin-toolbar.js`)
+  berisi SEMUA filter di kanan). Tanpa `title` (tab Ekonomi/Legalitas): maks 3 filter sebaris + "Filter lain". Tombol Filter
+  membuka popup Filter (`x-admin.modal` md, `id="panel-filter"`) dengan "Terapkan" dan "Atur ulang" (pilihan di popup baru
+  diterapkan saat Terapkan). Cari dan filter sebaris langsung diterapkan: Alpine `adminToolbar` (`resources/js/admin-toolbar.js`)
   memuat ulang lewat fetch (cari: jeda 300 ms), menukar setiap `[data-swap="kunci"]` (hasil, kartu angka, ringkasan + pil,
   tautan unduh yang ikut filter, tab menu), pushState. Pil filter aktif (`FilterChips`) + "Hapus semua". Tanpa JS: form GET.
 - Halaman daftar: kartu angka di atas, lalu SATU `x-admin.card flush` berisi `x-admin.toolbar title` + tabel `bare`
@@ -1006,8 +1026,27 @@ atau banner foto di area aplikasi. `x-tabs` hanya untuk tab dalam halaman (panel
   masuk peta itu.
 - `x-admin.toasts` (dirender layout untuk SEMUA peran, menggantikan alert pesan sistem): pojok kanan bawah (HP di atas
   navigasi bawah), hilang otomatis 4 detik, berhenti saat disorot/difokuskan, bisa ditutup.
-- `x-admin.confirm`: dialog konfirmasi seragam untuk aksi berisiko (hapus kelompok/produk/izin, ubah status kelompok,
-  verifikasi, minta revisi, buka kembali); tombol `danger-solid` (putih di atas `fix` 6,6:1) atau brand.
+- `x-admin.modal`: SATU komponen popup (tidak ada lagi drawer/panel samping atau `x-modal`). `<dialog>` di tengah layar
+  (role dialog, aria-modal, fokus terkunci, fokus awal ke isian pertama, fokus kembali ke pemicu, halaman belakang tidak
+  bisa digulir, gambar lazy di dalamnya dimuat saat dibuka), latar forest 40% + blur tipis, fade + skala 96% ke 100% dalam 180ms (tanpa gerak bila reduced motion).
+  Ukuran `sm` 440px (konfirmasi), `md` 560px (form pendek, bawaan), `lg` 760px (pratinjau). Kepala judul 16px + satu baris
+  keterangan + tombol X; badan menggulir sendiri (maks 85vh, HP 90vh, lebar penuh dengan margin 16px); slot `footer`
+  menempel (Batal = `requestClose()` lalu aksi utama). Tutup lewat Esc, X, atau klik latar; bila isian berubah (`guard`)
+  muncul "Buang perubahan?". Buka/tutup: `$dispatch('open-modal'|'close-modal', nama)`; event `modal-closed` setelah
+  tertutup. Validasi server gagal: form di popup membawa `_modal=nama`, halaman kembali dengan popup terbuka
+  (`:show`, atribut `data-open-on-load`), isian lama dan pesan di bawah isian.
+- Popup yang ada: Filter (md), pratinjau kelompok (lg, tombol "Buka detail"), tambah/ubah akun dan "Tambah akun kelompok"
+  (`admin.users._modal`, md), kirim ulang undangan dan atur ulang sandi (sm), tambah/ubah produk, izin, data master (md,
+  `recordForm`), foto produk, isi laporan atas nama kelompok, unduh rekap, ubah status kelompok (md, alasan), tandai profil
+  terverifikasi (sm, kepala detail dan antrean), verifikasi, minta revisi, buka kembali (md), tindak lanjut masalah/kebutuhan
+  (md), semua konfirmasi hapus (sm), cari umum, ajukan laporan dan salin dari bulan lalu (form laporan). Alamat lama form
+  yang kini popup dialihkan: `/admin/pengaturan/pengguna/tambah` → daftar `?tambah=1` (dengan `?kelompok=` → tab Akun
+  detail kelompok `?tambah-akun=1`), `/{user}/ubah` → detail akun `?ubah=1`; tindak lanjut dibuka dari detail laporan lewat
+  `/{area}/laporan/masalah/{id}?ubah=1`. Tetap halaman penuh: tambah/ubah kelompok, laporan A sampai H, berita, konten
+  Website, detail kelompok, detail/verifikasi laporan.
+- `x-admin.confirm`: dialog konfirmasi seragam (di atas `x-admin.modal`, sm; md bila berisi isian) untuk aksi berisiko (hapus
+  kelompok/produk/izin, ubah status kelompok, verifikasi, minta revisi, buka kembali); tombol `danger-solid` (putih di atas
+  `fix` 6,6:1) atau brand; terbuka lagi otomatis bila `old('_modal')` sama.
 - `x-admin.action-bar`: bar aksi menempel di bawah layar di semua ukuran; detail laporan: Minta revisi + Verifikasi
   (atau Verifikasi nonaktif bila pemisahan tugas).
 - `x-admin.greeting`: banner sapaan dasbor (lihat Header halaman), prop `highlight`, `sentence`, `action`, slot kanan.
@@ -1016,7 +1055,8 @@ atau banner foto di area aplikasi. `x-tabs` hanya untuk tab dalam halaman (panel
   Laba) dengan rupiah ringkas `Format::rupiahShort` (rb/jt/M HANYA di sini, nilai lengkap di tooltip) + persen perubahan
   SETARA (`Statistics::matchedChange`): hanya kelompok yang laporannya terverifikasi di periode ini DAN bulan sebelumnya
   dan mengisi angka itu di keduanya; tooltip "Dibanding <bulan>, dari N kelompok yang sama"; N < `Statistics::MIN_MATCHED`
-  (5) → teks kecil "belum bisa dibandingkan" (juga kartu "Penjualan <bulan>" di tab Ekonomi, filter ikut);
+  (5) → persen tidak tampil dan SATU baris kecil di bawah ketiga angka "Belum bisa dibandingkan dengan <bulan>: kurang dari
+  5 kelompok terverifikasi di kedua bulan" (kartu "Penjualan <bulan>" di tab Ekonomi: teks kecil "belum bisa dibandingkan");
   laba negatif "Rugi Rp …" (`fix`); "diisi X dari Y laporan" hanya bila X < Y. Cakupan "X dari Y kelompok wajib lapor
   terverifikasi" + pendapatan lain + bar 6px + persen (< 50%: "Angka belum mewakili seluruh kelompok"). Grafik garis 6
   bulan Penjualan (`brand`) dan Biaya (`chart-2`) dari `Statistics::recentEconomy` (query baca, hanya `verified`, aturan
@@ -1031,19 +1071,19 @@ atau banner foto di area aplikasi. `x-tabs` hanya untuk tab dalam halaman (panel
 - Grafik (`resources/js/charts.js`): label sumbu 11px `ink-3`, grid putus-putus tipis `line`, titik di tiap bulan, sumbu
   rupiah "Rp 50 jt".
 - `x-chart` memakai `x-admin.card`.
-- Kepala detail kelompok (`x-admin.organization-header`, Admin/OPD dan Profil Kelompok): remah di kiri pada baris yang
-  sama dengan tombol cari dan lonceng (layout `:header="false"` + `breadcrumbs`), lalu avatar inisial 56px (belum ada
-  kolom foto profil kelompok), nama 24px semibold maks 2 baris, subjudul "Jenis · Kampung" + bidang usaha berikon (teks,
+- Kepala detail kelompok (`x-admin.organization-header`, Admin/OPD dan Profil kelompok): remah di kiri pada baris yang
+  sama dengan tombol cari dan lonceng (layout `:header="false"` + `breadcrumbs`), lalu foto utama 56px (`OrganizationPhoto`)
+  atau inisial bila tidak ada, nama 24px semibold maks 2 baris, subjudul "Jenis · Kampung" + bidang usaha berikon (teks,
   bukan chip), pil status kelompok + pil status verifikasi profil (+ "Tandai terverifikasi" bagi yang berhak), aksi di
   kanan sejajar nama (tombol tambah sesuai tab, Ubah profil, menu titik tiga Admin: Tambah akun, Ubah status, Hapus).
   Lalu strip 4 `x-admin.stat compact` (anggota: kosong = "Belum diisi" 15px + tautan "lengkapi di Ubah profil"; produk;
   izin terbit "dari N izin tercatat" / "belum ada izin tercatat"; laporan terverifikasi; hitungan dari `loadCount`).
 - Ikon kecil `brand` di judul kartu (`x-admin.card icon`) dan ikon tab (`x-admin.tabs` `icon`) HANYA di detail
-  kelompok/Profil Kelompok. Ikon dalam kotak `brand-50` di `x-admin.stat`, `x-admin.empty`, kotak dasbor; dalam
+  kelompok/Profil kelompok. Ikon dalam kotak `brand-50` di `x-admin.stat`, `x-admin.empty`, kotak dasbor; dalam
   lingkaran di `x-info-item` dan kotak unggah.
 
 ### Form (pola seragam)
-- Semua form tambah/ubah halaman penuh (kelompok, pengguna, berita, konten Website, foto jenis, impor, Akun Saya,
+- Semua form tambah/ubah halaman penuh (kelompok, pengguna, berita, konten Website, foto jenis, impor, Akun saya,
   status legalitas Kelompok, form laporan): `x-admin.form-intro` di atas form ("Kolom bertanda * wajib diisi." + ringkasan
   "Ada N isian yang perlu diperbaiki"; halaman menggulir dan fokus ke isian salah pertama), lalu kartu
   `x-admin.form-section` (judul 15px + satu kalimat petunjuk di kolom kiri 280px, isian di kanan maks 720px mulai
@@ -1060,8 +1100,8 @@ atau banner foto di area aplikasi. `x-tabs` hanya untuk tab dalam halaman (panel
   "Perubahan belum disimpan" setelah isian berubah, dan peringatan browser saat meninggalkan halaman (Alpine `formGuard`,
   `resources/js/form-guard.js`; isian ber-`data-no-dirty` diabaikan; prop `form` bila bar di luar `<form>`). Halaman
   dengan beberapa form tersimpan sendiri-sendiri (slide hero, kartu Mengenal, blok potensi) memakai tombol simpan per form.
-- Tambah/ubah produk, izin, dan data master tetap lewat modal (`recordForm`, tanpa mengubah route): isian dengan pola
-  label/wajib/error yang sama, Batal sekunder + Simpan.
+- Tambah/ubah produk, izin, data master, dan akun lewat popup `x-admin.modal` (`recordForm` / `admin.users._modal`, tanpa
+  mengubah route simpan): isian dengan pola label/wajib/error yang sama, Batal sekunder + Simpan.
 - Unggah: `x-admin.dropzone` untuk file di form biasa (tarik-dan-lepas atau pilih, pratinjau gambar, nama + ukuran file,
   batas ukuran tertulis; atribut diteruskan ke `<input type="file">`); `x-file-upload` (XHR langsung tersimpan) bergaya
   sama dengan pratinjau gambar per file.
@@ -1074,9 +1114,21 @@ atau banner foto di area aplikasi. `x-tabs` hanya untuk tab dalam halaman (panel
   bidang usaha, total anggota + "diisi X dari Y kelompok") yang mengikuti filter aktif ("sesuai filter") → kartu "Daftar
   kelompok" (`x-admin.toolbar title`: cari nama + Filter berisi kampung, jenis, status, bidang usaha, OPD [Admin];
   langsung diterapkan) berisi `x-admin.table` selebar kartu (kolom Kelompok, Jenis sebagai chip, Kampung, Bidang usaha,
-  Anggota, Status, titik tiga Lihat/Ubah). Mulai 1280px klik baris membuka laci ringkasan dari kanan di atas konten
-  (Alpine `organizationPanel`, memuat `/{area}/kelompok/{id}/ringkas`, Policy `view`; Esc/latar menutup); `?pilih=id`
-  membuka laci sejak awal. Panel baris pertama tetap dirender di server. Layar lebih kecil membuka halaman detail. Aksi:
+  Anggota, Status, titik tiga Buka detail/Ubah). Klik di mana saja pada baris (semua ukuran layar) membuka popup pratinjau
+  lg tanpa pindah halaman (Alpine `organizationPanel` + `shared.organizations._preview-modal`, memuat
+  `/{area}/kelompok/{id}/ringkas`, Policy `view`); nama tetap `<a href>` ke detail sehingga Ctrl/Cmd/klik tengah membuka
+  tab baru. Isi (`_panel`, tanpa tab): foto utama 16:9 (maks 240px, sudut 10px; tanpa foto: kotak `brand-50` berinisial +
+  "Belum ada foto"), nama, jenis · kampung, pil status dan verifikasi profil, ringkasan angka (anggota, produk, izin terbit,
+  laporan terverifikasi), ketua, telepon, email, tahun berdiri, bidang usaha, OPD pembina, alamat, produk, laporan
+  terakhir. Kaki: panah sebelumnya/berikutnya (juga tombol ← →), "Tutup", "Ubah profil", "Buka detail". URL `?pratinjau=ID`
+  (alias lama `?pilih`): membuka = pushState sehingga Back menutup popup, pindah ← → = replaceState; membuka URL itu
+  langsung menampilkan popup (dirender server di daftar, dimuat saat init di tab lain). Pola yang sama di tab Verifikasi
+  profil (klik baris) dan Kemungkinan data ganda (klik nama kelompok mana pun). Dari dalam popup, `$refs`/`$root` milik
+  daftar tidak terjangkau: `organizationPanel` menyimpan elemen pembungkusnya sendiri.
+- Foto utama kelompok: SATU tempat `App\Support\OrganizationPhoto` (belum ada kolom foto profil): foto produk terbaru
+  (`product-photos.show`, Policy) → lampiran gambar kelompok (`attachments.show`, Policy) → foto bidang usaha → tidak ada.
+  Dipakai popup pratinjau dan kepala detail kelompok (56px; tanpa foto: inisial). Gambar di dalam popup tidak memakai
+  `loading="lazy"`; `adminModal` juga mengubah gambar lazy menjadi segera dimuat saat popup dibuka. Panel baris pertama tetap dirender di server. Layar lebih kecil membuka halaman detail. Aksi:
   Tambah kelompok (utama, Admin), Unduh Excel + Impor (sekunder).
 - Detail: kepala `x-admin.organization-header` (lihat pola halaman) → `x-admin.tabs` berikon dengan angka, urutan Profil ·
   Produk · Izin · Laporan · Akun (Admin) · Riwayat → tab Profil tanpa mengulang isi kepala (nama, jenis, status,

@@ -74,7 +74,7 @@ class MonthlyReportController extends Controller
             'attachments' => $report->attachments()->with('uploader')->latest()->get()->each->setRelation('attachable', $report),
             'back' => route('kelompok.reports.index'),
             'breadcrumbs' => [
-                ['label' => 'Laporan Bulanan', 'href' => route('kelompok.reports.index')],
+                ['label' => 'Laporan bulanan', 'href' => route('kelompok.reports.index')],
                 ['label' => 'Laporan '.Format::month($report->period)],
             ],
             'editUrl' => $request->user()->can('update', $report) ? route('kelompok.reports.edit', $report) : null,

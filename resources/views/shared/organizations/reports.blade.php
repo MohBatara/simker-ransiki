@@ -40,11 +40,11 @@
 
 @if (! empty($entryPeriods))
     {{-- "Isi laporan" atas nama kelompok (OPD pembina/Admin), dibuka dari tombol di aksi header. --}}
-    <x-modal name="report-entry" title="Isi laporan atas nama kelompok" :show="$errors->has('period')">
+    <x-admin.modal name="report-entry" title="Isi laporan atas nama kelompok" description="Untuk kelompok yang tidak punya HP atau akun." :show="$errors->has('period')">
         <form novalidate id="form-report-entry" method="POST" action="{{ route($area.'.reports.store', $organization) }}" class="space-y-4">
             @csrf
             <p class="text-label text-ink-3">Kolom bertanda <span class="text-fix" aria-hidden="true">*</span><span class="sr-only">bintang</span> wajib diisi.</p>
-            <p>Untuk kelompok yang tidak punya HP atau akun. Nama Anda tercatat sebagai pengisi di riwayat laporan.</p>
+            <p>Nama Anda tercatat sebagai pengisi di riwayat laporan.</p>
             @if (App\Models\MonthlyReport::separatesDuties())
                 <p class="text-ink-soft">Laporan yang Anda isi atau ajukan perlu diverifikasi oleh Admin atau petugas OPD lain.</p>
             @endif
@@ -53,8 +53,8 @@
             </x-field>
         </form>
         <x-slot:footer>
-            <x-button variant="secondary" x-on:click="$dispatch('close-modal', 'report-entry')">Batal</x-button>
+            <x-button variant="secondary" x-on:click="requestClose()">Batal</x-button>
             <x-button type="submit" form="form-report-entry" processing="Membuka…">Isi laporan</x-button>
         </x-slot:footer>
-    </x-modal>
+    </x-admin.modal>
 @endif

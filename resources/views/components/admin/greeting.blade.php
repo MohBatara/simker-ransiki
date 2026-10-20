@@ -8,6 +8,8 @@
     'sentence' => null,
     // Tautan aksi brand bergaris bawah: ['label' => ..., 'href' => ...].
     'action' => null,
+    // Sisakan ruang kanan atas untuk lonceng (layout leadTools, dasbor Kelompok).
+    'toolsSpace' => false,
 ])
 
 @php
@@ -22,6 +24,7 @@
 @endphp
 
 {{--
+    Slot "task" (dasbor Kelompok): satu tugas utama di bawah sapaan.
     Banner sapaan dasbor selebar penuh: gradasi lembut brand-50 ke brand-mist dengan bingkai brand-100 (atas permintaan,
     pengecualian larangan gradasi). Kiri: kartu mini putih berisi angka terpenting; tengah: sapaan menurut jam WIT,
     tanggal, satu kalimat, tautan aksi; kanan: slot (pemilih periode). Teks ink/ink-2/brand di atas brand-50 ≥ 4,9:1.
@@ -40,11 +43,14 @@
         </{{ $tag }}>
     @endif
     <div class="min-w-0 flex-1">
-        <p class="text-label text-ink-2"><time datetime="{{ $now->toDateString() }}">{{ \App\Support\Format::dayDate($now) }}</time>@if ($subtitle) <span aria-hidden="true">·</span> {{ $subtitle }}@endif</p>
-        <p class="mt-0.5 text-page-title font-semibold text-ink">{{ $greeting }}, {{ $firstName }}</p>
+        <p @class(['text-label text-ink-2', 'md:pr-14' => $toolsSpace])><time datetime="{{ $now->toDateString() }}">{{ \App\Support\Format::dayDate($now) }}</time>@if ($subtitle) <span aria-hidden="true">·</span> {{ $subtitle }}@endif</p>
+        <p @class(['mt-0.5 text-page-title font-semibold text-ink', 'md:pr-14' => $toolsSpace])>{{ $greeting }}, {{ $firstName }}</p>
         @if ($sentence)
             <p class="mt-0.5 text-caption text-ink-2">{{ $sentence }}</p>
         @endif
+        @isset($task)
+            <div class="mt-4">{{ $task }}</div>
+        @endisset
         @if ($action)
             <a href="{{ $action['href'] }}" class="mt-1 inline-flex min-h-11 items-center gap-1 text-caption font-semibold text-brand underline underline-offset-4 hover:text-brand-hover md:min-h-8">{{ $action['label'] }} <x-heroicon-o-arrow-right class="size-3.5" aria-hidden="true" /></a>
         @endif

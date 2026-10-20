@@ -2,7 +2,7 @@
 <x-layouts.app
     :title="$organization->name"
     :description="$organization->village->name.', Distrik Ransiki'"
-    phone-title="Profil Kelompok"
+    phone-title="Profil kelompok"
     :header="false"
     own-heading
 >

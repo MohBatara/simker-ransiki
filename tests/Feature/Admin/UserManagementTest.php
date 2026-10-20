@@ -27,6 +27,7 @@ test('hanya admin yang bisa mengelola pengguna', function (string $role) {
 
     $this->get('/admin/pengaturan/pengguna')->assertForbidden();
     $this->get('/admin/pengaturan/pengguna/tambah')->assertForbidden();
+    $this->get('/admin/pengaturan/pengguna?tambah=1')->assertForbidden();
     $this->post('/admin/pengaturan/pengguna', ['name' => 'X', 'username' => 'x.baru', 'role' => 'admin'])->assertForbidden();
     $this->post("/admin/pengaturan/pengguna/{$target->id}/reset-kata-sandi")->assertForbidden();
     $this->patch("/admin/pengaturan/pengguna/{$target->id}/nonaktifkan")->assertForbidden();
@@ -125,17 +126,20 @@ test('username unik tanpa membedakan huruf besar dan hanya memakai karakter yang
     'ada @' => ['ketua@desa', 'Username hanya boleh berisi huruf, angka, titik, garis bawah, dan tanda hubung.'],
 ]);
 
-test('form tambah dari detail kelompok sudah memilih kelompok itu', function () {
+test('popup tambah akun di detail kelompok sudah menetapkan peran dan kelompok itu; alamat lama dialihkan', function () {
     $this->actingAs($this->admin);
 
     $this->get("/admin/kelompok/{$this->organization->id}/akun")
         ->assertSee('Tambah akun')
-        ->assertSee("/admin/pengaturan/pengguna/tambah?kelompok={$this->organization->id}", false);
+        ->assertSee("\$dispatch('open-modal', 'user-create')", false)
+        ->assertSee('Tambah akun kelompok')
+        ->assertSee('<input type="hidden" name="role" value="kelompok">', false)
+        ->assertSee('<input type="hidden" name="organization_id" value="'.$this->organization->id.'">', false);
 
     $this->get("/admin/pengaturan/pengguna/tambah?kelompok={$this->organization->id}")
-        ->assertOk()
-        ->assertSee('<option value="kelompok" selected>', false)
-        ->assertSee('<option value="'.$this->organization->id.'" selected>', false);
+        ->assertRedirect("/admin/kelompok/{$this->organization->id}/akun?tambah-akun=1");
+    $this->get("/admin/kelompok/{$this->organization->id}/akun?tambah-akun=1")
+        ->assertSee('data-modal="user-create" data-open-on-load', false);
 });
 
 test('reset kata sandi membuat kata sandi sementara baru dan mengeluarkan pengguna dari semua perangkat', function () {

@@ -94,10 +94,10 @@
         </div>
         </x-admin.card>
 
-        <x-modal name="record-form" :show="$failed" x-on:close="closed()">
-            <x-slot:title>
+        <x-admin.modal name="record-form" :show="$failed" x-on:modal-closed="closed()">
+            <x-slot:heading>
                 <span x-text="mode === 'edit' ? 'Ubah {{ $type->noun() }}' : 'Tambah {{ $type->noun() }}'">Tambah {{ $type->noun() }}</span>
-            </x-slot:title>
+            </x-slot:heading>
 
             <form novalidate method="POST" x-bind:action="action" id="record-form" class="space-y-4 text-ink">
                 @csrf
@@ -119,10 +119,10 @@
             </form>
 
             <x-slot:footer>
-                <x-button variant="secondary" x-on:click="$dispatch('close-modal', 'record-form')">Batal</x-button>
+                <x-button variant="secondary" x-on:click="requestClose()">Batal</x-button>
                 <x-button type="submit" form="record-form" processing="Menyimpan…">Simpan</x-button>
             </x-slot:footer>
-        </x-modal>
+        </x-admin.modal>
 
         <x-admin.confirm name="record-delete" :title="'Hapus '.$type->noun()" bind-action="deleteAction" method="DELETE" confirm="Hapus" processing="Menghapus…">
             <p>Hapus <strong class="text-ink" x-text="deleting.name"></strong>? Data yang dihapus tidak bisa dikembalikan.</p>

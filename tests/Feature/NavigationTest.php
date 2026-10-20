@@ -11,13 +11,13 @@ test('menu tiap peran sesuai CLAUDE.md bagian 6', function (Role $role, array $l
         ->and($items->where('primary', true)->map(fn (array $item) => $item['short'] ?? $item['label'])->values()->all())->toBe($primary);
 })->with([
     'kelompok' => [Role::Kelompok,
-        ['Dasbor', 'Profil Kelompok', 'Produk', 'Legalitas & Izin', 'Laporan Bulanan', 'Notifikasi', 'Akun Saya'],
+        ['Dasbor', 'Profil kelompok', 'Produk', 'Legalitas dan izin', 'Laporan bulanan', 'Notifikasi', 'Akun saya'],
         ['Dasbor', 'Profil', 'Produk', 'Laporan']],
     'opd' => [Role::Opd,
-        ['Dasbor', 'Kelompok binaan', 'Laporan', 'Notifikasi', 'Akun Saya'],
+        ['Dasbor', 'Kelompok binaan', 'Laporan', 'Notifikasi', 'Akun saya'],
         ['Dasbor', 'Kelompok', 'Laporan']],
     'admin' => [Role::Admin,
-        ['Dasbor', 'Kelompok', 'Laporan', 'Website', 'Pengaturan', 'Notifikasi', 'Akun Saya'],
+        ['Dasbor', 'Kelompok', 'Laporan', 'Website', 'Pengaturan', 'Notifikasi', 'Akun saya'],
         ['Dasbor', 'Kelompok', 'Laporan', 'Website']],
 ]);
 
@@ -28,8 +28,8 @@ test('label ringkas sesuai tabel CLAUDE.md bagian 6', function () {
         ->all();
 
     expect($shorts)->toMatchArray([
-        'Dasbor' => 'Dasbor', 'Profil Kelompok' => 'Profil', 'Legalitas & Izin' => 'Izin',
-        'Laporan Bulanan' => 'Laporan', 'Laporan' => 'Laporan', 'Akun Saya' => 'Akun',
+        'Dasbor' => 'Dasbor', 'Profil kelompok' => 'Profil', 'Legalitas dan izin' => 'Izin',
+        'Laporan bulanan' => 'Laporan', 'Laporan' => 'Laporan', 'Akun saya' => 'Akun',
         'Kelompok binaan' => 'Kelompok', 'Kelompok' => 'Kelompok', 'Website' => 'Website', 'Pengaturan' => 'Pengaturan',
     ]);
 });
@@ -39,9 +39,9 @@ test('sidebar hanya menampilkan menu yang halamannya sudah ada', function () {
         ->get('/kelompok')
         ->assertOk()
         ->assertSee('aria-label="Dasbor"', false)
-        ->assertSee('aria-label="Akun Saya"', false)
+        ->assertSee('aria-label="Akun saya"', false)
         ->assertSee('aria-label="Produk"', false)
-        ->assertSee('aria-label="Laporan Bulanan"', false)
+        ->assertSee('aria-label="Laporan bulanan"', false)
         ->assertSee('aria-label="Notifikasi"', false)
         ->assertSee('Keluar');
 });

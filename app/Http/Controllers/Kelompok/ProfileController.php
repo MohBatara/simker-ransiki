@@ -27,7 +27,7 @@ class ProfileController extends Controller
         $organization = $this->organization($request)->load(['institutionType', 'village', 'sectors', 'opds', 'updater'])
             ->loadCount([
                 'monthlyReports', 'products', 'licenses',
-                // Strip angka di kepala Profil Kelompok (tampilan saja).
+                // Strip angka di kepala Profil kelompok (tampilan saja).
                 'licenses as issued_licenses_count' => fn ($query) => $query->where('status', LicenseStatus::Issued),
                 'monthlyReports as verified_reports_count' => fn ($query) => $query->where('status', ReportStatus::Verified),
             ]);
@@ -87,7 +87,7 @@ class ProfileController extends Controller
             'attachments' => $license->attachments()->with('uploader')->latest()->get()->each->setRelation('attachable', $license),
             'backUrl' => route('kelompok.licenses.index'),
             'breadcrumbs' => [
-                ['label' => 'Legalitas & Izin', 'href' => route('kelompok.licenses.index')],
+                ['label' => 'Legalitas dan izin', 'href' => route('kelompok.licenses.index')],
                 ['label' => $license->type],
             ],
         ]);

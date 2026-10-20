@@ -66,12 +66,13 @@ test('judul dasbor seragam: judul "Dasbor", lalu kartu sapaan dengan nama instan
         ->assertSeeInOrder(['>Dasbor</h1>', 'Distrik Ransiki', 'Selamat'], false);
 });
 
-test('form panjang menampilkan ringkasan error dengan tautan ke isian', function () {
+test('popup tambah akun menampilkan ringkasan error dengan tautan ke isian dan terbuka lagi', function () {
     $this->actingAs(User::factory()->admin()->create())
-        ->from('/admin/pengaturan/pengguna/tambah')
+        ->from('/admin/pengaturan/pengguna?tambah=1')
         ->followingRedirects()
         ->post('/admin/pengaturan/pengguna', [])
         ->assertSee('data-form-errors', false)
         ->assertSee('isian yang perlu diperbaiki')
-        ->assertSee('href="#name"', false);
+        ->assertSee('href="#name"', false)
+        ->assertSee('data-modal="user-create" data-open-on-load', false);
 });

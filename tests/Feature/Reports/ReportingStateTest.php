@@ -140,5 +140,22 @@ test('dasbor kelompok menampilkan sisa hari menuju tenggat', function () {
     $organization = ($this->make)('KUB Belum');
 
     $this->actingAs(User::factory()->kelompok($organization)->create())->get('/kelompok')
-        ->assertOk()->assertSee('Tenggat 10 Oktober 2026 · 3 hari lagi');
+        ->assertOk()->assertSee('paling lambat 10 Oktober 2026 (3 hari lagi)');
+});
+
+test('teks tenggat: diajukan sebelum tenggat lalu revisi tidak terlambat; belum diajukan lewat tenggat terlambat N hari', function () {
+    Carbon::setTestNow(Carbon::parse('2026-10-14 09:00', 'Asia/Jayapura'));
+    $period = Carbon::parse('2026-09-01');
+    $revised = MonthlyReport::factory()->for(($this->make)('KUB Revisi'))->status(ReportStatus::Revision)->create(['period' => $period, 'submitted_at' => '2026-10-09 10:00']);
+    $missing = ($this->make)('KUB Telat');
+
+    expect(ReportingState::for($revised, $period))->toBe(ReportingState::Revision)
+        ->and($revised->isOverdue())->toBeFalse()
+        ->and(ReportingState::for(null, $period))->toBe(ReportingState::Overdue);
+
+    $this->actingAs(User::factory()->kelompok($revised->organization)->create())->get('/kelompok')
+        ->assertOk()->assertSee('Laporan September 2026 perlu diperbaiki')->assertDontSee('terlambat')->assertDontSee('lewat ');
+
+    $this->actingAs(User::factory()->kelompok($missing)->create())->get('/kelompok')
+        ->assertOk()->assertSee('Laporan September 2026 terlambat 4 hari');
 });

@@ -147,7 +147,7 @@
 
     @unless ($queue)
         {{-- Rekap satu bulan: status laporan tiap kelompok + angka dari laporan terverifikasi. --}}
-        <x-modal name="report-recap" title="Unduh rekap laporan">
+        <x-admin.modal name="report-recap" title="Unduh rekap laporan" :guard="false">
             <form novalidate id="form-rekap" method="GET" action="{{ route($area.'.reports.recap') }}" class="space-y-4">
                 <p>Status laporan setiap kelompok wajib lapor, lalu ringkasan angka dari laporan terverifikasi saja.</p>
                 <x-field label="Bulan" for="recap-periode">
@@ -158,6 +158,6 @@
                 <x-button variant="secondary" type="submit" form="form-rekap" name="format" value="pdf">Unduh PDF</x-button>
                 <x-button type="submit" form="form-rekap" name="format" value="xlsx">Unduh Excel</x-button>
             </x-slot:footer>
-        </x-modal>
+        </x-admin.modal>
     @endunless
 </x-layouts.app>

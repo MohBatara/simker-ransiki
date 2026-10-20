@@ -36,7 +36,7 @@ test('sidebar memakai label ringkas dengan nama menu lengkap untuk tooltip', fun
 
     $this->get('/dev/komponen')
         ->assertOk()
-        ->assertSee('aria-label="Legalitas &amp; Izin"', false)
+        ->assertSee('aria-label="Legalitas dan izin"', false)
         ->assertSee('Izin')
         ->assertSee('Dasbor')
         ->assertDontSee('Dashboard');
