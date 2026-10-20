@@ -3,7 +3,7 @@
 @use('App\Models\SiteSetting')
 @use('App\Support\PublicImages')
 
-<x-layouts.app title="Konten Beranda" description="Foto hero, judul, dan bagian lain di beranda website publik." section="website" tab="beranda">
+<x-layouts.app title="Konten beranda" description="Foto hero, judul, dan bagian lain di beranda website publik." section="website" tab="beranda">
     <x-slot:secondary>
         <x-button variant="secondary" icon="arrow-top-right-on-square" :href="route('home')" target="_blank" rel="noopener">Lihat beranda</x-button>
     </x-slot:secondary>

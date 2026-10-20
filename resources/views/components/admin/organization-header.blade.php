@@ -20,7 +20,7 @@
 @endphp
 
 {{--
-    Kepala detail kelompok (Admin/OPD) dan Profil Kelompok: avatar 56px, nama 24px (maks 2 baris), subjudul "Jenis · Kampung"
+    Kepala detail kelompok (Admin/OPD) dan Profil kelompok: avatar 56px, nama 24px (maks 2 baris), subjudul "Jenis · Kampung"
     + bidang usaha berikon (teks, bukan chip), lalu pil status kelompok dan status verifikasi profil (+ "Tandai
     terverifikasi" bagi Admin/OPD yang berhak). Aksi di kanan sejajar nama (slot "actions"; slot "menu" = isi menu "…").
     Di bawahnya strip 4 x-admin.stat ringkas: anggota, produk, izin terbit, laporan terverifikasi.

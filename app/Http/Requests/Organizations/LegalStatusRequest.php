@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\Rule;
 
 /**
- * Form kecil status legalitas di halaman Legalitas & Izin milik kelompok.
+ * Form kecil status legalitas di halaman Legalitas dan izin milik kelompok.
  */
 class LegalStatusRequest extends FormRequest
 {

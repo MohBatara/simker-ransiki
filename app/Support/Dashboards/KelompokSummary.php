@@ -3,16 +3,20 @@
 namespace App\Support\Dashboards;
 
 use App\Enums\LegalStatus;
+use App\Enums\ReportingState;
 use App\Enums\ReportStatus;
+use App\Enums\Role;
 use App\Models\MonthlyReport;
 use App\Models\Organization;
 use App\Models\ReportIssue;
+use App\Support\Format;
 use Carbon\CarbonImmutable;
+use Carbon\CarbonInterface;
 use Illuminate\Support\Collection;
 
 /**
- * Isi dasbor Kelompok: laporan bulan wajib lapor, bulan berjalan, catatan revisi terbaru,
- * kelengkapan profil, dan riwayat enam bulan.
+ * Isi dasbor Kelompok: satu tugas utama di kartu sapaan (task), laporan bulan wajib lapor, bulan berjalan,
+ * catatan revisi terbaru, kelengkapan profil, dan riwayat beberapa bulan terakhir.
  */
 class KelompokSummary
 {
@@ -43,12 +47,71 @@ class KelompokSummary
             'distance' => ReportingPeriod::deadlineDistance($deadline),
             'daysLeft' => ReportingPeriod::daysUntil($deadline),
             'pastDeadline' => MonthlyReport::isPastDeadline($period),
+            'daysLate' => max(1, -ReportingPeriod::daysUntil($deadline)),
             // Bulan sebelumnya yang belum pernah diajukan (belum dibuat atau masih draf).
             'earlierOutstanding' => $this->organization->reportingPeriods()
                 ->filter(fn (CarbonImmutable $earlier) => $earlier->lt($period))
                 ->filter(fn (CarbonImmutable $earlier) => $this->reports->get($earlier->format('Y-m'))?->submitted_at === null)
                 ->count(),
         ];
+    }
+
+    /**
+     * Satu tugas utama untuk kartu sapaan, yang pertama berlaku: perlu revisi, terlambat (belum pernah diajukan dan lewat
+     * tenggat), belum diajukan sebelum tenggat, menunggu verifikasi, terverifikasi. "Terlambat" mengikuti ReportingState:
+     * laporan yang sudah diajukan tepat waktu lalu diminta revisi tidak pernah terlambat.
+     *
+     * @return array{kind: string, tone: string, title: string, period: ?CarbonImmutable, report: ?MonthlyReport, action: ?string, note: ?array{text: string, by: ?string, date: ?CarbonInterface}}
+     */
+    public function task(): array
+    {
+        $task = fn (string $kind, string $title, ?CarbonImmutable $period = null, ?MonthlyReport $report = null, ?string $action = null, ?array $note = null) => [
+            'kind' => $kind,
+            // Warna garis aksen + ikon kotak tugas: merah (revisi, terlambat), kuning (menunggu), selain itu brand.
+            'tone' => match ($kind) {
+                'revision', 'overdue' => 'danger',
+                'waiting' => 'warning',
+                default => 'brand',
+            },
+            'title' => $title,
+            'period' => $period,
+            'report' => $report,
+            'action' => $action,
+            'note' => $note,
+        ];
+
+        if ($revision = $this->latestRevision()) {
+            $request = $revision->latestRevisionRequest;
+
+            return $task('revision', 'Laporan '.Format::month($revision->period).' perlu diperbaiki', $revision->period->toImmutable(), $revision, 'Perbaiki laporan', $request ? [
+                'text' => $request->note,
+                // "Yosias Kafiar, Pertanian"; Admin: "Nama, Admin distrik".
+                'by' => $request->user ? $request->user->name.match (true) {
+                    $request->user->isAdmin() => ', Admin distrik',
+                    (bool) $request->user->opd => ', '.($request->user->opd->short_name ?: $request->user->opd->name),
+                    default => '',
+                } : null,
+                'date' => $request->created_at,
+            ] : null);
+        }
+
+        $due = $this->due();
+
+        if (! $due) {
+            return $task('not-started', 'Kewajiban lapor dimulai '.Format::month($this->organization->reporting_starts_on).'.');
+        }
+
+        $period = $due['period'];
+        $report = $due['report'];
+        $month = Format::month($period);
+
+        return match (ReportingState::for($report, $period)) {
+            ReportingState::Overdue => $task('overdue', 'Laporan '.$month.' terlambat '.$due['daysLate'].' hari', $period, $report, 'Isi laporan sekarang'),
+            ReportingState::Draft, ReportingState::Missing => $task('open', 'Laporan '.$month.' paling lambat '.Format::date($due['deadline']).' ('.$due['distance'].')', $period, $report, 'Isi laporan'),
+            ReportingState::Submitted => $task('waiting', 'Laporan '.$month.' sedang diperiksa OPD', $period, $report),
+            // Revision tanpa catatan sudah ditangani di atas; sisanya terverifikasi.
+            default => $task('done', 'Laporan '.$month.' sudah terverifikasi. Terima kasih.', $period, $report),
+        };
     }
 
     /** Laporan bulan berjalan (bisa diisi sebagai draf), atau null bila belum dibuat. */
@@ -69,6 +132,26 @@ class KelompokSummary
         return $this->reports->where('status', ReportStatus::Revision)->sortByDesc('period')->first()?->load('latestRevisionRequest.user.opd');
     }
 
+    /**
+     * Kartu "Kelompok saya": jumlah produk dan izin tercatat, jumlah anggota, OPD pembina dengan petugas aktifnya.
+     *
+     * @return array{products: int, licenses: int, members: ?int, opds: Collection}
+     */
+    public function facts(): array
+    {
+        $this->organization->loadCount(['products', 'licenses']);
+
+        return [
+            'products' => $this->organization->products_count,
+            'licenses' => $this->organization->licenses_count,
+            'members' => $this->organization->members_count,
+            'opds' => $this->organization->opds()
+                ->with(['users' => fn ($query) => $query->where('role', Role::Opd)->where('is_active', true)->orderBy('name')->select(['id', 'name', 'phone', 'opd_id'])])
+                ->orderBy('name')
+                ->get(['opds.id', 'opds.name', 'opds.short_name']),
+        ];
+    }
+
     /** @return list<array{label: string, done: bool, route: string}> */
     public function profileChecklist(): array
     {
@@ -85,9 +168,9 @@ class KelompokSummary
     }
 
     /**
-     * Enam bulan terakhir sampai bulan wajib lapor, terbaru dulu; bulan yang belum dibuat ikut tampil.
+     * Beberapa bulan terakhir sampai bulan wajib lapor, terbaru dulu; bulan yang belum dibuat ikut tampil.
      *
-     * @return Collection<int, array{period: CarbonImmutable, report: ?MonthlyReport}>
+     * @return Collection<int, array{period: CarbonImmutable, report: ?MonthlyReport, state: ReportingState}>
      */
     public function history(int $months = 6): Collection
     {
@@ -96,8 +179,23 @@ class KelompokSummary
         return $this->organization->reportingPeriods()
             ->filter(fn (CarbonImmutable $period) => $period->lte($due))
             ->take($months)
-            ->map(fn (CarbonImmutable $period) => ['period' => $period, 'report' => $this->reports->get($period->format('Y-m'))])
+            ->map(fn (CarbonImmutable $period) => [
+                'period' => $period,
+                'report' => $report = $this->reports->get($period->format('Y-m')),
+                'state' => ReportingState::for($report, $period),
+            ])
             ->values();
+    }
+
+    /**
+     * Bulan wajib lapor yang belum pernah diajukan dan lebih lama dari $before (di luar daftar ringkas "Laporan saya").
+     */
+    public function outstandingBefore(CarbonImmutable $before): int
+    {
+        return $this->organization->reportingPeriods()
+            ->filter(fn (CarbonImmutable $period) => $period->lt($before))
+            ->filter(fn (CarbonImmutable $period) => $this->reports->get($period->format('Y-m'))?->submitted_at === null)
+            ->count();
     }
 
     /**

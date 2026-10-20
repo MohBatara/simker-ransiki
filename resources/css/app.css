@@ -220,6 +220,23 @@
         --radius-tile: 12px;
     }
 
+    /*
+     * Area Kelompok: pengurus kelompok kebanyakan memakai HP. Semua teks minimal 14px (label, keterangan, kepala tabel,
+     * pil status) dan tombol/isian 44px di semua ukuran layar. Utilitas text-* membaca variabel ini, jadi cukup di sini.
+     */
+    .theme-app.theme-kelompok {
+        --control-h: 2.75rem;
+        --control-text: 0.875rem;
+        --label-text: 0.875rem;
+        --hint-text: 0.875rem;
+        --text-micro: 0.875rem;
+        --text-micro--line-height: 1.25rem;
+        --text-label: 0.875rem;
+        --text-label--line-height: 1.25rem;
+        --text-caption: 0.875rem;
+        --text-caption--line-height: 1.25rem;
+    }
+
     :where(a, button, summary, [tabindex]):focus-visible {
         outline: 2px solid var(--color-brand);
         outline-offset: 2px;

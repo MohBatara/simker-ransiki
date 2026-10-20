@@ -7,7 +7,7 @@ use App\Models\Organization;
 use App\Models\Product;
 
 /**
- * Data tab Profil detail kelompok (Admin/OPD) dan halaman Profil Kelompok: laporan terakhir, foto
+ * Data tab Profil detail kelompok (Admin/OPD) dan halaman Profil kelompok: laporan terakhir, foto
  * (foto produk lalu lampiran gambar), dan tautan pencarian Google Maps dari alamat.
  */
 class OrganizationOverview

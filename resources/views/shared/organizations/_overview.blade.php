@@ -1,5 +1,5 @@
 {{--
-    Tab Profil detail kelompok (Admin/OPD) dan halaman Profil Kelompok, tanpa mengulang isi kepala halaman. Desktop: kolom
+    Tab Profil detail kelompok (Admin/OPD) dan halaman Profil kelompok, tanpa mengulang isi kepala halaman. Desktop: kolom
     kiri 8/12 (Informasi umum, Usaha dan sumber daya, Deskripsi, Foto) dan kanan 4/12 (Lokasi, Ringkasan, Publikasi);
     HP bertumpuk. Data kosong: "Belum diisi" (Format::orEmpty).
     Variabel: $organization, $overview (App\Support\OrganizationOverview::data), $area, $documents.

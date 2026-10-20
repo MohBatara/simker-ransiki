@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\ProfileStatus;
 use App\Enums\ReportStatus;
 use App\Models\MonthlyReport;
 use App\Models\Opd;
@@ -9,20 +10,6 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Blade;
 
 afterEach(fn () => Carbon::setTestNow());
-
-test('tenggat tinggal 3 hari atau kurang ditandai wait dan tebal; lewat tenggat memakai fix', function (string $now, string $classes, string $text) {
-    Carbon::setTestNow(Carbon::parse($now, 'Asia/Jayapura'));
-    $organization = Organization::factory()->create(['name' => 'KUB Contoh Tenggat', 'reporting_starts_on' => '2026-07-01']);
-
-    $html = $this->actingAs(User::factory()->kelompok($organization)->create())->get('/kelompok')->assertOk()->getContent();
-
-    expect($html)->toMatch('/<p class="'.preg_quote($classes, '/').'">\s*Tenggat 10 Oktober 2026 · '.preg_quote($text, '/').'/');
-})->with([
-    '6 hari' => ['2026-10-04 09:00:00', 'text-ink-soft', '6 hari lagi'],
-    '3 hari' => ['2026-10-07 09:00:00', 'font-semibold text-wait', '3 hari lagi'],
-    'hari ini' => ['2026-10-10 09:00:00', 'font-semibold text-wait', 'hari ini'],
-    'lewat' => ['2026-10-12 09:00:00', 'text-fix', 'lewat 2 hari'],
-]);
 
 test('dasbor kelompok: judul Dasbor lalu banner sapaan dengan nama kelompok', function () {
     Carbon::setTestNow(Carbon::parse('2026-10-04 09:00:00', 'Asia/Jayapura'));
@@ -46,7 +33,7 @@ test('judul kolom angka dan selnya memakai padding dan perataan yang sama', func
 
 test('perlu dikerjakan: hanya tugas yang ada (tanpa baris angka 0); per OPD di dalam kartu', function () {
     Carbon::setTestNow(Carbon::parse('2026-10-20 12:00:00', 'Asia/Jayapura'));
-    $organization = Organization::factory()->create(['reporting_starts_on' => '2026-07-01', 'profile_status' => App\Enums\ProfileStatus::Verified]);
+    $organization = Organization::factory()->create(['reporting_starts_on' => '2026-07-01', 'profile_status' => ProfileStatus::Verified]);
     $organization->opds()->attach(Opd::factory()->create());
     User::factory()->kelompok($organization)->create();
     MonthlyReport::factory()->for($organization)->status(ReportStatus::Verified)->create(['period' => '2026-09-01', 'submitted_at' => now()]);

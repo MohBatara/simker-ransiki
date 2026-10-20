@@ -51,7 +51,7 @@ class Navigation
 
         if ($isAdmin) {
             $sections['website'] = self::section('Website', 'globe-alt', [
-                'beranda' => ['label' => 'Konten Beranda', 'route' => 'admin.content.edit'],
+                'beranda' => ['label' => 'Konten beranda', 'route' => 'admin.content.edit'],
                 'profil' => ['label' => 'Profil Ransiki', 'route' => 'admin.content.profile'],
                 'halaman' => ['label' => 'Halaman & kontak', 'route' => 'admin.content.pages'],
                 'berita' => ['label' => 'Berita & kegiatan', 'route' => 'admin.posts.index'],
@@ -71,15 +71,15 @@ class Navigation
     public static function definitions(Role $role): array
     {
         $notifications = self::item('Notifikasi', 'notifications.index', 'bell', active: 'notifications.*');
-        $account = self::item('Akun Saya', 'account.password.edit', 'user-circle', 'Akun', active: 'account.*');
+        $account = self::item('Akun saya', 'account.password.edit', 'user-circle', 'Akun', active: 'account.*');
 
         if ($role === Role::Kelompok) {
             return [
                 self::item('Dasbor', 'kelompok.dashboard', 'home', primary: true),
-                self::item('Profil Kelompok', 'kelompok.profile.show', 'building-office', 'Profil', true, 'kelompok.profile.*'),
+                self::item('Profil kelompok', 'kelompok.profile.show', 'building-office', 'Profil', true, 'kelompok.profile.*'),
                 self::item('Produk', 'kelompok.products.index', 'cube', primary: true, active: 'kelompok.products.*'),
-                self::item('Legalitas & Izin', 'kelompok.licenses.index', 'document-check', 'Izin', active: 'kelompok.licenses.*'),
-                self::item('Laporan Bulanan', 'kelompok.reports.index', 'document-text', 'Laporan', true, 'kelompok.reports.*'),
+                self::item('Legalitas dan izin', 'kelompok.licenses.index', 'document-check', 'Izin', active: 'kelompok.licenses.*'),
+                self::item('Laporan bulanan', 'kelompok.reports.index', 'document-text', 'Laporan', true, 'kelompok.reports.*'),
                 $notifications,
                 $account,
             ];
@@ -97,7 +97,7 @@ class Navigation
             'group' => $section['group'],
         ])->values()->all();
 
-        // Akun Saya tidak di sidebar (ada di menu profil bilah atas), hanya di navigasi bawah HP.
+        // Akun saya tidak di sidebar (ada di menu profil bilah atas), hanya di navigasi bawah HP.
         return [...$items, $notifications, array_merge($account, ['sidebar' => false])];
     }
 

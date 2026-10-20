@@ -90,7 +90,7 @@ test('kelompok mengelola izin dan status legalitasnya', function () {
 
 test('menu kelompok mengarah ke halaman profil, produk, dan izin', function () {
     $this->get('/kelompok')
-        ->assertSee('aria-label="Profil Kelompok"', false)
+        ->assertSee('aria-label="Profil kelompok"', false)
         ->assertSee('aria-label="Produk"', false)
-        ->assertSee('aria-label="Legalitas &amp; Izin"', false);
+        ->assertSee('aria-label="Legalitas dan izin"', false);
 });

@@ -28,6 +28,8 @@
         'Persen dibanding bulan sebelumnya, hanya dari kelompok yang terverifikasi di kedua bulan (minimal '.Statistics::MIN_MATCHED.' kelompok).',
     ];
     $chart = StatisticsCharts::economyTrend($economyTrend);
+    // "Belum bisa dibandingkan" ditulis sekali di bawah ketiga angka, bukan di tiap angka.
+    $incomparable = collect($numbers)->keys()->map(fn ($field) => $economyChange[$field] ?? null)->first(fn ($comparison) => $comparison && ! $comparison['comparable']);
 @endphp
 
 <x-admin.card :title="'Ekonomi '.Format::month($period)" description="Dari laporan terverifikasi" stretch :class="$class ?? null">
@@ -61,7 +63,7 @@
                         $loss = $total['sum'] !== null && $total['sum'] < 0;
                         $short = $total['sum'] === null ? null : ($loss ? 'Rugi ' : '').Format::rupiahShort($total['sum']);
                         $full = $total['sum'] === null ? null : ($loss ? 'Rugi Rp '.Format::number(abs($total['sum'])) : Format::rupiah($total['sum']));
-                        $comparison = $economyChange[$field] ?? null;
+                        $comparison = ($economyChange[$field]['comparable'] ?? false) ? $economyChange[$field] : null;
                     @endphp
                     <div @class(['min-w-0', 'sm:border-l sm:border-line-soft sm:pl-4' => ! $loop->first])>
                         <dt class="text-label text-ink-2">{{ $label }}</dt>
@@ -85,6 +87,11 @@
                     </div>
                 @endforeach
             </dl>
+            @if ($incomparable)
+                <p class="-mt-2 text-label text-ink-3" data-incomparable>
+                    Belum bisa dibandingkan dengan {{ Format::month($incomparable['previous']) }}: kurang dari {{ Statistics::MIN_MATCHED }} kelompok terverifikasi di kedua bulan.
+                </p>
+            @endif
 
             {{-- Cakupan: berapa kelompok wajib lapor yang laporannya sudah terverifikasi. --}}
             <div class="space-y-1.5">

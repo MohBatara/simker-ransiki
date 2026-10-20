@@ -63,12 +63,12 @@ class ComponentGalleryController extends Controller implements HasMiddleware
     {
         return [
             ['label' => 'Dasbor', 'icon' => 'home', 'href' => '#', 'primary' => true],
-            ['label' => 'Profil Kelompok', 'short' => 'Profil', 'icon' => 'building-office', 'href' => '#', 'primary' => true],
+            ['label' => 'Profil kelompok', 'short' => 'Profil', 'icon' => 'building-office', 'href' => '#', 'primary' => true],
             ['label' => 'Produk', 'icon' => 'cube', 'href' => '#', 'primary' => true],
-            ['label' => 'Legalitas & Izin', 'short' => 'Izin', 'icon' => 'document-check', 'href' => '#'],
-            ['label' => 'Laporan Bulanan', 'short' => 'Laporan', 'icon' => 'document-text', 'href' => '#', 'primary' => true],
+            ['label' => 'Legalitas dan izin', 'short' => 'Izin', 'icon' => 'document-check', 'href' => '#'],
+            ['label' => 'Laporan bulanan', 'short' => 'Laporan', 'icon' => 'document-text', 'href' => '#', 'primary' => true],
             ['label' => 'Notifikasi', 'icon' => 'bell', 'href' => '#'],
-            ['label' => 'Akun Saya', 'short' => 'Akun', 'icon' => 'user-circle', 'href' => '#'],
+            ['label' => 'Akun saya', 'short' => 'Akun', 'icon' => 'user-circle', 'href' => '#'],
             ['label' => 'Komponen', 'icon' => 'squares-2x2', 'href' => route('dev.components.app'), 'active' => true],
         ];
     }

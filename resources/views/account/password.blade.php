@@ -11,7 +11,7 @@
     ];
 @endphp
 
-<x-layouts.app title="Akun Saya" :description="$user->name.' · '.$user->role->label()">
+<x-layouts.app title="Akun saya" :description="$user->name.' · '.$user->role->label()">
     <div class="space-y-6">
         <x-admin.form-section title="Data akun" description="Nama, username, dan peran diatur oleh Admin distrik. Hubungi Admin bila ada yang perlu diubah.">
             <dl class="divide-y divide-line rounded-tile border border-line">
