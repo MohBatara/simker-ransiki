@@ -25,6 +25,8 @@
     'header' => true,
     // Dengan header false: halaman merender h1 sendiri (mis. kepala detail kelompok), jadi tanpa h1 pembaca layar.
     'ownHeading' => false,
+    // Dengan header false: lonceng (alat kepala halaman) di pojok kanan atas slot "lead" (dasbor Kelompok), bukan sebaris sendiri.
+    'leadTools' => false,
 ])
 
 @php
@@ -221,7 +223,7 @@
                         <h1 class="sr-only">{{ $title }}</h1>
                     @endunless
                     {{-- Tanpa kepala halaman (detail kelompok): remah di kiri dan cari + lonceng di kanan pada SATU baris. --}}
-                    @if ($tools !== '' || $breadcrumbs)
+                    @if (($tools !== '' && ! $leadTools) || $breadcrumbs)
                         <div class="mb-4 hidden min-h-(--control-h) items-center justify-between gap-4 md:flex">
                             @if ($breadcrumbs)
                                 <x-breadcrumbs :items="$breadcrumbs" class="min-w-0" />
@@ -231,7 +233,14 @@
                             <div class="flex shrink-0 items-center gap-2">{!! $tools !!}</div>
                         </div>
                     @endif
-                    {{ $lead ?? '' }}
+                    @if ($leadTools && $tools !== '' && isset($lead))
+                        <div class="relative">
+                            <div class="absolute right-4 top-4 hidden items-center gap-2 md:right-5 md:top-5 md:flex *:bg-panel">{!! $tools !!}</div>
+                            {{ $lead }}
+                        </div>
+                    @else
+                        {{ $lead ?? '' }}
+                    @endif
                 @else
                     {{-- Semua peran: kepala halaman seragam di dalam panel; aksi sekunder masuk menu "…" di HP. --}}
                     {{-- condensed: di HP judul sudah ada di header atas; bila header atas memakai judul lain (phoneTitle), h1 tetap tampil. --}}

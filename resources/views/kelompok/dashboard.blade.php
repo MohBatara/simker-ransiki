@@ -1,40 +1,25 @@
 @use('App\Support\Format')
-@use('App\Enums\ReportingState')
 
 @php
-    $doneCount = collect($checklist)->where('done', true)->count();
-    $profileComplete = $doneCount === count($checklist);
+    $missing = collect($checklist)->reject(fn ($item) => $item['done'])->values();
     // Draf bulan berjalan: tampil bila sudah ada, atau bila tugas utama tidak meminta mengisi laporan lain.
     $showCurrent = $current['allowed'] && ($current['report'] || ($canCreate && in_array($task['kind'], ['waiting', 'done', 'not-started'], true)));
 @endphp
 
-<x-layouts.app title="Dasbor" description="Laporan bulanan, produksi, dan tindak lanjut kelompok Anda.">
-    {{-- Kartu sapaan = SATU tugas utama (KelompokSummary::task); tombolnya tidak diulang di kartu lain. --}}
-    <x-admin.greeting :name="auth()->user()->name" :subtitle="$organization->name" :tone="$task['tone']" class="mb-6">
-        <x-slot:task>
-            <h2 class="text-card-head font-semibold text-ink" data-task="{{ $task['kind'] }}">{{ $task['title'] }}</h2>
-            @if ($task['note'])
-                <figure class="mt-2 max-w-2xl rounded-control border border-fix/20 bg-panel px-3 py-2">
-                    <blockquote class="whitespace-pre-line break-words text-ink">{{ $task['note']['text'] }}</blockquote>
-                    <figcaption class="mt-1 text-caption text-ink-2">
-                        Catatan dari {{ $task['note']['by'] ?? 'peninjau' }}@if ($task['note']['date']), {{ Format::date($task['note']['date']) }}@endif.
-                    </figcaption>
-                </figure>
-            @endif
-            @if ($task['action'])
-                <div class="mt-3">
-                    @include('kelompok.dashboard.report-action', ['period' => $task['period'], 'report' => $task['report'], 'label' => $task['action'], 'class' => 'max-md:w-full max-md:*:w-full'])
-                    @if (! $task['report'] && ! $canCreate)
-                        <p class="text-caption text-ink-2">Kelompok ini sudah tutup, sehingga tidak bisa membuat laporan baru.</p>
-                    @endif
-                </div>
-            @endif
-        </x-slot:task>
-    </x-admin.greeting>
+{{-- Tanpa kepala halaman: kartu sapaan menjadi elemen teratas, lonceng di pojok kanan atasnya (leadTools). --}}
+<x-layouts.app title="Dasbor" description="Laporan bulanan, produksi, dan tindak lanjut kelompok Anda." :header="false" lead-tools>
+    <x-slot:lead>
+        {{-- Kartu sapaan netral untuk semua keadaan; SATU tugas utama di dalamnya, tombolnya tidak diulang di kartu lain. --}}
+        <x-admin.greeting :name="auth()->user()->name" :subtitle="$organization->name" tools-space>
+            <x-slot:task>
+                @include('kelompok.dashboard.task')
+            </x-slot:task>
+        </x-admin.greeting>
+    </x-slot:lead>
 
-    <div class="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_320px] lg:items-start">
-        {{-- Laporan saya: tiga bulan wajib lapor terakhir + draf bulan berjalan. --}}
-        <x-admin.card title="Laporan saya" flush>
+    {{-- Desktop: Laporan saya 8 kolom, Kelompok saya 4 kolom, sama tinggi. HP: bertumpuk dengan urutan yang sama. --}}
+    <div class="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-12 lg:items-stretch">
+        <x-admin.card title="Laporan saya" flush stretch center-header class="overflow-hidden lg:col-span-8">
             <x-slot:actions>
                 <x-link :href="route('kelompok.reports.index')">Semua laporan</x-link>
             </x-slot:actions>
@@ -52,7 +37,7 @@
                                 default => route('kelompok.reports.show', $report),
                             };
                         @endphp
-                        <x-list.item :href="$href" data-period="{{ $row['period']->format('Y-m') }}">
+                        <x-list.item :href="$href" class="min-h-15 py-2!" data-period="{{ $row['period']->format('Y-m') }}">
                             <span class="min-w-0 flex-1">
                                 <span class="block font-semibold text-ink">{{ Format::month($row['period']) }}</span>
                                 <span class="block text-caption text-ink-soft">
@@ -77,50 +62,74 @@
             @endif
 
             @if ($showCurrent)
-                <div class="flex flex-wrap items-center justify-between gap-3 border-t border-line-soft px-4 py-3 md:px-5" data-current-report>
-                    <p class="text-ink">Laporan {{ Format::month($current['period']) }} sudah bisa diisi.</p>
+                {{-- Kaki kartu: draf bulan berjalan. --}}
+                <div class="mt-auto flex flex-wrap items-center gap-3 border-t border-brand-100 bg-brand-50 px-4 py-3 md:px-5" data-current-report>
+                    <x-heroicon-o-pencil-square class="size-5 shrink-0 text-brand" aria-hidden="true" />
+                    <p class="min-w-0 flex-1 text-ink">Laporan {{ Format::month($current['period']) }} sudah bisa diisi.</p>
                     @include('kelompok.dashboard.report-action', ['period' => $current['period'], 'report' => $current['report'], 'label' => $current['report'] ? 'Lanjutkan' : 'Mulai isi', 'variant' => 'secondary', 'class' => 'max-sm:w-full max-sm:*:w-full'])
                 </div>
             @endif
         </x-admin.card>
 
-        {{-- Kelengkapan profil: lengkap = satu baris; daftar centang hanya bila ada yang belum. --}}
-        @if ($profileComplete)
-            <x-admin.card>
-                <div class="flex flex-wrap items-center justify-between gap-x-3 gap-y-1" data-profile-complete>
-                    <p class="flex items-center gap-2 font-semibold text-ink">
+        {{-- Kelompok saya: kelengkapan profil, angka ringkas, OPD pembina. Tiap baris menaut ke halaman terkait. --}}
+        <x-admin.card title="Kelompok saya" flush stretch center-header class="lg:col-span-4">
+            <x-slot:actions>
+                <x-link :href="route('kelompok.profile.show')">Lihat profil</x-link>
+            </x-slot:actions>
+
+            <x-list flush>
+                @if ($missing->isEmpty())
+                    <x-list.item :href="route('kelompok.profile.show')" data-profile-complete>
                         <x-heroicon-o-check-circle class="size-5 shrink-0 text-ok" aria-hidden="true" />
-                        Profil lengkap
-                    </p>
-                    <x-link :href="route('kelompok.profile.show')">Lihat profil</x-link>
-                </div>
-            </x-admin.card>
-        @else
-            <x-admin.card title="Kelengkapan profil">
-                <p class="text-ink-soft"><span class="font-semibold tabular-nums text-ink">{{ $doneCount }} dari {{ count($checklist) }}</span> lengkap</p>
-                <div class="mt-2 h-2 overflow-hidden rounded-full bg-subtle" role="img" aria-label="{{ $doneCount }} dari {{ count($checklist) }} lengkap">
-                    <div class="h-full rounded-full bg-brand" style="width: {{ round($doneCount / max(1, count($checklist)) * 100) }}%"></div>
-                </div>
-                <ul class="mt-4 space-y-2">
-                    @foreach ($checklist as $item)
-                        <li class="flex items-start gap-2">
-                            @if ($item['done'])
-                                <x-heroicon-o-check-circle class="mt-0.5 size-5 shrink-0 text-ok" />
-                                <span class="text-ink">{{ $item['label'] }}</span>
-                                <span class="sr-only">sudah lengkap</span>
-                            @else
-                                <span class="mt-0.5 size-5 shrink-0 rounded-full border border-line-input" aria-hidden="true"></span>
-                                <span class="min-w-0">
-                                    <span class="text-ink">{{ $item['label'] }}</span>
-                                    <span class="sr-only">belum lengkap.</span>
-                                    <x-link :href="route($item['route'])" class="ml-1">Lengkapi</x-link>
-                                </span>
-                            @endif
-                        </li>
-                    @endforeach
-                </ul>
-            </x-admin.card>
-        @endif
+                        <span class="min-w-0 flex-1 font-semibold text-ink">Profil lengkap</span>
+                    </x-list.item>
+                @else
+                    <x-list.item :href="route($missing->first()['route'])" data-profile-incomplete>
+                        <span class="mt-0.5 size-5 shrink-0 self-start rounded-full border-2 border-wait" aria-hidden="true"></span>
+                        <span class="min-w-0 flex-1">
+                            <span class="block font-semibold text-ink">Profil belum lengkap, {{ $missing->count() }} bagian lagi</span>
+                            <span class="block text-caption text-ink-soft">Belum: {{ $missing->pluck('label')->map(fn ($label) => Str::lcfirst($label))->join(', ') }}</span>
+                        </span>
+                    </x-list.item>
+                @endif
+                @foreach ([
+                    ['Produk', Format::number($facts['products']), route('kelompok.products.index')],
+                    ['Izin tercatat', Format::number($facts['licenses']), route('kelompok.licenses.index')],
+                    ['Anggota', $facts['members'] === null ? null : Format::number($facts['members']).' orang', route('kelompok.profile.show')],
+                ] as [$label, $value, $href])
+                    <x-list.item :href="$href">
+                        <span class="min-w-0 flex-1 text-ink-soft">{{ $label }}</span>
+                        @if ($value === null)
+                            <x-admin.empty-value />
+                        @else
+                            <span class="font-semibold tabular-nums text-ink">{{ $value }}</span>
+                        @endif
+                    </x-list.item>
+                @endforeach
+            </x-list>
+
+            {{-- OPD pembina: nama OPD, petugas aktif, telepon bila ada (bukan tautan halaman; telepon bisa diketuk). --}}
+            <div class="border-t border-line-soft px-4 py-3 md:px-5" data-opd-contacts>
+                <p class="text-caption text-ink-soft">OPD pembina</p>
+                @forelse ($facts['opds'] as $opd)
+                    <div class="mt-2">
+                        <p class="font-semibold text-ink">{{ $opd->name }}</p>
+                        @forelse ($opd->users as $officer)
+                            <p class="flex flex-wrap items-center gap-x-2 text-ink-soft">
+                                <span>{{ $officer->name }}</span>
+                                @if ($officer->phone)
+                                    <x-link :href="'tel:'.preg_replace('/[^\d+]/', '', $officer->phone)" class="font-normal">{{ $officer->phone }}</x-link>
+                                @endif
+                            </p>
+                        @empty
+                            <p class="text-ink-soft">Belum ada petugas.</p>
+                        @endforelse
+                    </div>
+                @empty
+                    <p class="mt-1 text-ink-soft">Belum ada OPD pembina. Hubungi Admin distrik.</p>
+                @endforelse
+            </div>
+        </x-admin.card>
     </div>
 
     {{-- Status tindak lanjut OPD atas masalah & kebutuhan yang pernah dilaporkan (baca-saja). --}}

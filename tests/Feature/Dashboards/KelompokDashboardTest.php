@@ -39,7 +39,7 @@ test('belum diajukan dan belum lewat tenggat: paling lambat + hari lagi, tombol 
 
     expect(primaryTask($html))->toBe(['open', 'Laporan September 2026 paling lambat 10 Oktober 2026 (6 hari lagi)'])
         ->and(preg_match_all('/>\s*Isi laporan\s*</', $html))->toBe(1)
-        ->and($html)->toContain('data-tone="brand"');
+        ->and($html)->toContain('data-task-box data-tone="brand"');
 });
 
 test('belum diajukan dan lewat tenggat: terlambat N hari, kartu merah, tombol Isi laporan sekarang', function (string $now, int $days, ?ReportStatus $draft) {
@@ -51,7 +51,7 @@ test('belum diajukan dan lewat tenggat: terlambat N hari, kartu merah, tombol Is
     $html = $this->get('/kelompok')->assertOk()->getContent();
 
     expect(primaryTask($html))->toBe(['overdue', "Laporan September 2026 terlambat {$days} hari"])
-        ->and($html)->toContain('data-tone="danger"')
+        ->and($html)->toContain('data-task-box data-tone="danger"')
         ->and(substr_count($html, 'Isi laporan sekarang'))->toBe(1);
 })->with([
     'sehari setelah tenggat, belum dibuat' => ['2026-10-11 08:00:00', 1, null],
@@ -66,15 +66,14 @@ test('diajukan tepat waktu lalu diminta revisi: bukan terlambat; tugas utama per
 
     $html = $this->get('/kelompok')->assertOk()
         ->assertSee('Lengkapi foto kegiatan.')
-        ->assertSee('Catatan dari Petugas Contoh')
-        ->assertSee('15 Oktober 2026')
+        ->assertSee('Petugas Contoh, Contoh · 15 Okt 2026')
         ->assertSee("/kelompok/laporan/{$report->id}/ubah\"", false)
         ->assertDontSee('terlambat')
         ->assertDontSee('lewat ')
         ->getContent();
 
     expect(primaryTask($html))->toBe(['revision', 'Laporan September 2026 perlu diperbaiki'])
-        ->and($html)->toContain('data-tone="danger"')
+        ->and($html)->toContain('data-task-box data-tone="danger"')
         ->and(preg_match_all('/>\s*Perbaiki laporan\s*</', $html))->toBe(1)
         ->and(ReportingState::for($report, $report->period))->toBe(ReportingState::Revision)
         ->and($report->isOverdue())->toBeFalse();
@@ -87,7 +86,7 @@ test('revisi didahulukan dari laporan lain yang terlambat', function () {
     expect(primaryTask($this->get('/kelompok')->getContent()))->toBe(['revision', 'Laporan Agustus 2026 perlu diperbaiki']);
 });
 
-test('sudah diajukan menunggu: tanpa tombol utama; terverifikasi: terima kasih; bulan berjalan ditawarkan', function (ReportStatus $status, string $kind, string $title) {
+test('sudah diajukan menunggu: tanpa tombol utama; terverifikasi: terima kasih; bulan berjalan ditawarkan', function (ReportStatus $status, string $kind, string $title, string $tone) {
     MonthlyReport::factory()->for($this->organization)->status($status)->create(['period' => '2026-09-01', 'submitted_at' => '2026-10-02 10:00:00']);
 
     $html = $this->get('/kelompok')->assertOk()
@@ -97,11 +96,11 @@ test('sudah diajukan menunggu: tanpa tombol utama; terverifikasi: terima kasih; 
         ->getContent();
 
     expect(primaryTask($html))->toBe([$kind, $title])
-        ->and($html)->toContain('data-tone="brand"')
+        ->and($html)->toContain('data-task-box data-tone="'.$tone.'"')
         ->and($html)->not->toContain('Isi laporan');
 })->with([
-    'menunggu' => [ReportStatus::Submitted, 'waiting', 'Laporan September 2026 sedang diperiksa OPD'],
-    'terverifikasi' => [ReportStatus::Verified, 'done', 'Laporan September 2026 sudah terverifikasi. Terima kasih.'],
+    'menunggu' => [ReportStatus::Submitted, 'waiting', 'Laporan September 2026 sedang diperiksa OPD', 'warning'],
+    'terverifikasi' => [ReportStatus::Verified, 'done', 'Laporan September 2026 sudah terverifikasi. Terima kasih.', 'brand'],
 ]);
 
 test('draf bulan berjalan: Lanjutkan', function () {
@@ -142,16 +141,38 @@ test('laporan saya: tiga bulan terakhir dengan status dan tanggal diajukan; hany
     expect($queries)->toBeLessThan(20);
 });
 
-test('kelengkapan profil: daftar bila belum lengkap, satu baris bila lengkap', function () {
-    $this->get('/kelompok')->assertSee('Kelengkapan profil')->assertSee('0 dari 4')->assertSee('Deskripsi kelompok');
+test('kepala halaman diganti kartu sapaan netral; lonceng di pojok kartu', function () {
+    $html = $this->get('/kelompok')->assertOk()->getContent();
 
-    $this->organization->update(['description' => 'Contoh deskripsi.', 'legal_status' => LegalStatus::None]);
+    expect($html)->toContain('<h1 class="sr-only">Dasbor</h1>')
+        ->not->toContain('Laporan bulanan, produksi, dan tindak lanjut kelompok Anda.</p>')
+        ->toContain('data-bell="desktop"')
+        ->toContain('from-brand-50 to-brand-mist')
+        ->not->toContain('bg-fix-bg p-4');
+});
+
+test('kelompok saya: status profil, angka ringkas bertautan, OPD pembina dengan petugas dan telepon', function () {
+    $opd = Opd::factory()->create(['name' => 'Dinas Contoh Pembina']);
+    $this->organization->opds()->attach($opd);
+    User::factory()->opd($opd)->create(['name' => 'Petugas Aktif', 'phone' => '0812-0000-1111']);
+    User::factory()->opd($opd)->inactive()->create(['name' => 'Petugas Nonaktif']);
+
+    $this->get('/kelompok')
+        ->assertSee('Kelompok saya')
+        ->assertSee('Profil belum lengkap, 4 bagian lagi')
+        ->assertSee('Belum: deskripsi kelompok, minimal satu produk, foto produk, status legalitas')
+        ->assertSeeInOrder(['Produk', '0', 'Izin tercatat', '0', 'Anggota', 'Belum diisi'])
+        ->assertSee('href="'.route('kelompok.licenses.index').'"', false)
+        ->assertSeeInOrder(['OPD pembina', 'Dinas Contoh Pembina', 'Petugas Aktif', '0812-0000-1111'])
+        ->assertSee('href="tel:081200001111"', false)
+        ->assertDontSee('Petugas Nonaktif');
+
+    $this->organization->update(['description' => 'Contoh deskripsi.', 'legal_status' => LegalStatus::None, 'members_count' => 12]);
     Product::factory()->for($this->organization)->create(['photo_path' => 'produk/contoh.jpg']);
 
     $this->get('/kelompok')
         ->assertSee('data-profile-complete', false)
         ->assertSee('Profil lengkap')
-        ->assertSee('Lihat profil')
-        ->assertDontSee('Kelengkapan profil')
-        ->assertDontSee('Deskripsi kelompok');
+        ->assertSee('12 orang')
+        ->assertDontSee('Profil belum lengkap');
 });

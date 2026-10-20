@@ -583,16 +583,20 @@ draft ──ajukan──▶ submitted ──verifikasi──▶ verified ──b
   pelaporan per OPD; lalu belum mengajukan (Admin dan OPD). HP: semua kartu bertumpuk, grid 2x2 tetap 2 kolom.
   Grafik kepatuhan pelaporan dan tren 12 bulan hanya di tab Ekonomi.
   Setelah tenggat, daftar "Belum mengajukan" berjudul "Terlambat melapor {bulan}" dengan badge "Terlambat".
-  Dasbor Kelompok: kartu sapaan = SATU tugas utama (`KelompokSummary::task`, pertama yang berlaku): a) laporan Perlu
-  revisi: "Laporan {bulan} perlu diperbaiki" + kutipan catatan (nama, tanggal) + "Perbaiki laporan"; b) belum pernah
-  diajukan dan lewat tenggat (`ReportingState` Terlambat): "Laporan {bulan} terlambat N hari" + "Isi laporan sekarang";
-  c) belum diajukan sebelum tenggat: "Laporan {bulan} paling lambat {tanggal} (N hari lagi)" + "Isi laporan"; d) menunggu:
-  "sedang diperiksa OPD", tanpa tombol; e) "sudah terverifikasi. Terima kasih." Kartu merah lembut (`x-admin.greeting
-  tone="danger"`, `fix-bg` polos) untuk a dan b, selain itu brand-50. Tombol tugas tidak diulang di kartu lain. Di bawahnya
-  "Laporan saya" (3 bulan wajib lapor terakhir: periode, pil `ReportingState`, tanggal diajukan; bulan lebih lama yang belum
-  diajukan dihitung; draf bulan berjalan "Laporan {bulan} sudah bisa diisi" + Lanjutkan) dan "Kelengkapan profil" (lengkap =
-  satu baris "Profil lengkap" + "Lihat profil"; daftar centang hanya bila ada yang belum). "Lewat/terlambat N hari" HANYA
-  untuk laporan yang belum pernah diajukan; diajukan tepat waktu lalu direvisi tidak pernah terlambat. "Diajukan terlambat" (`wasSubmittedLate()`, informasi saja):
+  Dasbor Kelompok: tanpa kepala halaman (`:header="false" lead-tools`: h1 pembaca layar, lonceng di pojok kanan atas kartu
+  sapaan). Kartu sapaan netral (brand-50, bingkai brand-100) untuk semua keadaan: "tanggal · nama kelompok", sapaan, lalu
+  SATU kotak tugas (`kelompok.dashboard.task`, `KelompokSummary::task`, pertama yang berlaku): putih, bingkai line, sudut
+  12px, garis aksen 4px kiri + ikon status (merah revisi/terlambat, kuning menunggu, selain itu brand), judul 15px, kutipan
+  catatan 14px + sumber "Nama, OPD · 5 Okt 2026", tombol di kanan (desktop) / di bawah selebar penuh (HP). Keadaan: a) Perlu
+  revisi "Laporan {bulan} perlu diperbaiki" + "Perbaiki laporan"; b) belum pernah diajukan dan lewat tenggat (`ReportingState`
+  Terlambat) "terlambat N hari" + "Isi laporan sekarang"; c) belum diajukan sebelum tenggat "paling lambat {tanggal} (N hari
+  lagi)" + "Isi laporan"; d) menunggu "sedang diperiksa OPD", tanpa tombol; e) "sudah terverifikasi. Terima kasih." Tombol
+  tugas tidak diulang di kartu lain. Di bawahnya (desktop 8 + 4 kolom, sama tinggi; HP bertumpuk): "Laporan saya" (3 bulan
+  wajib lapor terakhir, baris 60px: periode, tanggal diajukan, pil `ReportingState`; bulan lebih lama yang belum diajukan
+  dihitung; kaki brand-50 draf bulan berjalan "Laporan {bulan} sudah bisa diisi" + Lanjutkan) dan "Kelompok saya"
+  (`KelompokSummary::facts`: "Profil lengkap" atau "Profil belum lengkap, N bagian lagi" + daftar yang belum; Produk, Izin
+  tercatat, Anggota bertautan; OPD pembina + petugas aktif + telepon). "Lewat/terlambat N hari" HANYA untuk laporan yang
+  belum pernah diajukan; diajukan tepat waktu lalu direvisi tidak pernah terlambat. "Diajukan terlambat" (`wasSubmittedLate()`, informasi saja):
   `submitted_at` melewati tenggat periodenya.
 - Status "belum melapor" dihitung untuk kelompok `active` dan `inactive` yang
   `reporting_starts_on` ≤ periode. Kelompok `closed` tidak dihitung.

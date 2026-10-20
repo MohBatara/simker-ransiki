@@ -5,6 +5,7 @@ namespace App\Support\Dashboards;
 use App\Enums\LegalStatus;
 use App\Enums\ReportingState;
 use App\Enums\ReportStatus;
+use App\Enums\Role;
 use App\Models\MonthlyReport;
 use App\Models\Organization;
 use App\Models\ReportIssue;
@@ -66,7 +67,12 @@ class KelompokSummary
     {
         $task = fn (string $kind, string $title, ?CarbonImmutable $period = null, ?MonthlyReport $report = null, ?string $action = null, ?array $note = null) => [
             'kind' => $kind,
-            'tone' => in_array($kind, ['revision', 'overdue'], true) ? 'danger' : 'brand',
+            // Warna garis aksen + ikon kotak tugas: merah (revisi, terlambat), kuning (menunggu), selain itu brand.
+            'tone' => match ($kind) {
+                'revision', 'overdue' => 'danger',
+                'waiting' => 'warning',
+                default => 'brand',
+            },
             'title' => $title,
             'period' => $period,
             'report' => $report,
@@ -79,7 +85,12 @@ class KelompokSummary
 
             return $task('revision', 'Laporan '.Format::month($revision->period).' perlu diperbaiki', $revision->period->toImmutable(), $revision, 'Perbaiki laporan', $request ? [
                 'text' => $request->note,
-                'by' => $request->user?->nameWithAgency(),
+                // "Yosias Kafiar, Pertanian"; Admin: "Nama, Admin distrik".
+                'by' => $request->user ? $request->user->name.match (true) {
+                    $request->user->isAdmin() => ', Admin distrik',
+                    (bool) $request->user->opd => ', '.($request->user->opd->short_name ?: $request->user->opd->name),
+                    default => '',
+                } : null,
                 'date' => $request->created_at,
             ] : null);
         }
@@ -119,6 +130,26 @@ class KelompokSummary
     public function latestRevision(): ?MonthlyReport
     {
         return $this->reports->where('status', ReportStatus::Revision)->sortByDesc('period')->first()?->load('latestRevisionRequest.user.opd');
+    }
+
+    /**
+     * Kartu "Kelompok saya": jumlah produk dan izin tercatat, jumlah anggota, OPD pembina dengan petugas aktifnya.
+     *
+     * @return array{products: int, licenses: int, members: ?int, opds: Collection}
+     */
+    public function facts(): array
+    {
+        $this->organization->loadCount(['products', 'licenses']);
+
+        return [
+            'products' => $this->organization->products_count,
+            'licenses' => $this->organization->licenses_count,
+            'members' => $this->organization->members_count,
+            'opds' => $this->organization->opds()
+                ->with(['users' => fn ($query) => $query->where('role', Role::Opd)->where('is_active', true)->orderBy('name')->select(['id', 'name', 'phone', 'opd_id'])])
+                ->orderBy('name')
+                ->get(['opds.id', 'opds.name', 'opds.short_name']),
+        ];
     }
 
     /** @return list<array{label: string, done: bool, route: string}> */

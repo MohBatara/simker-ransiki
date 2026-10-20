@@ -10,6 +10,8 @@
     // Tautan "Lihat semua" brand dengan panah di kanan kepala kartu.
     'more' => null,
     'moreLabel' => 'Lihat semua',
+    // Judul dan aksi kepala sejajar tengah (kepala tanpa keterangan, mis. "Laporan saya" + "Semua laporan").
+    'centerHeader' => false,
 ])
 
 @php
@@ -22,7 +24,7 @@
 --}}
 <section {{ $attributes->class(['min-w-0 rounded-box border border-line bg-panel', 'flex flex-col' => $stretch]) }}>
     @if ($hasHeader)
-        <header class="flex flex-wrap items-start justify-between gap-x-4 gap-y-2 px-4 pt-4 md:px-5 md:pt-5 {{ $flush ? 'pb-4' : '' }}">
+        <header class="flex flex-wrap {{ $centerHeader ? 'items-center' : 'items-start' }} justify-between gap-x-4 gap-y-2 px-4 pt-4 md:px-5 md:pt-5 {{ $flush ? 'pb-4' : '' }}">
             <div class="min-w-0">
                 @if ($title)
                     <h2 class="flex min-h-8 items-center gap-2 text-card-head font-semibold text-ink">

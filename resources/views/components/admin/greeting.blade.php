@@ -8,8 +8,8 @@
     'sentence' => null,
     // Tautan aksi brand bergaris bawah: ['label' => ..., 'href' => ...].
     'action' => null,
-    // brand (bawaan, gradasi lembut) atau danger (latar merah lembut polos: tugas perlu revisi/terlambat).
-    'tone' => 'brand',
+    // Sisakan ruang kanan atas untuk lonceng (layout leadTools, dasbor Kelompok).
+    'toolsSpace' => false,
 ])
 
 @php
@@ -29,11 +29,7 @@
     pengecualian larangan gradasi). Kiri: kartu mini putih berisi angka terpenting; tengah: sapaan menurut jam WIT,
     tanggal, satu kalimat, tautan aksi; kanan: slot (pemilih periode). Teks ink/ink-2/brand di atas brand-50 ≥ 4,9:1.
 --}}
-<section {{ $attributes->class([
-    'flex flex-col gap-4 rounded-box border p-4 md:flex-row md:items-center md:gap-6 md:p-5',
-    'border-brand-100 bg-linear-to-r from-brand-50 to-brand-mist' => $tone !== 'danger',
-    'border-fix/25 bg-fix-bg' => $tone === 'danger',
-]) }} data-tone="{{ $tone }}">
+<section {{ $attributes->class('flex flex-col gap-4 rounded-box border border-brand-100 bg-linear-to-r from-brand-50 to-brand-mist p-4 md:flex-row md:items-center md:gap-6 md:p-5') }}>
     @if ($highlight)
         @php $tag = ($highlight['href'] ?? null) ? 'a' : 'div'; @endphp
         <{{ $tag }} @if ($highlight['href'] ?? null) href="{{ $highlight['href'] }}" @endif class="flex shrink-0 items-center gap-3 rounded-box border border-line bg-panel px-4 py-3 shadow-xs md:w-60 {{ ($highlight['href'] ?? null) ? 'transition-colors hover:border-brand-100' : '' }}">
@@ -47,13 +43,13 @@
         </{{ $tag }}>
     @endif
     <div class="min-w-0 flex-1">
-        <p class="text-label text-ink-2"><time datetime="{{ $now->toDateString() }}">{{ \App\Support\Format::dayDate($now) }}</time>@if ($subtitle) <span aria-hidden="true">·</span> {{ $subtitle }}@endif</p>
-        <p class="mt-0.5 text-page-title font-semibold text-ink">{{ $greeting }}, {{ $firstName }}</p>
+        <p @class(['text-label text-ink-2', 'md:pr-14' => $toolsSpace])><time datetime="{{ $now->toDateString() }}">{{ \App\Support\Format::dayDate($now) }}</time>@if ($subtitle) <span aria-hidden="true">·</span> {{ $subtitle }}@endif</p>
+        <p @class(['mt-0.5 text-page-title font-semibold text-ink', 'md:pr-14' => $toolsSpace])>{{ $greeting }}, {{ $firstName }}</p>
         @if ($sentence)
             <p class="mt-0.5 text-caption text-ink-2">{{ $sentence }}</p>
         @endif
         @isset($task)
-            <div class="mt-3">{{ $task }}</div>
+            <div class="mt-4">{{ $task }}</div>
         @endisset
         @if ($action)
             <a href="{{ $action['href'] }}" class="mt-1 inline-flex min-h-11 items-center gap-1 text-caption font-semibold text-brand underline underline-offset-4 hover:text-brand-hover md:min-h-8">{{ $action['label'] }} <x-heroicon-o-arrow-right class="size-3.5" aria-hidden="true" /></a>

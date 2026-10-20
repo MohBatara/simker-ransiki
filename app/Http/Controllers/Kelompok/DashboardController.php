@@ -25,6 +25,7 @@ class DashboardController extends Controller
             'task' => $summary->task(),
             'current' => $summary->current(),
             'checklist' => $summary->profileChecklist(),
+            'facts' => $summary->facts(),
             'history' => $history,
             'olderOutstanding' => $history->isEmpty() ? 0 : $summary->outstandingBefore($history->last()['period']),
             'followUps' => $summary->followUps(),
