@@ -7,8 +7,8 @@ use App\Http\Controllers\Publik\SiteImageController;
 use App\Http\Requests\Admin\PotentialBlockRequest;
 use App\Models\SiteSetting;
 use App\Support\ImageVariants;
+use App\Support\SitePhotos;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Support\Str;
 
 /**
  * Blok "Potensi ekonomi" di Profil Ransiki (Konten Website > Profil Ransiki). Hanya Admin (route role:admin + request).
@@ -25,8 +25,7 @@ class PotentialBlockController extends Controller
         ];
 
         if ($photo = $request->file($request->prefix().'.photo')) {
-            $path = "site/potensi-{$n}-".Str::uuid().'.jpg';
-            ImageVariants::store(SiteImageController::DISK, $photo->getRealPath(), $path, ImageVariants::WIDE);
+            $path = SitePhotos::storePotential((int) $n, $photo->getRealPath());
             ImageVariants::delete(SiteImageController::DISK, SiteSetting::get("potential_{$n}_photo_path"), ImageVariants::WIDE);
             $values["potential_{$n}_photo_path"] = $path;
         }

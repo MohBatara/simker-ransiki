@@ -75,6 +75,12 @@ return [
     ],
 
     /*
+    | Foto resmi distrik dari database/seeders/media (hero beranda, Profil Ransiki) dipasang OfficialPhotoSeeder.
+    | Tes mematikannya (phpunit.xml) agar tidak menulis ke storage asli dan tetap cepat.
+    */
+    'seed_photos' => (bool) env('SIMKER_SEED_PHOTOS', true),
+
+    /*
     |--------------------------------------------------------------------------
     | Ikon bidang usaha di website publik (App\Support\PublicIcons)
     |--------------------------------------------------------------------------

@@ -11,10 +11,10 @@ use App\Models\HeroSlide;
 use App\Models\SiteSetting;
 use App\Support\ImageVariants;
 use App\Support\PublicDirectory;
+use App\Support\SitePhotos;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Str;
 use Illuminate\View\View;
 
 class SiteContentController extends Controller
@@ -59,7 +59,7 @@ class SiteContentController extends Controller
     public function storePhoto(SiteImageRequest $request, string $slot): JsonResponse
     {
         $key = SiteSetting::PHOTO_SLOTS[$slot];
-        $path = $this->storeImage($request, 'site/'.$slot, in_array($slot, SiteSetting::BANNER_SLOTS, true) ? ImageVariants::HERO_BUDGET : []);
+        $path = SitePhotos::storeSlot($slot, $request->file('file')->getRealPath());
 
         ImageVariants::delete(SiteImageController::DISK, SiteSetting::get($key), ImageVariants::WIDE);
         SiteSetting::put([$key => $path]);
@@ -78,7 +78,7 @@ class SiteContentController extends Controller
 
     public function storeSectorPhoto(SiteImageRequest $request, BusinessSector $sector): JsonResponse
     {
-        $path = $this->storeImage($request, 'site/bidang-'.$sector->id);
+        $path = SitePhotos::storeWide('site/bidang-'.$sector->id, $request->file('file')->getRealPath());
 
         ImageVariants::delete(SiteImageController::DISK, $sector->photo_path, ImageVariants::WIDE);
         $sector->forceFill(['photo_path' => $path])->save();
@@ -94,14 +94,5 @@ class SiteContentController extends Controller
         Cache::forget(PublicDirectory::SECTORS_CACHE_KEY);
 
         return back()->with('status', 'Foto bidang usaha dihapus.');
-    }
-
-    /** Diproses seperti foto produk (putar sesuai EXIF, tanpa metadata) + varian WebP 480/960/1600. */
-    private function storeImage(SiteImageRequest $request, string $prefix, array $budgets = []): string
-    {
-        $path = $prefix.'-'.Str::uuid().'.jpg';
-        ImageVariants::store(SiteImageController::DISK, $request->file('file')->getRealPath(), $path, ImageVariants::WIDE, $budgets);
-
-        return $path;
     }
 }

@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Actions\Files\StoreAttachment;
 use App\Enums\FollowUpStatus;
 use App\Enums\IssueKind;
 use App\Enums\LegalStatus;
@@ -27,6 +28,7 @@ use App\Support\Format;
 use App\Support\ImageProcessor;
 use App\Support\ImageVariants;
 use Illuminate\Database\Seeder;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Storage;
@@ -147,6 +149,8 @@ class DemoSeeder extends Seeder
             'office_hours' => 'Senin sampai Jumat, pukul 08.00 sampai 15.00 WIT',
         ]);
 
+        $this->call(OfficialPhotoSeeder::class);
+
         if ($this->photosEnabled()) {
             $this->seedSitePhotos();
         }
@@ -160,17 +164,19 @@ class DemoSeeder extends Seeder
     }
 
     /**
-     * Foto hanya diproses di local: tes tidak menulis ke storage asli dan tetap cepat. Sumbernya foto
-     * sementara di database/seeders/photos; path tetap (…-demo.jpg) agar seed ulang menimpa file yang sama.
+     * Foto hanya diproses di local: tes tidak menulis ke storage asli dan tetap cepat. Sumbernya foto asli klien di
+     * database/seeders/media (produk, kelompok, berita) dan foto sementara di database/seeders/photos (sampul, Tentang,
+     * bidang usaha, jenis kelembagaan); path tetap (…-demo.jpg) agar seed ulang menimpa file yang sama.
      */
     private function photosEnabled(): bool
     {
         return app()->isLocal() && is_dir(database_path('seeders/photos'));
     }
 
+    /** "media/…" = foto asli klien (database/seeders/media); nama file saja = foto sementara di database/seeders/photos. */
     private function photo(string $file): string
     {
-        return database_path('seeders/photos/'.$file);
+        return database_path('seeders/'.(str_starts_with($file, 'media/') ? $file : 'photos/'.$file));
     }
 
     private function storeWidePhoto(string $file, string $path, array $budgets = [], array $widths = ImageVariants::WIDE): string
@@ -189,6 +195,20 @@ class DemoSeeder extends Seeder
         Storage::disk(Product::PHOTO_DISK)->put($base.Product::THUMBNAIL_SUFFIX.'.jpg', $thumbnail['contents']);
 
         $product->forceFill(['photo_path' => $base.'.jpg'])->save();
+    }
+
+    /**
+     * Foto kelompok (belum ada kolom foto profil kelompok): lampiran gambar kelompok lewat StoreAttachment yang sama dengan
+     * unggahan, sehingga tampil di kartu Foto detail kelompok dan hanya bisa dibuka lewat route lampiran (Policy).
+     */
+    private function storeOrganizationPhotos(Organization $organization, array $files, User $uploader): void
+    {
+        $captions = OfficialPhotoSeeder::captions();
+
+        foreach ($files as $file) {
+            $name = ($captions[substr($file, strlen('media/'))] ?? 'Foto kelompok').'.jpg';
+            app(StoreAttachment::class)->handle($organization, new UploadedFile($this->photo($file), $name, 'image/jpeg', null, true), $uploader);
+        }
     }
 
     /** Foto sampul, "Tentang", dan lima bidang usaha. Perdagangan dan Lainnya sengaja tanpa foto. */
@@ -244,31 +264,31 @@ class DemoSeeder extends Seeder
     }
 
     /**
-     * Tujuh berita terbit (empat berfoto; satu kegiatan dengan tanggal kegiatan ke depan untuk Agenda), satu draf, dan satu
+     * Tujuh berita terbit (empat berfoto asli klien; satu kegiatan dengan tanggal kegiatan ke depan untuk Agenda), satu draf, dan satu
      * terjadwal (keduanya tidak tampil publik). Elemen ke-9 opsional = tanggal kegiatan.
      */
     private function seedPosts(User $admin, array $organizations): void
     {
         $posts = [
             [
-                'Pelatihan fermentasi biji kakao untuk tiga kelompok tani', 'kegiatan', '2026-09-24 09:00', 'published', [1, 19, 38], 'panen-kakao.jpg',
+                'Pelatihan fermentasi biji kakao untuk tiga kelompok tani', 'kegiatan', '2026-09-24 09:00', 'published', [1, 19, 38], null,
                 'Petugas penyuluh melatih anggota tiga kelompok tani cara fermentasi dan penjemuran biji kakao agar mutunya seragam.',
                 "Pelatihan berlangsung dua hari di rumah fermentasi Kelompok Tani Kakao Harapan. Peserta berasal dari tiga kelompok tani kakao binaan.\n\n## Materi\n\n- Memilih buah yang matang penuh\n- Fermentasi dalam kotak kayu selama lima hari\n- Penjemuran di para-para sampai kadar air cukup rendah\n- Sortasi dan pengemasan dalam karung bersih\n\nSetiap kelompok membawa pulang satu set catatan praktik. Petugas akan berkunjung lagi bulan depan untuk melihat hasilnya.",
             ],
             [
-                'Produk olahan kelompok tampil di pameran UMKM kabupaten', 'kegiatan', '2026-08-19 10:00', 'published', [2, 20, 34, 36], 'pengemasan.jpg',
-                'Keripik pisang, cokelat batang, dan sagu lempeng dari empat kelompok binaan dipajang dan dijual di pameran UMKM tingkat kabupaten.',
-                "Empat kelompok usaha dari Distrik Ransiki ikut pameran UMKM selama tiga hari. Stan distrik menampilkan keripik pisang, cokelat batang, sagu lempeng, dan bagea.\n\nSebagian besar produk habis terjual pada hari kedua. Beberapa pengunjung meminta kontak kelompok untuk pesanan rutin.\n\nPengalaman ini menunjukkan kemasan dan label yang rapi sangat membantu penjualan.",
+                'Produk olahan kelompok dijual bersama di Pasar Ransiki', 'kegiatan', '2026-08-19 10:00', 'published', [2, 20, 34, 36], 'media/berita/pasar-ransiki.jpg',
+                'Keripik pisang, cokelat batang, dan sagu lempeng dari empat kelompok binaan dijual di lapak bersama Pasar Ransiki.',
+                "Empat kelompok usaha binaan berjualan di lapak bersama Pasar Ransiki selama tiga hari pasar. Lapak menampilkan keripik pisang, cokelat batang, sagu lempeng, dan bagea.\n\nSebagian besar produk habis terjual pada hari kedua. Beberapa pembeli meminta kontak kelompok untuk pesanan rutin.\n\nPengalaman ini menunjukkan kemasan dan label yang rapi sangat membantu penjualan.",
             ],
             [
-                'Panen raya kakao di kebun kelompok tani', 'kegiatan', '2026-07-08 08:00', 'published', [19], 'kakao.jpg',
-                'Kelompok Tani Kakao Mekar Jaya memanen kakao bersama setelah tiga bulan perawatan kebun dan pemangkasan.',
-                "Panen raya dilakukan bergiliran di kebun anggota selama satu pekan. Hasilnya dikumpulkan di rumah fermentasi kelompok.\n\nAnggota mencatat berat hasil panen setiap kebun agar pembagian hasil penjualan adil.",
+                'Petugas meninjau kandang kelompok peternak ayam kampung', 'kegiatan', '2026-07-08 08:00', 'published', [22], 'media/berita/kandang-ayam.jpg',
+                'Petugas penyuluh mengunjungi kandang Kelompok Peternak Ayam Kampung Subur Makmur untuk memeriksa kebersihan kandang dan kesehatan ayam.',
+                "Kunjungan dilakukan pagi hari saat ayam diberi pakan. Petugas memeriksa ventilasi kandang, tempat minum, dan catatan vaksinasi.\n\nAnggota diminta memisahkan ayam yang sakit dan mencatat jumlah ayam setiap pekan agar laporan bulanan lebih mudah diisi.",
             ],
             [
-                'Pelatihan pengemasan dan label untuk produk keripik', 'kegiatan', '2026-06-12 09:00', 'published', [2, 14, 20], 'keripik.jpg',
-                'Pelaku usaha keripik belajar memilih kemasan yang tahan lama dan menulis label yang lengkap.',
-                "Peserta mempraktikkan pengemasan dengan plastik tebal dan perekat panas. Materi label mencakup nama produk, berat bersih, tanggal produksi, dan alamat usaha.\n\nKelompok yang sudah siap akan didampingi mengurus izin PIRT.",
+                'Pendampingan pencatatan hasil tangkapan kelompok nelayan', 'kegiatan', '2026-06-12 09:00', 'published', [6, 17], 'media/berita/pendampingan-nelayan-2.jpg',
+                'Petugas mendampingi dua kelompok nelayan mencatat hasil tangkapan harian sebagai bahan laporan bulanan.',
+                "Pendampingan dilakukan di pangkalan perahu kelompok. Setiap nelayan mencatat jenis ikan, berat, dan harga jual setelah kembali melaut.\n\nCatatan harian ini dijumlahkan setiap akhir bulan sehingga angka produksi dan penjualan di laporan lebih tepat.",
             ],
             [
                 'Batas pengiriman laporan bulanan setiap tanggal 10', 'berita', '2026-09-01 08:00', 'published', [], null,
@@ -281,7 +301,7 @@ class DemoSeeder extends Seeder
                 "Bawa KTP ketua, data anggota, dan keterangan usaha. Pendampingan tidak dipungut biaya.\n\nKelompok yang sudah punya NIB dapat melanjutkan ke pengurusan PIRT atau sertifikat halal.",
             ],
             [
-                'Pelatihan pengasapan ikan untuk kelompok nelayan', 'kegiatan', '2026-10-05 09:00', 'published', [6, 33], null,
+                'Pelatihan pengasapan ikan untuk kelompok nelayan', 'kegiatan', '2026-10-05 09:00', 'published', [6, 33], 'media/berita/pendampingan-nelayan.jpg',
                 'Pelatihan pengasapan ikan yang lebih bersih untuk dua kelompok nelayan, terbuka bagi anggota yang mendaftar.',
                 "Pelatihan contoh ini membahas cara mengasap ikan dengan tungku tertutup agar asap tidak menempel berlebihan.\n\nPendaftaran lewat petugas OPD pembina paling lambat satu pekan sebelum pelatihan.",
                 '2026-11-12',
@@ -289,12 +309,12 @@ class DemoSeeder extends Seeder
             [
                 'Rencana pelatihan pengolahan ikan asap', 'kegiatan', null, 'draft', [6, 33], null,
                 'Rencana pelatihan pengasapan ikan yang lebih bersih untuk kelompok nelayan.',
-                "Draf. Jadwal dan tempat menyusul.",
+                'Draf. Jadwal dan tempat menyusul.',
             ],
             [
                 'Pameran produk kampung akhir tahun', 'berita', '2026-12-01 08:00', 'published', [], null,
                 'Pendaftaran stan pameran produk kampung akhir tahun dibuka untuk kelompok binaan.',
-                "Setiap kelompok mendapat satu meja. Pendaftaran lewat petugas OPD pembina.",
+                'Setiap kelompok mendapat satu meja. Pendaftaran lewat petugas OPD pembina.',
             ],
         ];
 
@@ -348,7 +368,7 @@ class DemoSeeder extends Seeder
             'email' => ($data['email'] ?? false) ? "kelompok{$n}@example.test" : null,
             'members_count' => $members,
             'workforce_count' => $members === null || $n % 5 === 0 ? null : max(1, intdiv($members, 3)),
-            'description' => $n % 11 === 0 ? null : strtr(DemoData::SECTOR_TEXT[$primarySector][0], ['{produk}' => $productList, '{kampung}' => $village->name]),
+            'description' => $n % 11 === 0 ? null : strtr(DemoData::SECTOR_TEXT[$data['text'] ?? $primarySector][0], ['{produk}' => $productList, '{kampung}' => $village->name]),
             'production_capacity' => $n % 3 === 0 ? null : sprintf('Sekitar %s %s per bulan', Format::number(round($firstProduct[2] * 1.3, -1)), $firstProduct[1]),
             'markets' => [
                 'Pasar distrik dan pengepul dari kota.',
@@ -398,6 +418,10 @@ class DemoSeeder extends Seeder
             }
 
             $products[] = [$product, $base, $price, $season];
+        }
+
+        if ($this->photosEnabled()) {
+            $this->storeOrganizationPhotos($organization, $data['photos'] ?? [], $admin);
         }
 
         $this->seedLicenses($n, $organization);
@@ -668,7 +692,7 @@ class DemoSeeder extends Seeder
         $sales = $fillsFinance ? array_sum(array_column($items, 'revenue')) : null;
         $isEnterprise = in_array($data['type'], ['bumdes', 'kdmp']);
         $members = $organization->members_count;
-        $text = DemoData::SECTOR_TEXT[$data['sectors'][0]];
+        $text = DemoData::SECTOR_TEXT[$data['text'] ?? $data['sectors'][0]];
         $productName = mb_strtolower($products[0][0]->name);
 
         return [[

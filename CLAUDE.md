@@ -440,7 +440,7 @@ Jangan mengarang kepanjangan akronim resmi (KDMP, KNMP, dsb.). Simpan apa adanya
 - Tabel produksi di HP: kartu dengan nama tebal lalu "Jumlah: 1.384 ekor" dan "Kelompok: 5" (`x-admin.table.cell inline`).
 
 ### Konten & notifikasi
-- `hero_slides` (foto hero beranda, Konten Website > tab Beranda, maks `HeroSlide::MAX` = 3, Policy `HeroSlidePolicy`
+- `hero_slides` (foto hero beranda, Konten Website > tab Beranda, maks `HeroSlide::MAX` = 4, Policy `HeroSlidePolicy`
   hanya Admin): photo_path (JPEG 1920 tanpa EXIF; varian WebP 640/1280/1920 = `ImageVariants::HERO`; file asli tidak
   disimpan), caption (≤ 100), alt_text (wajib), focus (enum HeroFocus atas/tengah/bawah → object-position), position,
   is_active, created_by, updated_by. Unggah: JPG/PNG/WebP, maks 8 MB, lebar < 1280 px ditolak, 1280–1599 px diterima dengan peringatan kuning
@@ -448,7 +448,15 @@ Jangan mengarang kepanjangan akronim resmi (KDMP, KNMP, dsb.). Simpan apa adanya
   browser) dengan pratinjau. Validasi gagal: ringkasan error di atas tombol simpan form itu (`data-form-errors`). Isian tiap form slide berawalan sendiri (`baru[...]`,
   `slide_{id}[...]`). Foto: `GET /foto-hero/{id}` (slide nonaktif hanya Admin). Tanpa slide aktif: satu foto bawaan
   `resources/aset/hero-bawaan*` (`/foto-hero/bawaan`, foto sementara; ganti dengan foto asli Ransiki), tidak pernah
-  foto produk kelompok.
+  foto produk kelompok. Penyimpanan foto Konten Website (hero, slot sampul/tentang/profil/kantor, blok potensi, bidang
+  usaha) lewat SATU helper `App\Support\SitePhotos`, dipakai controller Admin dan seeder.
+- Foto resmi distrik dari klien: `database/seeders/media` (JPG sudah dikecilkan, tanpa GPS; kegunaan + keterangan di
+  `daftar-foto.csv`). `OfficialPhotoSeeder` (dipanggil ProductionSeeder DAN DemoSeeder) memasang 4 slide hero (`media/hero`,
+  urut nama file, keterangan = caption + alt dari CSV) dan foto Profil Ransiki (`OfficialPhotoSeeder::PROFILE`: Kantor
+  Distrik = banner + foto kantor, tiga foto pasar/nelayan = blok potensi) ke tabel/disk yang sama dengan unggahan Admin;
+  slot yang sudah berisi tidak ditimpa (aman diulang). Mati di tes (`SIMKER_SEED_PHOTOS=false`, `simker.seed_photos`).
+  Foto produk, kelompok, dan berita dari media (pemiliknya belum diketahui) HANYA di DemoSeeder; `produk/mahkota-adat.jpg`
+  belum boleh dipakai (bahan perlu dicek).
 - `site_settings`: key, value. Kunci di `SiteSetting::KEYS`: hero_title, hero_title_accent, home_intro, about_title (bawaan di
   `SiteSetting::DEFAULTS` bila kosong), profile_body,
   office_address,
@@ -853,7 +861,7 @@ Pengecualian dari Larangan di atas, khusus publik:
   hubung; tulis dengan koma, titik, atau "sampai" (dijaga tes).
 - Judul hero `text-hero` 48px (desktop) / `text-hero-sm` 36px (HP). Hero beranda memakai `.overlay-hero` yang lebih
   tebal (HP 85%; desktop 90% → 85% di 55% → 30%) agar aksen `sun` di judul ≥ 4,5:1 (dijaga `PublicContrastTest`).
-  Maks 3 foto dari `hero_slides` aktif (urut posisi; tanpa slide aktif: foto bawaan), slider Alpine `heroSlider`
+  Maks 4 foto dari `hero_slides` aktif (urut posisi; tanpa slide aktif: foto bawaan), slider Alpine `heroSlider`
   (`resources/js/hero-slider.js`): 7 detik, panah + titik, berhenti saat hover/fokus/tab tersembunyi, tanpa gerak
   bila `prefers-reduced-motion`. Foto pertama `fetchpriority="high"`, sisanya lazy.
 - Bagian gelap diberi kelas `on-dark` agar cincin fokus berwarna `sun`.
@@ -1247,6 +1255,10 @@ Data contoh harus terlihat realistis namun jelas bukan data resmi:
 - Riwayat laporan terverifikasi Januari–Juni 2026 (sebagian bulan sengaja kosong) untuk grafik, lalu
   laporan bulanan 3 bulan terakhir dengan status beragam (draft, submitted, revision, verified),
   sebagian kelompok sengaja belum melapor, sebagian `no_activity`, sebagian angka keuangan kosong.
+- Foto contoh: produk, kelompok, dan sampul berita dari foto klien `database/seeders/media` (abon ikan, tas anyaman, ayam
+  kampung; kelompok nelayan dan Kelompok Peternak Ayam Kampung Subur Makmur). Foto kelompok disimpan sebagai lampiran
+  gambar kelompok (`StoreAttachment`, belum ada kolom foto profil kelompok). Foto sementara lain (sampul, Tentang, bidang
+  usaha, jenis kelembagaan) masih dari `database/seeders/photos`. Produk tanpa foto memakai petak inisial.
 - Akun uji (kata sandi `password`, hanya untuk local):
   `admin` · `opd.pertanian` · `opd.dpmptsp` · `opd.dinkopdag` · `opd.perikanan` ·
   `kelompok1`, `kelompok2` (dua kelompok berbeda, untuk uji akses silang)
@@ -1271,7 +1283,7 @@ Data contoh harus terlihat realistis namun jelas bukan data resmi:
 
 Panduan langkah demi langkah: `docs/DEPLOY.md` (perbarui bila langkah deploy berubah).
 
-- Data awal server: `db:seed --class=ProductionSeeder --force` (data master saja; `OPDS`/`VILLAGES` di seeder
+- Data awal server: `db:seed --class=ProductionSeeder --force` (data master + foto resmi hero dan Profil Ransiki; `OPDS`/`VILLAGES` di seeder
   kosong sampai daftar resmi diterima), lalu `php artisan simker:create-admin` (interaktif, kata sandi tersembunyi,
   tanpa wajib ganti). `DatabaseSeeder` = ProductionSeeder (+ DemoSeeder hanya di local). `DemoSeeder` melempar
   `RuntimeException` di luar local/testing.

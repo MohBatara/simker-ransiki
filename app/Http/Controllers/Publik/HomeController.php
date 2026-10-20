@@ -26,7 +26,6 @@ class HomeController extends Controller
     /** Jumlah berita di daftar samping berita utama (HP dan tablet menampilkan 3 pertama). */
     private const NEWS_LIST_LIMIT = 4;
 
-
     public function __invoke(): View
     {
         return view('publik.home', [
@@ -41,7 +40,7 @@ class HomeController extends Controller
     }
 
     /**
-     * Slide hero yang diatur Admin (maks 3, urut posisi). Belum ada yang aktif: satu foto bawaan dari repo,
+     * Slide hero yang diatur Admin (maks HeroSlide::MAX = 4, urut posisi). Belum ada yang aktif: satu foto bawaan dari repo,
      * tidak pernah foto produk kelompok.
      *
      * @return list<array{image: array, alt: string, caption: ?string, focus: string}>

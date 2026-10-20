@@ -4,6 +4,7 @@ use App\Models\HeroSlide;
 use App\Models\Organization;
 use App\Models\User;
 use App\Support\ImageVariants;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 
 beforeEach(function () {
@@ -51,7 +52,7 @@ test('validasi: foto wajib, lebar minimal 1280 px, tipe, ukuran, teks alternatif
         ->assertSessionHasErrors(['baru.photo' => 'Foto terlalu kecil: lebarnya 1279 px, minimal 1.280 px. Pakai foto asli dari kamera, bukan hasil kiriman WhatsApp.']);
     $this->post('/admin/website/slide', slideInput(['photo' => realUpload('dok.pdf', "%PDF-1.4\n%contoh")]))
         ->assertSessionHasErrors('baru.photo');
-    $this->post('/admin/website/slide', slideInput(['photo' => Illuminate\Http\UploadedFile::fake()->create('besar.jpg', 9000, 'image/jpeg')]))
+    $this->post('/admin/website/slide', slideInput(['photo' => UploadedFile::fake()->create('besar.jpg', 9000, 'image/jpeg')]))
         ->assertSessionHasErrors(['baru.photo' => 'Ukuran foto paling besar 8 MB. Perkecil foto lalu coba lagi.']);
     $this->post('/admin/website/slide', slideInput(['photo' => null]))
         ->assertSessionHasErrors(['baru.photo' => 'Pilih foto slide.']);
@@ -61,15 +62,15 @@ test('validasi: foto wajib, lebar minimal 1280 px, tipe, ukuran, teks alternatif
     expect(HeroSlide::count())->toBe(0);
 });
 
-test('PNG diterima dan maksimal 3 slide', function () {
+test('PNG diterima dan maksimal 4 slide', function () {
     $this->actingAs($this->admin);
-    HeroSlide::factory()->count(2)->create();
+    HeroSlide::factory()->count(3)->create();
 
     $this->post('/admin/website/slide', slideInput(['photo' => realUpload('hero.png', imageBytes(1600, 900, 'png'))]))->assertSessionHasNoErrors();
     $this->post('/admin/website/slide', slideInput())
-        ->assertSessionHasErrors(['baru.photo' => 'Sudah ada 3 slide. Hapus salah satu slide lebih dulu.']);
+        ->assertSessionHasErrors(['baru.photo' => 'Sudah ada 4 slide. Hapus salah satu slide lebih dulu.']);
 
-    expect(HeroSlide::count())->toBe(3);
+    expect(HeroSlide::count())->toBe(4);
 });
 
 test('admin mengubah slide tanpa mengganti foto, lalu mengganti fotonya (varian lama dihapus)', function () {
@@ -161,8 +162,8 @@ test('tab Beranda menampilkan slide, form tambah, dan judul; tab Halaman & konta
         ->assertSee('Pratinjau')->assertSee('Kelembagaan Ekonomi')->assertSee('Halaman &amp; kontak', false);
     $this->get('/admin/website/halaman')->assertOk()->assertSee('Kontak kantor distrik')->assertSee('Foto sampul');
 
-    HeroSlide::factory()->count(2)->create();
-    $this->get('/admin/website')->assertDontSee('slide lagi.')->assertSee('Sudah 3 slide.');
+    HeroSlide::factory()->count(3)->create();
+    $this->get('/admin/website')->assertDontSee('slide lagi.')->assertSee('Sudah 4 slide.');
 });
 
 test('foto 1280–1599 px diterima dengan peringatan kuning; 1600 px ke atas tanpa peringatan', function () {
@@ -213,7 +214,7 @@ test('slide baru dan judul baru langsung tampil di beranda (tidak tertahan cache
 
     // Setiap URL di srcset bisa dibuka tanpa login dan berupa WebP; cadangan JPEG juga.
     $this->post('/logout');
-    foreach (App\Support\ImageVariants::HERO as $width) {
+    foreach (ImageVariants::HERO as $width) {
         $this->get("/foto-hero/{$slide->id}?ukuran={$width}&format=webp")->assertOk()->assertHeader('Content-Type', 'image/webp');
     }
     $this->get("/foto-hero/{$slide->id}")->assertOk()->assertHeader('Content-Type', 'image/jpeg');

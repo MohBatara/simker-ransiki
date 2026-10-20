@@ -11,7 +11,7 @@
     <x-admin.form-intro class="mb-6" />
 
     <x-admin.form-layout nav>
-        <x-admin.card title="Foto hero" description="Maksimal 3 slide, bergantian setiap 7 detik di bagian atas beranda. Selama belum ada slide yang ditampilkan, beranda memakai foto bawaan.">
+        <x-admin.card title="Foto hero" :description="'Maksimal '.HeroSlide::MAX.' slide, bergantian setiap 7 detik di bagian atas beranda. Selama belum ada slide yang ditampilkan, beranda memakai foto bawaan.'">
             @if ($slides->isEmpty())
                 <p class="text-ui text-ink-soft">Belum ada slide. Tambah slide pertama di bawah.</p>
             @else
@@ -54,7 +54,7 @@
                 </ol>
             @endif
             @if ($slides->count() >= HeroSlide::MAX)
-                <p class="mt-4 text-caption text-ink-muted">Sudah 3 slide. Hapus salah satu slide untuk menambah foto baru.</p>
+                <p class="mt-4 text-caption text-ink-muted">Sudah {{ HeroSlide::MAX }} slide. Hapus salah satu slide untuk menambah foto baru.</p>
             @endif
         </x-admin.card>
 
