@@ -86,7 +86,7 @@ final class DemoData
             'name' => 'BUMDes Maju Bersama', 'type' => 'bumdes', 'village' => 1,
             'leader' => 'Daniel Kafiar', 'sectors' => ['Perdagangan', 'Perkebunan'], 'opds' => ['Dinkopdag', 'Pertanian', 'DPMPTSP'],
             'members' => 9, 'founded' => 2017, 'tier' => 'rajin', 'september' => 'submitted',
-            'products' => [['Beras lokal', 'kg', 900, 13_000, 'dagang', null]],
+            'products' => [['Beras', 'kg', 900, 13_000, 'dagang', null]],
         ],
         4 => [
             'name' => 'Kelompok Perajin Noken Mama Sejahtera', 'type' => 'umkm', 'village' => 7,

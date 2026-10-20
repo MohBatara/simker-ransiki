@@ -310,7 +310,7 @@ test('kepatuhan pelaporan: urutan tumpukan tetap dan legenda memuat jumlah bulan
 
 test('tabel produksi: satuan menempel pada jumlah di semua ukuran layar, tanpa kolom Satuan terpisah', function () {
     $html = $this->actingAs($this->opdUser)->get('/opd/dasbor/ekonomi')->assertOk()
-        ->assertSee('data-label="Jumlah"', false)
+        ->assertSee('data-label="Produksi"', false)
         ->getContent();
 
     expect(preg_match('#15\s+kg#', strip_tags($html)))->toBe(1)

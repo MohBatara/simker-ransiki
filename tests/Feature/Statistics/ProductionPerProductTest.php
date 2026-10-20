@@ -135,6 +135,74 @@ test('kartu dasbor: subjudul baru, nama kelompok tunggal, "N kelompok" dengan da
         ->assertSee('lg:col-span-7', false);
 
     $this->get('/admin/dasbor/ekonomi?dari=2026-09&sampai=2026-09')->assertOk()
-        ->assertSee('Dibanding periode sebelumnya')
+        ->assertSee('Vs periode sebelumnya')
         ->assertSee('data-production-change="up"', false);
+});
+
+/** Isi kartu Produksi per produk di tab Ekonomi. */
+function economyProductionCard(mixed $test, string $query): string
+{
+    $html = $test->get('/admin/dasbor/ekonomi?'.$query)->assertOk()->getContent();
+    preg_match('#<div x-data="\{ q: \'\', all: false \}" data-production-table>.*?</section>#s', $html, $card);
+
+    return $card[0];
+}
+
+test('tab Ekonomi: tanpa baris yang bisa dibandingkan, kolom Vs disembunyikan dengan satu kalimat kecil', function () {
+    produce($this->orgs['Kelompok Alfa'], '2026-09-01', [['Kakao', 100, 'kg']]);
+    $this->actingAs($this->admin);
+
+    $card = economyProductionCard($this, 'dari=2026-09&sampai=2026-09');
+
+    expect($card)->toContain('Belum ada data periode sebelumnya untuk dibandingkan.')
+        ->not->toContain('Vs periode sebelumnya')
+        ->not->toContain('data-production-change');
+});
+
+test('tab Ekonomi: rentang dibanding rentang sebelumnya yang sama panjang; yang tidak bisa diberi "baru" kecil', function () {
+    // Rentang Agustus sampai September dibanding Juni sampai Juli.
+    produce($this->orgs['Kelompok Alfa'], '2026-06-01', [['Kakao', 40, 'kg']]);
+    produce($this->orgs['Kelompok Alfa'], '2026-07-01', [['Kakao', 60, 'kg']]);
+    produce($this->orgs['Kelompok Alfa'], '2026-08-01', [['Kakao', 70, 'kg']]);
+    produce($this->orgs['Kelompok Alfa'], '2026-09-01', [['Kakao', 80, 'kg'], ['Madu', 3, 'liter']]);
+    // Mei tidak ikut rentang pembanding.
+    produce($this->orgs['Kelompok Beta'], '2026-05-01', [['Madu', 9, 'liter']]);
+    $this->actingAs($this->admin);
+
+    $stats = new Statistics($this->admin, [], CarbonImmutable::parse('2026-08-01'), CarbonImmutable::parse('2026-09-01'));
+    $rows = $stats->production()->keyBy('product');
+    expect($rows['Kakao']['change'])->toBe(['status' => 'compared', 'percent' => 50.0, 'matched' => 1, 'previous' => 'Juni 2026 sampai Juli 2026'])
+        ->and($rows['Madu']['change']['status'])->toBe('new');
+
+    $card = economyProductionCard($this, 'dari=2026-08&sampai=2026-09');
+    expect($card)->toContain('Vs periode sebelumnya')
+        ->toContain('title="Dibanding Juni 2026 sampai Juli 2026, dari kelompok yang sama"')
+        ->toContain('data-production-change="up"')
+        ->toMatch('#<span class="cursor-help text-label text-ink-3"[^>]*data-production-change="new">baru</span>#')
+        ->not->toContain('belum bisa dibandingkan')
+        ->not->toContain('Belum ada data periode sebelumnya');
+});
+
+test('tab Ekonomi: nama kelompok utuh rata kiri, cari per baris, 15 baris lalu "Tampilkan semua (N)"', function () {
+    $alfa = $this->orgs['Kelompok Alfa']->forceFill(['name' => 'Kelompok Usaha Bersama Pengolahan Hasil Perikanan Pantai Damai'])->saveQuietly();
+    produce($this->orgs['Kelompok Alfa'], '2026-09-01', collect(range(1, 17))->map(fn ($n) => ["Produk {$n}", $n, 'kg'])->all());
+    $this->actingAs($this->admin);
+
+    $card = economyProductionCard($this, 'dari=2026-09&sampai=2026-09');
+
+    expect($card)->toContain('Kelompok Usaha Bersama Pengolahan Hasil Perikanan Pantai Damai</span>')
+        ->not->toContain('max-w-40 truncate')
+        ->toContain('data-search="produk 1 kelompok usaha bersama pengolahan hasil perikanan pantai damai"')
+        ->toContain('(all || 14 < 15)')
+        ->toContain('Tampilkan semua (17)')
+        ->toContain('placeholder="Cari produk atau kelompok"')
+        ->and(substr_count($card, 'data-search='))->toBe(17);
+});
+
+test('tab Ekonomi: tiga kartu ringkasan sejajar, catatan di ikon info, produksi selebar penuh di bawahnya', function () {
+    $html = $this->actingAs($this->admin)->get('/admin/dasbor/ekonomi')->assertOk()->getContent();
+
+    expect($html)->toContain('lg:grid-cols-3 lg:items-stretch')
+        ->and(preg_match('#role="tooltip"[^>]*>\s*<span class="block">Kelompok dengan lebih dari satu bidang usaha#', $html))->toBe(1)
+        ->and(strpos($html, 'data-production-table'))->toBeGreaterThan(strpos($html, 'Kebutuhan dukungan terbanyak'));
 });

@@ -3,6 +3,8 @@
     'source' => 'Dari laporan terverifikasi.',
     // Catatan di bawah grafik, mis. kelompok dengan beberapa bidang usaha.
     'note' => null,
+    // Catatan cara menghitung sebagai ikon info (i) bertooltip di kepala kartu (pengganti note yang panjang).
+    'info' => null,
     // line | bar | bar-stacked | bar-horizontal
     'type' => 'bar',
     'format' => 'number',
@@ -51,13 +53,18 @@
 
 <div {{ $attributes->class('min-w-0') }} @unless ($empty) x-data="chart(@js($configs))" @endunless>
     <x-admin.card :title="$title" :description="$source" stretch class="h-full">
-        @unless ($empty)
+        @if (! $empty || $info)
             <x-slot:actions>
-                <x-button variant="ghost" icon="table-cells" class="-my-2 print:hidden" x-on:click="showTable = ! showTable" x-bind:aria-expanded="showTable" aria-controls="{{ $id }}-tabel">
-                    <span x-text="showTable ? 'Tutup tabel' : 'Lihat tabel'">Lihat tabel</span>
-                </x-button>
+                @unless ($empty)
+                    <x-button variant="ghost" icon="table-cells" class="-my-2 print:hidden" x-on:click="showTable = ! showTable" x-bind:aria-expanded="showTable" aria-controls="{{ $id }}-tabel">
+                        <span x-text="showTable ? 'Tutup tabel' : 'Lihat tabel'">Lihat tabel</span>
+                    </x-button>
+                @endunless
+                @if ($info)
+                    <x-admin.info-tip :notes="$info" label="Cara menghitung" :id="$id.'-info'" class="-my-2" />
+                @endif
             </x-slot:actions>
-        @endunless
+        @endif
 
         @if ($empty)
             <p class="text-ink-soft">{{ $empty }}</p>

@@ -36,16 +36,7 @@
     <x-slot:actions>
         <span class="inline-flex h-8 items-center rounded-control border border-line px-2.5 text-label text-ink-2">6 bulan terakhir</span>
         {{-- Catatan cara menghitung sebagai tooltip (hover/fokus), bukan di badan kartu. --}}
-        <span class="group relative inline-flex">
-            <button type="button" class="flex size-11 items-center justify-center rounded-control text-ink-3 transition-colors hover:bg-subtle hover:text-ink md:size-8" aria-label="Cara menghitung" aria-describedby="catatan-ekonomi">
-                <x-heroicon-o-information-circle class="size-5" />
-            </button>
-            <span id="catatan-ekonomi" role="tooltip" class="invisible absolute right-0 top-full z-20 mt-1 w-72 rounded-card bg-ink px-3 py-2 text-caption text-paper opacity-0 shadow-float transition-opacity group-hover:visible group-hover:opacity-100 group-focus-within:visible group-focus-within:opacity-100">
-                @foreach ($notes as $note)
-                    <span class="block">{{ $note }}</span>
-                @endforeach
-            </span>
-        </span>
+        <x-admin.info-tip :notes="$notes" label="Cara menghitung" id="catatan-ekonomi" />
     </x-slot:actions>
 
     <div class="flex flex-1 flex-col gap-5">

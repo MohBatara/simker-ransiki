@@ -34,7 +34,8 @@ class StatisticsController extends Controller
             'salesChange' => $stats->matchedChange($stats->to())['income_sales'],
             'compliance' => $stats->compliance(),
             'sectors' => $stats->incomeBySector(),
-            'production' => $stats->production(),
+            // Lengkap: tab Ekonomi menampilkan 15 baris lalu "Tampilkan semua".
+            'production' => $stats->production(PHP_INT_MAX),
             'issues' => $stats->issues(),
         ]);
     }

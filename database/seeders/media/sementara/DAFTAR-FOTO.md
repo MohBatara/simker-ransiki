@@ -29,8 +29,8 @@ Tampil di Beranda (Produk unggulan), halaman Produk, dan kartu Direktori (foto p
 | 4 | Kopi bubuk | Kelompok Tani Kopi Pegunungan Sungai Bening | `kopi-bubuk.jpg` | kemasan kopi bubuk dan biji kopi sangrai | inisial |
 | 5 | Ikan asap | Kelompok Nelayan Tanjung Pasir Bersatu | `ikan-asap.jpg` | ikan asap di para-para atau tungku | inisial |
 | 6 | Cabai rawit | Kelompok Tani Sayur Lembah Subur | `cabai-rawit.jpg` | cabai rawit segar di keranjang | inisial |
-| 7 | Beras lokal | BUMDes Maju Bersama | `beras-lokal.jpg` | karung beras di gudang | inisial |
-| 8 | Beras | KDMP Bukit Hijau | `beras.jpg` | beras kemasan di rak toko koperasi | inisial |
+| 7 | Beras | BUMDes Maju Bersama | `beras.jpg` | karung beras di gudang | inisial |
+| 8 | Beras | KDMP Bukit Hijau | `beras-2.jpg` | beras kemasan di rak toko koperasi | inisial |
 | 9 | Sagu lempeng | UMKM Sagu Olahan Mama Muara | `sagu-lempeng.jpg` | sagu lempeng tersusun | inisial |
 | 10 | Kerupuk ikan | KUB Abon Ikan Mina Sejahtera | `kerupuk-ikan.jpg` | kemasan kerupuk ikan | inisial |
 | 11 | Telur ayam kampung | Kelompok Peternak Ayam Kampung Subur Makmur | `telur-ayam-kampung.jpg` | telur ayam kampung di rak telur | inisial |

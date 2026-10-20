@@ -47,54 +47,19 @@
             note="Terlambat: lewat tenggat dan belum pernah diajukan. Belum diajukan: belum dibuat atau masih draf, tenggat belum lewat."
         />
 
-        {{-- Grafik 5 kolom + Produksi per produk 7 kolom (seperti dasbor): tabel empat kolom muat tanpa digeser. --}}
-        <div class="grid grid-cols-1 gap-6 lg:grid-cols-12 lg:items-start">
+        {{-- Baris atas: tiga kartu ringkasan sama tinggi. Catatan cara menghitung di ikon info (i). --}}
+        <div class="grid grid-cols-1 gap-6 lg:grid-cols-3 lg:items-stretch">
             <x-chart
                 title="Pendapatan per bidang usaha"
                 :chart="StatisticsCharts::incomeBySector($sectors)"
-                note="Kelompok dengan lebih dari satu bidang usaha dihitung di setiap bidangnya, sehingga angka antarbidang tidak boleh dijumlahkan."
-                class="lg:col-span-5"
+                :info="['Kelompok dengan lebih dari satu bidang usaha dihitung di setiap bidangnya, sehingga angka antarbidang tidak boleh dijumlahkan.']"
             />
-
-            <x-admin.card title="Produksi per produk" description="Produk yang paling banyak diproduksi kelompok, dari laporan terverifikasi. Satuan berbeda tidak dijumlahkan." flush class="lg:col-span-7">
-                @if ($production->isEmpty())
-                    <p class="px-4 py-4 text-ink-soft md:px-5">Belum ada laporan terverifikasi yang mengisi produksi pada rentang ini.</p>
-                @else
-                    <x-admin.table bare class="max-md:p-4" label="Tabel produksi per produk">
-                        <x-slot:head>
-                            <x-admin.table.heading>Produk</x-admin.table.heading>
-                            <x-admin.table.heading numeric fit>Jumlah</x-admin.table.heading>
-                            <x-admin.table.heading numeric>Kelompok</x-admin.table.heading>
-                            {{-- Rentang sebelumnya sama panjang (satu bulan = bulan lalu); periodenya di tooltip tiap angka. --}}
-                            <x-admin.table.heading numeric fit wrap>Dibanding periode sebelumnya</x-admin.table.heading>
-                        </x-slot:head>
-                        @foreach ($production as $row)
-                            <x-admin.table.row>
-                                <x-admin.table.cell primary>{{ $row['product'] }}</x-admin.table.cell>
-                                {{-- Satuan menempel pada jumlah ("1.384 ekor") di semua ukuran layar, agar tabel muat di kartu setengah lebar. --}}
-                                <x-admin.table.cell label="Jumlah" numeric fit inline>
-                                    @if ($row['quantity'] === null)
-                                        <span class="text-ink-3">Tidak diisi</span>
-                                    @else
-                                        {{ Format::quantity($row['quantity']) }} {{ $row['unit'] ?? 'tanpa satuan' }}
-                                        @if ($row['filled'] < $row['organizations'])
-                                            <span class="block text-label text-ink-3">diisi {{ $row['filled'] }} dari {{ $row['organizations'] }} kelompok</span>
-                                        @endif
-                                    @endif
-                                </x-admin.table.cell>
-                                <x-admin.table.cell label="Kelompok" numeric inline>@include('shared.dashboards._production-cells', ['cell' => 'organizations'])</x-admin.table.cell>
-                                <x-admin.table.cell label="Dibanding periode sebelumnya" numeric fit inline>@include('shared.dashboards._production-cells', ['cell' => 'change'])</x-admin.table.cell>
-                            </x-admin.table.row>
-                        @endforeach
-                    </x-admin.table>
-                @endif
-            </x-admin.card>
+            <x-chart title="Masalah terbanyak" :chart="StatisticsCharts::issues($issues['problem'], 'Masalah')" :info="['Jumlah laporan yang menyebut kategori ini.']" />
+            <x-chart title="Kebutuhan dukungan terbanyak" :chart="StatisticsCharts::issues($issues['support'], 'Kebutuhan dukungan')" :info="['Jumlah laporan yang menyebut kategori ini.']" />
         </div>
 
-        <div class="grid grid-cols-1 gap-6 lg:grid-cols-2 lg:items-start">
-            <x-chart title="Masalah terbanyak" :chart="StatisticsCharts::issues($issues['problem'], 'Masalah')" note="Jumlah laporan yang menyebut kategori ini." />
-            <x-chart title="Kebutuhan dukungan terbanyak" :chart="StatisticsCharts::issues($issues['support'], 'Kebutuhan dukungan')" note="Jumlah laporan yang menyebut kategori ini." />
-        </div>
+        {{-- Produksi per produk selebar penuh, lengkap (urutan sama dengan Dasbor). --}}
+        @include('shared.statistics._production', ['production' => $production])
         </div>
     </div>
 </x-layouts.app>
