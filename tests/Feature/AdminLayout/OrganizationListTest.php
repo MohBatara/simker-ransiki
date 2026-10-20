@@ -53,23 +53,58 @@ test('OPD hanya menghitung kelompok binaan', function () {
     expect($response->viewData('totals')['organizations'])->toBe(2);
 });
 
-test('panel detail dirender bersama halaman untuk baris pertama, atau ?pilih=id', function () {
+test('klik baris membuka popup pratinjau (tanpa pindah halaman); ?pratinjau=id membuka popup sejak awal', function () {
     Product::factory()->for($this->beta)->create(['name' => 'Produk Panel Beta']);
     MonthlyReport::factory()->for($this->beta)->status(ReportStatus::Verified)->create(['period' => '2026-09-01', 'submitted_at' => now()]);
     $this->actingAs($this->admin);
 
-    $first = $this->get('/admin/kelompok')->assertOk();
-    expect($first->viewData('panel')['organization']->id)->toBe($this->alpha->id);
-    $first->assertSee('data-panel-id="'.$this->alpha->id.'"', false)
-        ->assertDontSee('data-selected="true"', false)
-        ->assertSee('Lihat detail');
+    // Tanpa ?pratinjau: tidak ada popup terbuka; baris membawa id pratinjau, nama tetap tautan ke detail (Ctrl/Cmd + klik).
+    $first = $this->get('/admin/kelompok')->assertOk()
+        ->assertSee('x-data="organizationPanel(', false)
+        ->assertSee('x-on:click="select($event)"', false)
+        ->assertSee('data-preview-id="'.$this->alpha->id.'"', false)
+        ->assertSee('href="'.route('admin.organizations.show', $this->alpha).'" data-row-link', false)
+        ->assertDontSee('data-modal="organization-preview" data-open-on-load', false)
+        ->assertSee('Buka detail');
+    expect($first->viewData('panel'))->toBeNull();
 
-    // ?pilih=id: laci terbuka sejak awal dengan baris itu ditandai.
-    $this->get('/admin/kelompok?pilih='.$this->beta->id)
+    $this->get('/admin/kelompok?pratinjau='.$this->beta->id)
+        ->assertSee('data-modal="organization-preview" data-open-on-load', false)
         ->assertSee('data-panel-id="'.$this->beta->id.'"', false)
-        ->assertSee('data-id="'.$this->beta->id.'" data-selected="true"', false)
+        ->assertSee('data-preview-id="'.$this->beta->id.'" data-selected="true"', false)
         ->assertSee('Produk Panel Beta')
-        ->assertSee('September 2026');
+        ->assertSee('September 2026')
+        ->assertSee('Kelompok berikutnya')
+        ->assertSee('x-on:keydown.arrow-right="go(1)"', false);
+
+    // Alamat lama ?pilih tetap membuka popup.
+    $this->get('/admin/kelompok?pilih='.$this->beta->id)->assertSee('data-modal="organization-preview" data-open-on-load', false);
+
+    // Isi popup juga bisa dimuat lewat route ringkas (dipakai saat baris diklik).
+    $this->get("/admin/kelompok/{$this->beta->id}/ringkas")->assertOk()->assertSee('Produk Panel Beta');
+});
+
+test('OPD hanya bisa membuka pratinjau kelompok binaannya', function () {
+    $opdUser = User::factory()->opd($this->opd)->create();
+    $this->actingAs($opdUser)->get("/opd/kelompok/{$this->alpha->id}/ringkas")->assertOk();
+    $this->get("/opd/kelompok/{$this->gamma->id}/ringkas")->assertNotFound();
+    $this->get('/opd/kelompok?pratinjau='.$this->gamma->id)->assertOk()
+        ->assertDontSee('data-modal="organization-preview" data-open-on-load', false)
+        ->assertDontSee('Gamma Lain');
+});
+
+test('tab Verifikasi profil dan Kemungkinan data ganda juga membuka popup pratinjau', function () {
+    $this->alpha->update(['profile_status' => App\Enums\ProfileStatus::Unverified]);
+    $this->actingAs($this->admin);
+
+    $this->get('/admin/kelompok/verifikasi-profil?jenis=baru')->assertOk()
+        ->assertSee('x-data="organizationPanel(', false)
+        ->assertSee('data-preview-id="'.$this->alpha->id.'"', false)
+        ->assertSee('data-modal="organization-preview"', false);
+
+    $this->get('/admin/kelompok/data-ganda')->assertOk()
+        ->assertSee('x-data="organizationPanel(', false)
+        ->assertSee('data-modal="organization-preview"', false);
 });
 
 test('?pilih untuk kelompok yang tidak terlihat diabaikan', function () {
@@ -98,31 +133,34 @@ test('jumlah query daftar terbatas (tanpa N+1)', function () {
     expect(count(DB::getQueryLog()))->toBeLessThan(30);
 });
 
-test('kepala kartu daftar: judul, cari kecil, dan tombol Filter berisi semua filter, langsung diterapkan tanpa Terapkan/Reset', function () {
+test('kepala kartu daftar: judul, cari kecil, dan tombol Filter membuka popup berisi semua filter dengan Terapkan dan Atur ulang', function () {
     $html = $this->actingAs($this->admin)->get('/admin/kelompok?sector='.$this->sectorA->id.'&village='.$this->villageA->id)->assertOk()
         ->assertSee('x-data="adminToolbar"', false)
         ->assertSee('Daftar kelompok')
         ->assertSee('Filter (2)')
-        ->assertDontSee('Terapkan</span>', false)
-        ->assertDontSee('>Reset<', false)
+        ->assertSee('aria-haspopup="dialog" aria-controls="panel-filter"', false)
+        ->assertSee('Terapkan</span>', false)
+        ->assertSee('Atur ulang</span>', false)
         ->getContent();
 
     $panel = strpos($html, 'id="panel-filter"');
 
-    // Semua filter ada di panel Filter (laci kanan desktop, bottom sheet HP), tanpa select sebaris.
+    // Semua filter ada di popup Filter (x-admin.modal md), tanpa select sebaris; tidak ada lagi laci samping.
     expect($html)->not->toContain('-inline"')
         ->and(strpos($html, 'id="village-panel"'))->toBeGreaterThan($panel)
         ->and(strpos($html, 'id="sector-panel"'))->toBeGreaterThan($panel)
         ->and(strpos($html, 'id="opd-panel"'))->toBeGreaterThan($panel)
         // Hasil yang ditukar saat filter berubah.
-        ->and($html)->toContain('data-swap="kelompok"')->toContain('data-swap="toolbar-summary"');
+        ->and($html)->toContain('data-swap="kelompok"')->toContain('data-swap="toolbar-summary"')
+        ->and($html)->toMatch('#<dialog[^>]*id="panel-filter"#')->not->toContain('translate-x-full');
 });
 
-test('ringkasan kelompok di laci kanan, tabel tetap lebar: jenis sebagai chip, kepala tabel menempel', function () {
+test('pratinjau kelompok berupa popup lg di tengah, tabel tetap lebar: jenis sebagai chip, kepala tabel menempel', function () {
     $this->actingAs($this->admin)->get('/admin/kelompok')->assertOk()
         ->assertSee('>Bidang usaha</th>', false)
         ->assertSee('md:sticky md:top-0 md:z-10', false)
-        ->assertSee('aria-label="Ringkasan kelompok"', false)
-        ->assertSee('fixed inset-y-0 right-0 z-50', false)
+        ->assertSee('data-modal="organization-preview"', false)
+        ->assertSee('md:max-w-[760px]', false)
+        ->assertDontSee('fixed inset-y-0 right-0 z-50', false)
         ->assertSee('rounded-pill border border-line bg-panel', false);
 });

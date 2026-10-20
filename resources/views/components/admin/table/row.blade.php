@@ -9,6 +9,8 @@
     'edit' => null,
     // Nama baris untuk label tombol menu (mis. nama kelompok).
     'for' => null,
+    // Label tautan pertama di menu titik tiga (mis. "Buka detail" di daftar kelompok yang barisnya membuka popup).
+    'viewLabel' => 'Lihat',
 ])
 
 <tr @if ($href) data-row-href @endif {{ $attributes->class([
@@ -28,7 +30,7 @@
                         <x-heroicon-o-ellipsis-vertical class="size-5" />
                     </button>
                 </x-slot:trigger>
-                <x-dropdown.item :href="$href" icon="eye">Lihat</x-dropdown.item>
+                <x-dropdown.item :href="$href" icon="eye">{{ $viewLabel }}</x-dropdown.item>
                 @if ($edit)
                     <x-dropdown.item :href="$edit" icon="pencil-square">Ubah</x-dropdown.item>
                 @endif

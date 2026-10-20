@@ -2,10 +2,13 @@
 
 namespace App\Support;
 
+use App\Enums\LicenseStatus;
+use App\Enums\ReportStatus;
 use App\Models\Organization;
 
 /**
- * Isi panel detail di samping daftar kelompok (desktop): foto, data inti, 4 produk, 3 laporan terakhir.
+ * Isi popup pratinjau kelompok (daftar Kelompok, Verifikasi profil, data ganda): foto utama (OrganizationPhoto), data inti,
+ * ringkasan angka, 4 produk, 3 laporan terakhir.
  */
 class OrganizationPanel
 {
@@ -16,11 +19,15 @@ class OrganizationPanel
     public static function data(Organization $organization): array
     {
         $organization->loadMissing(['institutionType:id,name', 'village:id,name', 'sectors:id,name', 'opds:id,name,short_name'])
-            ->loadCount('products');
+            ->loadCount([
+                'products',
+                'licenses as issued_licenses_count' => fn ($query) => $query->where('status', LicenseStatus::Issued),
+                'monthlyReports as verified_reports_count' => fn ($query) => $query->where('status', ReportStatus::Verified),
+            ]);
 
         return [
             'organization' => $organization,
-            'image' => BannerImage::forOrganization($organization),
+            'photo' => OrganizationPhoto::for($organization),
             'products' => $organization->products()
                 ->orderByRaw('photo_path IS NULL')
                 ->orderBy('name')

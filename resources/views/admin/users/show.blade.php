@@ -32,19 +32,13 @@
         <x-button variant="secondary" icon="key" x-data x-on:click="$dispatch('open-modal', 'reset-password')">Atur ulang sandi</x-button>
         @if ($user->hasPendingInvitation())
             @can('invite', $user)
-                <x-button variant="secondary" icon="envelope" type="submit" form="form-invitation" processing="Mengirim…">Kirim ulang undangan</x-button>
+                <x-button variant="secondary" icon="envelope" x-data x-on:click="$dispatch('open-modal', 'send-invitation')">Kirim ulang undangan</x-button>
             @endcan
         @endif
     </x-slot:secondary>
     <x-slot:actions>
-        <x-button icon="pencil-square" :href="route('admin.users.edit', $user)">Ubah akun</x-button>
+        <x-button icon="pencil-square" x-data x-on:click="$dispatch('open-modal', 'user-edit')">Ubah akun</x-button>
     </x-slot:actions>
-
-    @if ($user->hasPendingInvitation())
-        @can('invite', $user)
-            <form novalidate id="form-invitation" method="POST" action="{{ route('admin.users.invitation', $user) }}" class="hidden">@csrf</form>
-        @endcan
-    @endif
 
     <div class="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_20rem] lg:items-start">
         <div class="min-w-0 space-y-6">
@@ -109,6 +103,16 @@
             </x-admin.card>
         </div>
     </div>
+
+    @include('admin.users._modal', ['open' => request()->boolean('ubah')])
+
+    @if ($user->hasPendingInvitation())
+        @can('invite', $user)
+            <x-admin.confirm name="send-invitation" title="Kirim ulang undangan" :action="route('admin.users.invitation', $user)" confirm="Kirim undangan" tone="brand" processing="Mengirim…">
+                <p>Tautan undangan baru dikirim ke <strong class="text-ink">{{ $user->email }}</strong> dan berlaku 72 jam. Tautan lama tidak berlaku lagi.</p>
+            </x-admin.confirm>
+        @endcan
+    @endif
 
     <x-admin.confirm name="reset-password" title="Atur ulang kata sandi" :action="route('admin.users.reset-password', $user)" confirm="Atur ulang" tone="brand">
         <p>Kata sandi lama <strong class="text-ink">{{ $user->name }}</strong> tidak berlaku lagi dan pengguna dikeluarkan dari semua perangkat. Kata sandi sementara baru akan ditampilkan sekali.</p>

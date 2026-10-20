@@ -139,10 +139,10 @@ test('halaman utama bertab tanpa remah; halaman detail tetap memakai remah', fun
     $this->get('/admin/kelompok/'.$organization->id)->assertOk()->assertSee('aria-label="Remah"', false);
 });
 
-test('baris tabel bertautan: menu titik tiga berisi Lihat dan Ubah', function () {
+test('baris tabel kelompok: menu titik tiga berisi Buka detail dan Ubah', function () {
     $organization = Organization::factory()->create(['name' => 'KUB Menu']);
 
     $this->actingAs(User::factory()->admin()->create())->get('/admin/kelompok')->assertOk()
         ->assertSee('aria-label="Tindakan untuk KUB Menu"', false)
-        ->assertSeeInOrder(['Lihat', '/admin/kelompok/'.$organization->id.'/ubah'], false);
+        ->assertSeeInOrder(['Buka detail', '/admin/kelompok/'.$organization->id.'/ubah'], false);
 });

@@ -18,6 +18,7 @@
         tone="brand"
         processing="Memverifikasi…"
         :show="$errors->has('verify_note')"
+        size="md"
     >
         <p>Laporan yang sudah diverifikasi masuk ke statistik resmi dan tidak bisa diubah lagi oleh kelompok.</p>
         <x-field label="Catatan untuk kelompok" for="verify_note" optional>
@@ -34,6 +35,7 @@
         tone="brand"
         processing="Mengirim…"
         :show="$errors->has('revision_note')"
+        size="md"
     >
         <p>Laporan dikembalikan ke kelompok untuk diperbaiki, lalu diajukan lagi.</p>
         <x-field label="Catatan revisi" for="revision_note" hint="Sebut bagian yang perlu diperbaiki. Catatan ini tampil di atas form laporan kelompok." required>
@@ -51,9 +53,10 @@
         confirm="Buka kembali"
         processing="Memproses…"
         :show="$errors->has('reopen_note')"
+        size="md"
     >
         <p>Verifikasi dicabut dan laporan kembali ke kelompok dengan status perlu revisi. Riwayat verifikasi tetap tersimpan.</p>
-        <x-field label="Alasan" for="reopen_note" hint="Wajib. Tampil untuk kelompok sebagai catatan revisi." required>
+        <x-field label="Alasan" for="reopen_note" hint="Tampil untuk kelompok sebagai catatan revisi." required>
             <x-textarea name="reopen_note" rows="4" minlength="10" maxlength="2000" required />
         </x-field>
     </x-admin.confirm>

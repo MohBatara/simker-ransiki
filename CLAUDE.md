@@ -714,7 +714,8 @@ dirancang dengan baik, bukan landing page startup.
 - Tidak ada gradasi, glow, blur, glassmorphism, atau pola latar dekoratif. Pengecualian: overlay foto
   (`.overlay-forest`, lihat di bawah), gradasi tipis `panel` → transparan di tepi kanan tab yang bisa
   digeser di HP (`x-tabs`, hanya saat masih ada tab tersembunyi) sebagai penanda geser, dan latar lembut
-  `brand-50` → `brand-mist` banner sapaan dasbor (atas permintaan).
+  `brand-50` → `brand-mist` banner sapaan dasbor (atas permintaan), dan latar popup `x-admin.modal` (forest 40% + blur 2px,
+  atas permintaan).
 - Tidak ada emoji di antarmuka.
 - Tidak ada bayangan tebal. Kartu memakai border 1px, tanpa shadow. Shadow kecil hanya untuk
   dropdown, modal, dan menu yang melayang; `shadow-xs` hanya untuk kartu mini di banner sapaan dan menu aktif sidebar.
@@ -967,8 +968,9 @@ atau banner foto di area aplikasi. `x-tabs` hanya untuk tab dalam halaman (panel
   tetap tampil di HP.
 - `x-admin.tabs`: tab bertautan 13px, tab aktif teks brand + garis bawah brand 2px, hitungan dalam pil kecil netral.
 - `x-admin.toolbar`: dengan `title` menjadi kepala kartu daftar (judul kiri; cari kecil + tombol "Filter" berikon corong
-  berisi SEMUA filter di kanan; laci kanan desktop, bottom sheet HP). Tanpa `title` (tab Ekonomi/Legalitas): maks 3 filter
-  sebaris + "Filter lain". Langsung diterapkan tanpa Terapkan/Reset: Alpine `adminToolbar` (`resources/js/admin-toolbar.js`)
+  berisi SEMUA filter di kanan). Tanpa `title` (tab Ekonomi/Legalitas): maks 3 filter sebaris + "Filter lain". Tombol Filter
+  membuka popup Filter (`x-admin.modal` md, `id="panel-filter"`) dengan "Terapkan" dan "Atur ulang" (pilihan di popup baru
+  diterapkan saat Terapkan). Cari dan filter sebaris langsung diterapkan: Alpine `adminToolbar` (`resources/js/admin-toolbar.js`)
   memuat ulang lewat fetch (cari: jeda 300 ms), menukar setiap `[data-swap="kunci"]` (hasil, kartu angka, ringkasan + pil,
   tautan unduh yang ikut filter, tab menu), pushState. Pil filter aktif (`FilterChips`) + "Hapus semua". Tanpa JS: form GET.
 - Halaman daftar: kartu angka di atas, lalu SATU `x-admin.card flush` berisi `x-admin.toolbar title` + tabel `bare`
@@ -998,8 +1000,27 @@ atau banner foto di area aplikasi. `x-tabs` hanya untuk tab dalam halaman (panel
   masuk peta itu.
 - `x-admin.toasts` (dirender layout untuk SEMUA peran, menggantikan alert pesan sistem): pojok kanan bawah (HP di atas
   navigasi bawah), hilang otomatis 4 detik, berhenti saat disorot/difokuskan, bisa ditutup.
-- `x-admin.confirm`: dialog konfirmasi seragam untuk aksi berisiko (hapus kelompok/produk/izin, ubah status kelompok,
-  verifikasi, minta revisi, buka kembali); tombol `danger-solid` (putih di atas `fix` 6,6:1) atau brand.
+- `x-admin.modal`: SATU komponen popup (tidak ada lagi drawer/panel samping atau `x-modal`). `<dialog>` di tengah layar
+  (role dialog, aria-modal, fokus terkunci, fokus awal ke isian pertama, fokus kembali ke pemicu, halaman belakang tidak
+  bisa digulir, gambar lazy di dalamnya dimuat saat dibuka), latar forest 40% + blur tipis, fade + skala 96% ke 100% dalam 180ms (tanpa gerak bila reduced motion).
+  Ukuran `sm` 440px (konfirmasi), `md` 560px (form pendek, bawaan), `lg` 760px (pratinjau). Kepala judul 16px + satu baris
+  keterangan + tombol X; badan menggulir sendiri (maks 85vh, HP 90vh, lebar penuh dengan margin 16px); slot `footer`
+  menempel (Batal = `requestClose()` lalu aksi utama). Tutup lewat Esc, X, atau klik latar; bila isian berubah (`guard`)
+  muncul "Buang perubahan?". Buka/tutup: `$dispatch('open-modal'|'close-modal', nama)`; event `modal-closed` setelah
+  tertutup. Validasi server gagal: form di popup membawa `_modal=nama`, halaman kembali dengan popup terbuka
+  (`:show`, atribut `data-open-on-load`), isian lama dan pesan di bawah isian.
+- Popup yang ada: Filter (md), pratinjau kelompok (lg, tombol "Buka detail"), tambah/ubah akun dan "Tambah akun kelompok"
+  (`admin.users._modal`, md), kirim ulang undangan dan atur ulang sandi (sm), tambah/ubah produk, izin, data master (md,
+  `recordForm`), foto produk, isi laporan atas nama kelompok, unduh rekap, ubah status kelompok (md, alasan), tandai profil
+  terverifikasi (sm, kepala detail dan antrean), verifikasi, minta revisi, buka kembali (md), tindak lanjut masalah/kebutuhan
+  (md), semua konfirmasi hapus (sm), cari umum, ajukan laporan dan salin dari bulan lalu (form laporan). Alamat lama form
+  yang kini popup dialihkan: `/admin/pengaturan/pengguna/tambah` → daftar `?tambah=1` (dengan `?kelompok=` → tab Akun
+  detail kelompok `?tambah-akun=1`), `/{user}/ubah` → detail akun `?ubah=1`; tindak lanjut dibuka dari detail laporan lewat
+  `/{area}/laporan/masalah/{id}?ubah=1`. Tetap halaman penuh: tambah/ubah kelompok, laporan A sampai H, berita, konten
+  Website, detail kelompok, detail/verifikasi laporan.
+- `x-admin.confirm`: dialog konfirmasi seragam (di atas `x-admin.modal`, sm; md bila berisi isian) untuk aksi berisiko (hapus
+  kelompok/produk/izin, ubah status kelompok, verifikasi, minta revisi, buka kembali); tombol `danger-solid` (putih di atas
+  `fix` 6,6:1) atau brand; terbuka lagi otomatis bila `old('_modal')` sama.
 - `x-admin.action-bar`: bar aksi menempel di bawah layar di semua ukuran; detail laporan: Minta revisi + Verifikasi
   (atau Verifikasi nonaktif bila pemisahan tugas).
 - `x-admin.greeting`: banner sapaan dasbor (lihat Header halaman), prop `highlight`, `sentence`, `action`, slot kanan.
@@ -1024,8 +1045,8 @@ atau banner foto di area aplikasi. `x-tabs` hanya untuk tab dalam halaman (panel
   rupiah "Rp 50 jt".
 - `x-chart` memakai `x-admin.card`.
 - Kepala detail kelompok (`x-admin.organization-header`, Admin/OPD dan Profil Kelompok): remah di kiri pada baris yang
-  sama dengan tombol cari dan lonceng (layout `:header="false"` + `breadcrumbs`), lalu avatar inisial 56px (belum ada
-  kolom foto profil kelompok), nama 24px semibold maks 2 baris, subjudul "Jenis · Kampung" + bidang usaha berikon (teks,
+  sama dengan tombol cari dan lonceng (layout `:header="false"` + `breadcrumbs`), lalu foto utama 56px (`OrganizationPhoto`)
+  atau inisial bila tidak ada, nama 24px semibold maks 2 baris, subjudul "Jenis · Kampung" + bidang usaha berikon (teks,
   bukan chip), pil status kelompok + pil status verifikasi profil (+ "Tandai terverifikasi" bagi yang berhak), aksi di
   kanan sejajar nama (tombol tambah sesuai tab, Ubah profil, menu titik tiga Admin: Tambah akun, Ubah status, Hapus).
   Lalu strip 4 `x-admin.stat compact` (anggota: kosong = "Belum diisi" 15px + tautan "lengkapi di Ubah profil"; produk;
@@ -1052,8 +1073,8 @@ atau banner foto di area aplikasi. `x-tabs` hanya untuk tab dalam halaman (panel
   "Perubahan belum disimpan" setelah isian berubah, dan peringatan browser saat meninggalkan halaman (Alpine `formGuard`,
   `resources/js/form-guard.js`; isian ber-`data-no-dirty` diabaikan; prop `form` bila bar di luar `<form>`). Halaman
   dengan beberapa form tersimpan sendiri-sendiri (slide hero, kartu Mengenal, blok potensi) memakai tombol simpan per form.
-- Tambah/ubah produk, izin, dan data master tetap lewat modal (`recordForm`, tanpa mengubah route): isian dengan pola
-  label/wajib/error yang sama, Batal sekunder + Simpan.
+- Tambah/ubah produk, izin, data master, dan akun lewat popup `x-admin.modal` (`recordForm` / `admin.users._modal`, tanpa
+  mengubah route simpan): isian dengan pola label/wajib/error yang sama, Batal sekunder + Simpan.
 - Unggah: `x-admin.dropzone` untuk file di form biasa (tarik-dan-lepas atau pilih, pratinjau gambar, nama + ukuran file,
   batas ukuran tertulis; atribut diteruskan ke `<input type="file">`); `x-file-upload` (XHR langsung tersimpan) bergaya
   sama dengan pratinjau gambar per file.
@@ -1066,9 +1087,21 @@ atau banner foto di area aplikasi. `x-tabs` hanya untuk tab dalam halaman (panel
   bidang usaha, total anggota + "diisi X dari Y kelompok") yang mengikuti filter aktif ("sesuai filter") → kartu "Daftar
   kelompok" (`x-admin.toolbar title`: cari nama + Filter berisi kampung, jenis, status, bidang usaha, OPD [Admin];
   langsung diterapkan) berisi `x-admin.table` selebar kartu (kolom Kelompok, Jenis sebagai chip, Kampung, Bidang usaha,
-  Anggota, Status, titik tiga Lihat/Ubah). Mulai 1280px klik baris membuka laci ringkasan dari kanan di atas konten
-  (Alpine `organizationPanel`, memuat `/{area}/kelompok/{id}/ringkas`, Policy `view`; Esc/latar menutup); `?pilih=id`
-  membuka laci sejak awal. Panel baris pertama tetap dirender di server. Layar lebih kecil membuka halaman detail. Aksi:
+  Anggota, Status, titik tiga Buka detail/Ubah). Klik di mana saja pada baris (semua ukuran layar) membuka popup pratinjau
+  lg tanpa pindah halaman (Alpine `organizationPanel` + `shared.organizations._preview-modal`, memuat
+  `/{area}/kelompok/{id}/ringkas`, Policy `view`); nama tetap `<a href>` ke detail sehingga Ctrl/Cmd/klik tengah membuka
+  tab baru. Isi (`_panel`, tanpa tab): foto utama 16:9 (maks 240px, sudut 10px; tanpa foto: kotak `brand-50` berinisial +
+  "Belum ada foto"), nama, jenis · kampung, pil status dan verifikasi profil, ringkasan angka (anggota, produk, izin terbit,
+  laporan terverifikasi), ketua, telepon, email, tahun berdiri, bidang usaha, OPD pembina, alamat, produk, laporan
+  terakhir. Kaki: panah sebelumnya/berikutnya (juga tombol ← →), "Tutup", "Ubah profil", "Buka detail". URL `?pratinjau=ID`
+  (alias lama `?pilih`): membuka = pushState sehingga Back menutup popup, pindah ← → = replaceState; membuka URL itu
+  langsung menampilkan popup (dirender server di daftar, dimuat saat init di tab lain). Pola yang sama di tab Verifikasi
+  profil (klik baris) dan Kemungkinan data ganda (klik nama kelompok mana pun). Dari dalam popup, `$refs`/`$root` milik
+  daftar tidak terjangkau: `organizationPanel` menyimpan elemen pembungkusnya sendiri.
+- Foto utama kelompok: SATU tempat `App\Support\OrganizationPhoto` (belum ada kolom foto profil): foto produk terbaru
+  (`product-photos.show`, Policy) → lampiran gambar kelompok (`attachments.show`, Policy) → foto bidang usaha → tidak ada.
+  Dipakai popup pratinjau dan kepala detail kelompok (56px; tanpa foto: inisial). Gambar di dalam popup tidak memakai
+  `loading="lazy"`; `adminModal` juga mengubah gambar lazy menjadi segera dimuat saat popup dibuka. Panel baris pertama tetap dirender di server. Layar lebih kecil membuka halaman detail. Aksi:
   Tambah kelompok (utama, Admin), Unduh Excel + Impor (sekunder).
 - Detail: kepala `x-admin.organization-header` (lihat pola halaman) → `x-admin.tabs` berikon dengan angka, urutan Profil ·
   Produk · Izin · Laporan · Akun (Admin) · Riwayat → tab Profil tanpa mengulang isi kepala (nama, jenis, status,

@@ -262,7 +262,7 @@
         />
     </div>
 
-    <x-modal name="minta-revisi" title="Minta revisi">
+    <x-admin.modal name="minta-revisi" title="Minta revisi" size="sm">
         <p>Jelaskan bagian yang perlu diperbaiki. Catatan ini dikirim ke kelompok.</p>
         <x-field label="Catatan" for="catatan" class="mt-4">
             <x-textarea name="catatan" rows="3" />
@@ -271,5 +271,5 @@
             <x-button variant="secondary" x-on:click="$dispatch('close-modal', 'minta-revisi')">Batal</x-button>
             <x-button>Minta revisi</x-button>
         </x-slot:footer>
-    </x-modal>
+    </x-admin.modal>
 </x-layouts.app>

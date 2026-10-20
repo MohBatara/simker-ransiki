@@ -66,8 +66,8 @@
             <x-admin.stat compact icon="users" label="Total anggota" :value="Format::number($totals['members'])" :hint="$membersHint" />
         </div>
 
-        {{-- Klik baris (≥ 1280px) membuka laci ringkasan dari kanan di atas konten; layar lebih kecil membuka halaman detail. --}}
-        <div x-data="organizationPanel(@js(request()->filled('pilih')))" x-on:keydown.escape.window="close()">
+        {{-- Klik baris membuka popup pratinjau tanpa pindah halaman (Ctrl/Cmd + klik nama: detail di tab baru). --}}
+        <div x-data="organizationPanel(@js(route($area.'.organizations.summary', ['organization' => '__ID__'])))" x-on:click="select($event)">
             <x-admin.card flush>
                 <x-admin.toolbar
                     :title="$isOpd ? 'Daftar kelompok binaan' : 'Daftar kelompok'"
@@ -94,7 +94,7 @@
                             </x-admin.empty>
                         @endif
                     @else
-                        <x-admin.table bare clickable id="daftar-kelompok" x-on:click="select($event)" class="min-w-0">
+                        <x-admin.table bare clickable id="daftar-kelompok" class="min-w-0">
                             <x-slot:head>
                                 <x-admin.table.heading>Kelompok</x-admin.table.heading>
                                 <x-admin.table.heading fit>Jenis</x-admin.table.heading>
@@ -109,10 +109,10 @@
                                     :href="route($area.'.organizations.show', $organization)"
                                     :edit="route($area.'.organizations.edit', $organization)"
                                     :for="$organization->name"
-                                    :data-panel-url="route($area.'.organizations.summary', $organization)"
-                                    :data-id="$organization->id"
-                                    :data-selected="$panel && request()->filled('pilih') && $panel['organization']->is($organization) ? 'true' : null"
-                                    class="xl:data-[selected]:bg-brand-50"
+                                    view-label="Buka detail"
+                                    :data-preview-id="$organization->id"
+                                    :data-selected="$panel && $panel['organization']->is($organization) ? 'true' : null"
+                                    class="data-[selected]:bg-brand-50"
                                 >
                                     <x-admin.table.cell primary>
                                         <x-admin.identity :name="$organization->name" :subtitle="$organization->leader_name ? 'Ketua: '.$organization->leader_name : null" />
@@ -135,26 +135,7 @@
                 </div>
             </x-admin.card>
 
-            {{-- Laci ringkasan (≥ 1280px): di atas konten, tabel tetap selebar kartu. --}}
-            <div x-cloak x-show="open" x-on:click="close()" class="fixed inset-0 z-40 hidden bg-ink/20 xl:block" aria-hidden="true"></div>
-            <aside
-                x-cloak
-                x-show="open"
-                x-transition:enter="transition-transform duration-150"
-                x-transition:enter-start="translate-x-full"
-                x-transition:leave="transition-transform duration-150"
-                x-transition:leave-end="translate-x-full"
-                class="fixed inset-y-0 right-0 z-50 hidden w-[26rem] overflow-y-auto border-l border-line bg-panel shadow-float xl:block"
-                aria-live="polite"
-                aria-label="Ringkasan kelompok"
-                x-bind:aria-busy="loading"
-            >
-                <div x-ref="panel" x-bind:class="loading && 'opacity-60'" class="transition-opacity">
-                    @if ($panel)
-                        @include('shared.organizations._panel')
-                    @endif
-                </div>
-            </aside>
+            @include('shared.organizations._preview-modal')
         </div>
     </div>
 </x-layouts.app>

@@ -64,7 +64,7 @@
             @if ($canManage || $area === 'admin')
                 <x-slot:menu>
                     @can('create', App\Models\User::class)
-                        <x-dropdown.item icon="user-plus" :href="route('admin.users.create', ['kelompok' => $organization->id])">Tambah akun</x-dropdown.item>
+                        <x-dropdown.item icon="user-plus" x-on:click="$dispatch('open-modal', 'user-create')">Tambah akun</x-dropdown.item>
                     @endcan
                     @if ($canManage)
                         @include('admin.organizations._danger', ['part' => 'menu'])
@@ -79,7 +79,7 @@
         @if ($area === 'admin' && $organization->users_count === 0)
             <x-alert tone="wait">
                 Kelompok ini belum punya akun, jadi belum bisa mengisi laporan.
-                <x-link :href="route('admin.users.create', ['kelompok' => $organization->id])" inline>Buat akun</x-link>
+                <button type="button" x-data x-on:click="$dispatch('open-modal', 'user-create')" class="font-semibold text-brand underline underline-offset-2 hover:text-brand-hover">Buat akun</button>
             </x-alert>
         @endif
 
@@ -133,5 +133,11 @@
 
     @if ($canManage)
         @include('admin.organizations._danger', ['part' => 'modals'])
+    @endif
+    {{-- "Tambah akun" kelompok (Admin): popup dengan peran dan kelompok sudah ditetapkan. --}}
+    @if ($area === 'admin')
+        @can('create', App\Models\User::class)
+            @include('admin.users._modal', ['user' => new App\Models\User, 'presetOrganization' => $organization, 'open' => request()->boolean('tambah-akun')])
+        @endcan
     @endif
 </x-layouts.app>

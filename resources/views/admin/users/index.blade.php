@@ -17,7 +17,7 @@
 
 <x-layouts.app title="Pengguna" description="Akun Admin, petugas OPD, dan pengurus kelompok." section="pengaturan" tab="pengguna">
     <x-slot:actions>
-        <x-button icon="plus" :href="route('admin.users.create')">Tambah akun</x-button>
+        <x-button icon="plus" x-data x-on:click="$dispatch('open-modal', 'user-create')">Tambah akun</x-button>
     </x-slot:actions>
 
     <x-admin.card flush>
@@ -41,7 +41,7 @@
                     </x-admin.empty>
                 @else
                     <x-admin.empty bare icon="users" title="Belum ada akun" description="Buat akun untuk petugas OPD dan pengurus kelompok.">
-                        <x-button icon="plus" :href="route('admin.users.create')">Tambah akun</x-button>
+                        <x-button icon="plus" x-data x-on:click="$dispatch('open-modal', 'user-create')">Tambah akun</x-button>
                     </x-admin.empty>
                 @endif
             @else
@@ -54,7 +54,7 @@
                     </x-slot:head>
 
                     @foreach ($users as $user)
-                        <x-admin.table.row :href="route('admin.users.show', $user)" :edit="route('admin.users.edit', $user)" :for="$user->name">
+                        <x-admin.table.row :href="route('admin.users.show', $user)" :edit="route('admin.users.show', [$user, 'ubah' => 1])" :for="$user->name">
                             <x-admin.table.cell primary>
                                 <span class="flex items-center gap-3">
                                     <x-avatar :name="$user->name" size="sm" />
@@ -86,4 +86,6 @@
             @endif
         </div>
     </x-admin.card>
+
+    @include('admin.users._modal', ['user' => $newUser, 'open' => request()->boolean('tambah')])
 </x-layouts.app>

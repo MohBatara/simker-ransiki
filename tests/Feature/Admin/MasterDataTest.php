@@ -115,7 +115,7 @@ test('form gagal validasi terbuka kembali dengan isian sebelumnya', function () 
         ->assertRedirect('/admin/pengaturan/data-master/kampung');
 
     $this->get('/admin/pengaturan/data-master/kampung')
-        ->assertSee('x-init="$el.showModal()"', false)
+        ->assertSee('data-modal="record-form" data-open-on-load', false)
         ->assertSee('Nama kampung wajib diisi.');
 });
 

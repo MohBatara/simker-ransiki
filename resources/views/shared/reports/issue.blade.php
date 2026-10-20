@@ -20,6 +20,11 @@
     <x-slot:badge>
         <x-admin.badge-status :status="$issue->follow_up_status" />
     </x-slot:badge>
+    @if ($canFollowUp)
+        <x-slot:actions>
+            <x-button icon="pencil-square" x-data x-on:click="$dispatch('open-modal', 'follow-up')">Ubah status tindak lanjut</x-button>
+        </x-slot:actions>
+    @endif
 
     <div class="space-y-6 xl:grid xl:grid-cols-[minmax(0,1fr)_360px] xl:items-start xl:gap-6 xl:space-y-0">
         <div class="min-w-0 space-y-6">
@@ -50,33 +55,6 @@
                 </dl>
             </x-admin.card>
 
-            @if ($canFollowUp)
-                <x-admin.card title="Ubah status tindak lanjut" description="Catatan tindakan tampil untuk kelompok. Kelompok mendapat notifikasi bila statusnya berubah.">
-                    <form novalidate method="POST" action="{{ route($area.'.issues.follow-up', $issue) }}" class="space-y-6">
-                        @csrf
-                        <x-admin.form-intro />
-                        <div class="grid gap-6 md:grid-cols-2">
-                            <x-field label="Status" for="status" required>
-                                <x-select name="status" :options="FollowUpStatus::options()" :selected="$issue->follow_up_status->value" required />
-                            </x-field>
-                            <x-field label="Tanggal tindakan" for="acted_on" required>
-                                <x-input type="date" name="acted_on" :value="$today" :max="$today" required />
-                            </x-field>
-                            @if ($opds)
-                                <x-field label="OPD penanggung jawab" for="opd_id" optional class="md:col-span-2">
-                                    <x-select name="opd_id" :options="$opds" :selected="$issue->follow_up_opd_id ?? array_key_first($opds)" placeholder="Belum ditentukan" />
-                                </x-field>
-                            @endif
-                        </div>
-                        <x-field label="Catatan tindakan" for="note" hint="Apa yang sudah atau akan dilakukan, mis. jadwal pelatihan atau alasan tidak dapat ditindaklanjuti." required>
-                            <x-textarea name="note" rows="4" minlength="5" maxlength="2000" required />
-                        </x-field>
-                        <div class="flex justify-end max-md:*:w-full">
-                            <x-button type="submit" processing="Menyimpan…">Simpan tindak lanjut</x-button>
-                        </div>
-                    </form>
-                </x-admin.card>
-            @endif
         </div>
 
         <x-admin.card title="Riwayat tindak lanjut">
@@ -87,4 +65,35 @@
             @endif
         </x-admin.card>
     </div>
+
+    @if ($canFollowUp)
+        {{-- Tindak lanjut sebagai popup md; validasi gagal membuka popup lagi (old _modal). --}}
+        <x-admin.modal name="follow-up" title="Ubah status tindak lanjut" description="Catatan tampil untuk kelompok; kelompok diberi notifikasi bila statusnya berubah." :show="old('_modal') === 'follow-up' || request()->boolean('ubah')">
+            <form novalidate id="form-follow-up" method="POST" action="{{ route($area.'.issues.follow-up', $issue) }}" class="space-y-5">
+                @csrf
+                <input type="hidden" name="_modal" value="follow-up">
+                <x-admin.form-intro />
+                <div class="grid gap-5 md:grid-cols-2">
+                    <x-field label="Status" for="status" required>
+                        <x-select name="status" :options="FollowUpStatus::options()" :selected="$issue->follow_up_status->value" required />
+                    </x-field>
+                    <x-field label="Tanggal tindakan" for="acted_on" required>
+                        <x-input type="date" name="acted_on" :value="$today" :max="$today" required />
+                    </x-field>
+                    @if ($opds)
+                        <x-field label="OPD penanggung jawab" for="opd_id" class="md:col-span-2">
+                            <x-select name="opd_id" :options="$opds" :selected="$issue->follow_up_opd_id ?? array_key_first($opds)" placeholder="Belum ditentukan" />
+                        </x-field>
+                    @endif
+                </div>
+                <x-field label="Catatan tindakan" for="note" hint="Apa yang sudah atau akan dilakukan, mis. jadwal pelatihan atau alasan tidak dapat ditindaklanjuti." required>
+                    <x-textarea name="note" rows="4" minlength="5" maxlength="2000" required />
+                </x-field>
+            </form>
+            <x-slot:footer>
+                <x-button variant="secondary" x-on:click="requestClose()">Batal</x-button>
+                <x-button type="submit" form="form-follow-up" processing="Menyimpan…">Simpan tindak lanjut</x-button>
+            </x-slot:footer>
+        </x-admin.modal>
+    @endif
 </x-layouts.app>

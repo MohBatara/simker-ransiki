@@ -68,7 +68,7 @@ test('modal ubah status terbuka lagi bila validasi gagal', function () {
         ->followingRedirects()
         ->patch($this->url, ['status' => 'closed'])
         ->assertSee('Tulis alasan singkat perubahan status.')
-        ->assertSee('x-init="$el.showModal()"', false);
+        ->assertSee('data-modal="organization-status" data-open-on-load', false);
 });
 
 test('hanya admin yang bisa mengubah status', function () {

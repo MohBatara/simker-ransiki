@@ -18,6 +18,9 @@
     tab="profil"
     :description="($area === 'opd' ? 'Profil kelompok binaan' : 'Profil kelompok').' yang belum terverifikasi: perubahan dari akun kelompok dan profil yang belum pernah diperiksa.'"
 >
+    <div x-data="{ verifying: { url: '', name: '' } }">
+    {{-- Klik baris membuka popup pratinjau kelompok tanpa pindah halaman. --}}
+    <div x-data="organizationPanel(@js(route($area.'.organizations.summary', ['organization' => '__ID__'])))" x-on:click="select($event)">
     <x-admin.card flush>
         <div class="flex flex-wrap items-center justify-between gap-3 px-4 pb-4 pt-4 md:px-5 md:pt-5">
             <h2 class="text-card-head font-semibold text-ink">Antrean verifikasi profil</h2>
@@ -50,7 +53,7 @@
                 </x-slot:head>
 
                 @foreach ($organizations as $organization)
-                    <x-admin.table.row :href="$changes ? route($area.'.organizations.history', $organization) : route($area.'.organizations.show', $organization)" :for="$organization->name">
+                    <x-admin.table.row :href="route($area.'.organizations.show', $organization)" :for="$organization->name" view-label="Buka detail" :data-preview-id="$organization->id" class="data-[selected]:bg-brand-50">
                         <x-admin.table.cell primary><x-admin.identity :name="$organization->name" :subtitle="$organization->institutionType->name" /></x-admin.table.cell>
                         @if ($changes)
                             <x-admin.table.cell label="Yang perlu diperiksa">{{ implode(', ', ProfileReview::changedLabels($organization)) }}</x-admin.table.cell>
@@ -61,10 +64,10 @@
                         @endif
                         @can('verifyProfile', $organization)
                             <x-slot:menu>
-                                <form novalidate method="POST" action="{{ route($area.'.organizations.verify-profile', $organization) }}" data-no-processing>
-                                    @csrf
-                                    <x-dropdown.item type="submit" icon="check-badge">Tandai terverifikasi</x-dropdown.item>
-                                </form>
+                                @if ($changes)
+                                    <x-dropdown.item icon="clock" :href="route($area.'.organizations.history', $organization)">Lihat riwayat perubahan</x-dropdown.item>
+                                @endif
+                                <x-dropdown.item icon="check-badge" x-on:click="verifying = {{ Js::from(['url' => route($area.'.organizations.verify-profile', $organization), 'name' => $organization->name]) }}; $dispatch('open-modal', 'verify-profile')">Tandai terverifikasi</x-dropdown.item>
                             </x-slot:menu>
                         @endcan
                     </x-admin.table.row>
@@ -76,4 +79,13 @@
             </x-admin.table>
         @endif
     </x-admin.card>
+
+    @include('shared.organizations._preview-modal', ['panel' => null])
+    </div>
+
+    {{-- Menu titik tiga "Tandai terverifikasi" membuka konfirmasi ini (form mengikuti baris yang dipilih). --}}
+    <x-admin.confirm name="verify-profile" title="Tandai profil terverifikasi" bind-action="verifying.url" confirm="Tandai terverifikasi" tone="brand" processing="Menyimpan…">
+        <p>Tandai profil <strong class="text-ink" x-text="verifying.name"></strong> terverifikasi? Pastikan data pentingnya sudah sesuai.</p>
+    </x-admin.confirm>
+    </div>
 </x-layouts.app>

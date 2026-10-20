@@ -603,3 +603,56 @@
         @apply font-semibold;
     }
 }
+
+/*
+ * Popup area aplikasi (x-admin.modal): fade + skala 96% ke 100% dalam 180ms (tanpa geser dari samping). Latar forest 40%
+ * dengan blur tipis (pengecualian Bagian 7 atas permintaan). Halaman belakang tidak bisa digulir selama popup terbuka.
+ */
+@layer components {
+    .app-modal {
+        opacity: 1;
+        transform: scale(1);
+        transition: opacity 180ms ease-out, transform 180ms ease-out, overlay 180ms allow-discrete, display 180ms allow-discrete;
+    }
+
+    .app-modal:not([open]) {
+        opacity: 0;
+        transform: scale(0.96);
+    }
+
+    @starting-style {
+        .app-modal[open] {
+            opacity: 0;
+            transform: scale(0.96);
+        }
+    }
+
+    .app-modal::backdrop {
+        background-color: rgb(15 46 34 / 0.4);
+        backdrop-filter: blur(2px);
+        opacity: 1;
+        transition: opacity 180ms ease-out, overlay 180ms allow-discrete, display 180ms allow-discrete;
+    }
+
+    .app-modal:not([open])::backdrop {
+        opacity: 0;
+    }
+
+    @starting-style {
+        .app-modal[open]::backdrop {
+            opacity: 0;
+        }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .app-modal,
+        .app-modal::backdrop {
+            transition: none;
+        }
+    }
+
+    html.modal-open {
+        overflow: hidden;
+    }
+}
+
