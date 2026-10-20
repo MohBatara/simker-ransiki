@@ -15,7 +15,11 @@ dibangun di laptop, database MySQL dari hPanel, cron `schedule:run` setiap menit
    - Ekstensi wajib aktif: `gd` (dengan WebP), `exif`, `fileinfo`, `zip`, `xmlreader`, `xmlwriter`, `dom`,
      `libxml`, `filter`, `mbstring`, `pdo_mysql`, `openssl`, `intl` (umumnya sudah aktif).
    - PHP Options: `upload_max_filesize` ≥ `12M`, `post_max_size` ≥ `12M`, `memory_limit` ≥ `512M`,
-     `max_execution_time` ≥ `120`.
+     `max_execution_time` ≥ `120`. Semua unggahan foto dibatasi 10 MB per file; 12M memberi ruang untuk data form
+     lain di permintaan yang sama. Di bawah itu, foto besar gagal dengan "File terlalu besar" sebelum sampai ke aplikasi.
+   - Opsional: ekstensi `imagick` dengan dukungan HEIC (libheif + dekoder HEVC) agar foto iPhone (HEIC) yang terkirim
+     tanpa JavaScript tetap bisa dikonversi di server. Tanpa itu tidak apa-apa: HEIC sudah diubah ke JPG di browser,
+     dan yang lolos ditolak dengan pesan cara mengirim ulang. Matikan paksa dengan `SIMKER_CONVERT_HEIC=false`.
 2. **Database**: Databases → MySQL Databases → buat database + pengguna. Catat nama database, nama
    pengguna, dan kata sandinya (bentuknya `u123456789_simker`).
 3. **SSH**: Advanced → SSH Access → aktifkan, catat host, port (biasanya `65002`), dan pengguna.

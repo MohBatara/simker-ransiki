@@ -131,7 +131,7 @@
                             :remaining="1"
                             camera
                             x-bind:data-url="photo.uploadUrl"
-                            hint="Foto JPG atau PNG, maksimal 10 MB. Foto lama akan diganti."
+                            :hint="\App\Support\ImageUpload::HINT.' Foto lama akan diganti.'"
                         />
                     </div>
                     <x-slot:footer>

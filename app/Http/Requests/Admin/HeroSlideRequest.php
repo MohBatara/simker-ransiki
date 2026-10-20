@@ -3,8 +3,10 @@
 namespace App\Http\Requests\Admin;
 
 use App\Enums\HeroFocus;
+use App\Http\Requests\Concerns\ConvertsHeicUploads;
 use App\Models\HeroSlide;
 use App\Rules\AllowedUpload;
+use App\Support\ImageUpload;
 use Closure;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\UploadedFile;
@@ -17,7 +19,9 @@ use Illuminate\Validation\Validator;
  */
 class HeroSlideRequest extends FormRequest
 {
-    public const MAX_KILOBYTES = 8192;
+    use ConvertsHeicUploads;
+
+    public const MAX_KILOBYTES = ImageUpload::MAX_KILOBYTES;
 
     /** Di bawah ini ditolak. */
     public const MIN_WIDTH = 1280;
@@ -41,7 +45,7 @@ class HeroSlideRequest extends FormRequest
 
         return [
             $p => ['required', 'array'],
-            "{$p}.photo" => [$this->route('slide') ? 'nullable' : 'required', 'bail', 'file', 'max:'.self::MAX_KILOBYTES, 'mimetypes:image/jpeg,image/png,image/webp', $this->dimensions(...)],
+            "{$p}.photo" => [$this->route('slide') ? 'nullable' : 'required', 'bail', 'file', ImageUpload::notHeic(), 'max:'.self::MAX_KILOBYTES, 'mimetypes:image/jpeg,image/png,image/webp', $this->dimensions(...)],
             "{$p}.alt_text" => ['required', 'string', 'max:200'],
             "{$p}.caption" => ['nullable', 'string', 'max:100'],
             "{$p}.focus" => ['required', Rule::enum(HeroFocus::class)],
@@ -108,8 +112,8 @@ class HeroSlideRequest extends FormRequest
         return [
             "{$p}.photo.required" => 'Pilih foto slide.',
             "{$p}.photo.uploaded" => 'Foto gagal diunggah. Periksa koneksi lalu coba lagi.',
-            "{$p}.photo.max" => 'Ukuran foto paling besar 8 MB. Perkecil foto lalu coba lagi.',
-            "{$p}.photo.mimetypes" => "Foto harus JPG, PNG, atau WebP. Foto iPhone (HEIC): ubah pengaturan kamera ke 'Paling Kompatibel', lalu ambil ulang fotonya.",
+            "{$p}.photo.max" => ImageUpload::MAX_MESSAGE,
+            "{$p}.photo.mimetypes" => 'Foto harus JPG, PNG, WebP, atau foto iPhone (HEIC).',
             "{$p}.alt_text.required" => 'Isi teks alternatif: jelaskan isi foto untuk pembaca layar.',
         ];
     }

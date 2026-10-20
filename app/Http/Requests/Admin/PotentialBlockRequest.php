@@ -4,7 +4,7 @@ namespace App\Http\Requests\Admin;
 
 /**
  * Satu blok "Potensi ekonomi" (Profil Ransiki). Isian berawalan "potensi_{n}[...]"; aturan foto sama dengan kartu
- * Mengenal Distrik Ransiki (JPG/PNG/WebP, maks 8 MB, lebar minimal 800 px).
+ * Mengenal Distrik Ransiki (JPG/PNG/WebP atau HEIC, maks 10 MB, lebar minimal 800 px).
  */
 class PotentialBlockRequest extends AboutCardRequest
 {

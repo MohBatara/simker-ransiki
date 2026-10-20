@@ -1,6 +1,6 @@
 @props([
     'url' => '',
-    // 'document' = JPG/PNG/PDF (lampiran), 'photo' = JPG/PNG (foto produk).
+    // 'document' = foto atau PDF (lampiran), 'photo' = foto saja (foto produk, sampul berita, foto situs).
     'kind' => 'document',
     'multiple' => true,
     // Sisa slot file untuk entitas ini (maks 10 per entitas).
@@ -11,9 +11,10 @@
 ])
 
 @php
-    // Hanya JPEG/PNG agar iPhone otomatis mengonversi foto HEIC menjadi JPEG.
-    $accept = $kind === 'photo' ? 'image/jpeg,image/png' : 'image/jpeg,image/png,application/pdf';
-    $hint ??= ($kind === 'photo' ? 'Foto JPG atau PNG.' : 'JPG, PNG, atau PDF.').' Maksimal 10 MB per file.';
+    // Bawaan tanpa HEIC agar iPhone mengubah foto ke JPG sendiri; JavaScript menambah HEIC di perangkat lain
+    // (data-image-accept, resources/js/image-upload.js). Foto disiapkan di browser sebelum dikirim.
+    $accept = $kind === 'photo' ? \App\Support\ImageUpload::ACCEPT : \App\Support\ImageUpload::ACCEPT.',application/pdf';
+    $hint ??= $kind === 'photo' ? \App\Support\ImageUpload::HINT : 'JPG, PNG, WebP, foto iPhone (HEIC), atau PDF. Maksimal 10 MB per file.';
 @endphp
 
 <div
@@ -39,7 +40,7 @@
         <p class="text-caption text-ink-muted">{{ $hint }}</p>
     </div>
 
-    <input type="file" x-ref="picker" class="sr-only" tabindex="-1" aria-hidden="true" accept="{{ $accept }}" @if ($multiple) multiple @endif x-on:change="add($event.target.files); $event.target.value = ''">
+    <input type="file" x-ref="picker" class="sr-only" tabindex="-1" aria-hidden="true" accept="{{ $accept }}" data-image-accept="{{ $kind }}" @if ($multiple) multiple @endif x-on:change="add($event.target.files); $event.target.value = ''">
     @if ($camera)
         <input type="file" x-ref="camera" class="sr-only" tabindex="-1" aria-hidden="true" accept="image/jpeg,image/png" capture="environment" x-on:change="add($event.target.files); $event.target.value = ''">
     @endif

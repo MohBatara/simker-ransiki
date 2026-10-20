@@ -2,6 +2,7 @@
 
 namespace App\Rules;
 
+use App\Support\ImageUpload;
 use Closure;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Http\UploadedFile;
@@ -11,13 +12,14 @@ use Illuminate\Http\UploadedFile;
  */
 class AllowedUpload implements ValidationRule
 {
-    public const IMAGE_TYPES = ['image/jpeg', 'image/png'];
+    public const IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 
-    public const DOCUMENT_TYPES = ['image/jpeg', 'image/png', 'application/pdf'];
+    public const DOCUMENT_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf'];
 
     public const MAX_DIMENSION = 8000;
 
-    public const HEIC_MESSAGE = "Format HEIC belum didukung. Ubah pengaturan kamera iPhone ke 'Paling Kompatibel', atau kirim ulang sebagai JPG.";
+    /** HEIC yang tidak bisa dikonversi server (lihat ConvertsHeicUploads). */
+    public const HEIC_MESSAGE = ImageUpload::HEIC_MESSAGE;
 
     /**
      * @param  'photo'|'document'  $kind
@@ -31,9 +33,8 @@ class AllowedUpload implements ValidationRule
         }
 
         $mime = $value->getMimeType();
-        $extension = strtolower($value->getClientOriginalExtension());
 
-        if (in_array($extension, ['heic', 'heif'], true) || in_array($mime, ['image/heic', 'image/heif', 'image/heic-sequence', 'image/heif-sequence'], true)) {
+        if (ImageUpload::isHeic($value)) {
             $fail(self::HEIC_MESSAGE);
 
             return;
@@ -42,8 +43,8 @@ class AllowedUpload implements ValidationRule
         $allowed = $this->kind === 'photo' ? self::IMAGE_TYPES : self::DOCUMENT_TYPES;
         if (! in_array($mime, $allowed, true)) {
             $fail($this->kind === 'photo'
-                ? 'Tipe file tidak didukung. Gunakan foto JPG atau PNG.'
-                : 'Tipe file tidak didukung. Gunakan JPG, PNG, atau PDF.');
+                ? 'Tipe file tidak didukung. Gunakan JPG, PNG, WebP, atau foto iPhone (HEIC).'
+                : 'Tipe file tidak didukung. Gunakan JPG, PNG, WebP, foto iPhone (HEIC), atau PDF.');
 
             return;
         }

@@ -52,8 +52,8 @@ test('validasi: foto wajib, lebar minimal 1280 px, tipe, ukuran, teks alternatif
         ->assertSessionHasErrors(['baru.photo' => 'Foto terlalu kecil: lebarnya 1279 px, minimal 1.280 px. Pakai foto asli dari kamera, bukan hasil kiriman WhatsApp.']);
     $this->post('/admin/website/slide', slideInput(['photo' => realUpload('dok.pdf', "%PDF-1.4\n%contoh")]))
         ->assertSessionHasErrors('baru.photo');
-    $this->post('/admin/website/slide', slideInput(['photo' => UploadedFile::fake()->create('besar.jpg', 9000, 'image/jpeg')]))
-        ->assertSessionHasErrors(['baru.photo' => 'Ukuran foto paling besar 8 MB. Perkecil foto lalu coba lagi.']);
+    $this->post('/admin/website/slide', slideInput(['photo' => UploadedFile::fake()->create('besar.jpg', 11000, 'image/jpeg')]))
+        ->assertSessionHasErrors(['baru.photo' => 'Ukuran foto paling besar 10 MB. Perkecil foto lalu coba lagi.']);
     $this->post('/admin/website/slide', slideInput(['photo' => null]))
         ->assertSessionHasErrors(['baru.photo' => 'Pilih foto slide.']);
     $this->post('/admin/website/slide', slideInput(['alt_text' => '']))

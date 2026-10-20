@@ -2,11 +2,13 @@
 
 namespace App\Http\Requests\Files;
 
+use App\Http\Requests\Concerns\ConvertsHeicUploads;
 use App\Models\License;
 use App\Models\MonthlyReport;
 use App\Models\Organization;
 use App\Models\Product;
 use App\Rules\AllowedUpload;
+use App\Support\ImageUpload;
 use Illuminate\Auth\Access\Response;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Http\FormRequest;
@@ -17,7 +19,9 @@ use Illuminate\Support\Facades\Gate;
  */
 class UploadRequest extends FormRequest
 {
-    public const MAX_KILOBYTES = 10240;
+    use ConvertsHeicUploads;
+
+    public const MAX_KILOBYTES = ImageUpload::MAX_KILOBYTES;
 
     public function authorize(): Response
     {

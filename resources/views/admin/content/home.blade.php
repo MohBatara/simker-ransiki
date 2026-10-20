@@ -86,7 +86,7 @@
                             <p x-show="! preview" class="flex size-full items-center justify-center px-4 text-center text-caption text-ink-muted">Tanpa foto: memakai foto bidang usaha.</p>
                         </div>
                         <x-field label="Foto" :for="$p.'[photo]'" optional>
-                            <x-admin.dropzone :name="$p.'[photo]'" accept="image/jpeg,image/png,image/webp" hint="JPG, PNG, atau WebP. Maksimal 8 MB, lebar minimal 800 px." :preview="false" x-on:change="pick($event)" />
+                            <x-admin.dropzone :name="$p.'[photo]'" :hint="\App\Support\ImageUpload::HINT.' Lebar minimal 800 px.'" :preview="false" x-on:change="pick($event)" />
                         </x-field>
                         <x-field label="Judul" :for="$p.'[title]'" :hint="'Bawaan: '.App\Models\SiteSetting::DEFAULTS['about_card_'.$n.'_title']" optional>
                             <x-input :name="$p.'[title]'" :value="$settings['about_card_'.$n.'_title']" :placeholder="App\Models\SiteSetting::DEFAULTS['about_card_'.$n.'_title']" maxlength="60" />

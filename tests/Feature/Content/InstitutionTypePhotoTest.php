@@ -4,6 +4,7 @@ use App\Models\InstitutionType;
 use App\Models\Organization;
 use App\Models\User;
 use App\Support\ImageVariants;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 
 beforeEach(function () {
@@ -41,8 +42,8 @@ test('foto jenis: lebar minimal 800 px, tipe dan ukuran dicek', function () {
     $this->post($url, ['photo' => realUpload('kecil.jpg', imageBytes(799, 500))])
         ->assertSessionHasErrors(['photo' => 'Foto terlalu kecil: lebarnya 799 px, minimal 800 px. Pakai foto asli dari kamera, bukan hasil kiriman WhatsApp.']);
     $this->post($url, ['photo' => realUpload('dok.pdf', "%PDF-1.4\n%contoh")])->assertSessionHasErrors('photo');
-    $this->post($url, ['photo' => Illuminate\Http\UploadedFile::fake()->create('besar.jpg', 9000, 'image/jpeg')])
-        ->assertSessionHasErrors(['photo' => 'Ukuran foto paling besar 8 MB. Perkecil foto lalu coba lagi.']);
+    $this->post($url, ['photo' => UploadedFile::fake()->create('besar.jpg', 11000, 'image/jpeg')])
+        ->assertSessionHasErrors(['photo' => 'Ukuran foto paling besar 10 MB. Perkecil foto lalu coba lagi.']);
     $this->post($url, [])->assertSessionHasErrors(['photo' => 'Pilih foto lebih dulu.']);
 
     expect($this->type->fresh()->photo_path)->toBeNull();

@@ -19,7 +19,7 @@
                         <x-button variant="danger" type="submit" processing="Menghapus…">Hapus foto</x-button>
                     </form>
                 @endif
-                <x-file-upload :url="route('admin.content.photo.store', $slot)" kind="photo" :multiple="false" :remaining="1" hint="Foto lanskap JPG atau PNG, maksimal 10 MB. Foto lama akan diganti; tersimpan langsung saat diunggah." />
+                <x-file-upload :url="route('admin.content.photo.store', $slot)" kind="photo" :multiple="false" :remaining="1" :hint="\App\Support\ImageUpload::HINT.' Pakai foto lanskap. Foto lama akan diganti; tersimpan langsung saat diunggah.'" />
             </x-admin.form-section>
         @endforeach
 

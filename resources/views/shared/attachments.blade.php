@@ -37,7 +37,7 @@
 
         @if ($uploadUrl)
             @if ($remaining > 0)
-                <x-file-upload :url="$uploadUrl" :remaining="$remaining" :camera="$camera ?? false" :hint="'JPG, PNG, atau PDF. Maksimal 10 MB per file, sisa '.$remaining.' file.'" />
+                <x-file-upload :url="$uploadUrl" :remaining="$remaining" :camera="$camera ?? false" :hint="'JPG, PNG, WebP, foto iPhone (HEIC), atau PDF. Maksimal 10 MB per file, sisa '.$remaining.' file.'" />
             @else
                 <p class="text-caption text-ink-muted">Sudah ada 10 file. Hapus file lama untuk menambah yang baru.</p>
             @endif

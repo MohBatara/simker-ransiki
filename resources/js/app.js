@@ -10,34 +10,7 @@ import { dropzone, formGuard } from './form-guard';
 import { productGallery, scrollRow, stickyCta } from './products';
 import readingProgress from './reading-progress';
 import registerMotion from './motion';
-
-const HEIC_MESSAGE = "Format HEIC belum didukung. Ubah pengaturan kamera iPhone ke 'Paling Kompatibel', atau kirim ulang sebagai JPG.";
-
-/**
- * Perkecil foto di browser sebelum dikirim agar hemat kuota di koneksi lambat.
- * Server tetap memproses ulang; hasil di sini hanya penghematan, bukan jaminan keamanan.
- */
-async function shrinkImage(file, maxSide = 1600) {
-    if (!['image/jpeg', 'image/png'].includes(file.type) || !window.createImageBitmap) {
-        return file;
-    }
-
-    try {
-        const bitmap = await createImageBitmap(file, { imageOrientation: 'from-image' });
-        const scale = Math.min(1, maxSide / Math.max(bitmap.width, bitmap.height));
-        const canvas = document.createElement('canvas');
-        canvas.width = Math.round(bitmap.width * scale);
-        canvas.height = Math.round(bitmap.height * scale);
-        canvas.getContext('2d').drawImage(bitmap, 0, 0, canvas.width, canvas.height);
-        bitmap.close?.();
-
-        const blob = await new Promise((resolve) => canvas.toBlob(resolve, file.type, 0.8));
-
-        return blob && blob.size < file.size ? new File([blob], file.name, { type: file.type }) : file;
-    } catch {
-        return file;
-    }
-}
+import { applyImageAccept, isImageFile, prepareImage, PREPARE_ERROR } from './image-upload';
 
 function uploadErrorMessage(xhr) {
     if (xhr.status === 422) {
@@ -69,6 +42,10 @@ Alpine.data('uploader', ({ kind, maxMb, remaining, multiple }) => ({
     dragging: false,
     busy: false,
 
+    init() {
+        this.$root.querySelectorAll('input[data-image-accept]').forEach((input) => applyImageAccept(input));
+    },
+
     get needsReload() {
         return !this.busy && this.queue.some((item) => item.status === 'done') && this.queue.some((item) => item.status === 'error');
     },
@@ -77,7 +54,7 @@ Alpine.data('uploader', ({ kind, maxMb, remaining, multiple }) => ({
         const files = Array.from(fileList).slice(0, multiple ? undefined : 1);
 
         for (const file of files) {
-            const item = { key: `${Date.now()}-${Math.random()}`, file, name: file.name, size: `${(file.size / 1048576).toFixed(1).replace('.', ',')} MB`, preview: /^image\/(jpeg|png)$/.test(file.type) ? URL.createObjectURL(file) : null, progress: 0, status: 'waiting', error: null, retryable: false };
+            const item = { key: `${Date.now()}-${Math.random()}`, file, name: file.name, size: `${(file.size / 1048576).toFixed(1).replace('.', ',')} MB`, preview: null, progress: 0, status: 'waiting', error: null, retryable: false };
             const problem = this.problem(file);
 
             if (problem) {
@@ -100,16 +77,13 @@ Alpine.data('uploader', ({ kind, maxMb, remaining, multiple }) => ({
     },
 
     problem(file) {
-        if (/\.hei[cf]$/i.test(file.name) || /hei[cf]/i.test(file.type)) {
-            return HEIC_MESSAGE;
+        if (isImageFile(file) || (kind !== 'photo' && file.type === 'application/pdf')) {
+            return null;
         }
 
-        const allowed = kind === 'photo' ? ['image/jpeg', 'image/png'] : ['image/jpeg', 'image/png', 'application/pdf'];
-        if (!allowed.includes(file.type)) {
-            return kind === 'photo' ? 'Tipe file tidak didukung. Gunakan foto JPG atau PNG.' : 'Tipe file tidak didukung. Gunakan JPG, PNG, atau PDF.';
-        }
-
-        return null;
+        return kind === 'photo'
+            ? 'Tipe file tidak didukung. Gunakan JPG, PNG, WebP, atau foto iPhone (HEIC).'
+            : 'Tipe file tidak didukung. Gunakan JPG, PNG, WebP, foto iPhone (HEIC), atau PDF.';
     },
 
     async run() {
@@ -134,7 +108,18 @@ Alpine.data('uploader', ({ kind, maxMb, remaining, multiple }) => ({
 
     async upload(item) {
         item.status = 'preparing';
-        const file = await shrinkImage(item.file);
+        let file = item.file;
+
+        if (isImageFile(file)) {
+            try {
+                file = await prepareImage(file);
+            } catch {
+                Object.assign(item, { status: 'error', error: PREPARE_ERROR });
+                return;
+            }
+            // Pratinjau baru muncul setelah foto siap (juga untuk HEIC yang tidak bisa ditampilkan browser).
+            Object.assign(item, { name: file.name, size: `${(file.size / 1048576).toFixed(1).replace('.', ',')} MB`, preview: URL.createObjectURL(file) });
+        }
 
         if (file.size > maxMb * 1024 * 1024) {
             Object.assign(item, { status: 'error', error: `Ukuran file paling besar ${maxMb} MB. Perkecil file lalu coba lagi.` });
@@ -180,7 +165,7 @@ Alpine.data('uploader', ({ kind, maxMb, remaining, multiple }) => ({
     statusText(item) {
         return {
             waiting: 'Menunggu',
-            preparing: 'Menyiapkan',
+            preparing: 'Menyiapkan foto...',
             uploading: `Mengunggah ${item.progress}%`,
             done: 'Selesai',
             error: 'Gagal',

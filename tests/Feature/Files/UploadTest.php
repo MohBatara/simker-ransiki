@@ -9,6 +9,7 @@ use App\Models\Organization;
 use App\Models\Product;
 use App\Models\User;
 use App\Rules\AllowedUpload;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 
 beforeEach(function () {
@@ -22,7 +23,7 @@ beforeEach(function () {
     $this->other = Organization::factory()->create();
 });
 
-function uploadTo(object $test, string $url, Illuminate\Http\UploadedFile $file)
+function uploadTo(object $test, string $url, UploadedFile $file)
 {
     return $test->postJson($url, ['file' => $file]);
 }
@@ -77,8 +78,8 @@ test('file ditolak dengan pesan berbahasa Indonesia', function (Closure $makeFil
 
     expect(Attachment::count())->toBe(0);
 })->with([
-    'PHP berekstensi jpg' => [fn () => realUpload('foto.jpg', '<?php echo "halo"; ?>'), 'Tipe file tidak didukung. Gunakan JPG, PNG, atau PDF.'],
-    'teks berekstensi pdf' => [fn () => realUpload('surat.pdf', 'bukan pdf'), 'Tipe file tidak didukung. Gunakan JPG, PNG, atau PDF.'],
+    'PHP berekstensi jpg' => [fn () => realUpload('foto.jpg', '<?php echo "halo"; ?>'), 'Tipe file tidak didukung. Gunakan JPG, PNG, WebP, foto iPhone (HEIC), atau PDF.'],
+    'teks berekstensi pdf' => [fn () => realUpload('surat.pdf', 'bukan pdf'), 'Tipe file tidak didukung. Gunakan JPG, PNG, WebP, foto iPhone (HEIC), atau PDF.'],
     'HEIC' => [fn () => realUpload('IMG_0001.HEIC', "\0\0\0\x18ftypheic\0\0\0\0mif1heic"), AllowedUpload::HEIC_MESSAGE],
     'lebih dari 10 MB' => [fn () => realUpload('besar.pdf', '%PDF-1.4'.str_repeat('0', 10 * 1024 * 1024 + 10)), 'Ukuran file paling besar 10 MB. Perkecil file lalu coba lagi.'],
     'lebih dari 8000 piksel' => [fn () => realUpload('panjang.png', imageBytes(8001, 10, 'png')), 'Gambar terlalu besar (lebih dari 8000 piksel per sisi). Perkecil gambar lalu coba lagi.'],
@@ -195,7 +196,7 @@ test('foto produk hanya menerima gambar', function () {
 
     $this->actingAs($this->owner)
         ->postJson("/foto-produk/{$product->id}", ['file' => realUpload('katalog.pdf', '%PDF-1.4')])
-        ->assertJsonPath('errors.file.0', 'Tipe file tidak didukung. Gunakan foto JPG atau PNG.');
+        ->assertJsonPath('errors.file.0', 'Tipe file tidak didukung. Gunakan JPG, PNG, WebP, atau foto iPhone (HEIC).');
 });
 
 test('foto produk publik bisa dilihat tamu, foto produk tidak publik tidak', function () {

@@ -1,8 +1,9 @@
 @props([
     'name',
-    'accept' => 'image/jpeg,image/png',
+    // Foto: accept bawaan tanpa HEIC; JavaScript menambah HEIC di perangkat selain iPhone/iPad (resources/js/image-upload.js).
+    'accept' => \App\Support\ImageUpload::ACCEPT,
     // Batas ukuran dan tipe, selalu tertulis di kotak.
-    'hint' => 'JPG atau PNG, maksimal 10 MB.',
+    'hint' => \App\Support\ImageUpload::HINT,
     // URL gambar saat ini (pratinjau awal); null = belum ada.
     'current' => null,
     // false: tanpa pratinjau di kotak (halaman punya pratinjau sendiri, mis. slide hero).
@@ -11,6 +12,8 @@
 
 @php
     $id = \App\Support\FormField::id($name);
+    // Kotak foto (bukan impor spreadsheet): disiapkan di browser dan accept-nya mengikuti perangkat.
+    $image = str_starts_with($accept, 'image/');
 @endphp
 
 {{--
@@ -26,8 +29,12 @@
         <span class="flex size-10 items-center justify-center rounded-full bg-brand-tint text-brand" aria-hidden="true"><x-heroicon-o-arrow-up-tray class="size-5" /></span>
         <span class="text-ui text-ink"><span class="font-semibold text-brand">Pilih file</span> <span class="max-md:hidden">atau tarik dan lepas di sini</span></span>
         <span class="text-caption text-ink-muted">{{ $hint }}</span>
-        <input type="file" id="{{ $id }}" name="{{ $name }}" accept="{{ $accept }}" x-ref="input" x-on:change="changed($event)" class="sr-only" {{ $attributes }}>
+        {{-- x-on:change dari pemanggil (mis. pratinjau slide) digabung: atribut ganda diabaikan browser. --}}
+        <input type="file" id="{{ $id }}" name="{{ $name }}" accept="{{ $accept }}" @if ($image) data-image-accept="photo" @endif x-ref="input" x-on:change="changed($event){{ $attributes->has('x-on:change') ? '; '.$attributes->get('x-on:change') : '' }}" class="sr-only" {{ $attributes->except('x-on:change') }}>
     </label>
+
+    <p x-cloak x-show="preparing" class="text-caption text-ink-soft" role="status">Menyiapkan foto...</p>
+    <p x-cloak x-show="error" x-text="error" class="text-caption text-fix" role="alert" data-prepare-error></p>
 
     <div x-cloak x-show="name || ({{ $preview ? 'true' : 'false' }} && preview)" class="flex items-center gap-3 rounded-control border border-line bg-paper p-2">
         @if ($preview)

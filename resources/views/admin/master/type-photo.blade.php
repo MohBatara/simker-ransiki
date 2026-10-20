@@ -28,7 +28,7 @@
 
         <x-admin.form-section :title="$current ? 'Ganti foto' : 'Unggah foto'" description="Di kartu kecil, foto mengisi sisi kanan dan memudar ke warna kartu. Di kartu utama, foto memenuhi kartu.">
             <x-field label="Foto" for="photo" required>
-                <x-admin.dropzone name="photo" accept="image/jpeg,image/png,image/webp" hint="JPG, PNG, atau WebP. Maksimal 8 MB, lebar minimal 800 px." :preview="false" x-on:change="pick($event)" required />
+                <x-admin.dropzone name="photo" :hint="\App\Support\ImageUpload::HINT.' Lebar minimal 800 px.'" :preview="false" x-on:change="pick($event)" required />
             </x-field>
             <div class="max-w-sm space-y-2" x-cloak x-show="preview">
                 <p class="text-ui font-semibold text-ink">Pratinjau</p>

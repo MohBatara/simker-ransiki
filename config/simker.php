@@ -81,6 +81,14 @@ return [
     'seed_photos' => (bool) env('SIMKER_SEED_PHOTOS', true),
 
     /*
+    | Foto iPhone (HEIC) yang sampai ke server tanpa diubah di browser: dikonversi dengan Imagick bila ekstensinya
+    | mendukung HEIC (App\Support\ImageUpload). false = selalu ditolak dengan pesan cara mengirim ulang.
+    */
+    'uploads' => [
+        'convert_heic' => (bool) env('SIMKER_CONVERT_HEIC', true),
+    ],
+
+    /*
     |--------------------------------------------------------------------------
     | Ikon bidang usaha di website publik (App\Support\PublicIcons)
     |--------------------------------------------------------------------------

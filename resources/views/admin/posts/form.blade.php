@@ -128,7 +128,7 @@
                         <x-button variant="danger" type="submit" processing="Menghapus…">Hapus foto</x-button>
                     </form>
                 @endif
-                <x-file-upload :url="route('admin.posts.cover.store', $post)" kind="photo" :multiple="false" :remaining="1" hint="Foto JPG atau PNG, maksimal 10 MB. Foto diperkecil dan data lokasinya dibuang otomatis. Foto lama akan diganti." />
+                <x-file-upload :url="route('admin.posts.cover.store', $post)" kind="photo" :multiple="false" :remaining="1" :hint="\App\Support\ImageUpload::HINT.' Foto diperkecil dan data lokasinya dibuang otomatis. Foto lama akan diganti.'" />
             </x-admin.form-section>
         @else
             <p class="text-caption text-ink-muted">Foto sampul bisa ditambahkan setelah berita disimpan.</p>

@@ -443,9 +443,9 @@ Jangan mengarang kepanjangan akronim resmi (KDMP, KNMP, dsb.). Simpan apa adanya
 - `hero_slides` (foto hero beranda, Konten Website > tab Beranda, maks `HeroSlide::MAX` = 4, Policy `HeroSlidePolicy`
   hanya Admin): photo_path (JPEG 1920 tanpa EXIF; varian WebP 640/1280/1920 = `ImageVariants::HERO`; file asli tidak
   disimpan), caption (≤ 100), alt_text (wajib), focus (enum HeroFocus atas/tengah/bawah → object-position), position,
-  is_active, created_by, updated_by. Unggah: JPG/PNG/WebP, maks 8 MB, lebar < 1280 px ditolak, 1280–1599 px diterima dengan peringatan kuning
-  (`session('warning')`, "Foto mungkin kurang tajam di layar lebar"), form biasa (bukan XHR, tidak diperkecil di
-  browser) dengan pratinjau. Validasi gagal: ringkasan error di atas tombol simpan form itu (`data-form-errors`). Isian tiap form slide berawalan sendiri (`baru[...]`,
+  is_active, created_by, updated_by. Unggah: JPG/PNG/WebP/HEIC, maks 10 MB, lebar < 1280 px ditolak, 1280–1599 px diterima dengan peringatan kuning
+  (`session('warning')`, "Foto mungkin kurang tajam di layar lebar"), form biasa (bukan XHR; di browser hanya
+  diperkecil sampai 2000 px, jadi aturan lebar tetap berlaku) dengan pratinjau. Validasi gagal: ringkasan error di atas tombol simpan form itu (`data-form-errors`). Isian tiap form slide berawalan sendiri (`baru[...]`,
   `slide_{id}[...]`). Foto: `GET /foto-hero/{id}` (slide nonaktif hanya Admin). Tanpa slide aktif: satu foto bawaan
   `resources/aset/hero-bawaan*` (`/foto-hero/bawaan`, foto sementara; ganti dengan foto asli Ransiki), tidak pernah
   foto produk kelompok. Penyimpanan foto Konten Website (hero, slot sampul/tentang/profil/kantor, blok potensi, bidang
@@ -1236,8 +1236,21 @@ marketplace, PWA/aplikasi mobile, dua bahasa.
   Tipe dicek dari isi file (`finfo`), bukan ekstensi. Gambar > 8000 px per sisi ditolak sebelum
   diproses. Gambar diproses `intervention/image` (driver GD): diputar sesuai EXIF, sisi terpanjang
   maks 1600 px, disimpan ulang tanpa metadata (EXIF/GPS hilang). Foto produk selalu JPEG + versi
-  kecil 400 px. Input gambar memakai `accept="image/jpeg,image/png"` (iPhone mengonversi HEIC);
-  HEIC yang tetap terkirim ditolak dengan pesan cara mengubah pengaturan kamera.
+  kecil 400 px.
+- Foto (SEMUA tempat unggah gambar: lampiran, foto produk, sampul berita, Konten Website, hero, kartu, jenis
+  kelembagaan) menerima JPG, PNG, WebP, dan foto iPhone (HEIC/HEIF), maks 10 MB (`App\Support\ImageUpload`: ACCEPT,
+  HINT "JPG, PNG, WebP, atau foto iPhone (HEIC). Maksimal 10 MB.", pesan). `accept` dari server tanpa HEIC; JavaScript
+  (`resources/js/image-upload.js`, input ber-`data-image-accept="photo|document"` di `x-file-upload` dan
+  `x-admin.dropzone`) menambah HEIC hanya di perangkat selain iPhone/iPad (iPadOS yang mengaku Mac: Macintosh +
+  `maxTouchPoints > 1`), agar iOS tetap mengubah foto ke JPG sendiri. Di browser: HEIC → JPG lewat `heic-to` (npm,
+  `import()` dinamis, hanya saat ada file HEIC), lalu semua foto digambar ulang di canvas (maks 2000 px, JPEG 0,82,
+  arah EXIF, metadata hilang; PNG tetap PNG), "Menyiapkan foto..." selama proses, pratinjau setelah selesai; gagal →
+  pesan "Foto ini tidak bisa diproses. Coba kirim ulang dari iPhone dengan format Paling Kompatibel ...". Dropzone
+  menahan kirim form selama foto disiapkan. Server: trait `ConvertsHeicUploads` (semua Form Request foto) mencoba
+  Imagick bila mendukung HEIC (`simker.uploads.convert_heic`), selain itu `ImageUpload::notHeic()`/`AllowedUpload`
+  menolak dengan pesan yang sama. Semua foto tetap disimpan ulang di server (tanpa EXIF/GPS, maks 1600 px; hero 1920).
+  Tes: `sail npm run test:js` (logika accept, `node --test`), `tests/Feature/Files/HeicUploadTest.php`, dan
+  `tests/Browser/HeicUploadTest.php` (jalankan per file setelah `npm run build`; fixture `tests/fixtures/foto-iphone.heic`).
 - Unggah lewat XHR satu file per permintaan dengan bilah progres; gambar diperkecil dulu di
   browser (canvas), server tetap memproses ulang. Batas 30 unggahan per menit per akun.
 - Jangan menaruh query di Blade.

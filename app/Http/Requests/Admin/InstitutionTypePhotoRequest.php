@@ -2,7 +2,9 @@
 
 namespace App\Http\Requests\Admin;
 
+use App\Http\Requests\Concerns\ConvertsHeicUploads;
 use App\Rules\AllowedUpload;
+use App\Support\ImageUpload;
 use Closure;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\UploadedFile;
@@ -12,6 +14,8 @@ use Illuminate\Http\UploadedFile;
  */
 class InstitutionTypePhotoRequest extends FormRequest
 {
+    use ConvertsHeicUploads;
+
     public const MIN_WIDTH = 800;
 
     public function authorize(): bool
@@ -22,7 +26,7 @@ class InstitutionTypePhotoRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'photo' => ['required', 'bail', 'file', 'max:'.HeroSlideRequest::MAX_KILOBYTES, 'mimetypes:image/jpeg,image/png,image/webp', $this->dimensions(...)],
+            'photo' => ['required', 'bail', 'file', ImageUpload::notHeic(), 'max:'.ImageUpload::MAX_KILOBYTES, 'mimetypes:image/jpeg,image/png,image/webp', $this->dimensions(...)],
         ];
     }
 
@@ -44,8 +48,8 @@ class InstitutionTypePhotoRequest extends FormRequest
         return [
             'photo.required' => 'Pilih foto lebih dulu.',
             'photo.uploaded' => 'Foto gagal diunggah. Periksa koneksi lalu coba lagi.',
-            'photo.max' => 'Ukuran foto paling besar 8 MB. Perkecil foto lalu coba lagi.',
-            'photo.mimetypes' => "Foto harus JPG, PNG, atau WebP. Foto iPhone (HEIC): ubah pengaturan kamera ke 'Paling Kompatibel', lalu ambil ulang fotonya.",
+            'photo.max' => ImageUpload::MAX_MESSAGE,
+            'photo.mimetypes' => 'Foto harus JPG, PNG, WebP, atau foto iPhone (HEIC).',
         ];
     }
 }

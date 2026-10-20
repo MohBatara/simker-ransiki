@@ -2,7 +2,9 @@
 
 namespace App\Http\Requests\Admin;
 
+use App\Http\Requests\Concerns\ConvertsHeicUploads;
 use App\Rules\AllowedUpload;
+use App\Support\ImageUpload;
 use Closure;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\UploadedFile;
@@ -14,6 +16,8 @@ use Illuminate\Validation\Rule;
  */
 class AboutCardRequest extends FormRequest
 {
+    use ConvertsHeicUploads;
+
     public function authorize(): bool
     {
         return (bool) $this->user()?->isAdmin();
@@ -38,7 +42,7 @@ class AboutCardRequest extends FormRequest
             "{$p}.title" => ['nullable', 'string', 'max:60'],
             "{$p}.text" => ['nullable', 'string', 'max:90'],
             "{$p}.sector" => ['nullable', 'integer', Rule::exists('business_sectors', 'id')],
-            "{$p}.photo" => ['nullable', 'bail', 'file', 'max:'.HeroSlideRequest::MAX_KILOBYTES, 'mimetypes:image/jpeg,image/png,image/webp', $this->dimensions(...)],
+            "{$p}.photo" => ['nullable', 'bail', 'file', ImageUpload::notHeic(), 'max:'.ImageUpload::MAX_KILOBYTES, 'mimetypes:image/jpeg,image/png,image/webp', $this->dimensions(...)],
         ];
     }
 
@@ -60,8 +64,8 @@ class AboutCardRequest extends FormRequest
         $p = $this->prefix();
 
         return [
-            "{$p}.photo.max" => 'Ukuran foto paling besar 8 MB. Perkecil foto lalu coba lagi.',
-            "{$p}.photo.mimetypes" => "Foto harus JPG, PNG, atau WebP. Foto iPhone (HEIC): ubah pengaturan kamera ke 'Paling Kompatibel', lalu ambil ulang fotonya.",
+            "{$p}.photo.max" => ImageUpload::MAX_MESSAGE,
+            "{$p}.photo.mimetypes" => 'Foto harus JPG, PNG, WebP, atau foto iPhone (HEIC).',
         ];
     }
 
