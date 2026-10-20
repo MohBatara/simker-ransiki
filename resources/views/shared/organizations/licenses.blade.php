@@ -65,6 +65,10 @@
                         <x-admin.table.actions :for="$license->type">
                             <x-dropdown.item icon="pencil-square" x-on:click="edit({{ Js::from($toRecord($license)) }})">Ubah</x-dropdown.item>
                             <x-dropdown.item icon="trash" class="text-fix!" x-on:click="remove({{ Js::from(['id' => $license->id, 'name' => $license->type]) }})">Hapus</x-dropdown.item>
+                            <x-slot:phone>
+                                <x-button variant="secondary" icon="pencil-square" class="min-h-11" x-on:click="edit({{ Js::from($toRecord($license)) }})">Ubah</x-button>
+                                <x-button variant="ghost" icon="trash" class="ml-auto min-h-11 text-fix! hover:bg-fix-bg!" x-on:click="remove({{ Js::from(['id' => $license->id, 'name' => $license->type]) }})">Hapus</x-button>
+                            </x-slot:phone>
                         </x-admin.table.actions>
                     @endif
                 </x-admin.table.row>

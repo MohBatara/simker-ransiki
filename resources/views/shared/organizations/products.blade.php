@@ -70,6 +70,18 @@
                                 ]) }})">{{ $product->photo_path ? 'Ganti foto' : 'Tambah foto' }}</x-dropdown.item>
                             @endif
                             <x-dropdown.item icon="trash" class="text-fix!" x-on:click="remove({{ Js::from(['id' => $product->id, 'name' => $product->name]) }})">Hapus</x-dropdown.item>
+                            <x-slot:phone>
+                                <x-button variant="secondary" icon="pencil-square" class="min-h-11" x-on:click="edit({{ Js::from($product->only(['id', ...$fields])) }})">Ubah</x-button>
+                                @if ($canPhoto ?? false)
+                                    <x-button variant="secondary" icon="camera" class="min-h-11" x-on:click="$dispatch('product-photo', {{ Js::from([
+                                        'name' => $product->name,
+                                        'url' => $product->photoUrl(),
+                                        'uploadUrl' => route('product-photos.store', $product),
+                                        'deleteUrl' => route('product-photos.destroy', $product),
+                                    ]) }})">Foto</x-button>
+                                @endif
+                                <x-button variant="ghost" icon="trash" class="ml-auto min-h-11 text-fix! hover:bg-fix-bg!" x-on:click="remove({{ Js::from(['id' => $product->id, 'name' => $product->name]) }})">Hapus</x-button>
+                            </x-slot:phone>
                         </x-admin.table.actions>
                     @endif
                 </x-admin.table.row>
